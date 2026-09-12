@@ -19,3 +19,9 @@ header,main,footer{max-width:1440px}main{padding-top:26px;padding-bottom:32px}.v
 .timeline-top>span:first-child{justify-self:start}
 .timeline-top>span:last-child{justify-self:end;text-align:right}
 .timeline-top>span{min-width:0}
+
+/* The projection picker sits in the globe's own toolbar, so it has to be as compact as
+   the buttons beside it rather than the full-width select in the inspector. */
+.toolbar-select{width:auto;padding:9px 10px}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+@media(max-width:850px){.toolbar-select{padding:8px 6px;max-width:104px}}

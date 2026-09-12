@@ -58,3 +58,22 @@ export function reproject(image, bounds, width = 1024) {
   return output;
 }
 
+
+// Plane placements for the flat projections, in the same units as the sheet meshes:
+// half-width 1 for all of them, half-height 0.5 for the 2:1 sheets and 1 for Mercator.
+export const MERCATOR_LIMIT = 85.051129;
+
+export function placeMollweide(longitude, latitude) {
+  const [x, y] = mollweide(longitude * Math.PI / 180, latitude * Math.PI / 180);
+  return [x, y * 0.5];
+}
+
+export function placeEquirectangular(longitude, latitude) {
+  return [longitude / 180, latitude / 180];
+}
+
+export function placeMercator(longitude, latitude) {
+  const clamped = Math.max(-MERCATOR_LIMIT, Math.min(MERCATOR_LIMIT, latitude));
+  const y = Math.log(Math.tan(Math.PI / 4 + clamped * Math.PI / 360));
+  return [longitude / 180, y / Math.PI];
+}

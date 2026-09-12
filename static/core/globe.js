@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from '../vendor/three/OrbitControls.js';
-import { reproject } from './projection.js';
+import { placeEquirectangular, placeMercator, placeMollweide, reproject }
+  from './projection.js';
 
 const $ = (id) => document.getElementById(id);
 const frames = JSON.parse($('globe-frames').textContent);
@@ -26,7 +27,18 @@ const frameStops = frames.map((frame, index) =>
 // the rendered globe rather than derived: the geometry's UV convention and the
 // canvas flip cancel out, so a label goes where the reprojection put its pixels.
 const TEXTURE_MERIDIAN = 0;
+// Each projection is a shape to draw on and a way to place a longitude and latitude on
+// it. The shader undoes the projection per texel; these place the labels and the grid.
+const PROJECTIONS = {
+  globe: { sheet: null, code: 0, place: null, half: [1, 1] },
+  equirect: { sheet: [2, 1], code: 1, place: placeEquirectangular, half: [1, 0.5] },
+  mollweide: { sheet: [2, 1], code: 2, place: placeMollweide, half: [1, 0.5] },
+  mercator: { sheet: [2, 2], code: 3, place: placeMercator, half: [1, 1] },
+};
 const surfaceToggle = $('surface');
+let projection = 'globe';
+let surfaceMesh;
+let gridVisible = false;
 let surface = 'map';
 let nameLayer;
 let nameGroupKey = '';
@@ -165,7 +177,7 @@ async function selectStop(value, manual = false) {
     uniforms.blend.value = place.blend;
     uniforms.masked.value = masked ? 1 : 0;
     applyMotion(place);
-    earth.visible = true;
+    surfaceMesh.visible = true;
     showNames(place, masked);
     stage.dataset.frame = place.from.id;
     stage.dataset.blend = place.blend.toFixed(2);
@@ -200,6 +212,33 @@ function applyMotion(place) {
   uniforms.motionCount.value = count;
   stage.dataset.motions = String(count);
 }
+function setProjection(name) {
+  if (!PROJECTIONS[name] || name === projection) return;
+  projection = name;
+  const globe = projection === 'globe';
+  uniforms.projection.value = PROJECTIONS[projection].code;
+  surfaceMesh.geometry.dispose();
+  surfaceMesh.geometry = globe
+    ? new THREE.SphereGeometry(1, 96, 64)
+    : new THREE.PlaneGeometry(...PROJECTIONS[projection].sheet, 1, 1);
+  earth.remove(grid);
+  grid.traverse((node) => node.geometry?.dispose());
+  grid = createGrid();
+  earth.add(grid);
+  controls.enableRotate = globe;
+  controls.enablePan = !globe;
+  controls.autoRotate = controls.autoRotate && globe;
+  $('rotate').disabled = !globe;
+  $('rotate').setAttribute('aria-pressed', String(controls.autoRotate));
+  $('gesture').textContent = globe
+    ? '드래그로 회전 · 스크롤 / 핀치로 확대'
+    : '드래그로 이동 · 스크롤 / 핀치로 확대';
+  stage.dataset.projection = projection;
+  nameGroupKey = '';
+  fitCamera();
+  resetView();
+  selectStop(stop);
+}
 function globeMaterial() {
   const linear = (rgb) => new THREE.Color().setRGB(
     rgb[0] / 255, rgb[1] / 255, rgb[2] / 255, THREE.SRGBColorSpace);
@@ -207,6 +246,7 @@ function globeMaterial() {
     surfaceA: { value: null }, surfaceB: { value: null },
     blend: { value: 0 }, masked: { value: 0 },
     land: { value: linear(LAND_COLOUR) }, ocean: { value: linear(OCEAN_COLOUR) },
+    projection: { value: 0 },
     motionCount: { value: 0 },
     motionPoints: { value: Array.from({ length: MAX_MOTIONS }, () => new THREE.Vector4()) },
     motionRadius: { value: new Float32Array(MAX_MOTIONS) },
@@ -228,6 +268,8 @@ function globeMaterial() {
       uniform float masked;
       uniform vec3 land;
       uniform vec3 ocean;
+      const float PI = 3.141592653589793;
+      uniform int projection;
       uniform int motionCount;
       uniform vec4 motionPoints[${MAX_MOTIONS}];
       uniform float motionRadius[${MAX_MOTIONS}];
@@ -260,7 +302,31 @@ function globeMaterial() {
         return mix(pow((colour + 0.055) / 1.055, vec3(2.4)), colour / 12.92,
                    step(colour, vec3(0.04045)));
       }
+      // Where on the equirectangular fields this fragment looks. On the sphere the
+      // geometry already carries that; on a sheet the projection has to be undone,
+      // which is also what decides whether a fragment is on the map at all.
+      bool locate(out vec2 found) {
+        if (projection <= 1) { found = vUv; return true; }
+        float x = vUv.x * 2.0 - 1.0;
+        float y = vUv.y * 2.0 - 1.0;
+        float latitude;
+        float longitude;
+        if (projection == 2) {
+          if (x * x + y * y > 1.0) return false;
+          float theta = asin(clamp(y, -1.0, 1.0));
+          latitude = asin(clamp((2.0 * theta + sin(2.0 * theta)) / PI, -1.0, 1.0));
+          longitude = PI * x / max(cos(theta), 1e-6);
+          if (abs(longitude) > PI) return false;
+        } else {
+          latitude = 2.0 * atan(exp(y * PI)) - PI * 0.5;
+          longitude = x * PI;
+        }
+        found = vec2(longitude / (2.0 * PI) + 0.5, latitude / PI + 0.5);
+        return true;
+      }
       void main() {
+        vec2 surfaceUv;
+        if (!locate(surfaceUv)) discard;
         vec3 colour;
         if (masked > 0.5) {
           // Both textures hold a signed distance to the coastline. Mixing the distances
@@ -268,23 +334,35 @@ function globeMaterial() {
           // dissolve one into the other. Sampling each side through the travel field
           // first carries each landmass along its own path, so the coastline morphs
           // around a continent that is moving rather than melting in place.
-          vec2 shift = travel(vec2((vUv.x - 0.5) * 360.0, (vUv.y - 0.5) * 180.0));
+          vec2 shift = travel(vec2((surfaceUv.x - 0.5) * 360.0, (surfaceUv.y - 0.5) * 180.0));
           vec2 offset = vec2(shift.x / 360.0, shift.y / 180.0);
-          float here = texture2D(surfaceA, vUv - blend * offset).r;
-          float there = texture2D(surfaceB, vUv + (1.0 - blend) * offset).r;
+          float here = texture2D(surfaceA, surfaceUv - blend * offset).r;
+          float there = texture2D(surfaceB, surfaceUv + (1.0 - blend) * offset).r;
           float distance = mix(here, there, blend) - 0.5;
           float edge = fwidth(distance) + 0.0012;
           colour = mix(ocean, land, smoothstep(-edge, edge, distance));
         } else {
-          colour = mix(decode(texture2D(surfaceA, vUv).rgb),
-                       decode(texture2D(surfaceB, vUv).rgb), blend);
+          colour = mix(decode(texture2D(surfaceA, surfaceUv).rgb),
+                       decode(texture2D(surfaceB, surfaceUv).rgb), blend);
         }
-        // Limb shading gives the sphere volume without reading height from colour.
-        colour *= 0.58 + 0.42 * pow(abs(vGlobeNormal.z), 0.45);
+        // Limb shading gives the sphere volume without reading height from colour. A
+        // flat sheet has no limb, so it is left alone.
+        if (projection == 0) colour *= 0.58 + 0.42 * pow(abs(vGlobeNormal.z), 0.45);
         gl_FragColor = vec4(colour, 1.0);
         #include <colorspace_fragment>
       }`,
   });
+}
+const FLAT_DISTANCE = 2.6;
+const NAME_LIFT = 0.015;
+function onSheet(longitude, latitude, lift = 0) {
+  const [x, y] = PROJECTIONS[projection].place(longitude, latitude);
+  return new THREE.Vector3(x, y, lift);
+}
+function pointAt(longitude, latitude, lift) {
+  return projection === 'globe'
+    ? onSphere(longitude, latitude, 1 + lift)
+    : onSheet(longitude, latitude, lift);
 }
 function onSphere(longitude, latitude, radius = 1) {
   const theta = THREE.MathUtils.degToRad(90 - latitude);
@@ -353,67 +431,97 @@ function showNames(place, visible) {
   }
   // A name on both sides travels between its two positions. One that exists on only
   // one side fades, because the piece it names has no counterpart to move to.
-  const start = new THREE.Vector3();
-  const finish = new THREE.Vector3();
   for (const sprite of nameLayer.children) {
     const { from, to } = sprite.userData;
     if (from && to) {
-      start.copy(onSphere(from.lon, from.lat));
-      finish.copy(onSphere(to.lon, to.lat));
-      sprite.position.copy(start.lerp(finish, place.blend).normalize().multiplyScalar(1.015));
+      sprite.position.copy(between(from, to, place.blend));
       sprite.userData.fade = 1;
     } else if (from) {
-      sprite.position.copy(onSphere(from.lon, from.lat, 1.015));
+      sprite.position.copy(labelPoint(from.lon, from.lat));
       sprite.userData.fade = 1 - place.blend;
     } else {
-      sprite.position.copy(onSphere(to.lon, to.lat, 1.015));
+      sprite.position.copy(labelPoint(to.lon, to.lat));
       sprite.userData.fade = place.blend;
     }
   }
   stage.dataset.names = String(
     nameLayer.children.filter((sprite) => sprite.userData.fade > 0.001).length);
 }
+function labelPoint(longitude, latitude) {
+  return pointAt(longitude, latitude, NAME_LIFT);
+}
+function between(from, to, blend) {
+  const start = labelPoint(from.lon, from.lat);
+  const finish = labelPoint(to.lon, to.lat);
+  if (projection !== 'globe') return start.lerp(finish, blend);
+  // On the sphere a straight line cuts through it, so come back out to the surface.
+  return start.lerp(finish, blend).normalize().multiplyScalar(1 + NAME_LIFT);
+}
 function updateNameVisibility() {
   if (!nameLayer.visible) return;
+  const flat = projection !== 'globe';
   const toCamera = camera.position.clone().normalize();
   const position = new THREE.Vector3();
   for (const sprite of nameLayer.children) {
-    sprite.getWorldPosition(position);
-    const facing = position.normalize().dot(toCamera);
-    sprite.material.opacity = THREE.MathUtils.clamp((facing - 0.12) / 0.18, 0, 1)
-      * (sprite.userData.fade ?? 1);
+    let facing = 1;
+    if (!flat) {
+      sprite.getWorldPosition(position);
+      facing = THREE.MathUtils.clamp((position.normalize().dot(toCamera) - 0.12) / 0.18, 0, 1);
+    }
+    sprite.material.opacity = facing * (sprite.userData.fade ?? 1);
     sprite.visible = sprite.material.opacity > 0.02;
   }
 }
 function createGrid() {
+  // Built from longitude and latitude rather than from the mesh, so the same parallels
+  // and meridians follow whichever projection is showing, curved or straight.
   const result = new THREE.Group();
   const material = new THREE.LineBasicMaterial({ color: 0xc4f7ef, transparent: true, opacity: 0.23 });
-  function line(points) { result.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(points), material)); }
+  const limit = projection === 'mercator' ? 85 : 90;
+  const lift = projection === 'globe' ? 0.004 : 0.003;
+  function line(points) {
+    result.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(points), material));
+  }
   for (let latitude = -60; latitude <= 60; latitude += 30) {
-    const phi = THREE.MathUtils.degToRad(latitude);
     const points = [];
-    for (let i = 0; i <= 180; i++) {
-      const theta = i / 180 * Math.PI * 2;
-      points.push(new THREE.Vector3(Math.cos(phi) * Math.cos(theta), Math.sin(phi), Math.cos(phi) * Math.sin(theta)).multiplyScalar(1.004));
+    for (let step = 0; step <= 180; step++) points.push(pointAt(-180 + step * 2, latitude, lift));
+    line(points);
+  }
+  for (let longitude = -180; longitude < 180; longitude += 30) {
+    const points = [];
+    for (let step = 0; step <= 90; step++) {
+      points.push(pointAt(longitude, -limit + step * (2 * limit / 90), lift));
     }
     line(points);
   }
-  for (let longitude = 0; longitude < 360; longitude += 30) {
-    const theta = THREE.MathUtils.degToRad(longitude);
-    const points = [];
-    for (let i = 0; i <= 90; i++) {
-      const phi = i / 90 * Math.PI - Math.PI / 2;
-      points.push(new THREE.Vector3(Math.cos(phi) * Math.cos(theta), Math.sin(phi), Math.cos(phi) * Math.sin(theta)).multiplyScalar(1.004));
-    }
-    line(points);
-  }
-  result.visible = false;
+  result.visible = gridVisible;
   return result;
 }
+function fitCamera() {
+  const { width, height } = stage.getBoundingClientRect();
+  if (!width || !height) return;
+  renderer.setSize(width, height);
+  camera.aspect = width / height;
+  if (projection === 'globe') {
+    camera.fov = THREE.MathUtils.radToDeg(
+      2 * Math.atan(Math.tan(THREE.MathUtils.degToRad(21)) / Math.min(1, camera.aspect)));
+  } else {
+    // Hold the sheet at one distance and open the lens until it fits both ways, so a
+    // resize reframes the map without undoing the reader's zoom.
+    const [halfWidth, halfHeight] = PROJECTIONS[projection].half;
+    const tangent = Math.max(halfHeight * 1.08 / FLAT_DISTANCE,
+                             halfWidth * 1.08 / (FLAT_DISTANCE * camera.aspect));
+    camera.fov = THREE.MathUtils.radToDeg(2 * Math.atan(tangent));
+  }
+  camera.updateProjectionMatrix();
+}
 function resetView() {
-  camera.position.set(0, 0.18, 3.45);
-  earth.rotation.set(0, -Math.PI / 2, 0);
+  const globe = projection === 'globe';
+  earth.rotation.set(0, globe ? -Math.PI / 2 : 0, 0);
+  camera.position.set(0, globe ? 0.18 : 0, globe ? 3.45 : FLAT_DISTANCE);
   controls.target.set(0, 0, 0);
+  controls.minDistance = globe ? 1.65 : FLAT_DISTANCE * 0.3;
+  controls.maxDistance = globe ? 5 : FLAT_DISTANCE * 2.2;
   controls.update();
 }
 function init() {
@@ -426,11 +534,12 @@ function init() {
   controls = new OrbitControls(camera, renderer.domElement);
   controls.enableDamping = !reducedMotion;
   controls.enablePan = false;
-  controls.minDistance = 1.65;
-  controls.maxDistance = 5;
+
   controls.autoRotateSpeed = 0.55;
-  earth = new THREE.Mesh(new THREE.SphereGeometry(1, 96, 64), globeMaterial());
-  earth.visible = false;
+  earth = new THREE.Group();
+  surfaceMesh = new THREE.Mesh(new THREE.SphereGeometry(1, 96, 64), globeMaterial());
+  surfaceMesh.visible = false;
+  earth.add(surfaceMesh);
   grid = createGrid();
   earth.add(grid);
   nameLayer = new THREE.Group();
@@ -438,14 +547,7 @@ function init() {
   earth.add(nameLayer);
   scene.add(earth);
   resetView();
-  const observer = new ResizeObserver(() => {
-    const { width, height } = stage.getBoundingClientRect();
-    if (!width || !height) return;
-    renderer.setSize(width, height);
-    camera.aspect = width / height;
-    camera.fov = THREE.MathUtils.radToDeg(2 * Math.atan(Math.tan(THREE.MathUtils.degToRad(21)) / Math.min(1, camera.aspect)));
-    camera.updateProjectionMatrix();
-  });
+  const observer = new ResizeObserver(fitCamera);
   observer.observe(stage);
   let previous = performance.now();
   renderer.setAnimationLoop((time) => {
@@ -462,6 +564,8 @@ function init() {
     status.classList.remove('loaded');
     status.textContent = '그래픽 연결이 끊겼습니다. 페이지를 새로고침해 주세요.';
   });
+  stage.dataset.projection = projection;
+  $('projection').value = projection;
   frames.forEach((frame, index) => $('era').add(new Option(`${frame.label} · ${ageText(frame)}`, index)));
   $('timeline').max = stops.length - 1;
   $('era').addEventListener('change', () => selectFrame(Number($('era').value), true));
@@ -478,8 +582,9 @@ function init() {
     $('rotate').setAttribute('aria-pressed', String(controls.autoRotate));
   });
   $('grid').addEventListener('click', () => {
-    grid.visible = !grid.visible;
-    $('grid').setAttribute('aria-pressed', String(grid.visible));
+    gridVisible = !gridVisible;
+    grid.visible = gridVisible;
+    $('grid').setAttribute('aria-pressed', String(gridVisible));
   });
   if (surfaceToggle) {
     surfaceToggle.addEventListener('click', () => {
@@ -488,15 +593,28 @@ function init() {
       selectStop(stop, true);
     });
   }
+  $('projection').addEventListener('change', () => setProjection($('projection').value));
   $('reset').addEventListener('click', resetView);
   stage.addEventListener('keydown', (event) => {
     const keys = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', '+', '=', '-'];
     if (!keys.includes(event.key)) return;
     event.preventDefault();
-    if (event.key === 'ArrowLeft') earth.rotation.y -= 0.12;
-    if (event.key === 'ArrowRight') earth.rotation.y += 0.12;
-    if (event.key === 'ArrowUp') earth.rotation.x -= 0.12;
-    if (event.key === 'ArrowDown') earth.rotation.x += 0.12;
+    const step = 0.12;
+    if (projection === 'globe') {
+      if (event.key === 'ArrowLeft') earth.rotation.y -= step;
+      if (event.key === 'ArrowRight') earth.rotation.y += step;
+      if (event.key === 'ArrowUp') earth.rotation.x -= step;
+      if (event.key === 'ArrowDown') earth.rotation.x += step;
+    } else {
+      // A sheet has nothing to turn, so the arrows slide the view instead.
+      const pan = camera.position.z * 0.08;
+      const shift = new THREE.Vector3(
+        (event.key === 'ArrowRight' ? 1 : 0) - (event.key === 'ArrowLeft' ? 1 : 0),
+        (event.key === 'ArrowUp' ? 1 : 0) - (event.key === 'ArrowDown' ? 1 : 0), 0).multiplyScalar(pan);
+      camera.position.add(shift);
+      controls.target.add(shift);
+      controls.update();
+    }
     if (['+', '=', '-'].includes(event.key)) {
       camera.position.multiplyScalar(event.key === '-' ? 1.1 : 0.9);
       camera.position.clampLength(controls.minDistance, controls.maxDistance);

@@ -118,6 +118,28 @@ try {
   });
   expect(painted).toBe(true);
   await page.screenshot({path:'data/screenshots/globe-mask.png',fullPage:true});
+  // Projections: each draws a different picture of the same stop, the flat ones have
+  // nothing to spin, and the globe gets its rotation back.
+  const drawn = new Map();
+  for (const name of ['globe', 'mollweide', 'mercator', 'equirect']) {
+    await page.locator('#projection').selectOption(name);
+    await expect(globe).toHaveAttribute('data-projection', name);
+    await expect(globe).toHaveAttribute('aria-busy', 'false');
+    if (name === 'globe') await expect(page.locator('#rotate')).toBeEnabled();
+    else await expect(page.locator('#rotate')).toBeDisabled();
+    drawn.set(name, await page.locator('#globe canvas').screenshot());
+  }
+  const pictures = [...drawn.values()];
+  for (let first = 0; first < pictures.length; first++) {
+    for (let second = first + 1; second < pictures.length; second++) {
+      expect(Buffer.compare(pictures[first], pictures[second])).not.toBe(0);
+    }
+  }
+  await page.locator('#projection').selectOption('mollweide');
+  await expect(globe).toHaveAttribute('data-names', '7');
+  await page.screenshot({path:'data/screenshots/globe-mollweide.png',fullPage:true});
+  await page.locator('#projection').selectOption('globe');
+  await expect(page.locator('#rotate')).toBeEnabled();
   await page.locator('#era').selectOption('8');
   await expect(globe).toHaveAttribute('data-frame','scotese-237');
   await expect(globe).toHaveAttribute('aria-busy','false');

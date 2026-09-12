@@ -11,8 +11,8 @@
     <div class="globe-caption"><span class="live-dot"></span><span id="globe-age">현재</span></div>
     <div id="status" role="status" aria-live="polite">지구본을 준비하고 있습니다…</div>
     <button id="retry" class="retry" hidden>다시 불러오기</button>
-    <div class="globe-toolbar"><button id="rotate" aria-pressed="false">자동 회전</button><button id="grid" aria-pressed="false">격자</button>{% if fields_available %}<button id="surface" aria-pressed="false">대륙 마스크</button>{% endif %}<button id="reset">시점 초기화</button></div>
-    <p class="gesture">드래그로 회전 · 스크롤 / 핀치로 확대</p>
+    <div class="globe-toolbar"><label class="sr-only" for="projection">투영 방식</label><select id="projection" class="toolbar-select"><option value="globe">지구본</option><option value="mollweide">몰바이데 지도</option><option value="mercator">웹 메르카토르</option><option value="equirect">정거원통</option></select><button id="rotate" aria-pressed="false">자동 회전</button><button id="grid" aria-pressed="false">격자</button>{% if fields_available %}<button id="surface" aria-pressed="false">대륙 마스크</button>{% endif %}<button id="reset">시점 초기화</button></div>
+    <p class="gesture" id="gesture">드래그로 회전 · 스크롤 / 핀치로 확대</p>
   </section>
   <aside class="inspector">
     <p class="eyebrow">SELECTED TIME</p><h2 id="period">현재</h2><p id="age" class="age">0 <span>Ma</span></p><p id="source-title">Modern World</p>

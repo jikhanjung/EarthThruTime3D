@@ -120,6 +120,31 @@ between the two positions the segmentation found for it. No plate motion, sea le
 computed, and the intermediate coastline belongs to no reconstruction anyone published.
 Only the stops that land on a source map show what the source drew.
 
+## Projections
+
+A picker in the toolbar chooses what the map is drawn on: the globe, a Mollweide sheet,
+Web Mercator, or plain equirectangular. Mollweide is the one to compare against the
+source, because it is the projection the Scotese maps are assumed to use, so the sheet
+reproduces their layout. Web Mercator is there because it is what web maps look like,
+and because the contrast with Mollweide is itself the lesson: the same landmass covers
+a wildly different share of the picture near the poles.
+
+One shader serves all four. On the globe the geometry's own coordinates already say
+where to sample; on a sheet the fragment undoes the projection to a longitude and
+latitude, then samples the same equirectangular fields. Undoing it is also what decides
+whether a fragment is on the map at all: a Mollweide fragment outside the ellipse is
+discarded rather than painted. Nothing about the data changes with the projection, so an
+interpolated stop morphs the same way on a sheet as on the globe.
+
+The grid is built from parallels and meridians rather than from the mesh, so it curves
+on the globe and on Mollweide and rules straight lines on the other two. Labels are
+placed through the same projection. Mercator is cut at 85.05 degrees, the usual web
+limit, because the projection sends the poles to infinity.
+
+Flat views pan instead of rotating, and auto-rotation is disabled there because a sheet
+has nothing to spin. The sheet is held at one distance and the lens opens until it fits,
+so resizing the window reframes the map without undoing the reader's zoom.
+
 ## Derived surface option
 
 A toolbar toggle, **대륙 마스크**, swaps the source-map texture for the distance field
