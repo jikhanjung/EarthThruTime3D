@@ -107,8 +107,20 @@ function loadMap(frame) {
     prepare(new THREE.CanvasTexture(reproject(await loadImage(frame.url), frame.bounds))));
 }
 function loadField(frame) {
-  return cache(`${frame.id}:field`, async () =>
-    prepare(new THREE.Texture(await loadImage(frame.field), THREE.UVMapping)));
+  // A field is data, not a picture: distance in red, height in green. Decoding it as
+  // an <img> lets the browser colour-manage the bytes on the way to WebGL, which some
+  // engines do even when asked not to, and a shifted distance moves the coastline. An
+  // ImageBitmap decoded with conversion off hands the shader the bytes as written.
+  return cache(`${frame.id}:field`, async () => {
+    const response = await fetch(frame.field);
+    if (!response.ok) throw new Error(`Download failed: ${frame.field}`);
+    const bitmap = await createImageBitmap(await response.blob(), {
+      colorSpaceConversion: 'none', premultiplyAlpha: 'none', imageOrientation: 'flipY',
+    });
+    const texture = prepare(new THREE.Texture(bitmap, THREE.UVMapping));
+    texture.flipY = false;   // already flipped at decode; bitmaps cannot flip on upload
+    return texture;
+  });
 }
 async function loadSurface(frame) {
   if ((surface !== 'map' || !frame.url) && frame.field) {
