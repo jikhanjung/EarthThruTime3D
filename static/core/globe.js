@@ -16,6 +16,10 @@ const OCEAN_COLOUR = [22, 86, 135];
 // observed. The viewer does not care how the stops were spaced, so an even count per
 // map and a fixed span in millions of years both arrive the same way.
 const stops = JSON.parse($('globe-stops').textContent);
+// Per gap, where each matched landmass sits on both of its maps. These are the control
+// points that carry a continent across the gap instead of dissolving it in place.
+const motions = JSON.parse($('globe-motions')?.textContent ?? '[]');
+const MAX_MOTIONS = 16;
 const frameStops = frames.map((frame, index) =>
   stops.findIndex(([from, , blend]) => blend === 0 && from === index));
 // Longitude of the texture's left edge, in the sphere's own sweep. Measured against
@@ -160,6 +164,7 @@ async function selectStop(value, manual = false) {
     uniforms.surfaceB.value = second;
     uniforms.blend.value = place.blend;
     uniforms.masked.value = masked ? 1 : 0;
+    applyMotion(place);
     earth.visible = true;
     showNames(place, masked);
     stage.dataset.frame = place.from.id;
@@ -184,6 +189,17 @@ async function selectStop(value, manual = false) {
 function selectFrame(index, manual = false) {
   return selectStop(frameStops[Math.max(0, Math.min(frames.length - 1, index))], manual);
 }
+function applyMotion(place) {
+  const gap = place.blend > 0 ? motions[frames.indexOf(place.from)] ?? [] : [];
+  const count = Math.min(gap.length, MAX_MOTIONS);
+  for (let index = 0; index < count; index++) {
+    const pair = gap[index];
+    uniforms.motionPoints.value[index].set(pair.lon, pair.lat, pair.to_lon, pair.to_lat);
+    uniforms.motionRadius.value[index] = pair.radius;
+  }
+  uniforms.motionCount.value = count;
+  stage.dataset.motions = String(count);
+}
 function globeMaterial() {
   const linear = (rgb) => new THREE.Color().setRGB(
     rgb[0] / 255, rgb[1] / 255, rgb[2] / 255, THREE.SRGBColorSpace);
@@ -191,6 +207,9 @@ function globeMaterial() {
     surfaceA: { value: null }, surfaceB: { value: null },
     blend: { value: 0 }, masked: { value: 0 },
     land: { value: linear(LAND_COLOUR) }, ocean: { value: linear(OCEAN_COLOUR) },
+    motionCount: { value: 0 },
+    motionPoints: { value: Array.from({ length: MAX_MOTIONS }, () => new THREE.Vector4()) },
+    motionRadius: { value: new Float32Array(MAX_MOTIONS) },
   };
   return new THREE.ShaderMaterial({
     uniforms,
@@ -209,8 +228,34 @@ function globeMaterial() {
       uniform float masked;
       uniform vec3 land;
       uniform vec3 ocean;
+      uniform int motionCount;
+      uniform vec4 motionPoints[${MAX_MOTIONS}];
+      uniform float motionRadius[${MAX_MOTIONS}];
       varying vec2 vUv;
       varying vec3 vGlobeNormal;
+
+      // Where the ground under this texel came from and is going to, in degrees. Each
+      // control point pulls its own neighbourhood by the distance that landmass
+      // travels, with a Gaussian falling off over the piece's own angular size, so
+      // continents move as bodies and the open ocean between them stays put.
+      vec2 travel(vec2 lonlat) {
+        vec2 sum = vec2(0.0);
+        float weight = 0.0;
+        for (int index = 0; index < ${MAX_MOTIONS}; index++) {
+          if (index >= motionCount) break;
+          vec4 point = motionPoints[index];
+          float eastward = mod(lonlat.x - point.x + 540.0, 360.0) - 180.0;
+          float northward = lonlat.y - point.y;
+          float shrink = cos(radians(0.5 * (lonlat.y + point.y)));
+          float span = sqrt(eastward * eastward * shrink * shrink + northward * northward);
+          float radius = max(motionRadius[index], 1.0);
+          float pull = exp(-0.5 * span * span / (radius * radius));
+          sum += pull * vec2(mod(point.z - point.x + 540.0, 360.0) - 180.0, point.w - point.y);
+          weight += pull;
+        }
+        if (weight <= 0.0) return vec2(0.0);
+        return sum / weight * smoothstep(0.05, 0.45, weight);
+      }
       vec3 decode(vec3 colour) {
         return mix(pow((colour + 0.055) / 1.055, vec3(2.4)), colour / 12.92,
                    step(colour, vec3(0.04045)));
@@ -220,8 +265,14 @@ function globeMaterial() {
         if (masked > 0.5) {
           // Both textures hold a signed distance to the coastline. Mixing the distances
           // and cutting at the midpoint moves the coastline; mixing pictures would only
-          // dissolve one into the other.
-          float distance = mix(texture2D(surfaceA, vUv).r, texture2D(surfaceB, vUv).r, blend) - 0.5;
+          // dissolve one into the other. Sampling each side through the travel field
+          // first carries each landmass along its own path, so the coastline morphs
+          // around a continent that is moving rather than melting in place.
+          vec2 shift = travel(vec2((vUv.x - 0.5) * 360.0, (vUv.y - 0.5) * 180.0));
+          vec2 offset = vec2(shift.x / 360.0, shift.y / 180.0);
+          float here = texture2D(surfaceA, vUv - blend * offset).r;
+          float there = texture2D(surfaceB, vUv + (1.0 - blend) * offset).r;
+          float distance = mix(here, there, blend) - 0.5;
           float edge = fwidth(distance) + 0.0012;
           colour = mix(ocean, land, smoothstep(-edge, edge, distance));
         } else {

@@ -33,6 +33,7 @@
 <noscript><p>지구본을 표시하려면 JavaScript를 활성화해 주세요.</p></noscript>
 {{ frames|json_script:'globe-frames' }}
 {{ stops|json_script:'globe-stops' }}
+{{ motions|json_script:'globe-motions' }}
 {% else %}<section class="notice"><h2>고지리 지구본</h2><p>이 실행 환경에서는 연구용 지도 뷰어가 활성화되지 않았습니다.</p></section>{% endif %}
 {% endblock %}
 {% block scripts %}{% if viewer_enabled %}

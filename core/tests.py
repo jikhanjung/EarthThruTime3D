@@ -157,6 +157,52 @@ class GlobeTests(TestCase):
         self.assertEqual(globe_module.timeline([{'age': 7}], {'interval_ma': None, 'steps': 4}),
                          [[0, 0, 0.0, 7]])
 
+    def test_motion_pairs_only_where_a_piece_keeps_its_identity(self):
+        def piece(name, lon, lat, radius=20.0):
+            return {"names": [{"name": name}], "centroid": [lon, lat], "radius_deg": radius}
+
+        frames = [{"id": "a", "age": 100.0}, {"id": "b", "age": 50.0}]
+        pieces = {"a": [piece("대륙", 0, 0)], "b": [piece("대륙", 10, 0)]}
+        gap = globe_module.motions(frames, pieces)[0]
+        self.assertEqual(len(gap), 1)
+        self.assertAlmostEqual(gap[0]["moved"], 10.0, places=3)
+        self.assertEqual(gap[0]["lon"], 0)
+        self.assertEqual(gap[0]["to_lon"], 10)
+
+        # A piece that splits has no single place to travel to.
+        pieces = {"a": [{"names": [{"name": "북"}, {"name": "남"}], "centroid": [0, 0],
+                         "radius_deg": 20.0}],
+                  "b": [piece("북", 20, 20), piece("남", -20, -20)]}
+        self.assertEqual(globe_module.motions(frames, pieces)[0], [])
+
+        # A correspondence implying an impossible plate speed is not movement.
+        near = [{"id": "a", "age": 1.0}, {"id": "b", "age": 0.0}]
+        pieces = {"a": [piece("대륙", 0, 0)], "b": [piece("대륙", 40, 0)]}
+        self.assertEqual(globe_module.motions(near, pieces)[0], [])
+
+        # Islands are too small to carry a continent's morph.
+        pieces = {"a": [piece("섬", 0, 0, radius=1.0)], "b": [piece("섬", 5, 0, radius=1.0)]}
+        self.assertEqual(globe_module.motions(frames, pieces)[0], [])
+
+    def test_motion_pairs_are_capped_and_ordered_by_size(self):
+        frames = [{"id": "a", "age": 400.0}, {"id": "b", "age": 0.0}]
+        pieces = {"a": [], "b": []}
+        for index in range(globe_module.MAX_MOTIONS + 4):
+            radius = 5.0 + index
+            pieces["a"].append({"names": [{"name": str(index)}], "centroid": [0, 0],
+                                "radius_deg": radius})
+            pieces["b"].append({"names": [{"name": str(index)}], "centroid": [1, 0],
+                                "radius_deg": radius})
+        gap = globe_module.motions(frames, pieces)[0]
+        self.assertEqual(len(gap), globe_module.MAX_MOTIONS)
+        self.assertEqual([pair["radius"] for pair in gap],
+                         sorted((pair["radius"] for pair in gap), reverse=True))
+
+    def test_separation_measures_along_the_globe(self):
+        self.assertAlmostEqual(globe_module.separation([0, 0], [0, 0]), 0.0, places=6)
+        self.assertAlmostEqual(globe_module.separation([0, 0], [90, 0]), 90.0, places=4)
+        self.assertAlmostEqual(globe_module.separation([0, 89], [180, 89]), 2.0, places=4)
+
     def test_missing_map_returns_404(self):
         with self.settings(SCOTESE_VIEWER_ENABLED=True):
             with patch('pathlib.Path.open', side_effect=FileNotFoundError):

@@ -385,6 +385,26 @@ def outline(rgb, labels, pieces):
     return Image.fromarray(out)
 
 
+def locate(pieces, labels, bounds, disc_px):
+    """Give each piece a position and an angular size on the globe.
+
+    The centroid is where the piece sits; the interior point is where a label can go
+    without landing offshore. The radius comes from the area, which is meaningful here
+    because Mollweide is equal-area: a piece covering a fraction f of the disc covers
+    the same fraction of the sphere, matching a cap of radius acos(1 - 2f).
+    """
+    for piece in pieces:
+        column, row = piece["centroid_px"]
+        longitude, latitude = inverse_mollweide(column, row, bounds)
+        piece["centroid"] = [round(float(longitude), 3), round(float(latitude), 3)]
+        column, row = interior_point(labels == piece["label"])
+        longitude, latitude = inverse_mollweide(column, row, bounds)
+        piece["interior"] = [round(float(longitude), 3), round(float(latitude), 3)]
+        fraction = min(0.5, piece["area_px"] / max(disc_px, 1))
+        piece["radius_deg"] = round(float(np.degrees(np.arccos(1.0 - 2.0 * fraction))), 3)
+    return pieces
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("map_id", help="source image stem, e.g. 000 or LGM")
@@ -411,6 +431,7 @@ def main():
     labels, pieces = components(land, args.min_area)
     anchors = labels_for(args.map_id)
     unmatched = name_pieces(labels, pieces, anchors, bounds)
+    locate(pieces, labels, bounds, int(inside.sum()))
 
     out_dir = BASE_DIR / args.out
     out_dir.mkdir(parents=True, exist_ok=True)

@@ -65,6 +65,27 @@ moves a coastline: each texel holds its distance to the nearest coast, positive 
 so the midpoint of two distances is the coastline halfway between. Continents grow,
 shrink and drift instead of fading through each other.
 
+Blending two fields in place makes a landmass melt where it was and grow where it will
+be. To move it instead, each side is sampled through a **travel field** first. The
+server pairs the pieces on the two maps that share a name, keeping only one-to-one
+correspondences: a piece the segmentation split or merged across the gap has no single
+place to travel to, so it is dropped rather than read as motion. It also drops any pair
+whose centroids are further apart than 1.5 degrees of arc per million years, about 15
+centimetres a year, which is faster than any plate anyone measures; two maps that
+disagree by more than that disagree for some other reason. What survives is a handful
+of control points per gap, each one a landmass with a start, an end and an angular size
+taken from its area.
+
+The shader turns those points into a displacement for every texel: a Gaussian falling
+off over each piece's own radius, normalised across whichever points reach that texel,
+and faded out where none do. A texel inside Africa moves with Africa; the open ocean
+between continents stays put. The field is sampled at the texel's origin on the older
+map and at its destination on the newer one, so the coastline morphs around a continent
+that is moving rather than one that is melting. At most 16 control points are carried at
+once, which is more than any of these maps needs.
+
+Gaps with no surviving pair, 237 to 195 Ma among them, fall back to blending in place.
+
 `scripts/segment_landmass.py` writes each field as an equirectangular 1024 x 512 PNG,
 land positive around mid-grey at two grey levels per pixel of distance. The distance
 transform is run on the mask tiled three times in longitude so it crosses the
@@ -78,7 +99,8 @@ only one side fades, because the piece it names has no counterpart to move to. P
 walks the sub-steps at the same pace per source map as before, so it reads as motion.
 
 What an interpolated stop shows is neither observation nor reconstruction. It is a
-geometric blend of two published maps. No plate motion, sea level or deformation is
+geometric blend of two published maps, with each landmass carried along a straight path
+between the two positions the segmentation found for it. No plate motion, sea level or deformation is
 computed, and the intermediate coastline belongs to no reconstruction anyone published.
 Only the stops that land on a source map show what the source drew.
 

@@ -78,6 +78,18 @@ try {
   await page.locator('#timeline').dispatchEvent('input');
   await expect(globe).toHaveAttribute('data-blend', '0.50');
   await expect(page.locator('#between-note')).toBeVisible();
+  // A stop inside a gap with matched landmasses carries them; a stop on a source map
+  // has nothing to carry.
+  await page.locator('#timeline').fill('54');
+  await page.locator('#timeline').dispatchEvent('input');
+  await expect(globe).toHaveAttribute('data-blend', '0.50');
+  expect(Number(await globe.getAttribute('data-motions'))).toBeGreaterThan(0);
+  await page.locator('#timeline').fill('52');
+  await page.locator('#timeline').dispatchEvent('input');
+  await expect(globe).toHaveAttribute('data-motions', '0');
+  await page.locator('#timeline').fill('58');
+  await page.locator('#timeline').dispatchEvent('input');
+  await expect(globe).toHaveAttribute('data-blend', '0.50');
   // The notes about the derived surface and the interpolated stop must not resize the
   // globe: the inspector scrolls instead of growing the row.
   const panelWithNotes = await page.locator('.globe-panel').boundingBox();

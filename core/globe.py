@@ -1,5 +1,6 @@
 """Local reference globe catalogue; all asset paths come from the pinned manifest."""
 import json
+import math
 from functools import lru_cache
 from pathlib import Path
 
@@ -33,6 +34,15 @@ KOREAN_LABELS = ["후기 원생대", "후기 캄브리아기", "중기 오르도
 # that script has been run, so the viewer has to work without them.
 SEGMENTATION_DIR = "data/derived/segmentation"
 
+# Control points the morph shader can hold at once. Every map has fewer named pieces
+# than this, so the cap only ever trims the smallest.
+MAX_MOTIONS = 16
+# Fastest plate motion anyone measures is around 15 cm a year, which is 1.5 degrees of
+# arc per million years. A correspondence implying more than that is not movement.
+MAX_DEGREES_PER_MA = 1.5
+# Below this a piece is an island on these maps, too small to carry a continent's morph.
+MIN_MOTION_RADIUS_DEG = 4.0
+
 
 def derived_path(item, suffix):
     stem = Path(item["image"]["path"]).stem
@@ -44,21 +54,6 @@ def field_path(item):
     return derived_path(item, "field.png")
 
 
-def landmass_names(item):
-    """Names to print on the derived globe, one per named piece location.
-
-    Read from the segmentation report rather than stored in the catalogue: the names
-    belong to the pieces the segmentation found, and they move when it is rerun.
-    """
-    path = derived_path(item, "pieces.json")
-    if not path.exists():
-        return []
-    report = json.loads(path.read_text())
-    return [{"name": name["name"], "lon": name["lon"], "lat": name["lat"]}
-            for piece in report.get("pieces", [])
-            for name in piece.get("names", []) if name.get("display", True)]
-
-
 @lru_cache(maxsize=1)
 def catalogue():
     return json.loads((settings.BASE_DIR / "sources/scotese-earth-history.json").read_text())
@@ -66,6 +61,87 @@ def catalogue():
 
 def enabled():
     return settings.SCOTESE_VIEWER_ENABLED
+
+
+def piece_report(item):
+    """The segmentation report's pieces for one map, or an empty list."""
+    path = derived_path(item, "pieces.json")
+    if not path.exists():
+        return []
+    return json.loads(path.read_text()).get("pieces", [])
+
+
+def landmass_names(pieces):
+    return [{"name": name["name"], "lon": name["lon"], "lat": name["lat"]}
+            for piece in pieces for name in piece.get("names", [])
+            if name.get("display", True)]
+
+
+def separation(first, second):
+    """Great-circle separation in degrees between two [lon, lat] points."""
+    lon1, lat1, lon2, lat2 = (math.radians(value) for value in (*first, *second))
+    cosine = (math.sin(lat1) * math.sin(lat2)
+              + math.cos(lat1) * math.cos(lat2) * math.cos(lon2 - lon1))
+    return math.degrees(math.acos(max(-1.0, min(1.0, cosine))))
+
+
+def _matched_pieces(older, newer):
+    """One-to-one piece correspondences between two maps, by shared name.
+
+    A piece that splits or merges across the gap has no single position to travel to,
+    so those correspondences are dropped rather than read as motion.
+    """
+    def by_name(pieces):
+        index = {}
+        for position, piece in enumerate(pieces):
+            for name in piece.get("names", []):
+                index.setdefault(name["name"], position)
+        return index
+
+    forward = by_name(older)
+    backward = by_name(newer)
+    links = {}
+    for name, position in forward.items():
+        if name in backward:
+            links.setdefault(position, set()).add(backward[name])
+    reverse = {}
+    for source, targets in links.items():
+        for target in targets:
+            reverse.setdefault(target, set()).add(source)
+    return [(older[source], newer[next(iter(targets))])
+            for source, targets in links.items()
+            if len(targets) == 1 and len(reverse[next(iter(targets))]) == 1]
+
+
+def motions(frames, pieces_by_frame, limit=MAX_MOTIONS):
+    """Per gap, how far each matched landmass travels, oldest gap first.
+
+    Each entry carries a piece from where it sits on one map to where it sits on the
+    next, so the viewer moves it and blends its outline on the way instead of
+    dissolving the whole map into the following one. Correspondences implying a plate
+    speed nobody measures are dropped: the two maps disagree for some other reason,
+    usually a piece that the segmentation split differently, and reading that as
+    movement would invent a journey.
+    """
+    result = []
+    for older_frame, newer_frame in zip(frames, frames[1:]):
+        span = abs(older_frame["age"] - newer_frame["age"])
+        budget = MAX_DEGREES_PER_MA * span
+        pairs = []
+        for older, newer in _matched_pieces(pieces_by_frame[older_frame["id"]],
+                                            pieces_by_frame[newer_frame["id"]]):
+            radius = max(older.get("radius_deg", 0), newer.get("radius_deg", 0))
+            if radius < MIN_MOTION_RADIUS_DEG:
+                continue
+            travelled = separation(older["centroid"], newer["centroid"])
+            if travelled > budget:
+                continue
+            pairs.append({"lon": older["centroid"][0], "lat": older["centroid"][1],
+                          "to_lon": newer["centroid"][0], "to_lat": newer["centroid"][1],
+                          "radius": round(radius, 3), "moved": round(travelled, 3)})
+        pairs.sort(key=lambda pair: pair["radius"], reverse=True)
+        result.append(pairs[:limit])
+    return result
 
 
 def _first_allowed(values, choices, convert):
@@ -143,19 +219,22 @@ def timeline(frames, plan):
 @require_safe
 def globe(request):
     frames = []
+    pieces_by_frame = {}
     if enabled():
         for item, korean in zip(catalogue()["maps"], KOREAN_LABELS):
+            pieces_by_frame[item["id"]] = piece_report(item)
             frames.append({"id": item["id"], "label": korean, "title": item["image_label"],
                            "age": item["age_ma"], "bounds": BOUNDS[item["id"].removeprefix("scotese-")],
                            "url": reverse("globe-map", args=[item["id"]]),
                            "field": (reverse("globe-field", args=[item["id"]])
                                      if field_path(item).exists() else None),
-                           "names": landmass_names(item),
+                           "names": landmass_names(pieces_by_frame[item["id"]]),
                            "source": item["page"]["url"]})
     plan = sampling(request)
     return render(request, "core/home.html",
                   {"frames": frames, "viewer_enabled": enabled(),
                    "stops": timeline(frames, plan), "sampling": plan,
+                   "motions": motions(frames, pieces_by_frame),
                    "fields_available": any(frame["field"] for frame in frames)})
 
 
