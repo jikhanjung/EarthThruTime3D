@@ -94,6 +94,15 @@ roughly a quarter of the raw land pixels at the edges. The inspector states this
 whenever the mode is active. Pre-Mesozoic maps use a different palette and their masks
 capture only the darker core of each landmass; see `devlog/20260912_003_*` for detail.
 
+## Panel sizing
+
+The notes about the derived surface and about an interpolated stop appear and disappear
+as the viewer is used. Without a definite row height the explorer grid grew with them
+and resized the globe, so the globe panel now has one height per breakpoint and the
+inspector scrolls inside it, with a reserved scrollbar gutter so a scrollbar appearing
+does not shift its text. The browser run asserts the globe panel keeps the same box
+across the plain map, the derived surface and an interpolated stop.
+
 ## Runtime and data boundaries
 
 Three.js modules and their MIT license are vendored locally using `npm run vendor`.

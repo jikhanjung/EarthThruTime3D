@@ -50,11 +50,14 @@ try {
   await page.locator('#era').selectOption('16');
   await expect(globe).toHaveAttribute('data-frame','scotese-000');
   const sourceGlobe = await page.locator('#globe canvas').screenshot();
+  const panelBefore = await page.locator('.globe-panel').boundingBox();
   await page.locator('#surface').click();
   await expect(page.locator('#surface')).toHaveAttribute('aria-pressed','true');
   await expect(globe).toHaveAttribute('aria-busy','false');
   await expect(page.locator('#surface-note')).toBeVisible();
   const maskGlobe = await page.locator('#globe canvas').screenshot();
+  const panelMasked = await page.locator('.globe-panel').boundingBox();
+  expect(panelMasked.height).toBe(panelBefore.height);
   expect(Buffer.compare(sourceGlobe,maskGlobe)).not.toBe(0);
   expect(await page.locator('#source-preview').getAttribute('src')).toContain('/globe/maps/');
   // Names are drawn on the sphere, so assert on the count the viewer reports.
@@ -75,6 +78,13 @@ try {
   await page.locator('#timeline').dispatchEvent('input');
   await expect(globe).toHaveAttribute('data-blend', '0.50');
   await expect(page.locator('#between-note')).toBeVisible();
+  // The notes about the derived surface and the interpolated stop must not resize the
+  // globe: the inspector scrolls instead of growing the row.
+  const panelWithNotes = await page.locator('.globe-panel').boundingBox();
+  expect(panelWithNotes.height).toBe(panelBefore.height);
+  expect(panelWithNotes.width).toBe(panelBefore.width);
+  expect(await page.locator('.inspector').evaluate((node) =>
+    node.scrollHeight > node.clientHeight)).toBe(true);
   expect(await page.locator('#globe-age').textContent()).toContain('보간');
   await page.locator('#timeline').fill('60');
   await page.locator('#timeline').dispatchEvent('input');
