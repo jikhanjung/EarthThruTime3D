@@ -67,3 +67,12 @@ and image route default off in production (`SCOTESE_VIEWER_ENABLED=false`).
 Attribution: C. R. Scotese, PALEOMAP Project, www.scotese.com.
 Reference: Scotese, C. R. (2001), *Atlas of Earth History*, Volume 1, Paleogeography,
 PALEOMAP Project, Arlington, Texas, 52 pp. See the license page for citation guidance.
+
+## PaleoDEM catalogue
+
+`paleodem.json` pins the 1° PALEOMAP PaleoDEMs (Scotese & Wright 2018, Zenodo record
+5460860, CC BY 4.0): 109 elevation/bathymetry grids, 0–540 Ma at 5 Myr, as NetCDF and CSV
+plus the documentation PDF. Fetch or verify with `.venv/bin/python scripts/fetch_paleodem.py`
+(`--verify-only` for offline). Archives unzip into `data/sources/paleodem/{nc,csv}/`
+(gitignored); GPlates cache files are not extracted. Unlike the web JPEGs, these grids
+may be redistributed with attribution.
