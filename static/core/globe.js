@@ -111,14 +111,24 @@ function loadField(frame) {
   // an <img> lets the browser colour-manage the bytes on the way to WebGL, which some
   // engines do even when asked not to, and a shifted distance moves the coastline. An
   // ImageBitmap decoded with conversion off hands the shader the bytes as written.
+  // WebGL only colour-converts DOM image sources; bytes handed over as an array are
+  // uploaded as they are, by specification. So decode to a 2D canvas, read the bytes
+  // back and upload those.
   return cache(`${frame.id}:field`, async () => {
     const response = await fetch(frame.field);
     if (!response.ok) throw new Error(`Download failed: ${frame.field}`);
     const bitmap = await createImageBitmap(await response.blob(), {
-      colorSpaceConversion: 'none', premultiplyAlpha: 'none', imageOrientation: 'flipY',
+      colorSpaceConversion: 'none', premultiplyAlpha: 'none',
     });
-    const texture = prepare(new THREE.Texture(bitmap, THREE.UVMapping));
-    texture.flipY = false;   // already flipped at decode; bitmaps cannot flip on upload
+    const canvas = document.createElement('canvas');
+    canvas.width = bitmap.width;
+    canvas.height = bitmap.height;
+    const context = canvas.getContext('2d', { colorSpace: 'srgb', willReadFrequently: true });
+    context.drawImage(bitmap, 0, 0);
+    bitmap.close();
+    const { data, width, height } = context.getImageData(0, 0, canvas.width, canvas.height);
+    const texture = prepare(new THREE.DataTexture(data, width, height, THREE.RGBAFormat, THREE.UnsignedByteType));
+    texture.flipY = true;   // row 0 of the field is north; the sphere's v runs south to north
     return texture;
   });
 }
