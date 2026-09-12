@@ -10,7 +10,8 @@
   <meta property="og:description" content="지질시대별 고지리를 3차원 지구로 재구성하는 연구 프로젝트">
   <meta name="theme-color" content="#112d35">
   <link rel="icon" href="{% static 'core/favicon.svg' %}" type="image/svg+xml">
-  <link rel="stylesheet" href="{% static 'core/site.css' %}">
+  {# ?v= releases a cached stylesheet on a version bump, so a viewer does not keep an old one. #}
+  <link rel="stylesheet" href="{% static 'core/site.css' %}?v={{ version }}">
   {% block extra_head %}{% endblock %}
 </head>
 <body>

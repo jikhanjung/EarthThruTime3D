@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 {% block title %}고지리 지구본{% endblock %}
-{% block extra_head %}<link rel="stylesheet" href="{% static 'core/globe.css' %}">{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{% static 'core/globe.css' %}?v={{ version }}">{% endblock %}
 {% block content %}
 <div class="viewer-heading"><div><p class="eyebrow">EARTH THROUGH TIME / PALEOMAP</p><h1>시간을 돌려, 지구를 보다.</h1></div><span class="tag">3D 고지리 탐색</span></div>
 {% if viewer_enabled %}
@@ -32,9 +32,10 @@
 </section>
 <noscript><p>지구본을 표시하려면 JavaScript를 활성화해 주세요.</p></noscript>
 {{ frames|json_script:'globe-frames' }}
+{{ stops|json_script:'globe-stops' }}
 {% else %}<section class="notice"><h2>고지리 지구본</h2><p>이 실행 환경에서는 연구용 지도 뷰어가 활성화되지 않았습니다.</p></section>{% endif %}
 {% endblock %}
 {% block scripts %}{% if viewer_enabled %}
-<script type="importmap">{"imports":{"three":"{% static 'vendor/three/three.module.js' %}"}}</script>
-<script type="module" src="{% static 'core/globe.js' %}"></script>
+<script type="importmap">{"imports":{"three":"{% static 'vendor/three/three.module.js' %}","{% static 'core/projection.js' %}":"{% static 'core/projection.js' %}?v={{ version }}"}}</script>
+<script type="module" src="{% static 'core/globe.js' %}?v={{ version }}"></script>
 {% endif %}{% endblock %}

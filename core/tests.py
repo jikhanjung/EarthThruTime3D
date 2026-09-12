@@ -8,6 +8,7 @@ from django.db import OperationalError
 from django.test import RequestFactory, TestCase
 
 from config.version import VERSION
+from core import globe as globe_module
 
 
 class SiteTests(TestCase):
@@ -116,6 +117,45 @@ class GlobeTests(TestCase):
                 path.return_value.exists.return_value = False
                 frames = self.client.get('/').context['frames']
         self.assertEqual([frame['names'] for frame in frames], [[]] * len(frames))
+
+    def test_sampling_falls_back_when_asked_for_something_unlisted(self):
+        request = RequestFactory().get('/', {'steps': '999'})
+        self.assertEqual(globe_module.sampling(request), {'interval_ma': None, 'steps': 4})
+        request = RequestFactory().get('/', {'steps': '16'})
+        self.assertEqual(globe_module.sampling(request), {'interval_ma': None, 'steps': 16})
+        request = RequestFactory().get('/', {'interval': '1'})
+        self.assertEqual(globe_module.sampling(request), {'interval_ma': 1.0, 'steps': None})
+        request = RequestFactory().get('/', {'interval': 'abc', 'steps': '8'})
+        self.assertEqual(globe_module.sampling(request), {'interval_ma': None, 'steps': 8})
+        with self.settings(SCOTESE_VIEWER_STEPS='2'):
+            self.assertEqual(globe_module.sampling()['steps'], 2)
+        with self.settings(SCOTESE_VIEWER_INTERVAL_MA='5'):
+            self.assertEqual(globe_module.sampling()['interval_ma'], 5.0)
+
+    def test_timeline_keeps_every_source_map_as_its_own_stop(self):
+        frames = [{'age': age} for age in [650, 514, 66, 14, 0.018, 0]]
+        for plan in [{'interval_ma': None, 'steps': 1}, {'interval_ma': None, 'steps': 8},
+                     {'interval_ma': 1.0, 'steps': None}, {'interval_ma': 25.0, 'steps': None}]:
+            stops = globe_module.timeline(frames, plan)
+            with self.subTest(plan=plan):
+                ages = [stop[3] for stop in stops]
+                self.assertEqual(ages, sorted(ages, reverse=True))
+                self.assertEqual(stops[0][2], 0.0)
+                self.assertEqual(stops[-1][2], 0.0)
+                observed = {stop[3] for stop in stops if stop[2] == 0.0}
+                for frame in frames:
+                    self.assertIn(frame['age'], observed)
+                for older, newer, blend, age in stops:
+                    self.assertTrue(0.0 <= blend < 1.0)
+                    self.assertTrue(frames[newer]['age'] <= age <= frames[older]['age'])
+
+    def test_timeline_step_count_follows_the_plan(self):
+        frames = [{'age': age} for age in [100, 50, 0]]
+        self.assertEqual(len(globe_module.timeline(frames, {'interval_ma': None, 'steps': 1})), 3)
+        self.assertEqual(len(globe_module.timeline(frames, {'interval_ma': None, 'steps': 4})), 9)
+        self.assertEqual(len(globe_module.timeline(frames, {'interval_ma': 10.0, 'steps': None})), 11)
+        self.assertEqual(globe_module.timeline([{'age': 7}], {'interval_ma': None, 'steps': 4}),
+                         [[0, 0, 0.0, 7]])
 
     def test_missing_map_returns_404(self):
         with self.settings(SCOTESE_VIEWER_ENABLED=True):

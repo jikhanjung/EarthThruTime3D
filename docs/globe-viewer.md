@@ -2,10 +2,10 @@
 
 The home page renders the 17 Scotese reference maps with Three.js 0.186.0. Selectors
 use original image ages from the provenance catalogue, including 356 Ma and 50.2 Ma.
-The slider carries four sub-steps between neighbouring maps, 65 stops in all, so
-dragging it moves rather than jumps. Only every fourth stop is a source map; the three
+The slider carries sub-steps between neighbouring maps, so dragging it moves rather
+than jumps. Only the stops that land on a published map are observations; the ones
 between are interpolated, and the caption, the inspector and the slider's accessible
-value all say so. Interval spacing is still uneven, because the source ages are.
+value all say so.
 
 ## Mapping pipeline
 
@@ -30,6 +30,30 @@ web JPEGs. Ellipse extents are visual estimates. Grid lines use viewer coordinat
 not validated geographic reference coordinates. Seams, polar distortion and baked-in
 annotations remain possible. Source maps are low resolution and contain relief shading,
 not elevation measurements. Do not use this display as a deformation reconstruction.
+
+## Sampling the timeline
+
+The server builds the slider's stops and sends them as `[from frame, to frame, blend,
+age]`, so the viewer consumes a table rather than a rule and does not care how the stops
+were spaced. Two samplings exist:
+
+- `SCOTESE_VIEWER_STEPS` divides every gap into the same number of sub-steps, 1, 2, 4,
+  8, 16 or 32, defaulting to 4, which gives 65 stops over the 17 maps. A stop is then a
+  fraction of the way from one map to the next, regardless of how much time that gap
+  covers, so the slider moves faster through deep time than through the Cenozoic.
+- `SCOTESE_VIEWER_INTERVAL_MA` instead places a stop every so many million years, 0.5,
+  1, 2, 5, 10 or 25, which makes the slider move at a constant rate through time. One
+  stop per million year gives 653 stops. This is the sampling GPlates-style continuous
+  time would want; see `docs/gplates-reference.md`.
+
+The interval wins when both are set. Either way the published map ages are always stops
+of their own, so the slider can still land on what the source actually drew, and the
+blend at every stop is linear in age between the two maps that bracket it. `?steps=` and
+`?interval=` override per request so a density can be tried without a restart; every
+path goes through the same allowlists, so none can hand the slider an odd range.
+
+More stops cost nothing in texture memory. Only 17 fields are ever loaded, whatever the
+sampling; the extra stops are positions between them.
 
 ## Interpolated stops
 

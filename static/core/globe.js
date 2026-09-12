@@ -11,9 +11,13 @@ const textures = new Map();
 // segmented globe is never mistaken for the published map.
 const LAND_COLOUR = [205, 193, 148];
 const OCEAN_COLOUR = [22, 86, 135];
-// Sub-steps the slider inserts between two source maps. Every stop that is not a
-// multiple of this is interpolated, never observed.
-const STEPS = 4;
+// The slider's stops, built by the server as [from frame, to frame, blend, age]. A
+// stop whose blend is zero is a published map; every other stop is interpolated, never
+// observed. The viewer does not care how the stops were spaced, so an even count per
+// map and a fixed span in millions of years both arrive the same way.
+const stops = JSON.parse($('globe-stops').textContent);
+const frameStops = frames.map((frame, index) =>
+  stops.findIndex(([from, , blend]) => blend === 0 && from === index));
 // Longitude of the texture's left edge, in the sphere's own sweep. Measured against
 // the rendered globe rather than derived: the geometry's UV convention and the
 // canvas flip cancel out, so a label goes where the reprojection put its pixels.
@@ -23,7 +27,7 @@ let surface = 'map';
 let nameLayer;
 let nameGroupKey = '';
 let uniforms;
-let stop = (frames.length - 1) * STEPS;
+let stop = stops.length - 1;
 let selected = frames.length - 1;
 let request = 0;
 let playing = false;
@@ -43,8 +47,13 @@ function setPlaying(value) {
 function scheduleNext() {
   // Playback walks the sub-steps so the change reads as motion, at the same pace per
   // source map as before.
-  const total = (frames.length - 1) * STEPS;
-  if (playing) playTimer = setTimeout(() => selectStop(stop >= total ? 0 : stop + 1), 2400 / STEPS);
+  // Playback walks the stops, holding the same pace per source map however densely
+  // the timeline was sampled.
+  const perFrame = (stops.length - 1) / Math.max(1, frames.length - 1);
+  if (playing) {
+    playTimer = setTimeout(() => selectStop(stop >= stops.length - 1 ? 0 : stop + 1),
+                           Math.max(60, 2400 / perFrame));
+  }
 }
 
 function loadImage(source) {
@@ -90,21 +99,21 @@ async function loadSurface(frame) {
   return loadMap(frame);
 }
 function stopAt(value) {
-  const total = (frames.length - 1) * STEPS;
-  const clamped = Math.max(0, Math.min(total, value));
-  const base = Math.min(frames.length - 1, Math.floor(clamped / STEPS));
-  const blend = (clamped - base * STEPS) / STEPS;
-  const next = Math.min(base + 1, frames.length - 1);
-  return { value: clamped, blend, from: frames[base], to: frames[next],
-           index: blend > 0.5 ? next : base };
+  const clamped = Math.max(0, Math.min(stops.length - 1, Math.round(value)));
+  const [from, to, blend, age] = stops[clamped];
+  return { value: clamped, blend, age, from: frames[from], to: frames[to],
+           index: blend > 0.5 ? to : from };
 }
-function blendedAge(place) {
-  return place.from.age + (place.to.age - place.from.age) * place.blend;
+function neighbourStop(direction) {
+  const marks = frameStops.filter((mark) => direction < 0 ? mark < stop : mark > stop);
+  if (!marks.length) return direction < 0 ? 0 : stops.length - 1;
+  return direction < 0 ? Math.max(...marks) : Math.min(...marks);
 }
 function ageLabel(place) {
   if (place.blend === 0) return ageText(place.from);
-  const age = blendedAge(place);
-  return age < 1 ? `${Math.round(age * 1e6).toLocaleString()}년 전` : `${age.toFixed(1)} Ma`;
+  return place.age < 1
+    ? `${Math.round(place.age * 1e6).toLocaleString()}년 전`
+    : `${place.age.toFixed(1)} Ma`;
 }
 function periodLabel(place) {
   return place.blend === 0 ? place.from.label : `${place.from.label} → ${place.to.label}`;
@@ -131,10 +140,10 @@ async function selectStop(value, manual = false) {
   $('source-link').href = anchor.source;
   $('source-preview').src = anchor.url;
   $('source-preview').alt = `${anchor.label} (${ageText(anchor)}) Scotese 원본 지도`;
-  $('older').disabled = stop === 0;
-  $('newer').disabled = stop === (frames.length - 1) * STEPS;
+  $('older').disabled = stop <= frameStops[0];
+  $('newer').disabled = stop >= frameStops[frames.length - 1];
   $('frame-number').textContent = between
-    ? `${ageText(place.from)} → ${ageText(place.to)} 사이`
+    ? `${ageLabel(place)} · 보간`
     : `${selected + 1} / ${frames.length}`;
   if (surfaceToggle) surfaceToggle.disabled = !place.from.field || !place.to.field;
   $('surface-note').hidden = !masked;
@@ -173,7 +182,7 @@ async function selectStop(value, manual = false) {
   }
 }
 function selectFrame(index, manual = false) {
-  return selectStop(index * STEPS, manual);
+  return selectStop(frameStops[Math.max(0, Math.min(frames.length - 1, index))], manual);
 }
 function globeMaterial() {
   const linear = (rgb) => new THREE.Color().setRGB(
@@ -403,11 +412,11 @@ function init() {
     status.textContent = '그래픽 연결이 끊겼습니다. 페이지를 새로고침해 주세요.';
   });
   frames.forEach((frame, index) => $('era').add(new Option(`${frame.label} · ${ageText(frame)}`, index)));
-  $('timeline').max = (frames.length - 1) * STEPS;
+  $('timeline').max = stops.length - 1;
   $('era').addEventListener('change', () => selectFrame(Number($('era').value), true));
   $('timeline').addEventListener('input', () => selectStop(Number($('timeline').value), true));
-  $('older').addEventListener('click', () => selectStop(stop - STEPS, true));
-  $('newer').addEventListener('click', () => selectStop(stop + STEPS, true));
+  $('older').addEventListener('click', () => selectStop(neighbourStop(-1), true));
+  $('newer').addEventListener('click', () => selectStop(neighbourStop(1), true));
   $('retry').addEventListener('click', () => selectStop(stop, true));
   $('play').addEventListener('click', () => {
     setPlaying(!playing);

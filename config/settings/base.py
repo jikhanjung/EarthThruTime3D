@@ -112,6 +112,22 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = Path(os.environ.get('MEDIA_ROOT', BASE_DIR / 'media'))
 INTEGRITY_SENTINEL = Path(DATABASES['default']['NAME']).parent / 'INTEGRITY_FAIL'
 
+# How the globe's timeline is sampled between the published maps.
+#
+# STEPS divides every gap into the same number of sub-steps, so a stop is a fraction of
+# the way from one map to the next regardless of how much time that gap covers.
+# INTERVAL_MA instead places a stop every so many million years, which makes the slider
+# move at a constant rate through time; gaps that cover more time then get more stops.
+# INTERVAL_MA wins when both are set. Either way the published map ages are always
+# stops of their own, so the slider can still land on what the source actually drew.
+#
+# Both are kept as raw strings: core.globe.sampling() validates them against the
+# choices, so a typo in the environment falls back instead of failing at import.
+SCOTESE_VIEWER_STEP_CHOICES = (1, 2, 4, 8, 16, 32)
+SCOTESE_VIEWER_INTERVAL_CHOICES = (0.5, 1.0, 2.0, 5.0, 10.0, 25.0)
+SCOTESE_VIEWER_STEPS = os.environ.get('SCOTESE_VIEWER_STEPS', '4')
+SCOTESE_VIEWER_INTERVAL_MA = os.environ.get('SCOTESE_VIEWER_INTERVAL_MA', '')
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 

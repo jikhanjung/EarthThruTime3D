@@ -68,6 +68,78 @@ def enabled():
     return settings.SCOTESE_VIEWER_ENABLED
 
 
+def _first_allowed(values, choices, convert):
+    for value in values:
+        try:
+            number = convert(value)
+        except (TypeError, ValueError):
+            continue
+        if number in choices:
+            return number
+    return None
+
+
+def sampling(request=None):
+    """How to sample the timeline, from the settings with a per-request override.
+
+    The query overrides exist so a density can be tried without a restart. Every path
+    goes through the same allowlists, so none can hand the slider an odd range.
+    """
+    get = request.GET.get if request is not None else (lambda key: None)
+    interval = _first_allowed((get("interval"), settings.SCOTESE_VIEWER_INTERVAL_MA),
+                              settings.SCOTESE_VIEWER_INTERVAL_CHOICES, float)
+    if interval is not None:
+        return {"interval_ma": interval, "steps": None}
+    count = _first_allowed((get("steps"), settings.SCOTESE_VIEWER_STEPS),
+                           settings.SCOTESE_VIEWER_STEP_CHOICES, int)
+    return {"interval_ma": None, "steps": 4 if count is None else count}
+
+
+def _gap_for(ages, age):
+    """Index of the older map of the pair that brackets `age`. Ages run oldest first."""
+    for index in range(len(ages) - 1):
+        if ages[index] >= age >= ages[index + 1]:
+            return index
+    return 0 if age > ages[0] else len(ages) - 2
+
+
+def _stop(ages, age):
+    index = _gap_for(ages, age)
+    older, newer = ages[index], ages[index + 1]
+    span = older - newer
+    blend = 0.0 if span == 0 else (older - age) / span
+    if blend >= 1.0:
+        return [index + 1, index + 1, 0.0, round(newer, 4)]
+    return [index, index + 1, round(blend, 5), round(age, 4)]
+
+
+def timeline(frames, plan):
+    """The slider's stops as [from frame, to frame, blend, age].
+
+    Sending the stops rather than a rule lets the sampling change without the viewer
+    knowing how it was produced, and lets an uneven grid, such as one stop per million
+    years, sit beside the even one.
+    """
+    ages = [frame["age"] for frame in frames]
+    if len(ages) < 2:
+        return [[0, 0, 0.0, ages[0]]] if ages else []
+    if plan["interval_ma"]:
+        marks = set(ages)
+        age = ages[0]
+        while age > ages[-1]:
+            age = max(ages[-1], age - plan["interval_ma"])
+            marks.add(round(age, 4))
+        return [_stop(ages, age) for age in sorted(marks, reverse=True)]
+    stops = []
+    for index in range(len(ages) - 1):
+        for step in range(plan["steps"]):
+            blend = step / plan["steps"]
+            stops.append([index, index + 1, round(blend, 5),
+                          round(ages[index] + (ages[index + 1] - ages[index]) * blend, 4)])
+    stops.append([len(ages) - 1, len(ages) - 1, 0.0, ages[-1]])
+    return stops
+
+
 @require_safe
 def globe(request):
     frames = []
@@ -80,8 +152,10 @@ def globe(request):
                                      if field_path(item).exists() else None),
                            "names": landmass_names(item),
                            "source": item["page"]["url"]})
+    plan = sampling(request)
     return render(request, "core/home.html",
                   {"frames": frames, "viewer_enabled": enabled(),
+                   "stops": timeline(frames, plan), "sampling": plan,
                    "fields_available": any(frame["field"] for frame in frames)})
 
 

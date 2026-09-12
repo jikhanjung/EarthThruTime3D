@@ -11,3 +11,11 @@ header,main,footer{max-width:1440px}main{padding-top:26px;padding-bottom:32px}.v
 @media(min-width:1400px){.explorer{--panel-height:720px}}
 @media(max-width:850px){.explorer{--panel-height:650px}}
 @media(max-width:640px){.explorer{grid-template-rows:none}.globe-panel{min-height:440px}.inspector{overflow:visible}}
+
+/* The timeline header centres the play button on the panel, not between its
+   neighbours: the age readout changes width as the slider moves, and a flex row let
+   that shift the button. Equal side columns hold it still. */
+.timeline-top{display:grid;grid-template-columns:1fr auto 1fr;align-items:center}
+.timeline-top>span:first-child{justify-self:start}
+.timeline-top>span:last-child{justify-self:end;text-align:right}
+.timeline-top>span{min-width:0}
