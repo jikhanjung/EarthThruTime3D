@@ -3,8 +3,8 @@
 고지리 자료를 바탕으로 지구 역사를 3D로 재구성하는 PaleoBytes 연구 프로젝트입니다.
 첫 목표는 시대별 지표면 시각화이며, 이후 지각 이동·변형과 맨틀 대류로 확장합니다.
 
-현재는 **Django 5.2 초기 웹 기반**입니다. Scotese 고지도 17장을 로컬 연구 자료로 수집했으며,
-3D 뷰어와 보간·물리 엔진은 아직 없습니다.
+현재는 **Django 5.2 + Three.js 고지리 지구본 뷰어**입니다. Scotese 고지도 17장을
+회전·확대하고 시대별로 탐색할 수 있습니다. 보간·물리 엔진은 아직 없습니다.
 
 ## 로컬 실행
 
@@ -29,7 +29,25 @@ uv를 사용한다면 설치 명령은 `uv pip install --python .venv/bin/python
 ```bash
 make check
 make test
+npm ci
+npm test
+# 개발 서버를 실행한 상태에서 (필요시 npx playwright install chromium):
+npm run test:browser
 ```
+
+## 지구본 조작
+
+홈에서 드래그로 회전하고 휠·핀치로 확대합니다. 시대 선택 메뉴 또는 타임라인으로
+17개 시점을 바꿀 수 있습니다. 자동 회전·격자·시대 순서 재생·시점 초기화를 지원합니다.
+지구본에 키보드 포커스를 두면 방향키로 회전, `+`/`-`로 확대·축소합니다.
+
+지도는 Mollweide 투영을 가정한 **근사 변환**이며, 원본의 지명·경계선이 남아 있습니다.
+고도나 지각 운동을 계산하지 않습니다. 원본 투영법과 중앙경선은 아직 확정되지 않았습니다.
+[변환 구현과 한계](docs/globe-viewer.md)를 참고하세요.
+
+Three.js 0.186.0과 MIT 라이선스는 `static/vendor/three/`에 포함됩니다.
+일반 실행에는 npm이나 외부 CDN이 필요하지 않습니다. 라이브러리를 갱신할 때
+`npm ci && npm run vendor`로 파일을 동기화합니다.
 
 ## 구성
 
@@ -52,7 +70,8 @@ make test
 ## 자료와 라이선스
 
 [초기 자료 목록](sources/README.md)에 Scotese.com 고지도 17장의 출처·연대·검증 방법을 정리했습니다.
-원본은 `data/sources/scotese/`에 로컬 저장하며 Git과 웹 배포에서 제외합니다.
+원본은 `data/sources/scotese/`에 로컬 저장하며 Git에서 제외합니다.
+개발용 지구본은 목록에 등록된 JPEG만 제공합니다. 운영 설정에서는 기본 비활성화합니다.
 새 체크아웃에서는 `.venv/bin/python scripts/fetch_scotese.py`로 동일 자료를 받을 수 있습니다.
 첫 개발 기록은 [devlog](devlog/20260912_001_project_initialization.md)에 있습니다.
 이 프로젝트의 소프트웨어 라이선스는 아직 지정하지 않았습니다.

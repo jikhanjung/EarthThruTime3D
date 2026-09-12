@@ -1,0 +1,6 @@
+# Offline map-processing tools. Not imported by the Django app or its tests;
+# install separately when running scripts/segment_landmass.py.
+numpy==2.4.6
+pillow==12.3.0
+scipy==1.17.1
+scikit-image==0.26.0

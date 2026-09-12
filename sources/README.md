@@ -60,7 +60,9 @@ The site's [license information](http://www.scotese.com/license.htm) permits cre
 personal, teaching, research and scientific-publication uses, while reserving commercial
 uses for written consent. It also discusses Internet websites among restricted uses.
 This catalogue is for local research; no public redistribution permission is assumed.
-Original images and page snapshots are not committed or served by Django.
+Original images and page snapshots are not committed. The local development viewer
+serves only the 17 allowlisted JPEGs; page snapshots remain inaccessible. The viewer
+and image route default off in production (`SCOTESE_VIEWER_ENABLED=false`).
 
 Attribution: C. R. Scotese, PALEOMAP Project, www.scotese.com.
 Reference: Scotese, C. R. (2001), *Atlas of Earth History*, Volume 1, Paleogeography,

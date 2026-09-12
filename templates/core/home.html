@@ -1,12 +1,40 @@
 {% extends 'base.html' %}
+{% load static %}
+{% block title %}고지리 지구본{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{% static 'core/globe.css' %}">{% endblock %}
 {% block content %}
-<p class="eyebrow">PALEOGEOGRAPHY · THROUGH DEEP TIME</p>
-<h1>지구의 역사를,<br>입체적으로.</h1>
-<p class="lead">과거의 대륙과 바다가 어떤 모습이었는지, 지각이 어떻게 움직이고 변형되었는지 탐색합니다.</p>
-<section class="notice"><h2>프로젝트 초기화 단계</h2><p>현재 웹 기반을 준비했습니다. 고지리 데이터와 3D 뷰어는 다음 단계에서 연결합니다.</p></section>
-<div class="cards">
-<section><p class="eyebrow">01 · 첫 목표</p><h2>고지리 3D 재구성</h2><p>시대별 지도를 구면 위에 배치하고 대륙과 해양의 변화를 살펴봅니다.</p></section>
-<section><p class="eyebrow">02 · 확장</p><h2>운동과 변형</h2><p>1만 년 간격의 보간부터 대륙 충돌과 산맥 형성의 근사 모델까지 확장합니다.</p></section>
-<section><p class="eyebrow">03 · 장기 목표</p><h2>지구 내부와 연결</h2><p>맨틀 대류와 지각 운동을 함께 다루는 모델을 탐구합니다.</p></section>
+<div class="viewer-heading"><div><p class="eyebrow">EARTH THROUGH TIME / PALEOMAP</p><h1>시간을 돌려, 지구를 보다.</h1></div><span class="tag">3D 고지리 탐색</span></div>
+{% if viewer_enabled %}
+<div class="explorer">
+  <section class="globe-panel" aria-label="회전 가능한 3D 지구본">
+    <div id="globe" tabindex="0" role="img" aria-label="고지리 지구본. 마우스 또는 방향키로 회전, 휠이나 더하기 빼기 키로 확대 축소."></div>
+    <div class="globe-caption"><span class="live-dot"></span><span id="globe-age">현재</span></div>
+    <div id="status" role="status" aria-live="polite">지구본을 준비하고 있습니다…</div>
+    <button id="retry" class="retry" hidden>다시 불러오기</button>
+    <div class="globe-toolbar"><button id="rotate" aria-pressed="false">자동 회전</button><button id="grid" aria-pressed="false">격자</button>{% if fields_available %}<button id="surface" aria-pressed="false">대륙 마스크</button>{% endif %}<button id="reset">시점 초기화</button></div>
+    <p class="gesture">드래그로 회전 · 스크롤 / 핀치로 확대</p>
+  </section>
+  <aside class="inspector">
+    <p class="eyebrow">SELECTED TIME</p><h2 id="period">현재</h2><p id="age" class="age">0 <span>Ma</span></p><p id="source-title">Modern World</p>
+    <label for="era">지질시대 선택</label><select id="era"></select>
+    <div class="step-buttons"><button id="older">← 더 과거</button><button id="newer">더 현재 →</button></div>
+    <figure class="source-preview"><img id="source-preview" alt="선택한 시대의 Scotese 원본 지도"><figcaption>원본 지도 · <a id="source-link" target="_blank" rel="noopener">출처 보기 ↗</a></figcaption></figure>
+    <p class="model-note">지도를 구면으로 옮긴 근사 시각화입니다. 원본의 지명·경계선이 남아 있으며, 실제 지형 높이와 판 운동을 계산한 모델은 아닙니다.</p>
+    <p class="model-note derived" id="surface-note" hidden>대륙 마스크 표시 중입니다. 원본 지도의 색을 분할해 육지와 바다 둘로만 칠한 결과이며, 원본이 그린 해안선 자체가 아니라 해석입니다. 대륙붕은 바다로 둡니다.</p>
+    <p class="model-note derived" id="between-note" hidden>원본 시점 사이를 보간한 화면입니다. 두 시점의 해안선 거리장을 섞어 만든 중간 형태이며, 실제 지각 운동이나 해수면 변화를 계산한 것이 아닙니다.</p>
+    <details><summary>변환 방식과 자료</summary><p>Mollweide 투영을 가정해 지도 영역을 구면으로 변환했습니다. 원본 투영법과 중앙경선은 미확정이며, 격자는 시각적 참고용입니다. 시대 전환은 원본 17장을 순서대로 보여줍니다.</p><p>C. R. Scotese · PALEOMAP Project<br><a href="http://www.scotese.com/license.htm" target="_blank" rel="noopener">이용 안내</a></p></details>
+  </aside>
 </div>
+<section class="timeline" aria-label="시대 탐색">
+  <div class="timeline-top"><span>지구의 시간</span><button id="play" aria-pressed="false">▶ 시대 순서 재생</button><span id="frame-number">17 / 17</span></div>
+  <input type="range" id="timeline" min="0" max="16" value="16" step="1" aria-label="시대별 지도 선택">
+  <div class="timeline-labels"><span>650 Ma · 과거</span><span>원본 17개 시점 · 사이는 보간 · 시대 간 간격은 일정하지 않음</span><span>현재 · 0 Ma</span></div>
+</section>
+<noscript><p>지구본을 표시하려면 JavaScript를 활성화해 주세요.</p></noscript>
+{{ frames|json_script:'globe-frames' }}
+{% else %}<section class="notice"><h2>고지리 지구본</h2><p>이 실행 환경에서는 연구용 지도 뷰어가 활성화되지 않았습니다.</p></section>{% endif %}
 {% endblock %}
+{% block scripts %}{% if viewer_enabled %}
+<script type="importmap">{"imports":{"three":"{% static 'vendor/three/three.module.js' %}"}}</script>
+<script type="module" src="{% static 'core/globe.js' %}"></script>
+{% endif %}{% endblock %}

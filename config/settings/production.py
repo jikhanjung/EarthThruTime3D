@@ -3,6 +3,7 @@ from django.core.exceptions import ImproperlyConfigured
 from .base import *  # noqa: F403
 
 DEBUG = False
+SCOTESE_VIEWER_ENABLED = os.environ.get("SCOTESE_VIEWER_ENABLED", "false").lower() == "true"
 SECRET_KEY = os.environ.get("SECRET_KEY", "")
 ALLOWED_HOSTS = [h.strip() for h in os.environ.get("ALLOWED_HOSTS", "").split(",") if h.strip()]
 if len(SECRET_KEY) < 50 or SECRET_KEY.startswith("django-insecure-"):

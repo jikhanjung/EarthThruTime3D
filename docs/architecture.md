@@ -10,9 +10,10 @@
    India–Eurasia collision and Himalayan uplift as a candidate case study.
 4. Mantle coupling: add a separately validated solver and boundary conditions.
 
-The Django shell is implemented. Seventeen Scotese Earth History map images have been
-collected locally with a versioned provenance catalogue in `sources/`. No georeferenced
-dataset, geological model, renderer or solver has been implemented.
+The Django shell and a Three.js reference globe are implemented. Seventeen Scotese
+Earth History images are collected locally with a versioned provenance catalogue in
+`sources/`. The viewer uses an approximate Mollweide mapping; no validated georeferenced
+dataset, geological model or solver has been implemented. See `globe-viewer.md`.
 
 ## Proposed boundaries
 

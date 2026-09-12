@@ -1,0 +1,12 @@
+{
+  "name": "earththrutime3d-viewer",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "vendor": "node scripts/vendor-three.mjs",
+    "test": "node --test tests/projection.test.mjs",
+    "test:browser": "node tests/globe-browser.mjs"
+  },
+  "dependencies": {"three": "0.186.0"},
+  "devDependencies": {"@playwright/test": "1.58.2"}
+}
