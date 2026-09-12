@@ -1,0 +1,443 @@
+{
+  "schema_version": 1,
+  "dataset": "Scotese PALEOMAP Earth History web maps",
+  "author": "Christopher R. Scotese / PALEOMAP Project",
+  "retrieved_at": "2026-09-12T05:52:13.929376+00:00",
+  "source_index": {
+    "url": "http://www.scotese.com/earth.htm",
+    "path": "data/sources/scotese/pages/earth.htm",
+    "bytes": 8215,
+    "sha256": "70f27d27a39519f0f69d76740b059c5ff65368cafc0d76d6df0dc466312f34a7"
+  },
+  "license_page": {
+    "url": "http://www.scotese.com/license.htm",
+    "path": "data/sources/scotese/pages/license.htm",
+    "bytes": 11794,
+    "sha256": "f1cf8b587aad0557e6037c32214afcde2209bbf9d277a097c21314c4a4905afc"
+  },
+  "usage": "Local research reference; original assets excluded from Git and public serving. See sources/README.md.",
+  "transport_note": "HTTP used because both scotese.com and www.scotese.com HTTPS certificates did not match the requested hostname. Checksums identify retrieved bytes, not upstream authenticity.",
+  "projection": {
+    "name": null,
+    "status": "not georeferenced; projection and central meridian require verification per map"
+  },
+  "processing": "Original image bytes retained, no reprojection or cropping. Source labels preserved; not normalized to a current stratigraphic timescale.",
+  "maps": [
+    {
+      "id": "scotese-650",
+      "source_page_label": "Precambrian",
+      "image_label": "Late Proterozoic",
+      "age_years_before_present": 650000000,
+      "age_ma": 650.0,
+      "age_basis": "image title visually verified",
+      "image": {
+        "url": "http://www.scotese.com/images/650.jpg",
+        "path": "data/sources/scotese/images/650.jpg",
+        "bytes": 121178,
+        "sha256": "8d15533266597e98217814ae11a6b94859a68eca07968808c92954a6519473d7",
+        "width": 720,
+        "height": 455,
+        "media_type": "image/jpeg"
+      },
+      "page": {
+        "url": "http://www.scotese.com/precambr.htm",
+        "path": "data/sources/scotese/pages/precambr.htm",
+        "bytes": 1592,
+        "sha256": "d77e7873f2b056ff08e4d19f8f7b40c0b098e6fecaa661db5c27597ade70b784"
+      },
+      "notes": []
+    },
+    {
+      "id": "scotese-514",
+      "source_page_label": "Cambrian",
+      "image_label": "Late Cambrian",
+      "age_years_before_present": 514000000,
+      "age_ma": 514.0,
+      "age_basis": "image title visually verified",
+      "image": {
+        "url": "http://www.scotese.com/images/514.jpg",
+        "path": "data/sources/scotese/images/514.jpg",
+        "bytes": 130509,
+        "sha256": "bc8b2f4b0fcb2a5d93d0b24b14a77c82035912fb35d1d9801392dc4da4e94a9b",
+        "width": 720,
+        "height": 455,
+        "media_type": "image/jpeg"
+      },
+      "page": {
+        "url": "http://www.scotese.com/newpage12.htm",
+        "path": "data/sources/scotese/pages/newpage12.htm",
+        "bytes": 1939,
+        "sha256": "8f34ea477af3d372ae9af899b0a5146aa78d843a8d906f8e3d4999de3211df8f"
+      },
+      "notes": []
+    },
+    {
+      "id": "scotese-458",
+      "source_page_label": "Ordovician",
+      "image_label": "Middle Ordovician",
+      "age_years_before_present": 458000000,
+      "age_ma": 458.0,
+      "age_basis": "image title visually verified",
+      "image": {
+        "url": "http://www.scotese.com/images/458.jpg",
+        "path": "data/sources/scotese/images/458.jpg",
+        "bytes": 137225,
+        "sha256": "972cab8a3f2e658ca235dd08cd314ccf4739956c68991a046baba58a6a71cc5a",
+        "width": 720,
+        "height": 456,
+        "media_type": "image/jpeg"
+      },
+      "page": {
+        "url": "http://www.scotese.com/newpage1.htm",
+        "path": "data/sources/scotese/pages/newpage1.htm",
+        "bytes": 1668,
+        "sha256": "2feeece9fe94ff87f507038749f4fbd57606613d1a63779b520dcb9690f48089"
+      },
+      "notes": []
+    },
+    {
+      "id": "scotese-425",
+      "source_page_label": "Silurian",
+      "image_label": "Middle Silurian",
+      "age_years_before_present": 425000000,
+      "age_ma": 425.0,
+      "age_basis": "image title visually verified",
+      "image": {
+        "url": "http://www.scotese.com/images/425.jpg",
+        "path": "data/sources/scotese/images/425.jpg",
+        "bytes": 129955,
+        "sha256": "7f91709c4ce5e2263359f664114ba8373245d339b208aaeca57c9e120901c232",
+        "width": 720,
+        "height": 455,
+        "media_type": "image/jpeg"
+      },
+      "page": {
+        "url": "http://www.scotese.com/newpage2.htm",
+        "path": "data/sources/scotese/pages/newpage2.htm",
+        "bytes": 1649,
+        "sha256": "3dfc7cbb6a6f01fb83719bf9a308600dab610cbf64dc85cfccb3fefcf2fb0263"
+      },
+      "notes": []
+    },
+    {
+      "id": "scotese-390",
+      "source_page_label": "Devonian",
+      "image_label": "Early Devonian",
+      "age_years_before_present": 390000000,
+      "age_ma": 390.0,
+      "age_basis": "image title visually verified",
+      "image": {
+        "url": "http://www.scotese.com/images/390.jpg",
+        "path": "data/sources/scotese/images/390.jpg",
+        "bytes": 120845,
+        "sha256": "ff19ce82ed82a8b44959f32120e66aa24c1d5df4c02ed6db83f570dcb60f80a9",
+        "width": 720,
+        "height": 455,
+        "media_type": "image/jpeg"
+      },
+      "page": {
+        "url": "http://www.scotese.com/newpage3.htm",
+        "path": "data/sources/scotese/pages/newpage3.htm",
+        "bytes": 1702,
+        "sha256": "0ac64449feb396c68dab43a576210c515c3f2d1b1c83aa683054763136a26569"
+      },
+      "notes": []
+    },
+    {
+      "id": "scotese-342",
+      "source_page_label": "Early Carboniferous",
+      "image_label": "Early Carboniferous",
+      "age_years_before_present": 356000000,
+      "age_ma": 356.0,
+      "age_basis": "image title visually verified",
+      "image": {
+        "url": "http://www.scotese.com/images/342.jpg",
+        "path": "data/sources/scotese/images/342.jpg",
+        "bytes": 128139,
+        "sha256": "818c4e9c7f1e1c860f4fac9c4dea76e95355c58f48ae1703adb69be6cbc3450b",
+        "width": 720,
+        "height": 455,
+        "media_type": "image/jpeg"
+      },
+      "page": {
+        "url": "http://www.scotese.com/newpage4.htm",
+        "path": "data/sources/scotese/pages/newpage4.htm",
+        "bytes": 1763,
+        "sha256": "742b6787293263951462ff557436ca39fc4e0fb111f999321db56ec0960ee193"
+      },
+      "notes": [
+        "Filename says 342; image title says 356 Ma. Image title takes precedence."
+      ]
+    },
+    {
+      "id": "scotese-306",
+      "source_page_label": "Late Carboniferous",
+      "image_label": "Late Carboniferous",
+      "age_years_before_present": 306000000,
+      "age_ma": 306.0,
+      "age_basis": "image title visually verified",
+      "image": {
+        "url": "http://www.scotese.com/images/306.jpg",
+        "path": "data/sources/scotese/images/306.jpg",
+        "bytes": 127699,
+        "sha256": "498b3115d40c75474062d42e78b94bbba8a1d9be686989c45d66d87a6d844a68",
+        "width": 720,
+        "height": 456,
+        "media_type": "image/jpeg"
+      },
+      "page": {
+        "url": "http://www.scotese.com/late.htm",
+        "path": "data/sources/scotese/pages/late.htm",
+        "bytes": 1658,
+        "sha256": "2b9c2b0ff778385978ba6f399bad8c8f09c575be39359eba65162e3ff804d36a"
+      },
+      "notes": []
+    },
+    {
+      "id": "scotese-255",
+      "source_page_label": "Permian",
+      "image_label": "Late Permian",
+      "age_years_before_present": 255000000,
+      "age_ma": 255.0,
+      "age_basis": "image title visually verified",
+      "image": {
+        "url": "http://www.scotese.com/images/255.jpg",
+        "path": "data/sources/scotese/images/255.jpg",
+        "bytes": 119462,
+        "sha256": "6e8b813d8ce5a0ab4ae087675ed788c995a22ff69f5c31bc431920171ceb8c36",
+        "width": 720,
+        "height": 456,
+        "media_type": "image/jpeg"
+      },
+      "page": {
+        "url": "http://www.scotese.com/newpage5.htm",
+        "path": "data/sources/scotese/pages/newpage5.htm",
+        "bytes": 1622,
+        "sha256": "e9966fe49b358be01e8af088c854bfb9beb8f3f2f56bca059b6cac33776e6496"
+      },
+      "notes": []
+    },
+    {
+      "id": "scotese-237",
+      "source_page_label": "Triassic",
+      "image_label": "Early Triassic",
+      "age_years_before_present": 237000000,
+      "age_ma": 237.0,
+      "age_basis": "image title visually verified",
+      "image": {
+        "url": "http://www.scotese.com/images/237.jpg",
+        "path": "data/sources/scotese/images/237.jpg",
+        "bytes": 125185,
+        "sha256": "238a2fc14c110db22e08bfa71455ace0b024309ae8fea94e0d29c44a770cbabd",
+        "width": 720,
+        "height": 456,
+        "media_type": "image/jpeg"
+      },
+      "page": {
+        "url": "http://www.scotese.com/newpage8.htm",
+        "path": "data/sources/scotese/pages/newpage8.htm",
+        "bytes": 1776,
+        "sha256": "5a4cc99ae76a8987d565a06592c9a917d1dc5c12420cddb7452a0c9e41b7f1a4"
+      },
+      "notes": []
+    },
+    {
+      "id": "scotese-195",
+      "source_page_label": "Jurassic",
+      "image_label": "Early Jurassic",
+      "age_years_before_present": 195000000,
+      "age_ma": 195.0,
+      "age_basis": "image title visually verified",
+      "image": {
+        "url": "http://www.scotese.com/images/195.jpg",
+        "path": "data/sources/scotese/images/195.jpg",
+        "bytes": 117442,
+        "sha256": "c6a9d00950409f905d6db864dca9f9e184568baae98cf59b768e4e633a1f513e",
+        "width": 720,
+        "height": 456,
+        "media_type": "image/jpeg"
+      },
+      "page": {
+        "url": "http://www.scotese.com/jurassic.htm",
+        "path": "data/sources/scotese/pages/jurassic.htm",
+        "bytes": 1736,
+        "sha256": "5b3ad210f3a8ac26ef2e62ba15024346773de73fcd5be8c2aa327d004cc2299a"
+      },
+      "notes": []
+    },
+    {
+      "id": "scotese-152",
+      "source_page_label": "Late Jurassic",
+      "image_label": "Late Jurassic",
+      "age_years_before_present": 152000000,
+      "age_ma": 152.0,
+      "age_basis": "image title visually verified",
+      "image": {
+        "url": "http://www.scotese.com/images/152.jpg",
+        "path": "data/sources/scotese/images/152.jpg",
+        "bytes": 121136,
+        "sha256": "bd637b50ec55220145d15ce997acca77b66242217d81cbf353553085ce2fb60e",
+        "width": 720,
+        "height": 455,
+        "media_type": "image/jpeg"
+      },
+      "page": {
+        "url": "http://www.scotese.com/late1.htm",
+        "path": "data/sources/scotese/pages/late1.htm",
+        "bytes": 1760,
+        "sha256": "5a84950582cd8aaa7e4eb3a08f8d51e06e1455e4b73d5a399b58318835c609f6"
+      },
+      "notes": []
+    },
+    {
+      "id": "scotese-094",
+      "source_page_label": "Cretaceous",
+      "image_label": "Late Cretaceous",
+      "age_years_before_present": 94000000,
+      "age_ma": 94.0,
+      "age_basis": "image title visually verified",
+      "image": {
+        "url": "http://www.scotese.com/images/094.jpg",
+        "path": "data/sources/scotese/images/094.jpg",
+        "bytes": 122794,
+        "sha256": "4d9fff22b09c2586c7795744789022cf743b027e77ffcadf22b90e9b30fd8918",
+        "width": 720,
+        "height": 455,
+        "media_type": "image/jpeg"
+      },
+      "page": {
+        "url": "http://www.scotese.com/cretaceo.htm",
+        "path": "data/sources/scotese/pages/cretaceo.htm",
+        "bytes": 1737,
+        "sha256": "9f856082d0598eb5a5817c32aea69fc6994ac940118839c3223dd1cff1d4ef8b"
+      },
+      "notes": []
+    },
+    {
+      "id": "scotese-066",
+      "source_page_label": "K/T extinction",
+      "image_label": "K/T Boundary",
+      "age_years_before_present": 66000000,
+      "age_ma": 66.0,
+      "age_basis": "image title visually verified",
+      "image": {
+        "url": "http://www.scotese.com/images/066.jpg",
+        "path": "data/sources/scotese/images/066.jpg",
+        "bytes": 121854,
+        "sha256": "6929b92dace0a559cced7c014a1e1c16513046e1c0ee90ab5b05d6b6ad8b1988",
+        "width": 720,
+        "height": 456,
+        "media_type": "image/jpeg"
+      },
+      "page": {
+        "url": "http://www.scotese.com/K/t.htm",
+        "path": "data/sources/scotese/pages/K_t.htm",
+        "bytes": 1817,
+        "sha256": "2974ea8cc7f4517970d1e8313a91f2bf30719759f9b2913e4bd0081cb546f383"
+      },
+      "notes": []
+    },
+    {
+      "id": "scotese-050",
+      "source_page_label": "Eocene",
+      "image_label": "Middle Eocene",
+      "age_years_before_present": 50200000,
+      "age_ma": 50.2,
+      "age_basis": "image title visually verified",
+      "image": {
+        "url": "http://www.scotese.com/images/050.jpg",
+        "path": "data/sources/scotese/images/050.jpg",
+        "bytes": 121908,
+        "sha256": "87b3599048aec25efcb3e3d13dfb2d1f03bef89b380b2836be09638c66382822",
+        "width": 720,
+        "height": 455,
+        "media_type": "image/jpeg"
+      },
+      "page": {
+        "url": "http://www.scotese.com/newpage9.htm",
+        "path": "data/sources/scotese/pages/newpage9.htm",
+        "bytes": 1717,
+        "sha256": "454ebcfbfde10cba5bcc8905c0b62d9db52298531d0332bbbf2c8e3054420227"
+      },
+      "notes": [
+        "Filename says 050; image title says 50.2 Ma. Image title takes precedence."
+      ]
+    },
+    {
+      "id": "scotese-014",
+      "source_page_label": "Miocene",
+      "image_label": "Middle Miocene",
+      "age_years_before_present": 14000000,
+      "age_ma": 14.0,
+      "age_basis": "image title visually verified",
+      "image": {
+        "url": "http://www.scotese.com/images/014.jpg",
+        "path": "data/sources/scotese/images/014.jpg",
+        "bytes": 125052,
+        "sha256": "dd117cfafa8a422d99d7d95956bc78fac7a6d5841f1653cc4f588d2d8d963e20",
+        "width": 720,
+        "height": 455,
+        "media_type": "image/jpeg"
+      },
+      "page": {
+        "url": "http://www.scotese.com/miocene.htm",
+        "path": "data/sources/scotese/pages/miocene.htm",
+        "bytes": 1692,
+        "sha256": "b649f09298612c22d9b8e2d30c9b3c7f0e3b0066d6c3cac38b39a8aca6ab761e"
+      },
+      "notes": [
+        "Page prose mentions 20 million years; image title says Middle Miocene 14 Ma. Image title takes precedence."
+      ]
+    },
+    {
+      "id": "scotese-lgm",
+      "source_page_label": "Last Ice Age",
+      "image_label": "Last Glacial Maximum",
+      "age_years_before_present": 18000,
+      "age_ma": 0.018,
+      "age_basis": "image title visually verified",
+      "image": {
+        "url": "http://www.scotese.com/images/LGM.jpg",
+        "path": "data/sources/scotese/images/LGM.jpg",
+        "bytes": 142623,
+        "sha256": "9d4a1d113e3a7e84281b8f9e876d5dc5422a54d68f32df6cc093e324d58ae351",
+        "width": 720,
+        "height": 455,
+        "media_type": "image/jpeg"
+      },
+      "page": {
+        "url": "http://www.scotese.com/lastice.htm",
+        "path": "data/sources/scotese/pages/lastice.htm",
+        "bytes": 1822,
+        "sha256": "2c86c81f880ea82444476a5393fadece980ef0cfd3683cd26cd8154882de6b25"
+      },
+      "notes": [
+        "Preserves the source label of 18,000 years ago, not a revised age for the global LGM."
+      ]
+    },
+    {
+      "id": "scotese-000",
+      "source_page_label": "Modern World",
+      "image_label": "Modern World",
+      "age_years_before_present": 0,
+      "age_ma": 0.0,
+      "age_basis": "Modern World image title; present-day reference = 0",
+      "image": {
+        "url": "http://www.scotese.com/images/000.jpg",
+        "path": "data/sources/scotese/images/000.jpg",
+        "bytes": 134520,
+        "sha256": "8326635534efbcb41572c45a46395a19bb9fd1ddd6000821370542ac6016dd38",
+        "width": 720,
+        "height": 467,
+        "media_type": "image/jpeg"
+      },
+      "page": {
+        "url": "http://www.scotese.com/modern.htm",
+        "path": "data/sources/scotese/pages/modern.htm",
+        "bytes": 1809,
+        "sha256": "f22764c202f438f23477717374f89ffeeea97dec96f4b19b2d0d283afb599f87"
+      },
+      "notes": []
+    }
+  ]
+}
