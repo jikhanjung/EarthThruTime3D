@@ -29,8 +29,8 @@ test('raster sampling has north at the top and west at the left', () => {
 });
 
 test('flat projections place the corners and the centre where they belong', () => {
-  const { placeMollweide, placeEquirectangular, placeMercator, MERCATOR_LIMIT } = projection;
-  for (const place of [placeMollweide, placeEquirectangular, placeMercator]) {
+  const { placeMollweide, placeEquirectangular } = projection;
+  for (const place of [placeMollweide, placeEquirectangular]) {
     const [x, y] = place(0, 0);
     assert.ok(Math.abs(x) < 1e-9 && Math.abs(y) < 1e-9, `${place.name} centre`);
   }
@@ -40,8 +40,5 @@ test('flat projections place the corners and the centre where they belong', () =
   assert.ok(Math.abs(placeMollweide(180, 60)[0]) < 0.8);
   // Equirectangular is linear in both axes.
   assert.deepStrictEqual(placeEquirectangular(90, 45), [0.5, 0.25]);
-  // Mercator stretches toward its cut-off and reaches the square's edge there.
-  assert.ok(Math.abs(placeMercator(0, MERCATOR_LIMIT)[1] - 1) < 1e-4);
-  assert.ok(placeMercator(0, 60)[1] > placeEquirectangular(0, 60)[1]);
-  assert.strictEqual(placeMercator(0, 89)[1], placeMercator(0, MERCATOR_LIMIT)[1]);
+  assert.deepStrictEqual(placeEquirectangular(-180, -90), [-1, -0.5]);
 });

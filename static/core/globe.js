@@ -1,7 +1,6 @@
 import * as THREE from 'three';
 import { OrbitControls } from '../vendor/three/OrbitControls.js';
-import { placeEquirectangular, placeMercator, placeMollweide, reproject }
-  from './projection.js';
+import { placeEquirectangular, placeMollweide, reproject } from './projection.js';
 
 const $ = (id) => document.getElementById(id);
 const frames = JSON.parse($('globe-frames').textContent);
@@ -33,7 +32,6 @@ const PROJECTIONS = {
   globe: { sheet: null, code: 0, place: null, half: [1, 1] },
   equirect: { sheet: [2, 1], code: 1, place: placeEquirectangular, half: [1, 0.5] },
   mollweide: { sheet: [2, 1], code: 2, place: placeMollweide, half: [1, 0.5] },
-  mercator: { sheet: [2, 2], code: 3, place: placeMercator, half: [1, 1] },
 };
 const surfaceToggle = $('surface');
 let projection = 'globe';
@@ -309,18 +307,11 @@ function globeMaterial() {
         if (projection <= 1) { found = vUv; return true; }
         float x = vUv.x * 2.0 - 1.0;
         float y = vUv.y * 2.0 - 1.0;
-        float latitude;
-        float longitude;
-        if (projection == 2) {
-          if (x * x + y * y > 1.0) return false;
-          float theta = asin(clamp(y, -1.0, 1.0));
-          latitude = asin(clamp((2.0 * theta + sin(2.0 * theta)) / PI, -1.0, 1.0));
-          longitude = PI * x / max(cos(theta), 1e-6);
-          if (abs(longitude) > PI) return false;
-        } else {
-          latitude = 2.0 * atan(exp(y * PI)) - PI * 0.5;
-          longitude = x * PI;
-        }
+        if (x * x + y * y > 1.0) return false;
+        float theta = asin(clamp(y, -1.0, 1.0));
+        float latitude = asin(clamp((2.0 * theta + sin(2.0 * theta)) / PI, -1.0, 1.0));
+        float longitude = PI * x / max(cos(theta), 1e-6);
+        if (abs(longitude) > PI) return false;
         found = vec2(longitude / (2.0 * PI) + 0.5, latitude / PI + 0.5);
         return true;
       }
@@ -477,7 +468,6 @@ function createGrid() {
   // and meridians follow whichever projection is showing, curved or straight.
   const result = new THREE.Group();
   const material = new THREE.LineBasicMaterial({ color: 0xc4f7ef, transparent: true, opacity: 0.23 });
-  const limit = projection === 'mercator' ? 85 : 90;
   const lift = projection === 'globe' ? 0.004 : 0.003;
   function line(points) {
     result.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(points), material));
@@ -490,7 +480,7 @@ function createGrid() {
   for (let longitude = -180; longitude < 180; longitude += 30) {
     const points = [];
     for (let step = 0; step <= 90; step++) {
-      points.push(pointAt(longitude, -limit + step * (2 * limit / 90), lift));
+      points.push(pointAt(longitude, -90 + step * 2, lift));
     }
     line(points);
   }

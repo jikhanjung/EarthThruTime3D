@@ -121,7 +121,7 @@ try {
   // Projections: each draws a different picture of the same stop, the flat ones have
   // nothing to spin, and the globe gets its rotation back.
   const drawn = new Map();
-  for (const name of ['globe', 'mollweide', 'mercator', 'equirect']) {
+  for (const name of ['globe', 'mollweide', 'equirect']) {
     await page.locator('#projection').selectOption(name);
     await expect(globe).toHaveAttribute('data-projection', name);
     await expect(globe).toHaveAttribute('aria-busy', 'false');

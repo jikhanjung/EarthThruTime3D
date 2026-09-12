@@ -123,13 +123,12 @@ Only the stops that land on a source map show what the source drew.
 ## Projections
 
 A picker in the toolbar chooses what the map is drawn on: the globe, a Mollweide sheet,
-Web Mercator, or plain equirectangular. Mollweide is the one to compare against the
-source, because it is the projection the Scotese maps are assumed to use, so the sheet
-reproduces their layout. Web Mercator is there because it is what web maps look like,
-and because the contrast with Mollweide is itself the lesson: the same landmass covers
-a wildly different share of the picture near the poles.
+or equirectangular. Mollweide is the one to compare against the source, because it is
+the projection the Scotese maps are assumed to use, so the sheet reproduces their
+layout. Equirectangular is the fields' own storage laid out flat, a 2:1 box with
+longitude and latitude both linear.
 
-One shader serves all four. On the globe the geometry's own coordinates already say
+One shader serves all three. On the globe the geometry's own coordinates already say
 where to sample; on a sheet the fragment undoes the projection to a longitude and
 latitude, then samples the same equirectangular fields. Undoing it is also what decides
 whether a fragment is on the map at all: a Mollweide fragment outside the ellipse is
@@ -137,9 +136,13 @@ discarded rather than painted. Nothing about the data changes with the projectio
 interpolated stop morphs the same way on a sheet as on the globe.
 
 The grid is built from parallels and meridians rather than from the mesh, so it curves
-on the globe and on Mollweide and rules straight lines on the other two. Labels are
-placed through the same projection. Mercator is cut at 85.05 degrees, the usual web
-limit, because the projection sends the poles to infinity.
+on the globe and on Mollweide and rules straight lines on the equirectangular sheet.
+Labels are placed through the same projection.
+
+Web Mercator was offered for a while and then dropped. It is square rather than 2:1,
+because the 85.0511 degree cut-off web maps use is chosen to make the projected height
+equal the width, and a square world map of deep time is more confusing than useful next
+to the ellipse the source itself draws.
 
 Flat views pan instead of rotating, and auto-rotation is disabled there because a sheet
 has nothing to spin. The sheet is held at one distance and the lens opens until it fits,
