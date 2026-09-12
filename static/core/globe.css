@@ -25,3 +25,51 @@ header,main,footer{max-width:1440px}main{padding-top:26px;padding-bottom:32px}.v
 .toolbar-select{width:auto;padding:9px 10px}
 .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
 @media(max-width:850px){.toolbar-select{padding:8px 6px;max-width:104px}}
+
+/* Phone layout: the globe and the slider are the instrument, so they come first and
+   share the first screen. The explorer's two columns collapse with display:contents so
+   the inspector can move below the timeline, which its own grid row could not do. */
+@media(max-width:640px){
+  main{display:flex;flex-direction:column;gap:12px}
+  .viewer-heading{order:0;margin-bottom:0;padding:0 6px}
+  .viewer-heading .eyebrow{display:none}
+  .viewer-heading h1{font-size:1.35rem;margin:0}
+  .explorer{display:contents}
+  .globe-panel{order:1;min-height:56vh;min-height:56dvh;border:1px solid #29434a;border-radius:14px}
+  .timeline{order:2;margin-top:0;padding:12px 14px}
+  .timeline #timeline{margin:14px 0 6px}
+  .inspector{order:3;display:block;border:1px solid #29434a;border-top:1px solid #29434a;border-radius:14px;padding:18px 16px}
+  .inspector h2{font-size:1.2rem}
+  .inspector .age{font-size:1.6rem}
+  /* One row always: wrapping put a second row over the sphere. Anything that does not
+     fit scrolls sideways instead. */
+  .globe-toolbar{bottom:36px;max-width:calc(100% - 20px);overflow-x:auto;padding:2px;
+                 scrollbar-width:none;justify-content:flex-start;
+                 /* Fade the trailing edge so a control cut off by the screen reads as
+                    something to scroll to rather than something broken. */
+                 -webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 28px),transparent);
+                 mask-image:linear-gradient(90deg,#000 calc(100% - 28px),transparent)}
+  .globe-toolbar::-webkit-scrollbar{display:none}
+  .globe-toolbar button,.globe-toolbar select{font-size:.74rem;padding:8px 9px;flex:0 0 auto}
+  .toolbar-select{max-width:96px}
+  .gesture{bottom:8px;font-size:.68rem}
+}
+
+/* Short viewports, which is mostly a phone held sideways: the page chrome costs more
+   than it is worth, and the slider has to stay on screen with the globe. */
+@media(max-height:560px){
+  .viewer-heading{display:none}
+  main{padding-top:10px;padding-bottom:12px}
+  .explorer{--panel-height:calc(100dvh - 210px)}
+  .timeline{margin-top:12px;padding:10px 16px}
+  .timeline #timeline{margin:12px 0 6px}
+  .timeline-labels{display:none}
+  /* A panel this short has no room under the sphere, so the controls move to the top
+     corner and the caption takes the bottom one. */
+  .globe-toolbar{top:10px;right:12px;bottom:auto;left:auto;transform:none;
+                 justify-content:flex-end;max-width:calc(100% - 24px)}
+  .globe-toolbar button,.globe-toolbar select{font-size:.74rem;padding:7px 9px}
+  .toolbar-select{max-width:96px}
+  .globe-caption{top:auto;bottom:10px;left:14px}
+  .gesture{display:none}
+}

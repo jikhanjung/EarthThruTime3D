@@ -156,6 +156,27 @@ try {
   await page.locator('#reset').click();
   await page.screenshot({path:'data/screenshots/globe-mobile.png',fullPage:true});
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  // A phone leads with the instrument: the globe and the slider share the first screen
+  // and the inspector follows them rather than sitting between them.
+  const phone = async (selector) => page.locator(selector).boundingBox();
+  const panel = await phone('.globe-panel');
+  const timeline = await phone('.timeline');
+  const inspector = await phone('.inspector');
+  expect(timeline.y).toBeGreaterThan(panel.y);
+  expect(inspector.y).toBeGreaterThan(timeline.y);
+  expect(timeline.y + timeline.height).toBeLessThanOrEqual(844);
+  expect(panel.height).toBeGreaterThan(300);
+  // The controls stay on one row; a second row would cover the sphere.
+  expect((await phone('.globe-toolbar')).height).toBeLessThan(52);
+  // Sideways on the same phone the slider must still be reachable without scrolling.
+  await page.setViewportSize({width:844,height:390});
+  await expect(globe).toHaveAttribute('aria-busy', 'false');
+  const short = await phone('.timeline');
+  expect(short.y + short.height).toBeLessThanOrEqual(390);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await page.screenshot({path:'data/screenshots/globe-landscape.png',fullPage:true});
+  console.log('Phone layout passed');
+  await page.setViewportSize({width:390,height:844});
   // Force a missing source in a fresh page and verify retry restores the globe.
   const broken = await browser.newPage();
   await broken.route('**/globe/maps/scotese-000.jpg', route => route.fulfill({status:404}));
