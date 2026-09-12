@@ -37,7 +37,10 @@ const surfaceToggle = $('surface');
 // Without the published maps there is nothing to show but the derived surface, so the
 // viewer starts there and the toggle is not rendered at all.
 const sourceMapsPublic = frames.some((frame) => Boolean(frame.url));
-let surface = sourceMapsPublic ? 'map' : 'mask';
+// A relief series carries elevation in its fields, so its plain view is coloured by
+// height rather than by a photographed map, and the mask toggle returns to it.
+const reliefSeries = frames.some((frame) => frame.relief);
+let surface = reliefSeries ? 'relief' : sourceMapsPublic ? 'map' : 'mask';
 let projection = 'globe';
 let surfaceMesh;
 let gridVisible = false;
@@ -108,7 +111,7 @@ function loadField(frame) {
     prepare(new THREE.Texture(await loadImage(frame.field), THREE.UVMapping)));
 }
 async function loadSurface(frame) {
-  if ((surface === 'mask' || !frame.url) && frame.field) {
+  if ((surface !== 'map' || !frame.url) && frame.field) {
     const texture = await loadField(frame);
     texture.needsUpdate = true;
     return texture;
@@ -143,8 +146,9 @@ async function selectStop(value, manual = false) {
   selected = place.index;
   const ticket = ++request;
   const between = place.blend > 0;
-  const masked = (surface === 'mask' || !sourceMapsPublic)
-    && Boolean(place.from.field) && Boolean(place.to.field);
+  const fielded = Boolean(place.from.field) && Boolean(place.to.field);
+  const relief = surface === 'relief' && fielded;
+  const masked = !relief && (surface === 'mask' || !sourceMapsPublic) && fielded;
   const anchor = place.blend > 0.5 ? place.to : place.from;
   $('era').value = selected;
   $('timeline').value = stop;
@@ -179,11 +183,12 @@ async function selectStop(value, manual = false) {
     uniforms.surfaceA.value = first;
     uniforms.surfaceB.value = second;
     uniforms.blend.value = place.blend;
-    uniforms.masked.value = masked ? 1 : 0;
+    uniforms.mode.value = relief ? 2 : masked ? 1 : 0;
     applyMotion(place);
     surfaceMesh.visible = true;
     showNames(place, masked);
     stage.dataset.frame = place.from.id;
+    stage.dataset.surface = relief ? 'relief' : masked ? 'mask' : 'map';
     stage.dataset.blend = place.blend.toFixed(2);
     stage.setAttribute('aria-label', `${periodLabel(place)}, ${ageLabel(place)} ${masked ? '대륙 마스크 지구본' : '지구본'}${between ? ', 보간된 중간 형태' : ''}. 드래그 또는 방향키로 회전, 더하기 빼기로 확대 축소.`);
     stage.setAttribute('aria-busy', 'false');
@@ -248,7 +253,7 @@ function globeMaterial() {
     rgb[0] / 255, rgb[1] / 255, rgb[2] / 255, THREE.SRGBColorSpace);
   uniforms = {
     surfaceA: { value: null }, surfaceB: { value: null },
-    blend: { value: 0 }, masked: { value: 0 },
+    blend: { value: 0 }, mode: { value: 0 },
     land: { value: linear(LAND_COLOUR) }, ocean: { value: linear(OCEAN_COLOUR) },
     projection: { value: 0 },
     motionCount: { value: 0 },
@@ -269,7 +274,7 @@ function globeMaterial() {
       uniform sampler2D surfaceA;
       uniform sampler2D surfaceB;
       uniform float blend;
-      uniform float masked;
+      uniform int mode;
       uniform vec3 land;
       uniform vec3 ocean;
       const float PI = 3.141592653589793;
@@ -321,11 +326,23 @@ function globeMaterial() {
         found = vec2(longitude / (2.0 * PI) + 0.5, latitude / PI + 0.5);
         return true;
       }
+      // Height and depth as colour, the usual hypsometric convention: shallow to deep
+      // blue under water, green through tan to white above it. Which side of the coast
+      // a texel is on comes from the distance field, not from the height alone.
+      vec3 hypsometric(float metres, float landness) {
+        float depth = clamp(-metres / 6000.0, 0.0, 1.0);
+        vec3 sea = mix(decode(vec3(0.53, 0.75, 0.90)), decode(vec3(0.05, 0.14, 0.38)), depth);
+        float rise = clamp(metres / 4000.0, 0.0, 1.0);
+        vec3 ground = rise < 0.35
+          ? mix(decode(vec3(0.27, 0.53, 0.27)), decode(vec3(0.78, 0.70, 0.45)), rise / 0.35)
+          : mix(decode(vec3(0.78, 0.70, 0.45)), decode(vec3(0.95, 0.95, 0.95)), (rise - 0.35) / 0.65);
+        return mix(sea, ground, landness);
+      }
       void main() {
         vec2 surfaceUv;
         if (!locate(surfaceUv)) discard;
         vec3 colour;
-        if (masked > 0.5) {
+        if (mode >= 1) {
           // Both textures hold a signed distance to the coastline. Mixing the distances
           // and cutting at the midpoint moves the coastline; mixing pictures would only
           // dissolve one into the other. Sampling each side through the travel field
@@ -333,11 +350,18 @@ function globeMaterial() {
           // around a continent that is moving rather than melting in place.
           vec2 shift = travel(vec2((surfaceUv.x - 0.5) * 360.0, (surfaceUv.y - 0.5) * 180.0));
           vec2 offset = vec2(shift.x / 360.0, shift.y / 180.0);
-          float here = texture2D(surfaceA, surfaceUv - blend * offset).r;
-          float there = texture2D(surfaceB, surfaceUv + (1.0 - blend) * offset).r;
-          float distance = mix(here, there, blend) - 0.5;
+          vec4 here = texture2D(surfaceA, surfaceUv - blend * offset);
+          vec4 there = texture2D(surfaceB, surfaceUv + (1.0 - blend) * offset);
+          float distance = mix(here.r, there.r, blend) - 0.5;
           float edge = fwidth(distance) + 0.0012;
-          colour = mix(ocean, land, smoothstep(-edge, edge, distance));
+          float landness = smoothstep(-edge, edge, distance);
+          if (mode == 2) {
+            // Green holds elevation over -9000..6000 m, so sea level sits at 0.6.
+            float metres = (mix(here.g, there.g, blend) - 0.6) * 15000.0;
+            colour = hypsometric(metres, landness);
+          } else {
+            colour = mix(ocean, land, landness);
+          }
         } else {
           colour = mix(decode(texture2D(surfaceA, surfaceUv).rgb),
                        decode(texture2D(surfaceB, surfaceUv).rgb), blend);
@@ -584,7 +608,7 @@ function init() {
   });
   if (surfaceToggle) {
     surfaceToggle.addEventListener('click', () => {
-      surface = surface === 'mask' ? 'map' : 'mask';
+      surface = surface === 'mask' ? (reliefSeries ? 'relief' : 'map') : 'mask';
       surfaceToggle.setAttribute('aria-pressed', String(surface === 'mask'));
       selectStop(stop, true);
     });

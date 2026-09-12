@@ -5,7 +5,7 @@ const errors = [];
 try {
   const page = await browser.newPage({viewport: {width:1440, height:1100}});
   page.on('pageerror', error => errors.push(error.message));
-  await page.goto(process.env.VIEWER_URL || 'http://127.0.0.1:8000/');
+  await page.goto(process.env.VIEWER_URL || 'http://127.0.0.1:8000/?series=scotese');
   const globe = page.locator('#globe');
   await expect(globe).toHaveAttribute('data-frame', 'scotese-000');
   await mkdir('data/screenshots', {recursive:true});
@@ -180,7 +180,7 @@ try {
   // Force a missing source in a fresh page and verify retry restores the globe.
   const broken = await browser.newPage();
   await broken.route('**/globe/maps/scotese-000.jpg', route => route.fulfill({status:404}));
-  await broken.goto(process.env.VIEWER_URL || 'http://127.0.0.1:8000/');
+  await broken.goto(process.env.VIEWER_URL || 'http://127.0.0.1:8000/?series=scotese');
   await expect(broken.locator('#retry')).toBeVisible();
   await broken.unroute('**/globe/maps/scotese-000.jpg');
   await broken.locator('#retry').click();

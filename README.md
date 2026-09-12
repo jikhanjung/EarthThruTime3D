@@ -73,5 +73,7 @@ Three.js 0.186.0과 MIT 라이선스는 `static/vendor/three/`에 포함됩니�
 원본은 `data/sources/scotese/`에 로컬 저장하며 Git에서 제외합니다.
 개발용 지구본은 목록에 등록된 JPEG만 제공합니다. 운영 설정에서는 기본 비활성화합니다.
 새 체크아웃에서는 `.venv/bin/python scripts/fetch_scotese.py`로 동일 자료를 받을 수 있습니다.
+고도 시리즈는 `.venv/bin/python scripts/fetch_paleodem.py`로 PaleoDEM(CC BY 4.0)을 받고
+`scripts/build_paleodem.py`로 텍스처를 구운 뒤 기본으로 표시됩니다(`?series=scotese`로 원본 지도 시리즈).
 첫 개발 기록은 [devlog](devlog/20260912_001_project_initialization.md)에 있습니다.
 이 프로젝트의 소프트웨어 라이선스는 아직 지정하지 않았습니다.

@@ -51,7 +51,7 @@ MAX_AREA_RATIO = 3.0
 
 
 def derived_path(item, suffix):
-    stem = Path(item["image"]["path"]).stem
+    stem = item.get("stem") or Path(item["image"]["path"]).stem
     return Path(settings.SCOTESE_DERIVED_DIR) / f"{stem}-{suffix}"
 
 
@@ -63,6 +63,38 @@ def field_path(item):
 @lru_cache(maxsize=1)
 def catalogue():
     return json.loads((settings.BASE_DIR / "sources/scotese-earth-history.json").read_text())
+
+
+@lru_cache(maxsize=1)
+def paleodem_catalogue():
+    return json.loads((settings.BASE_DIR / "sources/paleodem-slices.json").read_text())
+
+
+SERIES = ("paleodem", "scotese")
+
+
+def paleodem_items():
+    """The PaleoDEM slices in the shape the field routes expect, oldest first.
+
+    These are elevation grids rather than pictures, so there is no image, no ellipse and
+    no segmentation report; the texture holds the coastline distance and the height.
+    """
+    record = paleodem_catalogue()["record"]
+    return [{"id": item["id"], "age_ma": item["age_ma"], "image_label": item["label"],
+             "stem": item["id"], "source": record} for item in paleodem_catalogue()["slices"]]
+
+
+def series(request=None):
+    """Which timeline to show. PaleoDEM is preferred but needs its fields built."""
+    asked = request.GET.get("series") if request is not None else None
+    chosen = asked if asked in SERIES else settings.GLOBE_SERIES
+    if chosen == "paleodem" and not any(field_path(item).exists() for item in paleodem_items()):
+        return "scotese"
+    return chosen if chosen in SERIES else "scotese"
+
+
+def find_item(map_id):
+    return next((item for item in catalogue()["maps"] + paleodem_items() if item["id"] == map_id), None)
 
 
 def enabled():
@@ -263,7 +295,16 @@ def bundle_report():
 def globe(request):
     frames = []
     pieces_by_frame = {}
-    if enabled():
+    chosen = series(request)
+    if enabled() and chosen == "paleodem":
+        for item in paleodem_items():
+            pieces_by_frame[item["id"]] = []
+            frames.append({"id": item["id"], "label": item["image_label"], "title": item["image_label"],
+                           "age": item["age_ma"], "bounds": None, "url": None, "relief": True,
+                           "field": (reverse("globe-field", args=[item["id"]])
+                                     if field_path(item).exists() else None),
+                           "names": [], "source": item["source"]})
+    elif enabled():
         for item, korean in zip(catalogue()["maps"], KOREAN_LABELS):
             pieces_by_frame[item["id"]] = piece_report(item)
             frames.append({"id": item["id"], "label": korean, "title": item["image_label"],
@@ -276,7 +317,7 @@ def globe(request):
                            "source": item["page"]["url"]})
     plan = sampling(request)
     return render(request, "core/home.html",
-                  {"frames": frames, "viewer_enabled": enabled(),
+                  {"frames": frames, "viewer_enabled": enabled(), "series": chosen,
                    "stops": timeline(frames, plan), "sampling": plan,
                    "source_maps_public": source_maps_public(),
                    "motions": motions(frames, pieces_by_frame),
@@ -303,7 +344,7 @@ def source_map(request, map_id):
 def land_field(request, map_id):
     if not enabled():
         raise Http404
-    item = next((item for item in catalogue()["maps"] if item["id"] == map_id), None)
+    item = find_item(map_id)
     if item is None:
         raise Http404
     try:

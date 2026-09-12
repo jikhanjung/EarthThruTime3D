@@ -5,12 +5,13 @@ from unittest.mock import patch
 from django.contrib import admin
 from django.contrib.auth import get_user_model
 from django.db import OperationalError
-from django.test import RequestFactory, TestCase
+from django.test import RequestFactory, TestCase, override_settings
 
 from config.version import VERSION
 from core import globe as globe_module
 
 
+@override_settings(GLOBE_SERIES='scotese')
 class SiteTests(TestCase):
     def test_public_pages(self):
         for url in ["/", "/about/", "/privacy/", "/contact/"]:
@@ -52,6 +53,7 @@ class SiteTests(TestCase):
         self.assertFalse(admin.site.has_permission(request))
 
 
+@override_settings(GLOBE_SERIES='scotese')
 class GlobeTests(TestCase):
     def test_all_frames_have_calibration_and_local_routes(self):
         with self.settings(SCOTESE_VIEWER_ENABLED=True):
@@ -259,3 +261,59 @@ class GlobeTests(TestCase):
             with patch('pathlib.Path.open', side_effect=FileNotFoundError):
                 with patch('core.globe.catalogue', return_value={'maps': [{'id': 'test', 'image': {'path': 'missing.jpg'}}]}):
                     self.assertEqual(self.client.get('/globe/maps/test.jpg').status_code, 404)
+
+
+@override_settings(SCOTESE_VIEWER_ENABLED=True, GLOBE_SERIES='paleodem')
+class PaleodemTests(TestCase):
+    """The elevation series: 109 grids served through the same field route."""
+
+    def setUp(self):
+        self.derived = TemporaryDirectory()
+        self.addCleanup(self.derived.cleanup)
+        settings_patch = self.settings(SCOTESE_DERIVED_DIR=self.derived.name)
+        settings_patch.enable()
+        self.addCleanup(settings_patch.disable)
+
+    def build(self, item):
+        Path(self.derived.name, f"{item['id']}-field.png").write_bytes(b'png')
+
+    def test_catalogue_is_oldest_first_with_unique_slug_ids(self):
+        items = globe_module.paleodem_items()
+        self.assertEqual(len(items), 109)
+        self.assertEqual([items[0]['age_ma'], items[-1]['age_ma']], [540, 0])
+        self.assertEqual(len({item['id'] for item in items}), 109)
+        for item in items:
+            self.assertRegex(item['id'], r'^paleodem-\d{4}$')
+
+    def test_falls_back_to_scotese_until_the_fields_are_built(self):
+        self.assertEqual(globe_module.series(RequestFactory().get('/')), 'scotese')
+        response = self.client.get('/')
+        self.assertEqual(response.context['series'], 'scotese')
+        self.build(globe_module.paleodem_items()[0])
+        self.assertEqual(globe_module.series(RequestFactory().get('/')), 'paleodem')
+        self.assertEqual(globe_module.series(RequestFactory().get('/?series=scotese')), 'scotese')
+        self.assertEqual(globe_module.series(RequestFactory().get('/?series=nope')), 'paleodem')
+
+    def test_frames_carry_relief_and_no_source_map(self):
+        for item in globe_module.paleodem_items():
+            self.build(item)
+        response = self.client.get('/')
+        frames = response.context['frames']
+        self.assertEqual(len(frames), 109)
+        self.assertEqual(response.context['series'], 'paleodem')
+        self.assertTrue(all(frame['relief'] and frame['url'] is None for frame in frames))
+        self.assertTrue(all(frame['field'] == f"/globe/fields/{frame['id']}.png" for frame in frames))
+        self.assertEqual([stop for stop in response.context['stops'] if stop[2] == 0].__len__(), 109)
+        self.assertEqual(response.context['motions'], [[] for _ in range(108)])
+        self.assertContains(response, 'id="surface"')
+        self.assertContains(response, 'zenodo.org/records/5460860')
+        self.assertNotContains(response, 'source-preview')
+
+    def test_field_route_serves_a_paleodem_slice(self):
+        item = globe_module.paleodem_items()[-1]
+        self.assertEqual(self.client.get(f"/globe/fields/{item['id']}.png").status_code, 404)
+        self.build(item)
+        response = self.client.get(f"/globe/fields/{item['id']}.png")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['Content-Type'], 'image/png')
+        self.assertEqual(self.client.get(f"/globe/maps/{item['id']}.jpg").status_code, 404)

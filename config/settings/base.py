@@ -133,6 +133,11 @@ SCOTESE_VIEWER_INTERVAL_CHOICES = (0.5, 1.0, 2.0, 5.0, 10.0, 25.0)
 SCOTESE_VIEWER_STEPS = os.environ.get('SCOTESE_VIEWER_STEPS', '4')
 SCOTESE_VIEWER_INTERVAL_MA = os.environ.get('SCOTESE_VIEWER_INTERVAL_MA', '')
 
+# Which timeline the globe shows: 'paleodem' (109 elevation grids, 0-540 Ma, CC BY 4.0)
+# or 'scotese' (the 17 web maps and their segmentation). A deployment without the
+# PaleoDEM fields falls back to scotese; ?series= overrides per request.
+GLOBE_SERIES = os.environ.get('GLOBE_SERIES', 'paleodem')
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 

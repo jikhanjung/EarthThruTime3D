@@ -1,0 +1,770 @@
+{
+ "title": "PALEOMAP PaleoDEMs, 1 degree, Scotese & Wright 2018 (CC BY 4.0)",
+ "record": "https://zenodo.org/records/5460860",
+ "directory": "data/sources/paleodem/nc/Scotese_Wright_2018_Maps_1-88_1degX1deg_PaleoDEMS_nc_v2",
+ "slices": [
+  {
+   "id": "paleodem-5400",
+   "age_ma": 540,
+   "label": "Cambrian Precambrian boundary",
+   "map": "88",
+   "file": "Map88_PALEOMAP_1deg_Cambrian_Precambrian boundary_540Ma.nc"
+  },
+  {
+   "id": "paleodem-5350",
+   "age_ma": 535,
+   "label": "Early Cambrian",
+   "map": "87.5",
+   "file": "Map87.5_PALEOMAP_1deg_Early_Cambrian_535Ma.nc"
+  },
+  {
+   "id": "paleodem-5300",
+   "age_ma": 530,
+   "label": "Early Cambrian",
+   "map": "87",
+   "file": "Map87_PALEOMAP_1deg_Early_Cambrian_530Ma.nc"
+  },
+  {
+   "id": "paleodem-5250",
+   "age_ma": 525,
+   "label": "Early Cambrian",
+   "map": "86.5",
+   "file": "Map86.5_PALEOMAP_1deg_Early_Cambrian_525Ma.nc"
+  },
+  {
+   "id": "paleodem-5200",
+   "age_ma": 520,
+   "label": "Early Middle Cambrian boundary",
+   "map": "86",
+   "file": "Map86_PALEOMAP_1deg_Early_Middle_Cambrian_boundary_520Ma.nc"
+  },
+  {
+   "id": "paleodem-5150",
+   "age_ma": 515,
+   "label": "early Middle Cambrian",
+   "map": "85",
+   "file": "Map85_PALEOMAP_1deg_early_Middle_Cambrian_515Ma.nc"
+  },
+  {
+   "id": "paleodem-5100",
+   "age_ma": 510,
+   "label": "early Middle Cambrian",
+   "map": "84.2",
+   "file": "Map84.2_PALEOMAP_1deg_early_Middle_Cambrian_510Ma.nc"
+  },
+  {
+   "id": "paleodem-5050",
+   "age_ma": 505,
+   "label": "late Middle Cambrian",
+   "map": "84.1",
+   "file": "Map84.1_PALEOMAP_1deg_late_Middle_Cambrian_505Ma.nc"
+  },
+  {
+   "id": "paleodem-5000",
+   "age_ma": 500,
+   "label": "late Middle Cambrian",
+   "map": "84",
+   "file": "Map84_PALEOMAP_1deg_late_Middle_Cambrian_500Ma.nc"
+  },
+  {
+   "id": "paleodem-4950",
+   "age_ma": 495,
+   "label": "Late Cambrian",
+   "map": "83.5",
+   "file": "Map83.5_PALEOMAP_1deg_Late_Cambrian_495Ma.nc"
+  },
+  {
+   "id": "paleodem-4900",
+   "age_ma": 490,
+   "label": "Late Cambrian",
+   "map": "83",
+   "file": "Map83_PALEOMAP_1deg_Late_Cambrian_490Ma.nc"
+  },
+  {
+   "id": "paleodem-4850",
+   "age_ma": 485,
+   "label": "Cambro-Ordovician Boundary",
+   "map": "82.5",
+   "file": "Map82.5_PALEOMAP_1deg_Cambro-Ordovician_Boundary_485Ma.nc"
+  },
+  {
+   "id": "paleodem-4800",
+   "age_ma": 480,
+   "label": "Early Ordovician",
+   "map": "82",
+   "file": "Map82_PALEOMAP_1deg_Early_Ordovician_480Ma.nc"
+  },
+  {
+   "id": "paleodem-4750",
+   "age_ma": 475,
+   "label": "Early Ordovician",
+   "map": "81.5",
+   "file": "Map81.5_PALEOMAP_1deg_Early_Ordovician_475Ma.nc"
+  },
+  {
+   "id": "paleodem-4700",
+   "age_ma": 470,
+   "label": "Early Ordovician",
+   "map": "81",
+   "file": "Map81_PALEOMAP_1deg_Early_Ordovician_470Ma.nc"
+  },
+  {
+   "id": "paleodem-4650",
+   "age_ma": 465,
+   "label": "Middle Ordovician",
+   "map": "80.5",
+   "file": "Map80.5_PALEOMAP_1deg_Middle_Ordovician_465Ma.nc"
+  },
+  {
+   "id": "paleodem-4600",
+   "age_ma": 460,
+   "label": "Middle Ordovician",
+   "map": "80",
+   "file": "Map80_PALEOMAP_1deg_Middle_Ordovician_460Ma.nc"
+  },
+  {
+   "id": "paleodem-4550",
+   "age_ma": 455,
+   "label": "Late Ordovician",
+   "map": "79",
+   "file": "Map79_PALEOMAP_1deg_Late_Ordovician_455Ma.nc"
+  },
+  {
+   "id": "paleodem-4500",
+   "age_ma": 450,
+   "label": "Late Ordovician",
+   "map": "78",
+   "file": "Map78_PALEOMAP_1deg_Late_Ordovician_450Ma.nc"
+  },
+  {
+   "id": "paleodem-4450",
+   "age_ma": 445,
+   "label": "Late Ordovician",
+   "map": "77",
+   "file": "Map77_PALEOMAP_1deg_Late_Ordovician_445Ma.nc"
+  },
+  {
+   "id": "paleodem-4400",
+   "age_ma": 440,
+   "label": "Early Silurian",
+   "map": "76",
+   "file": "Map76_PALEOMAP_1deg_Early_Silurian_440Ma.nc"
+  },
+  {
+   "id": "paleodem-4350",
+   "age_ma": 435,
+   "label": "Early Silurian",
+   "map": "75.5",
+   "file": "Map75.5_PALEOMAP_1deg_Early_Silurian_435Ma.nc"
+  },
+  {
+   "id": "paleodem-4300",
+   "age_ma": 430,
+   "label": "Middle Silurian",
+   "map": "75",
+   "file": "Map75_PALEOMAP_1deg_Middle_Silurian_430Ma.nc"
+  },
+  {
+   "id": "paleodem-4250",
+   "age_ma": 425,
+   "label": "Late Silurian",
+   "map": "74",
+   "file": "Map74_PALEOMAP_1deg_Late_Silurian_425Ma.nc"
+  },
+  {
+   "id": "paleodem-4200",
+   "age_ma": 420,
+   "label": "Late Silurian",
+   "map": "73",
+   "file": "Map73_PALEOMAP_1deg_Late_Silurian_420Ma.nc"
+  },
+  {
+   "id": "paleodem-4150",
+   "age_ma": 415,
+   "label": "Early Devonian",
+   "map": "72",
+   "file": "Map72_PALEOMAP_1deg_Early_Devonian_415Ma.nc"
+  },
+  {
+   "id": "paleodem-4100",
+   "age_ma": 410,
+   "label": "Early Devonian",
+   "map": "71",
+   "file": "Map71_PALEOMAP_1deg_Early_Devonian_410Ma.nc"
+  },
+  {
+   "id": "paleodem-4050",
+   "age_ma": 405,
+   "label": "Early Devonian",
+   "map": "70.5",
+   "file": "Map70.5_PALEOMAP_1deg_Early_Devonian_405Ma.nc"
+  },
+  {
+   "id": "paleodem-4000",
+   "age_ma": 400,
+   "label": "Early Devonian",
+   "map": "70",
+   "file": "Map70_PALEOMAP_1deg_Early_Devonian_400Ma.nc"
+  },
+  {
+   "id": "paleodem-3950",
+   "age_ma": 395,
+   "label": "Early Devonian",
+   "map": "69",
+   "file": "Map69_PALEOMAP_1deg_Early_Devonian_395Ma.nc"
+  },
+  {
+   "id": "paleodem-3905",
+   "age_ma": 390.5,
+   "label": "Middle Devonian",
+   "map": "68",
+   "file": "Map68_PALEOMAP_1deg_Middle_Devonian_390.5Ma.nc"
+  },
+  {
+   "id": "paleodem-3852",
+   "age_ma": 385.2,
+   "label": "Middle Devonian",
+   "map": "67.5",
+   "file": "Map67.5_PALEOMAP_1deg_Middle_Devonian_385.2Ma.nc"
+  },
+  {
+   "id": "paleodem-3800",
+   "age_ma": 380,
+   "label": "Late Devonian",
+   "map": "67",
+   "file": "Map67_PALEOMAP_1deg_Late_Devonian_380Ma.nc"
+  },
+  {
+   "id": "paleodem-3750",
+   "age_ma": 375,
+   "label": "Late Devonian",
+   "map": "66.5",
+   "file": "Map66.5_PALEOMAP_1deg_Late_Devonian_375Ma.nc"
+  },
+  {
+   "id": "paleodem-3700",
+   "age_ma": 370,
+   "label": "Late Devonian",
+   "map": "66",
+   "file": "Map66_PALEOMAP_1deg_Late_Devonian_370Ma.nc"
+  },
+  {
+   "id": "paleodem-3650",
+   "age_ma": 365,
+   "label": "Late Devonian",
+   "map": "65.5",
+   "file": "Map65.5_PALEOMAP_1deg_Late_Devonian_365Ma.nc"
+  },
+  {
+   "id": "paleodem-3600",
+   "age_ma": 360,
+   "label": "Devono-Carboniferous Boundary",
+   "map": "65",
+   "file": "Map65_PALEOMAP_1deg_Devono-Carboniferous Boundary_360Ma.nc"
+  },
+  {
+   "id": "paleodem-3550",
+   "age_ma": 355,
+   "label": "Early Mississippian",
+   "map": "64.5",
+   "file": "Map64.5_PALEOMAP_1deg_Early_Mississippian_355Ma.nc"
+  },
+  {
+   "id": "paleodem-3500",
+   "age_ma": 350,
+   "label": "Early Mississippian",
+   "map": "64",
+   "file": "Map64_PALEOMAP_1deg_Early_Mississippian_350Ma.nc"
+  },
+  {
+   "id": "paleodem-3450",
+   "age_ma": 345,
+   "label": "Middle Mississippian",
+   "map": "63.5",
+   "file": "Map63.5_PALEOMAP_1deg_Middle_Mississippian_345Ma.nc"
+  },
+  {
+   "id": "paleodem-3400",
+   "age_ma": 340,
+   "label": "Middle Mississippian",
+   "map": "63",
+   "file": "Map63_PALEOMAP_1deg_Middle_Mississippian_340Ma.nc"
+  },
+  {
+   "id": "paleodem-3350",
+   "age_ma": 335,
+   "label": "Middle Mississippian",
+   "map": "62.5",
+   "file": "Map62.5_PALEOMAP_1deg_Middle_Mississippian_335Ma.nc"
+  },
+  {
+   "id": "paleodem-3300",
+   "age_ma": 330,
+   "label": "Late Mississippian",
+   "map": "62",
+   "file": "Map62_PALEOMAP_1deg_Late_Mississippian_330Ma.nc"
+  },
+  {
+   "id": "paleodem-3250",
+   "age_ma": 325,
+   "label": "Late Mississippian",
+   "map": "61",
+   "file": "Map61_PALEOMAP_1deg_Late_Mississippian_325Ma.nc"
+  },
+  {
+   "id": "paleodem-3200",
+   "age_ma": 320,
+   "label": "Early Pennsylvanian",
+   "map": "60",
+   "file": "Map60_PALEOMAP_1deg_Early_Pennsylvanian_320Ma.nc"
+  },
+  {
+   "id": "paleodem-3150",
+   "age_ma": 315,
+   "label": "EarlyMiddleCarboniferous",
+   "map": "59.5",
+   "file": "Map59.5_PALEOMAP_1deg_EarlyMiddleCarboniferous_315Ma.nc"
+  },
+  {
+   "id": "paleodem-3100",
+   "age_ma": 310,
+   "label": "Middle Pennsylvanian",
+   "map": "59",
+   "file": "Map59_PALEOMAP_1deg_Middle_Pennsylvanian_310Ma.nc"
+  },
+  {
+   "id": "paleodem-3050",
+   "age_ma": 305,
+   "label": "Late Pennsylvanian",
+   "map": "58",
+   "file": "Map58_PALEOMAP_1deg_Late_Pennsylvanian_305Ma.nc"
+  },
+  {
+   "id": "paleodem-3000",
+   "age_ma": 300,
+   "label": "Late Pennsylvanian",
+   "map": "57",
+   "file": "Map57_PALEOMAP_1deg_Late_Pennsylvanian_300Ma.nc"
+  },
+  {
+   "id": "paleodem-2950",
+   "age_ma": 295,
+   "label": "Early Permian",
+   "map": "56",
+   "file": "Map56_PALEOMAP_1deg_Early_Permian_295Ma.nc"
+  },
+  {
+   "id": "paleodem-2900",
+   "age_ma": 290,
+   "label": "Early Permian",
+   "map": "55",
+   "file": "Map55_PALEOMAP_1deg_Early_Permian_290Ma.nc"
+  },
+  {
+   "id": "paleodem-2850",
+   "age_ma": 285,
+   "label": "Early Permian",
+   "map": "54.5",
+   "file": "Map54.5_PALEOMAP_1deg_Early_Permian_285Ma.nc"
+  },
+  {
+   "id": "paleodem-2800",
+   "age_ma": 280,
+   "label": "Early Permian",
+   "map": "54",
+   "file": "Map54_PALEOMAP_1deg_Early_Permian_280Ma.nc"
+  },
+  {
+   "id": "paleodem-2750",
+   "age_ma": 275,
+   "label": "Early Permian",
+   "map": "53",
+   "file": "Map53_PALEOMAP_1deg_Early_Permian_275Ma.nc"
+  },
+  {
+   "id": "paleodem-2700",
+   "age_ma": 270,
+   "label": "Middle Permian",
+   "map": "52",
+   "file": "Map52_PALEOMAP_1deg_Middle_Permian_270Ma.nc"
+  },
+  {
+   "id": "paleodem-2650",
+   "age_ma": 265,
+   "label": "Middle Permian",
+   "map": "51.5",
+   "file": "Map51.5_PALEOMAP_1deg_Middle_Permian_265Ma.nc"
+  },
+  {
+   "id": "paleodem-2600",
+   "age_ma": 260,
+   "label": "Middle Permian",
+   "map": "51",
+   "file": "Map51_PALEOMAP_1deg_Middle_Permian_260Ma.nc"
+  },
+  {
+   "id": "paleodem-2550",
+   "age_ma": 255,
+   "label": "LatePermian",
+   "map": "50",
+   "file": "Map50_PALEOMAP_1deg_LatePermian_255Ma.nc"
+  },
+  {
+   "id": "paleodem-2500",
+   "age_ma": 250,
+   "label": "Permo-Triassic Boundary",
+   "map": "49",
+   "file": "Map49_PALEOMAP_1deg_Permo-Triassic Boundary_250Ma.nc"
+  },
+  {
+   "id": "paleodem-2450",
+   "age_ma": 245,
+   "label": "Middle Triassic",
+   "map": "48",
+   "file": "Map48_PALEOMAP_1deg_Middle_Triassic_245Ma.nc"
+  },
+  {
+   "id": "paleodem-2400",
+   "age_ma": 240,
+   "label": "Middle Triassic",
+   "map": "47",
+   "file": "Map47_PALEOMAP_1deg_Middle_Triassic_240Ma.nc"
+  },
+  {
+   "id": "paleodem-2350",
+   "age_ma": 235,
+   "label": "Late Triassic",
+   "map": "46.5",
+   "file": "Map46.5_PALEOMAP_1deg_Late_Triassic_235Ma.nc"
+  },
+  {
+   "id": "paleodem-2300",
+   "age_ma": 230,
+   "label": "Late Triassic",
+   "map": "46",
+   "file": "Map46_PALEOMAP_1deg_Late_Triassic_230Ma.nc"
+  },
+  {
+   "id": "paleodem-2250",
+   "age_ma": 225,
+   "label": "Late Triassic",
+   "map": "45.5",
+   "file": "Map45.5_PALEOMAP_1deg_Late_Triassic_225Ma.nc"
+  },
+  {
+   "id": "paleodem-2200",
+   "age_ma": 220,
+   "label": "Late Triassic",
+   "map": "45",
+   "file": "Map45_PALEOMAP_1deg_Late_Triassic_220Ma.nc"
+  },
+  {
+   "id": "paleodem-2150",
+   "age_ma": 215,
+   "label": "Late Triassic",
+   "map": "44.5",
+   "file": "Map44.5_PALEOMAP_1deg_Late_Triassic_215Ma.nc"
+  },
+  {
+   "id": "paleodem-2100",
+   "age_ma": 210,
+   "label": "Late Triassic",
+   "map": "44",
+   "file": "Map44_PALEOMAP_1deg_Late_Triassic_210Ma.nc"
+  },
+  {
+   "id": "paleodem-2050",
+   "age_ma": 205,
+   "label": "Late Triassic",
+   "map": "43.5",
+   "file": "Map43.5_PALEOMAP_1deg_Late_Triassic_205Ma.nc"
+  },
+  {
+   "id": "paleodem-2000",
+   "age_ma": 200,
+   "label": "Late Triassic",
+   "map": "43",
+   "file": "Map43_PALEOMAP_1deg_Late_Triassic_200Ma.nc"
+  },
+  {
+   "id": "paleodem-1950",
+   "age_ma": 195,
+   "label": "Early Jurassic",
+   "map": "42",
+   "file": "Map42_PALEOMAP_1deg_Early_Jurassic_195Ma.nc"
+  },
+  {
+   "id": "paleodem-1900",
+   "age_ma": 190,
+   "label": "Early Jurassic",
+   "map": "41",
+   "file": "Map41_PALEOMAP_1deg_Early_Jurassic_190Ma.nc"
+  },
+  {
+   "id": "paleodem-1850",
+   "age_ma": 185,
+   "label": "Early Jurassic",
+   "map": "40",
+   "file": "Map40_PALEOMAP_1deg_Early_Jurassic_185Ma.nc"
+  },
+  {
+   "id": "paleodem-1800",
+   "age_ma": 180,
+   "label": "Early Jurassic",
+   "map": "39",
+   "file": "Map39_PALEOMAP_1deg_Early_Jurassic_180Ma.nc"
+  },
+  {
+   "id": "paleodem-1750",
+   "age_ma": 175,
+   "label": "Middle Jurassic",
+   "map": "38",
+   "file": "Map38_PALEOMAP_1deg_Middle_Jurassic_175Ma.nc"
+  },
+  {
+   "id": "paleodem-1700",
+   "age_ma": 170,
+   "label": "Middle Jurassic",
+   "map": "37",
+   "file": "Map37_PALEOMAP_1deg_Middle_Jurassic_170Ma.nc"
+  },
+  {
+   "id": "paleodem-1650",
+   "age_ma": 165,
+   "label": "Middle Jurassic",
+   "map": "36",
+   "file": "Map36_PALEOMAP_1deg_Middle_Jurassic_165Ma.nc"
+  },
+  {
+   "id": "paleodem-1600",
+   "age_ma": 160,
+   "label": "Late Jurassic",
+   "map": "35",
+   "file": "Map35_PALEOMAP_1deg_Late_Jurassic_160Ma.nc"
+  },
+  {
+   "id": "paleodem-1550",
+   "age_ma": 155,
+   "label": "Late Jurassic",
+   "map": "34",
+   "file": "Map34_PALEOMAP_1deg_Late_Jurassic_155Ma.nc"
+  },
+  {
+   "id": "paleodem-1500",
+   "age_ma": 150,
+   "label": "Late Jurassic",
+   "map": "33",
+   "file": "Map33_PALEOMAP_1deg_Late_Jurassic_150Ma.nc"
+  },
+  {
+   "id": "paleodem-1450",
+   "age_ma": 145,
+   "label": "Jurassic Cretaceous Boundary",
+   "map": "32",
+   "file": "Map32_PALEOMAP_1deg_Jurassic_Cretaceous_Boundary_145Ma.nc"
+  },
+  {
+   "id": "paleodem-1400",
+   "age_ma": 140,
+   "label": "Early Cretaceous",
+   "map": "31",
+   "file": "Map31_PALEOMAP_1deg_Early_Cretaceous_140Ma.nc"
+  },
+  {
+   "id": "paleodem-1350",
+   "age_ma": 135,
+   "label": "Early Cretaceous",
+   "map": "30",
+   "file": "Map30_PALEOMAP_1deg_Early_Cretaceous_135Ma.nc"
+  },
+  {
+   "id": "paleodem-1300",
+   "age_ma": 130,
+   "label": "Early Cretaceous",
+   "map": "29",
+   "file": "Map29_PALEOMAP_1deg_Early_Cretaceous_130Ma.nc"
+  },
+  {
+   "id": "paleodem-1250",
+   "age_ma": 125,
+   "label": "Early Cretaceous",
+   "map": "28",
+   "file": "Map28_PALEOMAP_1deg_Early_Cretaceous_125Ma.nc"
+  },
+  {
+   "id": "paleodem-1200",
+   "age_ma": 120,
+   "label": "Early Cretaceous",
+   "map": "27",
+   "file": "Map27_PALEOMAP_1deg_Early_Cretaceous_120Ma.nc"
+  },
+  {
+   "id": "paleodem-1150",
+   "age_ma": 115,
+   "label": "Early Cretaceous",
+   "map": "26",
+   "file": "Map26_PALEOMAP_1deg_Early_Cretaceous_115Ma.nc"
+  },
+  {
+   "id": "paleodem-1100",
+   "age_ma": 110,
+   "label": "Early Cretaceous",
+   "map": "25",
+   "file": "Map25_PALEOMAP_1deg_Early_Cretaceous_110Ma.nc"
+  },
+  {
+   "id": "paleodem-1050",
+   "age_ma": 105,
+   "label": "Early Cretaceous",
+   "map": "24",
+   "file": "Map24_PALEOMAP_1deg_Early Cretaceous_105Ma.nc"
+  },
+  {
+   "id": "paleodem-1000",
+   "age_ma": 100,
+   "label": "Early Cretaceous",
+   "map": "23",
+   "file": "Map23_PALEOMAP_1deg_Early_Cretaceous_100Ma.nc"
+  },
+  {
+   "id": "paleodem-0950",
+   "age_ma": 95,
+   "label": "Mid-Cretaceous",
+   "map": "22",
+   "file": "Map22_PALEOMAP_1deg_Mid-Cretaceous_95Ma.nc"
+  },
+  {
+   "id": "paleodem-0900",
+   "age_ma": 90,
+   "label": "Mid-Cretaceous",
+   "map": "21",
+   "file": "Map21_PALEOMAP_1deg_Mid-Cretaceous_90Ma.nc"
+  },
+  {
+   "id": "paleodem-0850",
+   "age_ma": 85,
+   "label": "Late Cretaceous",
+   "map": "20",
+   "file": "Map20_PALEOMAP_1deg_Late_Cretaceous_85Ma.nc"
+  },
+  {
+   "id": "paleodem-0800",
+   "age_ma": 80,
+   "label": "Late Cretaceous",
+   "map": "19",
+   "file": "Map19_PALEOMAP_1deg_Late_Cretaceous_80Ma.nc"
+  },
+  {
+   "id": "paleodem-0750",
+   "age_ma": 75,
+   "label": "Late Cretaceous",
+   "map": "18",
+   "file": "Map18_PALEOMAP_1deg_Late_Cretaceous_75Ma.nc"
+  },
+  {
+   "id": "paleodem-0700",
+   "age_ma": 70,
+   "label": "Late Cretaceous",
+   "map": "17",
+   "file": "Map17_PALEOMAP_1deg_Late_Cretaceous_70Ma.nc"
+  },
+  {
+   "id": "paleodem-0650",
+   "age_ma": 65,
+   "label": "KT Boundary",
+   "map": "16",
+   "file": "Map16_PALEOMAP_1deg_KT_Boundary_65Ma.nc"
+  },
+  {
+   "id": "paleodem-0600",
+   "age_ma": 60,
+   "label": "Paleocene",
+   "map": "15",
+   "file": "Map15_PALEOMAP_1deg_Paleocene_60Ma.nc"
+  },
+  {
+   "id": "paleodem-0550",
+   "age_ma": 55,
+   "label": "Paleocene Eocene Boundary",
+   "map": "14",
+   "file": "Map14_PALEOMAP_1deg_Paleocene_Eocene_Boundary_55Ma.nc"
+  },
+  {
+   "id": "paleodem-0500",
+   "age_ma": 50,
+   "label": "Early Eocene",
+   "map": "13",
+   "file": "Map13_PALEOMAP_1deg_Early_Eocene_50Ma.nc"
+  },
+  {
+   "id": "paleodem-0450",
+   "age_ma": 45,
+   "label": "early Middle Eocene",
+   "map": "12",
+   "file": "Map12_PALEOMAP_1deg_early_Middle_Eocene_45Ma.nc"
+  },
+  {
+   "id": "paleodem-0400",
+   "age_ma": 40,
+   "label": "late Middle Eocene",
+   "map": "11",
+   "file": "Map11_PALEOMAP_1deg_late_Middle_Eocene_40Ma.nc"
+  },
+  {
+   "id": "paleodem-0350",
+   "age_ma": 35,
+   "label": "Late Eocene",
+   "map": "10",
+   "file": "Map10_PALEOMAP_1deg_Late_Eocene_35Ma.nc"
+  },
+  {
+   "id": "paleodem-0300",
+   "age_ma": 30,
+   "label": "Early Oligocene",
+   "map": "09",
+   "file": "Map09_PALEOMAP_1deg_Early_Oligocene_30Ma.nc"
+  },
+  {
+   "id": "paleodem-0250",
+   "age_ma": 25,
+   "label": "Late Oligocene",
+   "map": "08",
+   "file": "Map08_PALEOMAP_1deg_Late_Oligocene_25Ma.nc"
+  },
+  {
+   "id": "paleodem-0200",
+   "age_ma": 20,
+   "label": "Early Miocene",
+   "map": "07",
+   "file": "Map07_PALEOMAP_1deg_Early_Miocene_20Ma.nc"
+  },
+  {
+   "id": "paleodem-0150",
+   "age_ma": 15,
+   "label": "Middle Miocene",
+   "map": "06",
+   "file": "Map06_PALEOMAP_1deg_Middle_Miocene_15Ma.nc"
+  },
+  {
+   "id": "paleodem-0100",
+   "age_ma": 10,
+   "label": "middle Late Miocene",
+   "map": "05",
+   "file": "Map05_PALEOMAP_1deg_middle_Late_Miocene_10Ma.nc"
+  },
+  {
+   "id": "paleodem-0050",
+   "age_ma": 5,
+   "label": "Pliocene",
+   "map": "03",
+   "file": "Map03_PALEOMAP_1deg_Pliocene_5Ma.nc"
+  },
+  {
+   "id": "paleodem-0000",
+   "age_ma": 0,
+   "label": "Holocene",
+   "map": "01",
+   "file": "Map01_PALEOMAP_1deg_Holocene_0Ma.nc"
+  }
+ ]
+}

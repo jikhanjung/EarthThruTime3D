@@ -319,15 +319,21 @@ def equirectangular(mask, bounds, width=FIELD_WIDTH):
     return mask[row, col]
 
 
-def signed_field(mask, bounds, width=FIELD_WIDTH):
-    land = equirectangular(mask, bounds, width)
+def signed_distance(land):
+    """Equirectangular land mask to the 8-bit signed distance the viewer interpolates."""
     # Tile in longitude so the distance transform crosses the antimeridian instead of
     # treating it as an edge. Latitude has real edges at the poles and is left alone.
+    width = land.shape[1]
     wide = np.tile(land, (1, 3))
     inside = ndimage.distance_transform_edt(wide)
     outside = ndimage.distance_transform_edt(~wide)
     signed = (inside - outside)[:, width:2 * width]
-    return np.clip(FIELD_ZERO + signed * FIELD_SCALE, 0, 255).astype(np.uint8), land
+    return np.clip(FIELD_ZERO + signed * FIELD_SCALE, 0, 255).astype(np.uint8)
+
+
+def signed_field(mask, bounds, width=FIELD_WIDTH):
+    land = equirectangular(mask, bounds, width)
+    return signed_distance(land), land
 
 
 PALETTE = np.array([

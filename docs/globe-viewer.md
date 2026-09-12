@@ -220,3 +220,32 @@ new license. The allowlist does not expose arbitrary files, HTML snapshots, or D
   installed: the inverse projection against the viewer's forward mapping, the inset
   ellipse mask and the colour conversion. Kept out of the Django suite because the web
   app does not depend on those packages.
+
+## Elevation series
+
+The viewer can show a second timeline: the 1° PALEOMAP PaleoDEMs of Scotese and Wright
+(2018), 109 elevation and bathymetry grids from 540 Ma to the present at 5 Myr, CC BY 4.0.
+`sources/paleodem-slices.json` lists them oldest first; `scripts/fetch_paleodem.py`
+fetches the pinned archives and `scripts/build_paleodem.py` writes one texture per
+slice, `paleodem-<age×10>-field.png`, beside the segmentation fields.
+
+Each texture is an RGB PNG on the same 1024 × 512 equirectangular grid. Red is the
+signed coastline distance the segmentation writes, taken at the 0 m contour of the
+bilinearly resampled grid, so mask mode, the stop table and the blend between stops work
+unchanged. Green is elevation quantised over -9000 to 6000 m, which puts sea level at
+0.6; the shader colours it with a hypsometric ramp, blue by depth and green through tan
+to white by height, and decides land against ocean from the distance rather than from
+the height so the coastline stays antialiased. The mask toggle returns to this relief
+view rather than to a photographed map.
+
+`GLOBE_SERIES` picks the series (`paleodem` by default, `scotese` for the 17 web maps);
+`?series=` overrides per request through the same allowlist. A checkout or deployment
+without any PaleoDEM texture falls back to the Scotese series, so the runtime bundle,
+which does not yet pack these textures, keeps serving what it has. The browser check
+pins `?series=scotese` because its assertions count that series' names and motions.
+
+What this series shows at a published slice is the reconstruction grid as its authors
+released it, not a measurement of ours. Between slices it is the same geometric blend as
+before, of distance and of height, with no travel field: the grids carry no piece
+identities, so nothing moves as a body. The elevation values are the grid's own; the
+palette is this project's choice.
