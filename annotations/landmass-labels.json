@@ -2,7 +2,7 @@
   "schema_version": 2,
   "purpose": "Names for the landmass pieces that scripts/segment_landmass.py finds.",
   "provenance": "Operator-assigned, not source data. Most anchors are the positions of names the source map itself prints, transcribed in source pixels, so a piece can be identified by which present-day landmasses it carries. The remaining anchors are geographic positions for maps whose landmasses need no transcription, mainly the recent ones. Each resolved name records which of the two it came from. The source maps label present-day landmass outlines drawn over the reconstruction, so a name states what a piece became, not what the map calls the ancient landmass.",
-  "anchor_note": "An anchor is either x/y in source pixels or lon/lat in degrees. It decides which segmented piece carries the name. A piece holding one anchor is labelled at its own interior point; a piece holding several is labelled at each anchor, so a merged mass such as Afro-Eurasia reads correctly. display:false keeps a name in the data but off the globe, to stop small blocks from crowding the sphere.",
+  "anchor_note": "An anchor is either x/y in source pixels or lon/lat in degrees. It decides which segmented piece carries the name. A piece holding one anchor is labelled at its own interior point; a piece holding several is labelled at each anchor, so a merged mass such as Afro-Eurasia reads correctly. display:false keeps a name in the data but off the globe, to stop small blocks from crowding the sphere. An optional track names the body a piece belongs to across maps, for the maps where the displayed name changes while the landmass does not. Matching uses the track when there is one.",
   "maps": {
     "000": [
       {
@@ -10,7 +10,8 @@
         "name_en": "Eurasia",
         "lon": 85,
         "lat": 52,
-        "display": true
+        "display": true,
+        "track": "eurasia"
       },
       {
         "name": "아프리카",
@@ -61,7 +62,8 @@
         "name_en": "Eurasia",
         "lon": 85,
         "lat": 52,
-        "display": true
+        "display": true,
+        "track": "eurasia"
       },
       {
         "name": "아프리카",
@@ -105,7 +107,8 @@
         "name_en": "Eurasia",
         "lon": 80,
         "lat": 45,
-        "display": true
+        "display": true,
+        "track": "eurasia"
       },
       {
         "name": "아프리카",
@@ -156,7 +159,8 @@
         "name_en": "Asia",
         "lon": 93,
         "lat": 41,
-        "display": true
+        "display": true,
+        "track": "eurasia"
       },
       {
         "name": "아프리카",
@@ -214,7 +218,8 @@
         "name_en": "Asia",
         "lon": 86,
         "lat": 38,
-        "display": true
+        "display": true,
+        "track": "eurasia"
       },
       {
         "name": "아프리카",
@@ -265,7 +270,8 @@
         "name_en": "Asia",
         "lon": 80,
         "lat": 46,
-        "display": true
+        "display": true,
+        "track": "eurasia"
       },
       {
         "name": "아프리카",
@@ -330,7 +336,8 @@
         "name_en": "Asia",
         "lon": 95,
         "lat": 53,
-        "display": true
+        "display": true,
+        "track": "eurasia"
       }
     ],
     "195": [
@@ -339,7 +346,8 @@
         "name_en": "Laurasia",
         "x": 355,
         "y": 97,
-        "display": true
+        "display": true,
+        "track": "pangaea"
       },
       {
         "name": "곤드와나",
@@ -355,7 +363,8 @@
         "name_en": "Pangaea",
         "lon": 16,
         "lat": -3,
-        "display": true
+        "display": true,
+        "track": "pangaea"
       },
       {
         "name": "시메리아",
@@ -371,7 +380,8 @@
         "name_en": "Pangea",
         "x": 285,
         "y": 175,
-        "display": true
+        "display": true,
+        "track": "pangaea"
       },
       {
         "name": "곤드와나",
@@ -422,7 +432,8 @@
         "name_en": "Pangea",
         "x": 332,
         "y": 189,
-        "display": true
+        "display": true,
+        "track": "pangaea"
       },
       {
         "name": "곤드와나",

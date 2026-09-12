@@ -138,6 +138,7 @@ def name_pieces(labels_map, pieces, anchors, bounds, tolerance_px=40.0):
         longitude, latitude = inverse_mollweide(col, row, bounds)
         by_label[label]["names"].append(
             {"name": anchor["name"], "name_en": anchor.get("name_en"),
+             "track": anchor.get("track"),
              "lon": round(float(longitude), 3), "lat": round(float(latitude), 3),
              "display": bool(anchor.get("display", True)),
              "source": "map label" if "x" in anchor else "position"})

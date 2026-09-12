@@ -157,9 +157,21 @@ class GlobeTests(TestCase):
         self.assertEqual(globe_module.timeline([{'age': 7}], {'interval_ma': None, 'steps': 4}),
                          [[0, 0, 0.0, 7]])
 
+    def test_a_track_carries_identity_across_a_rename(self):
+        frames = [{"id": "a", "age": 100.0}, {"id": "b", "age": 50.0}]
+        pieces = {"a": [{"names": [{"name": "아시아", "track": "eurasia"}],
+                         "centroid": [80, 40], "radius_deg": 30.0, "area_px": 9000}],
+                  "b": [{"names": [{"name": "유라시아", "track": "eurasia"}],
+                         "centroid": [85, 45], "radius_deg": 30.0, "area_px": 9500}]}
+        self.assertEqual(len(globe_module.motions(frames, pieces)[0]), 1)
+        for side in pieces.values():
+            side[0]["names"][0].pop("track")
+        self.assertEqual(globe_module.motions(frames, pieces)[0], [])
+
     def test_motion_pairs_only_where_a_piece_keeps_its_identity(self):
-        def piece(name, lon, lat, radius=20.0):
-            return {"names": [{"name": name}], "centroid": [lon, lat], "radius_deg": radius}
+        def piece(name, lon, lat, radius=20.0, area=1000):
+            return {"names": [{"name": name}], "centroid": [lon, lat],
+                    "radius_deg": radius, "area_px": area}
 
         frames = [{"id": "a", "age": 100.0}, {"id": "b", "age": 50.0}]
         pieces = {"a": [piece("대륙", 0, 0)], "b": [piece("대륙", 10, 0)]}
@@ -171,14 +183,27 @@ class GlobeTests(TestCase):
 
         # A piece that splits has no single place to travel to.
         pieces = {"a": [{"names": [{"name": "북"}, {"name": "남"}], "centroid": [0, 0],
-                         "radius_deg": 20.0}],
+                         "radius_deg": 20.0, "area_px": 1000}],
                   "b": [piece("북", 20, 20), piece("남", -20, -20)]}
         self.assertEqual(globe_module.motions(frames, pieces)[0], [])
 
-        # A correspondence implying an impossible plate speed is not movement.
-        near = [{"id": "a", "age": 1.0}, {"id": "b", "age": 0.0}]
+        # A shared name is kept however fast the implied motion is, because India
+        # really did cross the Tethys at close to two degrees of arc per million years.
+        # The rate is reported so an implausible pairing stays visible.
+        fast = [{"id": "a", "age": 60.0}, {"id": "b", "age": 50.0}]
+        pieces = {"a": [piece("인도", 0, 0)], "b": [piece("인도", 18, 0)]}
+        pair = globe_module.motions(fast, pieces)[0][0]
+        self.assertAlmostEqual(pair["deg_per_ma"], 1.8, places=3)
+        self.assertFalse(pair["fast"])
         pieces = {"a": [piece("대륙", 0, 0)], "b": [piece("대륙", 40, 0)]}
-        self.assertEqual(globe_module.motions(near, pieces)[0], [])
+        pair = globe_module.motions(fast, pieces)[0][0]
+        self.assertTrue(pair["fast"])
+
+        # Two pieces whose mapped areas differ this much are different extents of the
+        # same landmass, so their centroids cannot be compared.
+        pieces = {"a": [piece("남극", 0, -70, area=8000)],
+                  "b": [piece("남극", 25, -70, area=2000)]}
+        self.assertEqual(globe_module.motions(frames, pieces)[0], [])
 
         # Islands are too small to carry a continent's morph.
         pieces = {"a": [piece("섬", 0, 0, radius=1.0)], "b": [piece("섬", 5, 0, radius=1.0)]}
@@ -190,9 +215,9 @@ class GlobeTests(TestCase):
         for index in range(globe_module.MAX_MOTIONS + 4):
             radius = 5.0 + index
             pieces["a"].append({"names": [{"name": str(index)}], "centroid": [0, 0],
-                                "radius_deg": radius})
+                                "radius_deg": radius, "area_px": 1000})
             pieces["b"].append({"names": [{"name": str(index)}], "centroid": [1, 0],
-                                "radius_deg": radius})
+                                "radius_deg": radius, "area_px": 1000})
         gap = globe_module.motions(frames, pieces)[0]
         self.assertEqual(len(gap), globe_module.MAX_MOTIONS)
         self.assertEqual([pair["radius"] for pair in gap],

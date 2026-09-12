@@ -37,11 +37,18 @@ SEGMENTATION_DIR = "data/derived/segmentation"
 # Control points the morph shader can hold at once. Every map has fewer named pieces
 # than this, so the cap only ever trims the smallest.
 MAX_MOTIONS = 16
-# Fastest plate motion anyone measures is around 15 cm a year, which is 1.5 degrees of
-# arc per million years. A correspondence implying more than that is not movement.
-MAX_DEGREES_PER_MA = 1.5
+# India crossed the Tethys at roughly 18 to 20 cm a year, about 2 degrees of arc per
+# million years, and that is the fastest anyone measures. Pairs above it are reported,
+# not dropped: the identity comes from a shared name, which is a stronger statement than
+# a speed heuristic.
+FASTEST_MEASURED_DEGREES_PER_MA = 2.0
 # Below this a piece is an island on these maps, too small to carry a continent's morph.
 MIN_MOTION_RADIUS_DEG = 4.0
+# Two pieces whose mapped areas differ by more than this are not the same extent, so
+# their centroids are not comparable. Antarctica is the clearest case: the maps draw it
+# as a broken ice fringe, and the segmentation keeps a different share of it each time,
+# which moves the centroid without anything having moved.
+MAX_AREA_RATIO = 3.0
 
 
 def derived_path(item, suffix):
@@ -95,7 +102,7 @@ def _matched_pieces(older, newer):
         index = {}
         for position, piece in enumerate(pieces):
             for name in piece.get("names", []):
-                index.setdefault(name["name"], position)
+                index.setdefault(name.get("track") or name["name"], position)
         return index
 
     forward = by_name(older)
@@ -118,27 +125,38 @@ def motions(frames, pieces_by_frame, limit=MAX_MOTIONS):
 
     Each entry carries a piece from where it sits on one map to where it sits on the
     next, so the viewer moves it and blends its outline on the way instead of
-    dissolving the whole map into the following one. Correspondences implying a plate
-    speed nobody measures are dropped: the two maps disagree for some other reason,
-    usually a piece that the segmentation split differently, and reading that as
-    movement would invent a journey.
+    dissolving the whole map into the following one.
+
+    A shared identity is taken at its word however fast the implied motion is. India
+    crossed the Tethys at around 18 to 20 centimetres a year, close to two degrees of
+    arc per million years, so a speed limit tight enough to catch segmentation noise
+    also throws away the best-known journey on these maps. Each entry reports the speed
+    it implies, and `fast` marks the ones above the fastest plate anyone measures, so an
+    implausible pairing stays visible instead of being silently dropped.
+
+    What is dropped is measured rather than physical: a piece that split or merged, one
+    too small to carry a morph, and one whose mapped area changed so much that the two
+    centroids describe different extents of the same landmass.
     """
     result = []
     for older_frame, newer_frame in zip(frames, frames[1:]):
         span = abs(older_frame["age"] - newer_frame["age"])
-        budget = MAX_DEGREES_PER_MA * span
         pairs = []
         for older, newer in _matched_pieces(pieces_by_frame[older_frame["id"]],
                                             pieces_by_frame[newer_frame["id"]]):
             radius = max(older.get("radius_deg", 0), newer.get("radius_deg", 0))
             if radius < MIN_MOTION_RADIUS_DEG:
                 continue
-            travelled = separation(older["centroid"], newer["centroid"])
-            if travelled > budget:
+            areas = (older.get("area_px", 0), newer.get("area_px", 0))
+            if min(areas) <= 0 or max(areas) / min(areas) > MAX_AREA_RATIO:
                 continue
+            travelled = separation(older["centroid"], newer["centroid"])
+            rate = travelled / span if span else 0.0
             pairs.append({"lon": older["centroid"][0], "lat": older["centroid"][1],
                           "to_lon": newer["centroid"][0], "to_lat": newer["centroid"][1],
-                          "radius": round(radius, 3), "moved": round(travelled, 3)})
+                          "radius": round(radius, 3), "moved": round(travelled, 3),
+                          "deg_per_ma": round(rate, 4),
+                          "fast": rate > FASTEST_MEASURED_DEGREES_PER_MA})
         pairs.sort(key=lambda pair: pair["radius"], reverse=True)
         result.append(pairs[:limit])
     return result

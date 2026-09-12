@@ -67,14 +67,28 @@ shrink and drift instead of fading through each other.
 
 Blending two fields in place makes a landmass melt where it was and grow where it will
 be. To move it instead, each side is sampled through a **travel field** first. The
-server pairs the pieces on the two maps that share a name, keeping only one-to-one
+server pairs the pieces on the two maps that share an identity, keeping only one-to-one
 correspondences: a piece the segmentation split or merged across the gap has no single
-place to travel to, so it is dropped rather than read as motion. It also drops any pair
-whose centroids are further apart than 1.5 degrees of arc per million years, about 15
-centimetres a year, which is faster than any plate anyone measures; two maps that
-disagree by more than that disagree for some other reason. What survives is a handful
-of control points per gap, each one a landmass with a start, an end and an angular size
-taken from its area.
+place to travel to, so it is dropped rather than read as motion. Identity is the
+annotated name, or the `track` where a map renames a body that has not changed, as when
+the Asian landmass is drawn as Eurasia once Europe has joined it.
+
+A shared identity is taken at its word however fast the implied motion is. India crossed
+the Tethys at roughly 18 to 20 centimetres a year, close to two degrees of arc per
+million years, so a speed limit tight enough to catch segmentation noise also throws
+away the best-known journey on these maps. Each pair reports the rate it implies and is
+flagged above two degrees per million years, so an implausible pairing stays visible
+instead of being silently dropped.
+
+What is dropped is measured rather than physical. A pair is refused when a piece is too
+small to carry a morph, and when the two mapped areas differ by more than three times,
+because then the centroids describe different extents of the same landmass rather than
+a journey. Antarctica is the clearest case: these maps draw it as a broken ice fringe
+and the segmentation keeps a different share of it each time, which moved its centroid
+23 degrees between the Last Glacial Maximum and today, across eighteen thousand years.
+
+What survives is a handful of control points per gap, each one a landmass with a start,
+an end and an angular size taken from its area.
 
 The shader turns those points into a displacement for every texel: a Gaussian falling
 off over each piece's own radius, normalised across whichever points reach that texel,
@@ -84,7 +98,9 @@ map and at its destination on the newer one, so the coastline morphs around a co
 that is moving rather than one that is melting. At most 16 control points are carried at
 once, which is more than any of these maps needs.
 
-Gaps with no surviving pair, 237 to 195 Ma among them, fall back to blending in place.
+Gaps with no surviving pair fall back to blending in place. So does any landmass with no
+counterpart, which is why India shrinks rather than travels between 50 and 14 Ma: by 14
+Ma the maps draw it as part of Eurasia, and a merge has no single destination.
 
 `scripts/segment_landmass.py` writes each field as an equirectangular 1024 x 512 PNG,
 land positive around mid-grey at two grey levels per pixel of distance. The distance
