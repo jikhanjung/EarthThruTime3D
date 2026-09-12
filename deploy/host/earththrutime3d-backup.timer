@@ -1,0 +1,11 @@
+[Unit]
+Description=Hourly EarthThruTime3D database snapshot
+
+[Timer]
+OnCalendar=hourly
+# Spread the work off the hour so a snapshot never races a deploy started on it.
+RandomizedDelaySec=300
+Persistent=true
+
+[Install]
+WantedBy=timers.target

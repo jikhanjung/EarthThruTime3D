@@ -1,0 +1,38 @@
+contract_version = 1
+instance = "earththrutime3d"
+image = "honestjung/earththrutime3d"
+version = "v0.3.1"
+platform = "linux/amd64"
+settings = "config.settings.production"
+has_database = true
+health_url = "/healthz"
+services = ["earththrutime3d"]
+
+[verbs]
+preflight = "bash deploy/build.sh v0.3.1"
+build = "bash deploy/build.sh v0.3.1"
+deploy = "bash /srv/earththrutime3d/deploy.sh v0.3.1"
+seed = "none: no geological records are stored in the database yet"
+smoke = "bash /srv/earththrutime3d/smoke.sh"
+rollback = "bash /srv/earththrutime3d/deploy.sh <previous-version>"
+backup = "bash /srv/earththrutime3d/backup.sh"
+
+[targets.prod]
+host = "dolfinid"
+ssh_user = "honestjung"
+hostname = "cdgts.paleobytes.info"
+domain = "earththrutime.nopeoplestime.info"
+root = "/srv/earththrutime3d"
+expose = "127.0.0.1:8014"
+data = "/srv/earththrutime3d/data/<version>"
+database = "/srv/earththrutime3d/db/db.sqlite3"
+backups = "/srv/earththrutime3d/backups"
+# Host nginx/TLS configuration: deploy/host/earththrutime3d.nginx.conf.
+
+[publication]
+# The PALEOMAP licence permits personal, teaching, research and scientific-publication
+# use with credit, and names websites among the commercial uses needing the author's
+# written consent. This deployment therefore ships only the derived land fields, which
+# are this project's own measurement of the published maps, and no original JPEG is
+# placed in the image, the data bundle or on the server.
+source_maps_public = false

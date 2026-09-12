@@ -1,0 +1,12 @@
+[Unit]
+Description=EarthThruTime3D database snapshot
+Documentation=file:/srv/earththrutime3d/deploy-README.md
+
+[Service]
+Type=oneshot
+User=honestjung
+WorkingDirectory=/srv/earththrutime3d
+ExecStart=/usr/bin/env bash /srv/earththrutime3d/backup.sh
+# A failed snapshot must be visible, not silently retried into a gap in the history.
+StandardOutput=journal
+StandardError=journal

@@ -112,6 +112,11 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = Path(os.environ.get('MEDIA_ROOT', BASE_DIR / 'media'))
 INTEGRITY_SENTINEL = Path(DATABASES['default']['NAME']).parent / 'INTEGRITY_FAIL'
 
+# Where the segmentation's derived fields are read from. In a container this points at
+# the read-only runtime bundle; locally it is the working copy the script writes.
+SCOTESE_DERIVED_DIR = Path(os.environ.get(
+    'SCOTESE_DERIVED_DIR', BASE_DIR / 'data' / 'derived' / 'segmentation'))
+
 # How the globe's timeline is sampled between the published maps.
 #
 # STEPS divides every gap into the same number of sub-steps, so a stop is a fraction of

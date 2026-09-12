@@ -228,6 +228,32 @@ class GlobeTests(TestCase):
         self.assertAlmostEqual(globe_module.separation([0, 0], [90, 0]), 90.0, places=4)
         self.assertAlmostEqual(globe_module.separation([0, 89], [180, 89]), 2.0, places=4)
 
+    def test_source_maps_stay_off_the_network_until_they_are_published(self):
+        with self.settings(SCOTESE_VIEWER_ENABLED=True, SCOTESE_SOURCE_MAPS_PUBLIC=False):
+            response = self.client.get('/')
+            self.assertEqual(self.client.get('/globe/maps/scotese-000.jpg').status_code, 404)
+            self.assertFalse(response.context['source_maps_public'])
+            self.assertEqual({frame['url'] for frame in response.context['frames']}, {None})
+            self.assertNotContains(response, 'id="surface"')
+            self.assertNotContains(response, 'id="source-preview"')
+            self.assertContains(response, 'scotese.com')
+        with self.settings(SCOTESE_VIEWER_ENABLED=True, SCOTESE_SOURCE_MAPS_PUBLIC=True):
+            response = self.client.get('/')
+            self.assertTrue(response.context['source_maps_public'])
+            self.assertTrue(all(frame['url'] for frame in response.context['frames']))
+
+    def test_health_fails_when_the_runtime_bundle_is_missing(self):
+        with self.settings(SCOTESE_VIEWER_ENABLED=True, SCOTESE_DERIVED_DIR='/nonexistent'):
+            response = self.client.get('/healthz')
+        self.assertEqual(response.status_code, 503)
+        body = response.json()
+        self.assertEqual(body['status'], 'unhealthy')
+        self.assertEqual(body['fields']['missing'], body['fields']['expected'])
+        with self.settings(SCOTESE_VIEWER_ENABLED=False, SCOTESE_DERIVED_DIR='/nonexistent'):
+            response = self.client.get('/healthz')
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(response.json()['fields']['required'])
+
     def test_missing_map_returns_404(self):
         with self.settings(SCOTESE_VIEWER_ENABLED=True):
             with patch('pathlib.Path.open', side_effect=FileNotFoundError):

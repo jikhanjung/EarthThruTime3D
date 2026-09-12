@@ -2,6 +2,7 @@ from .base import *  # noqa: F403
 
 DEBUG = True
 SCOTESE_VIEWER_ENABLED = True
+SCOTESE_SOURCE_MAPS_PUBLIC = True
 SECRET_KEY = os.environ.get(  # noqa: F405
     "SECRET_KEY", "django-insecure-local-development-only-earththrutime3d"
 )

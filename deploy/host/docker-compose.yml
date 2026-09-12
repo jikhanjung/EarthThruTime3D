@@ -1,0 +1,34 @@
+name: earththrutime3d
+services:
+  earththrutime3d:
+    image: honestjung/earththrutime3d:${IMAGE_TAG:?Set IMAGE_TAG}
+    ports:
+      - "127.0.0.1:${HOST_PORT:-8014}:8000"
+    env_file:
+      - .env.django
+    volumes:
+      - type: bind
+        source: ./data/${DATA_VERSION:?Set DATA_VERSION}
+        target: /runtime
+        read_only: true
+        bind:
+          create_host_path: false
+      # The only writable persistent path. Code rollback never touches it.
+      - type: bind
+        source: ./db
+        target: /var/lib/earththrutime3d
+        bind:
+          create_host_path: false
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=64m
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"

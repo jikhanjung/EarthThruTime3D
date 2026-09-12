@@ -34,10 +34,13 @@ const PROJECTIONS = {
   mollweide: { sheet: [2, 1], code: 2, place: placeMollweide, half: [1, 0.5] },
 };
 const surfaceToggle = $('surface');
+// Without the published maps there is nothing to show but the derived surface, so the
+// viewer starts there and the toggle is not rendered at all.
+const sourceMapsPublic = frames.some((frame) => Boolean(frame.url));
+let surface = sourceMapsPublic ? 'map' : 'mask';
 let projection = 'globe';
 let surfaceMesh;
 let gridVisible = false;
-let surface = 'map';
 let nameLayer;
 let nameGroupKey = '';
 let uniforms;
@@ -105,7 +108,7 @@ function loadField(frame) {
     prepare(new THREE.Texture(await loadImage(frame.field), THREE.UVMapping)));
 }
 async function loadSurface(frame) {
-  if (surface === 'mask' && frame.field) {
+  if ((surface === 'mask' || !frame.url) && frame.field) {
     const texture = await loadField(frame);
     texture.needsUpdate = true;
     return texture;
@@ -140,7 +143,8 @@ async function selectStop(value, manual = false) {
   selected = place.index;
   const ticket = ++request;
   const between = place.blend > 0;
-  const masked = surface === 'mask' && Boolean(place.from.field) && Boolean(place.to.field);
+  const masked = (surface === 'mask' || !sourceMapsPublic)
+    && Boolean(place.from.field) && Boolean(place.to.field);
   const anchor = place.blend > 0.5 ? place.to : place.from;
   $('era').value = selected;
   $('timeline').value = stop;
@@ -152,8 +156,10 @@ async function selectStop(value, manual = false) {
   $('globe-age').textContent = [periodLabel(place), ageLabel(place),
     masked ? '대륙 마스크' : null, between ? '보간' : null].filter(Boolean).join(' / ');
   $('source-link').href = anchor.source;
-  $('source-preview').src = anchor.url;
-  $('source-preview').alt = `${anchor.label} (${ageText(anchor)}) Scotese 원본 지도`;
+  if ($('source-preview')) {
+    $('source-preview').src = anchor.url;
+    $('source-preview').alt = `${anchor.label} (${ageText(anchor)}) Scotese 원본 지도`;
+  }
   $('older').disabled = stop <= frameStops[0];
   $('newer').disabled = stop >= frameStops[frames.length - 1];
   $('frame-number').textContent = between

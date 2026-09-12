@@ -1,0 +1,36 @@
+**
+!manage.py
+!requirements.txt
+!config/
+!config/**
+!core/
+!core/**
+!templates/
+!templates/**
+!static/
+!static/**
+!sources/
+!sources/**
+!annotations/
+!annotations/**
+!deploy/
+!deploy/**
+**/__pycache__/**
+**/*.pyc
+**/.env
+**/.env.*
+!deploy/host/.env.django.example
+# The published PALEOMAP images and everything derived from them stay out of the image.
+# The runtime bundle carries the derived fields, and nothing carries the originals.
+data/
+dist/
+.build/
+.git/
+.venv/
+staticfiles/
+node_modules/
+devlog/
+docs/
+tests/
+scripts/
+.guides

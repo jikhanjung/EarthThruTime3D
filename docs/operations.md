@@ -1,7 +1,8 @@
 # Operations status
 
-This is a local development scaffold, not a configured production deployment.
-No production host, registry, domain, container stack or backup destination exists here.
+Deployed since 2026-09-12 at https://earththrutime.nopeoplestime.info/ on the dolfinid
+host. Configuration and procedure live in `deploy/README.md` and `deploy/deploy.toml`.
+Builds happen on the development host; the server only loads the image and swaps.
 The shared guides are referenced privately through `.guides`; they are not copied.
 
 ## Adopted now
@@ -18,28 +19,45 @@ The shared guides are referenced privately through `.guides`; they are not copie
 - Seed: **(none)**. No geological records exist yet; schema readiness is the temporary
   health invariant. Replace it with a meaningful domain invariant once data exists.
 
-## Before production
+## Adopted at the 2026-09-12 deployment
 
-Implement `preflight`, `deploy`, `seed`, `smoke`, and `rollback` under standard names.
-Preflight must inspect migrations, environment/configuration and seed changes against
-the prior release. Smoke must require status `ok`, the expected version and a domain
-invariant. Deploy and rollback are intentionally not executable placeholders today.
+- Verbs under standard names: `preflight`/`build`, `deploy`, `smoke`, `rollback`,
+  `backup`. `seed` is still **(none)**. Preflight runs Django's checks, the
+  missing-migration check and the test suite before any image is built.
+- Smoke requires status `ok`, the expected version, and the domain invariant: all 17
+  derived land fields present and served.
+- Rollback is the deploy command with the previous version, exercised in both
+  directions on the day of the first deployment.
+- Build happens on the development host. The server loads an immutable versioned image
+  and swaps; it never builds.
+- Non-root container (UID 10001), read-only root filesystem, `/tmp` on tmpfs, all
+  capabilities dropped, `no-new-privileges`, port bound to `127.0.0.1:8014` only, host
+  nginx terminating TLS with Let's Encrypt and webroot renewal.
+- Collectstatic runs at build time because the running root filesystem is read-only.
+  Migrations run at container startup against the persistent DB volume. The host never
+  migrates a running database.
+- The image and its data bundle are validated as a pair before the running service is
+  touched: the manifest version must match the image and every file's size and SHA-256
+  must match. A mismatched pair refuses to start.
+- Pre-deploy and hourly snapshots, taken with sqlite3's backup API from a throwaway
+  container, integrity-checked, and discarded if the check fails. Pruning happens only
+  after a verified new snapshot exists and never below one kept copy.
+- Code rollback and data restore stay separate: no deploy path writes to `db/`.
+- Secrets are provisioned in `.env.django` on the host at 600, never in the image.
+- The PALEOMAP originals are excluded from the image, the bundle and the server. The
+  build fails if a JPEG appears in the image, and the running container is checked for
+  refusing to serve one.
 
-Build/test images off production. Production only pulls immutable versioned images.
-Use a non-root container, persistent DB-directory/media mounts, local-only port binding,
-and nginx TLS. After stopping all writers, the container startup runs collectstatic,
-migrations, and gunicorn. Never migrate a running production DB from the host.
+## Still outstanding
 
-Provide verified pre-deploy, hourly and offsite backups. Verify snapshots before adoption;
-never prune on failed/missing sources. Offsite copies must clear sessions and VACUUM
-after integrity verification. Restore only after all writers stop; exercise restoration.
-Code rollback and data restore must remain separate. Deployment updates the image tag
-without replacing credentials or host configuration. Surface backup failures and monitor
-disk usage. Do not reseed operator-authored records.
-
-Provision `.env` values explicitly; do not ship secrets in an image. A trusted reverse
-proxy must strip incoming forwarding headers before `TRUST_PROXY_HEADERS=true` is set.
-Initial HSTS is one day; subdomain inclusion/preload default off until domains are ready.
-Run `check --deploy` with production settings. Resolve deployment-specific warnings.
-Finalize public contact/privacy details, asset attribution, touch icon and social preview
-metadata before publication; the initial shell has a favicon but no social image.
+- **Offsite backups.** Pre-deploy and hourly snapshots exist on the same host. No
+  offsite destination has been chosen, so the session-clearing and VACUUM steps that
+  belong to an offsite copy are not implemented either.
+- **Restore drill.** Rollback of code is exercised; restoring a database from a snapshot
+  has not been rehearsed.
+- **Disk monitoring and backup-failure alerting.** The host was at 89% when the service
+  was installed. A failed hourly snapshot is visible in the journal but nothing raises it.
+- **Social preview metadata and a touch icon.** The shell has a favicon only.
+- **A project licence.** Not chosen yet.
+- HSTS stays at one day with subdomain inclusion and preload off, which `check --deploy`
+  reports as two warnings. That is deliberate until the domain set is settled.

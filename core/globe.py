@@ -32,7 +32,6 @@ KOREAN_LABELS = ["후기 원생대", "후기 캄브리아기", "중기 오르도
 # Derived land masks produced by scripts/segment_landmass.py. They are an
 # interpretation of the published maps, not source data, and they are absent until
 # that script has been run, so the viewer has to work without them.
-SEGMENTATION_DIR = "data/derived/segmentation"
 
 # Control points the morph shader can hold at once. Every map has fewer named pieces
 # than this, so the cap only ever trims the smallest.
@@ -53,7 +52,7 @@ MAX_AREA_RATIO = 3.0
 
 def derived_path(item, suffix):
     stem = Path(item["image"]["path"]).stem
-    return settings.BASE_DIR / SEGMENTATION_DIR / f"{stem}-{suffix}"
+    return Path(settings.SCOTESE_DERIVED_DIR) / f"{stem}-{suffix}"
 
 
 def field_path(item):
@@ -68,6 +67,17 @@ def catalogue():
 
 def enabled():
     return settings.SCOTESE_VIEWER_ENABLED
+
+
+def source_maps_public():
+    """Whether the original PALEOMAP JPEGs are served to visitors.
+
+    Separate from running the viewer. The licence names websites among the commercial
+    uses needing the author's written consent, so a deployment can show the derived
+    land fields, which are this project's own measurement, while keeping the published
+    maps off the network. The attribution and the licence link stay either way.
+    """
+    return getattr(settings, "SCOTESE_SOURCE_MAPS_PUBLIC", False)
 
 
 def piece_report(item):
@@ -234,6 +244,21 @@ def timeline(frames, plan):
     return stops
 
 
+def bundle_report():
+    """Whether the derived land fields this deployment serves are actually present.
+
+    A viewer that is switched on but has no fields is broken rather than degraded, so
+    the health endpoint fails on it: the container will have been started against the
+    wrong runtime bundle.
+    """
+    if not enabled():
+        return {"required": False, "expected": 0, "missing": 0}
+    maps = catalogue()["maps"]
+    missing = [item["id"] for item in maps if not field_path(item).exists()]
+    return {"required": True, "expected": len(maps), "missing": len(missing),
+            "missing_ids": missing[:5]}
+
+
 @require_safe
 def globe(request):
     frames = []
@@ -243,7 +268,8 @@ def globe(request):
             pieces_by_frame[item["id"]] = piece_report(item)
             frames.append({"id": item["id"], "label": korean, "title": item["image_label"],
                            "age": item["age_ma"], "bounds": BOUNDS[item["id"].removeprefix("scotese-")],
-                           "url": reverse("globe-map", args=[item["id"]]),
+                           "url": (reverse("globe-map", args=[item["id"]])
+                                   if source_maps_public() else None),
                            "field": (reverse("globe-field", args=[item["id"]])
                                      if field_path(item).exists() else None),
                            "names": landmass_names(pieces_by_frame[item["id"]]),
@@ -252,13 +278,14 @@ def globe(request):
     return render(request, "core/home.html",
                   {"frames": frames, "viewer_enabled": enabled(),
                    "stops": timeline(frames, plan), "sampling": plan,
+                   "source_maps_public": source_maps_public(),
                    "motions": motions(frames, pieces_by_frame),
                    "fields_available": any(frame["field"] for frame in frames)})
 
 
 @require_safe
 def source_map(request, map_id):
-    if not enabled():
+    if not enabled() or not source_maps_public():
         raise Http404
     item = next((item for item in catalogue()["maps"] if item["id"] == map_id), None)
     if item is None:
