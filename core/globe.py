@@ -81,7 +81,21 @@ def paleodem_items():
     """
     record = paleodem_catalogue()["record"]
     return [{"id": item["id"], "age_ma": item["age_ma"], "image_label": item["label"],
-             "stem": item["id"], "source": record} for item in paleodem_catalogue()["slices"]]
+             "label_ko": item["label_ko"], "stem": item["id"], "source": record, "relief": True}
+            for item in paleodem_catalogue()["slices"]]
+
+
+def elevation_timeline():
+    """The PaleoDEM slices with the 650 Ma Scotese map in front as the oldest stop.
+
+    The grids stop at 540 Ma. The oldest web map reaches 650 Ma, and its segmented land
+    field is this project's own measurement, served already; it carries no heights, so
+    the viewer draws that stop as a mask and says so in its label.
+    """
+    oldest = catalogue()["maps"][0]
+    prelude = {**oldest, "label_ko": f"{KOREAN_LABELS[0]} · 분할 마스크",
+               "source": oldest["page"]["url"], "relief": False}
+    return [prelude] + paleodem_items()
 
 
 def series(request=None):
@@ -92,7 +106,7 @@ def series(request=None):
     """
     asked = request.GET.get("series") if request is not None else None
     chosen = asked if asked in SERIES else settings.GLOBE_SERIES
-    if chosen == "paleodem" and not all(field_path(item).exists() for item in paleodem_items()):
+    if chosen == "paleodem" and not all(field_path(item).exists() for item in elevation_timeline()):
         return "scotese"
     return chosen if chosen in SERIES else "scotese"
 
@@ -292,7 +306,7 @@ def bundle_report():
     # Validate the series the viewer actually serves. A configured PaleoDEM series that
     # is not fully built falls back to Scotese, and the report says so by name.
     shown = series()
-    items = paleodem_items() if shown == "paleodem" else catalogue()["maps"]
+    items = elevation_timeline() if shown == "paleodem" else catalogue()["maps"]
     missing = [item["id"] for item in items if not field_path(item).exists()]
     return {"required": True, "series": shown, "expected": len(items),
             "missing": len(missing), "missing_ids": missing[:5]}
@@ -304,13 +318,14 @@ def globe(request):
     pieces_by_frame = {}
     chosen = series(request)
     if enabled() and chosen == "paleodem":
-        for item in paleodem_items():
-            pieces_by_frame[item["id"]] = []
-            frames.append({"id": item["id"], "label": item["image_label"], "title": item["image_label"],
-                           "age": item["age_ma"], "bounds": None, "url": None, "relief": True,
+        for item in elevation_timeline():
+            pieces_by_frame[item["id"]] = piece_report(item)
+            frames.append({"id": item["id"], "label": item["label_ko"], "title": item["image_label"],
+                           "age": item["age_ma"], "bounds": None, "url": None, "relief": item["relief"],
                            "field": (reverse("globe-field", args=[item["id"]])
                                      if field_path(item).exists() else None),
-                           "names": [], "source": item["source"]})
+                           "names": landmass_names(pieces_by_frame[item["id"]]),
+                           "source": item["source"]})
     elif enabled():
         for item, korean in zip(catalogue()["maps"], KOREAN_LABELS):
             pieces_by_frame[item["id"]] = piece_report(item)

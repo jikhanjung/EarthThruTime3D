@@ -123,8 +123,7 @@ function loadMap(frame) {
 function loadField(frame) {
   // A field is data, not a picture: distance in red, height in green. Decoding it as
   // an <img> lets the browser colour-manage the bytes on the way to WebGL, which some
-  // engines do even when asked not to, and a shifted distance moves the coastline. An
-  // ImageBitmap decoded with conversion off hands the shader the bytes as written.
+  // engines do even when asked not to, and a shifted distance moves the coastline.
   // WebGL only colour-converts DOM image sources; bytes handed over as an array are
   // uploaded as they are, by specification. So decode to a 2D canvas, read the bytes
   // back and upload those.
@@ -183,7 +182,8 @@ async function selectStop(value, manual = false) {
   const ticket = ++request;
   const between = place.blend > 0;
   const fielded = Boolean(place.from.field) && Boolean(place.to.field);
-  const relief = surface === 'relief' && fielded;
+  // A stop needs heights on both sides to be drawn by height; the 650 Ma map has none.
+  const relief = surface === 'relief' && fielded && Boolean(place.from.relief) && Boolean(place.to.relief);
   const masked = !relief && (surface === 'mask' || !sourceMapsPublic) && fielded;
   const anchor = place.blend > 0.5 ? place.to : place.from;
   $('era').value = selected;

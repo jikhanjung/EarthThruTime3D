@@ -275,7 +275,7 @@ class PaleodemTests(TestCase):
         self.addCleanup(settings_patch.disable)
 
     def build(self, item):
-        Path(self.derived.name, f"{item['id']}-field.png").write_bytes(b'png')
+        globe_module.field_path(item).write_bytes(b'png')
 
     def test_catalogue_is_oldest_first_with_unique_slug_ids(self):
         items = globe_module.paleodem_items()
@@ -289,27 +289,32 @@ class PaleodemTests(TestCase):
         self.assertEqual(globe_module.series(RequestFactory().get('/')), 'scotese')
         response = self.client.get('/')
         self.assertEqual(response.context['series'], 'scotese')
-        items = globe_module.paleodem_items()
-        for item in items[:-1]:
+        items = globe_module.elevation_timeline()
+        for item in items[1:]:
             self.build(item)
         self.assertEqual(globe_module.series(RequestFactory().get('/')), 'scotese',
-                         'a partial build has frames that cannot render')
-        self.build(items[-1])
+                         'the 650 Ma prelude counts: a partial build has frames that cannot render')
+        self.build(items[0])
         self.assertEqual(globe_module.series(RequestFactory().get('/')), 'paleodem')
         self.assertEqual(globe_module.series(RequestFactory().get('/?series=scotese')), 'scotese')
         self.assertEqual(globe_module.series(RequestFactory().get('/?series=nope')), 'paleodem')
 
     def test_frames_carry_relief_and_no_source_map(self):
-        for item in globe_module.paleodem_items():
+        for item in globe_module.elevation_timeline():
             self.build(item)
         response = self.client.get('/')
         frames = response.context['frames']
-        self.assertEqual(len(frames), 109)
+        self.assertEqual(len(frames), 110)
         self.assertEqual(response.context['series'], 'paleodem')
-        self.assertTrue(all(frame['relief'] and frame['url'] is None for frame in frames))
+        self.assertEqual((frames[0]['id'], frames[0]['relief'], frames[0]['age']), ('scotese-650', False, 650))
+        self.assertIn('분할 마스크', frames[0]['label'])
+        self.assertTrue(all(frame['relief'] for frame in frames[1:]))
+        self.assertTrue(all(frame['url'] is None for frame in frames))
+        self.assertTrue(all(frame['label'] and frame['label'] != frame['title'] for frame in frames),
+                        'labels are Korean, titles the source stage names')
         self.assertTrue(all(frame['field'] == f"/globe/fields/{frame['id']}.png" for frame in frames))
-        self.assertEqual([stop for stop in response.context['stops'] if stop[2] == 0].__len__(), 109)
-        self.assertEqual(response.context['motions'], [[] for _ in range(108)])
+        self.assertEqual([stop for stop in response.context['stops'] if stop[2] == 0].__len__(), 110)
+        self.assertEqual(response.context['motions'], [[] for _ in range(109)])
         self.assertContains(response, 'id="surface"')
         self.assertContains(response, 'zenodo.org/records/5460860')
         self.assertNotContains(response, 'source-preview')
@@ -317,13 +322,13 @@ class PaleodemTests(TestCase):
     def test_health_validates_the_series_actually_served(self):
         report = self.client.get('/healthz').json()
         self.assertEqual((report['fields']['series'], report['fields']['expected']), ('scotese', 17))
-        for item in globe_module.paleodem_items():
+        for item in globe_module.elevation_timeline():
             self.build(item)
         response = self.client.get('/healthz')
         report = response.json()
         self.assertEqual(response.status_code, 200)
         self.assertEqual((report['fields']['series'], report['fields']['expected'],
-                          report['fields']['missing']), ('paleodem', 109, 0))
+                          report['fields']['missing']), ('paleodem', 110, 0))
 
     def test_field_route_serves_a_paleodem_slice(self):
         item = globe_module.paleodem_items()[-1]

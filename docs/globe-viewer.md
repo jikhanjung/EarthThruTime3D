@@ -271,6 +271,17 @@ its size as `data-cached`. Two textures are bound at any stop; the rest only sav
 re-download when scrubbing back. Without the bound a phone that had scrubbed the whole
 timeline would hold every slice, near a gigabyte at 2048 × 1024.
 
+The timeline is fronted by one stop the grids do not cover: the 650 Ma Scotese web map,
+as its segmented land field. That field is this project's own measurement and is served
+already for the Scotese series, so the licence position is unchanged; the JPEG itself
+stays off the network. It carries no heights, so the viewer draws that stop, and the
+gap down to 540 Ma, as a mask, and its label says 분할 마스크. It is also the coarsest
+stop on the timeline: the pre-Carboniferous maps use a different palette and the
+segmentation keeps only the dark core of each landmass.
+
+Stage names come from the grid file names, with a Korean label per stage in
+`sources/paleodem-slices.json`; the English name stays as the title.
+
 What this series shows at a published slice is the reconstruction grid as its authors
 released it, not a measurement of ours. Between slices it is the same geometric blend as
 before, of distance and of height, with no travel field: the grids carry no piece
