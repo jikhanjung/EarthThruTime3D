@@ -465,6 +465,29 @@ try {
     await expect(demGlobe).toHaveAttribute('aria-busy', 'false');
     await expect(demGlobe).toHaveAttribute('data-ice', 'true');
     expect(demFrames.length).toBe(112);
+    // Names and motion are borrowed from the atlas where computed: at a stop halfway
+    // between two grids the morph carries landmasses, and the names ride the relief.
+    if (demFrames.every(frame => frame.names.length)) {
+      const demStops = await dem.locator('#globe-stops').textContent().then(JSON.parse);
+      const halfway = demStops.findIndex(([from, , blend]) => demFrames[from]?.id === 'paleodem-0600' && blend === 0.5);
+      expect(halfway).toBeGreaterThan(0);
+      await dem.locator('#timeline').fill(String(halfway));
+      await dem.locator('#timeline').dispatchEvent('input');
+      await expect(demGlobe).toHaveAttribute('data-frame', 'paleodem-0600');
+      await expect(demGlobe).toHaveAttribute('data-blend', '0.50');
+      await expect(demGlobe).toHaveAttribute('aria-busy', 'false');
+      expect(Number(await demGlobe.getAttribute('data-motions'))).toBeGreaterThan(0);
+      await expect(demGlobe).toHaveAttribute('data-surface', 'relief');
+      // The coastline of the gap's older end rides the same motion field as the surface.
+      await dem.locator('#coastline').check();
+      await expect.poll(async () => await demGlobe.getAttribute('data-coastline-carried')).toBe('true');
+      await expect(dem.locator('#coastline-age')).toContainText('옮겨');
+      await dem.locator('#coastline').uncheck();
+      await dem.screenshot({path:'data/screenshots/globe-elevation-halfway.png', fullPage:false});
+      await dem.locator('#era').selectOption(String(demFrames.length - 1));
+      await expect(demGlobe).toHaveAttribute('data-frame', 'paleodem-0000');
+      console.log('Elevation names and motion passed');
+    }
     // Settings of the surface sit in the inspector; the toolbar keeps the view controls.
     await expect(dem.locator('.globe-toolbar #shading')).toHaveCount(0);
     await expect(dem.locator('.inspector #shading')).toHaveCount(1);
@@ -478,8 +501,13 @@ try {
     await expect(demGlobe).toHaveAttribute('data-sealevel', '0');
     await dem.locator('#temperature').click();
     await expect(demGlobe).toHaveAttribute('data-surface', 'temp');
+    // The colour key shows with the temperature surface, with the stop's distance from
+    // today's mean filled in; the present stop is 0.0 from itself.
+    await expect(dem.locator('#temp-legend')).toBeVisible();
+    await expect(dem.locator('#temp-legend')).toHaveAttribute('data-delta', /^-?\d+\.\d$/);
     await dem.locator('#temperature').click();
     await expect(demGlobe).toHaveAttribute('data-surface', 'relief');
+    await expect(dem.locator('#temp-legend')).toBeHidden();
     await dem.locator('#surface').click();
     await expect(demGlobe).toHaveAttribute('data-surface', 'mask');
     await dem.locator('#surface').click();
@@ -487,6 +515,18 @@ try {
     await dem.locator('#ice').click();
     await expect(demGlobe).toHaveAttribute('data-ice', 'false');
     await dem.locator('#ice').click();
+    // Past ice: the 300 Ma grid carries the sheet the atlas paints there, the 200 Ma grid none.
+    await dem.locator('#era').selectOption(String(demFrames.findIndex(frame => frame.id === 'paleodem-3000')));
+    await expect(demGlobe).toHaveAttribute('data-frame', 'paleodem-3000');
+    await expect(demGlobe).toHaveAttribute('aria-busy', 'false');
+    await expect(demGlobe).toHaveAttribute('data-ice', 'true');
+    await expect(dem.locator('#ice-note')).toBeVisible();
+    await dem.locator('#era').selectOption(String(demFrames.findIndex(frame => frame.id === 'paleodem-2000')));
+    await expect(demGlobe).toHaveAttribute('data-frame', 'paleodem-2000');
+    await expect(demGlobe).toHaveAttribute('aria-busy', 'false');
+    await expect(demGlobe).toHaveAttribute('data-ice', 'false');
+    await dem.locator('#era').selectOption(String(demFrames.length - 1));
+    await expect(demGlobe).toHaveAttribute('data-frame', 'paleodem-0000');
     // The fossil coastlines are offered over the grids as over the atlas.
     await dem.locator('#coastline').check();
     await expect.poll(async () => Number(await demGlobe.getAttribute('data-coastlines'))).toBeGreaterThan(0);
