@@ -24,3 +24,4 @@ dist/
 
 # Reference PDFs stay local; only the bibliography is tracked.
 docs/pdf/*.pdf
+docs/pdf/*.zip

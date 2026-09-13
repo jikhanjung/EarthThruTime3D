@@ -8,9 +8,13 @@
 - **받음**: 이 디렉터리에 있다. 판본이 출판본인지 저자 원고인지 함께 적는다.
 - **안 받음**: 받지 못했다. 사유와 받을 곳을 적는다.
 
-2026-09-13에 받았다. 오픈 액세스 여부는 [OpenAlex](https://openalex.org/)로 확인했다.
+2026-09-13에 받았다. 오픈 액세스 여부는 [OpenAlex](https://openalex.org/)로 확인했다. 받은 곳이
+"직접 받음"인 7편은 자동 내려받기가 막혀 브라우저로 받은 것이다.
 
-## 받음 (10)
+`Scotese_PaleoAtlas_v3.zip`은 Zenodo 배포 묶음 그대로다. 해설서 PDF 외에 PALEOMAP 회전 모델
+(`PALEOMAP_PlateModel.rot`), 판 다각형, PaleoDataPlotter 프로그램이 들어 있다. 이것도 Git에 올리지 않는다.
+
+## 받음 (17)
 
 | 파일 | 문헌 | 판본 | 받은 곳 |
 |---|---|---|---|
@@ -24,20 +28,13 @@
 | `Flament2017_NatCommun_Eurasia_thermochemical_structure.pdf` | Flament, N., Williams, S., Müller, R. D., Gurnis, M., and Bower, D. J., 2017. Origin and evolution of the deep thermochemical structure beneath Eurasia. *Nature Communications*, 8, 14164. doi:10.1038/ncomms14164 | 출판본, 오픈 액세스 | [Nature](https://www.nature.com/articles/ncomms14164) |
 | `Cucchiaro2025_CommunEarthEnviron_mobile_basal_structures.pdf` | Cucchiaro, A., Flament, N., Arnould, M., et al., 2025. Large volcanic eruptions are mostly sourced above mobile basal mantle structures. *Communications Earth & Environment*, 6. doi:10.1038/s43247-025-02482-z | 출판본, 오픈 액세스 | [Nature](https://www.nature.com/articles/s43247-025-02482-z) |
 | `Doubrovine2016_G3_failure_to_reject_accepted.pdf` | Doubrovine, P. V., Steinberger, B., and Torsvik, T. H., 2016. A failure to reject: Testing the correlation between large igneous provinces and deep mantle structures with EDF statistics. *Geochemistry, Geophysics, Geosystems*, 17, 1130–1163. doi:10.1002/2015GC006044 | 저자 원고 | [GFZpublic](https://gfzpublic.gfz.de/pubman/item/item_1487975) |
-
-## 안 받음: 오픈 액세스 사본이 있다 (7)
-
-자동 내려받기가 막혔을 뿐 브라우저로는 받을 수 있을 것이다.
-
-| 문헌 | 사유 | 받을 곳 |
-|---|---|---|
-| Torsvik, T. H., Smethurst, M. A., Burke, K., and Steinberger, B., 2006. Large igneous provinces generated from the margins of the large low-velocity provinces in the deep mantle. *Geophysical Journal International*, 167, 1447–1460. doi:10.1111/j.1365-246X.2006.03158.x | 출판사 403 | [OUP PDF](https://academic.oup.com/gji/article-pdf/167/3/1447/6004754/167-3-1447.pdf) |
-| Austermann, J., Kaye, B. T., Mitrovica, J. X., and Huybers, P., 2014. A statistical analysis of the correlation between large igneous provinces and lower mantle seismic structure. *Geophysical Journal International*, 197, 1–9. doi:10.1093/gji/ggt500 | 출판사 403, 저장소 링크 404 | [Harvard DASH](http://nrs.harvard.edu/urn-3:HUL.InstRepos:25673951), [OUP](https://academic.oup.com/gji/article/197/1/1/683265) |
-| Wagenaar, S., Vaes, B., and van Hinsbergen, D. J. J., 2025. Toward reconstructing mantle convection using a minimum-continent-motion reference frame. *Journal of Geophysical Research: Solid Earth*. doi:10.1029/2024JB030430 | 출판사 403. CC BY | [Wiley PDF](https://agupubs.onlinelibrary.wiley.com/doi/pdfdirect/10.1029/2024JB030430), [Utrecht](https://dspace.library.uu.nl/handle/1874/480054) |
-| Buffan, L., Jones, L. A., Domeier, M., Scotese, C. R., Zahirovic, S., and Varela, S., 2023. Mind the uncertainty: Global plate model choice impacts deep-time palaeobiological studies. *Methods in Ecology and Evolution*, 14, 3007–3019. doi:10.1111/2041-210X.14204 | 출판사 403. CC BY-NC | [Wiley PDF](https://besjournals.onlinelibrary.wiley.com/doi/pdfdirect/10.1111/2041-210X.14204), [Oslo](http://hdl.handle.net/10852/109529) |
-| Seton, M., Williams, S., Domeier, M., Collins, A., and Sigloch, K., 2023. Deconstructing plate tectonic reconstructions. *Nature Reviews Earth & Environment*, 4, 185–204. doi:10.1038/s43017-022-00384-8 | HAL이 봇 확인 페이지를 돌려줌 | [HAL 저자 원고](https://hal.science/hal-04000675/file/Seton2023-NatRevEE_DeconstructingPlateReconstructions_accepted_2022-12-19-merged.pdf) |
-| Davaille, A., and Romanowicz, B., 2020. Deflating the LLSVPs: Bundles of mantle thermochemical plumes rather than thick stagnant "piles". *Tectonics*, 39(10). doi:10.1029/2020TC006265 | HAL이 봇 확인 페이지를 돌려줌 | [HAL 저자 원고](https://hal.science/hal-03024568/file/Davaille_Romanowicz_Tectonics_FINAL_nomarks.pdf) |
-| Scotese, C. R., 2016. PALEOMAP PaleoAtlas for GPlates and the PaleoData Plotter Program. PALEOMAP Project. doi:10.5281/zenodo.10251792 | Zenodo 403(요청 과다) | [Zenodo](https://doi.org/10.5281/zenodo.10251792), [GSA 초록](https://gsa.confex.com/gsa/2016NC/webprogram/Paper275387.html) |
+| `Torsvik2006_GJI_LIPs_LLSVP_margins.pdf` | Torsvik, T. H., Smethurst, M. A., Burke, K., and Steinberger, B., 2006. Large igneous provinces generated from the margins of the large low-velocity provinces in the deep mantle. *Geophysical Journal International*, 167, 1447–1460. doi:10.1111/j.1365-246X.2006.03158.x | 출판본 | [OUP](https://academic.oup.com/gji/article/167/3/1447/2072613), 직접 받음 |
+| `Austermann2014_GJI_LIP_LLSVP_statistics.pdf` | Austermann, J., Kaye, B. T., Mitrovica, J. X., and Huybers, P., 2014. A statistical analysis of the correlation between large igneous provinces and lower mantle seismic structure. *Geophysical Journal International*, 197, 1–9. doi:10.1093/gji/ggt500 | 출판본 | [OUP](https://academic.oup.com/gji/article/197/1/1/683265), 직접 받음 |
+| `Wagenaar2025_JGR_minimum_continent_motion.pdf` | Wagenaar, S. D. M., Vaes, B., and van Hinsbergen, D. J. J., 2025. Toward reconstructing mantle convection using a minimum-continent-motion reference frame. *Journal of Geophysical Research: Solid Earth*, 130, e2024JB030430. doi:10.1029/2024JB030430 | 출판본, CC BY | [Wiley](https://doi.org/10.1029/2024JB030430), 직접 받음 |
+| `Buffan2023_MEE_mind_the_uncertainty.pdf` | Buffan, L., Jones, L. A., Domeier, M., Scotese, C. R., Zahirovic, S., and Varela, S., 2023. Mind the uncertainty: Global plate model choice impacts deep-time palaeobiological studies. *Methods in Ecology and Evolution*, 14, 3007–3019. doi:10.1111/2041-210X.14204 | 출판본, CC BY-NC | [Wiley](https://doi.org/10.1111/2041-210X.14204), 직접 받음 |
+| `Seton2023_NatRevEarthEnviron_deconstructing_reconstructions_accepted.pdf` | Seton, M., Williams, S., Domeier, M., Collins, A., and Sigloch, K., 2023. Deconstructing plate tectonic reconstructions. *Nature Reviews Earth & Environment*, 4, 185–204. doi:10.1038/s43017-022-00384-8 | 저자 원고 | [HAL](https://hal.science/hal-04000675), 직접 받음 |
+| `Davaille2020_Tectonics_deflating_LLSVPs_accepted.pdf` | Davaille, A., and Romanowicz, B., 2020. Deflating the LLSVPs: Bundles of mantle thermochemical plumes rather than thick stagnant "piles". *Tectonics*, 39(10). doi:10.1029/2020TC006265 | 저자 원고 | [HAL](https://hal.science/hal-03024568), 직접 받음 |
+| `Scotese2016_PALEOMAP_PaleoAtlas_for_GPlates_v3.pdf` | Scotese, C. R., 2016. PALEOMAP PaleoAtlas for GPlates and the PaleoData Plotter Program. PALEOMAP Project. doi:10.5281/zenodo.10251792 | 해설서 v3. `Scotese_PaleoAtlas_v3.zip`에서 꺼냄 | [Zenodo](https://doi.org/10.5281/zenodo.10251792), 직접 받음 |
 
 ## 안 받음: 구독이 필요하다 (7)
 
