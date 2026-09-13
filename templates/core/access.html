@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% block title %}접근 키{% endblock %}
+{% block content %}
+<section class="gate">
+  <p class="eyebrow">EARTH THROUGH TIME</p>
+  <h1>접근 키를 입력해 주세요</h1>
+  <p class="lead">이 실행 환경은 공개돼 있지 않습니다. 키를 한 번 입력하면 이 브라우저에서는 다시 묻지 않습니다.</p>
+  <form method="post" autocomplete="off">
+    {% csrf_token %}
+    <input type="hidden" name="next" value="{{ next }}">
+    <label for="key">접근 키</label>
+    <input type="password" id="key" name="key" required autofocus spellcheck="false"
+           autocapitalize="off" inputmode="text">
+    <button type="submit">들어가기</button>
+    {% if wrong %}<p class="wrong" role="alert">키가 맞지 않습니다.</p>{% endif %}
+  </form>
+</section>
+{% endblock %}

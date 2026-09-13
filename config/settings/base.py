@@ -37,7 +37,13 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    # Last, so the session and CSRF machinery it relies on are already in place.
+    'core.access.AccessKeyMiddleware',
 ]
+
+# A single shared key standing in for accounts. Empty means the site is open; set it and
+# every page asks once. See core/access.py.
+ACCESS_KEY = os.environ.get('ACCESS_KEY', '')
 
 ROOT_URLCONF = 'config.urls'
 

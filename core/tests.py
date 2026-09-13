@@ -278,6 +278,43 @@ class GlobeTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertFalse(response.json()['fields']['required'])
 
+    def test_a_model_without_a_licence_is_offered_only_behind_the_key(self):
+        with self.settings(SCOTESE_VIEWER_ENABLED=True, ACCESS_KEY=""):
+            offered = {model["id"] for model in globe_module.plate_models()}
+            self.assertNotIn("torsvikcocks2017", offered)
+            self.assertEqual(
+                self.client.get("/plates/torsvikcocks2017/rotations.json").status_code, 404)
+        with self.settings(SCOTESE_VIEWER_ENABLED=True, ACCESS_KEY="a-key-for-the-test"):
+            offered = {model["id"] for model in globe_module.plate_models()}
+            if not offered:
+                self.skipTest("plate models have not been packed in this checkout")
+            self.assertIn("torsvikcocks2017", offered)
+            self.assertFalse(next(model for model in globe_module.plate_models()
+                                  if model["id"] == "torsvikcocks2017")["published"])
+
+    def test_the_key_gate_lets_health_through_and_stops_the_rest(self):
+        with self.settings(ACCESS_KEY="a-key-for-the-test"):
+            self.assertEqual(self.client.get("/healthz").status_code, 200)
+            self.assertEqual(self.client.get("/").status_code, 302)
+            self.assertEqual(self.client.get("/about/")["Location"], "/access/?next=/about/")
+            self.assertEqual(self.client.get("/access/").status_code, 200)
+            self.assertEqual(self.client.post("/access/", {"key": "wrong"}).status_code, 401)
+            response = self.client.post("/access/", {"key": "a-key-for-the-test",
+                                                     "next": "/about/"})
+            self.assertEqual(response["Location"], "/about/")
+            self.assertEqual(self.client.get("/").status_code, 200)
+        with self.settings(ACCESS_KEY=""):
+            self.assertEqual(self.client.get("/").status_code, 200)
+
+    def test_the_gate_refuses_to_send_a_visitor_off_site(self):
+        with self.settings(ACCESS_KEY="a-key-for-the-test"):
+            for target in ("https://example.com/", "//example.com/"):
+                response = self.client.post("/access/", {"key": "a-key-for-the-test",
+                                                         "next": target})
+                self.assertEqual(response["Location"], "/")
+                self.client.logout()
+                self.client.cookies.clear()
+
     def test_missing_map_returns_404(self):
         with self.settings(SCOTESE_VIEWER_ENABLED=True):
             with patch('pathlib.Path.open', side_effect=FileNotFoundError):

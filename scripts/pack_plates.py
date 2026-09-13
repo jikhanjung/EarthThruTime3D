@@ -133,8 +133,11 @@ def shapefile_features(path, tolerance, minimum_points):
     """The same shape of record as the GPML reader, from a shapefile pair."""
     rows = dbf_records(path.with_suffix(".dbf"))
     for shape, row in zip(shapefile_rings(path), rows):
-        plate = row.get("PLATEID1") or row.get("PLATEID") or ""
-        if not plate.lstrip("-").isdigit():
+        # Plate ids are integers, but dBASE stores numbers as text and some files write
+        # them in scientific notation, so read them as numbers rather than digits.
+        try:
+            plate = int(float(row.get("PLATEID1") or row.get("PLATEID") or ""))
+        except ValueError:
             continue
         rings = []
         for points in shape:
@@ -145,7 +148,7 @@ def shapefile_features(path, tolerance, minimum_points):
             # Shapefiles write -999 where GPML says distantPast or distantFuture.
             begin = float(row.get("FROMAGE") or DISTANT_PAST)
             end = float(row.get("TOAGE") or DISTANT_FUTURE)
-            yield {"pid": int(plate),
+            yield {"pid": plate,
                    "from": DISTANT_PAST if begin <= -900 else begin,
                    "to": DISTANT_FUTURE if end <= -900 else end,
                    "name": (row.get("NAME") or "").strip() or None,

@@ -89,3 +89,4 @@ header,main,footer{max-width:1440px}main{padding-top:26px;padding-bottom:32px}.v
    laptop screen ends. This line says it exists, and steps aside once it is on. */
 .model-note.hint:not([hidden]){display:block;border-left:2px solid #88dfcc;padding-left:10px;
                                color:#bcd6dd}
+

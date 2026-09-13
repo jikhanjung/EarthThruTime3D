@@ -1,0 +1,53 @@
+{
+  "schema_version": 2,
+  "id": "torsvikcocks2017",
+  "title": "Torsvik & Cocks (2017) CEED6 Earth History and Palaeogeography model",
+  "short_title": "Torsvik & Cocks 2017",
+  "menu_title": "Torsvik & Cocks 2017 (비공개)",
+  "reference_frame": "hybrid palaeomagnetic (PM-HYBRID)",
+  "covers_ma": [
+    0,
+    540
+  ],
+  "preferred": false,
+  "publish": false,
+  "retrieved_at": "2026-09-13",
+  "citation": "Torsvik, T. H., and Cocks, L. R. M., 2017. Earth History and Palaeogeography. Cambridge University Press, 317 pp. Model files: CEED6, http://www.earthdynamics.org/earthmodel/",
+  "license": {
+    "name": "not stated",
+    "url": "http://www.earthdynamics.org/earthhistory/data_info.html",
+    "statement": "The download page and the accompanying data description carry no licence, only the book's copyright notice: \\u00a9 Trond H. Torsvik and L. R. M. Cocks 2016.",
+    "source": "http://www.earthdynamics.org/earthmodel/page2.html",
+    "note": "No permission to redistribute is stated, so this model is kept for local use and is not published. publish=false keeps it out of the deployment bundle, and the deployed site therefore never offers it. Ask the authors before that changes."
+  },
+  "publish_note": "Local use only. scripts/pack_plates.py will pack it and a local server will serve it; deploy/pack_data.py skips it, so the public site does not have it.",
+  "archive": {
+    "url": "http://www.earthdynamics.org/earthhistory/bookdata/CEED6.zip",
+    "path": "data/sources/plates/torsvikcocks2017/archive.zip",
+    "bytes": 9086687,
+    "sha256": "c2964d3ed791ae4b05690b16ff917309ae9dde60256be7e892df2463c2587eb1",
+    "member_prefix": ""
+  },
+  "members": [
+    {
+      "role": "rotation",
+      "name": "Torsvik_Cocks_HybridRotationFile.rot",
+      "bytes": 325009,
+      "sha256": "ca20f2b6d52c1b4676f3eb579439daf6e8c64a505854d26053b09b403db4c948"
+    },
+    {
+      "role": "continents",
+      "name": "CEED6_LAND.shp",
+      "bytes": 4902920,
+      "sha256": "cf7aa50f05b762acfc4dcc042a284f659a41f42135da5772c9a017f3e45346fb"
+    },
+    {
+      "role": "attributes",
+      "name": "CEED6_LAND.dbf",
+      "bytes": 215522,
+      "sha256": "d7a4d98409a5cc56a4b832d3f2ebb1c3a188e4bff250ae7114015fcb78b72ac5"
+    }
+  ],
+  "relationship": "An independent lineage from the EarthByte models, built on palaeomagnetism with longitudes tied to large igneous provinces and kimberlites. Its frame is the book's PM-HYBRID.",
+  "limitations": "Reaches 540 Ma only. Distributed without a licence, so it stays local. The land polygons are the book's compilation rather than a coastline file."
+}

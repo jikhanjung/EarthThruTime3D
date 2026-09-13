@@ -23,6 +23,7 @@ out differently and the rest of the pipeline reads the role, never a file name.
 | Müller et al. 2022 | optimised mantle | 0–1000 Ma | CC BY 4.0 | GPML |
 | Cao et al. 2024 | palaeomagnetic, to 1.8 Ga | 0–1800 Ma | CC BY 4.0 | GPML |
 | Matthews et al. 2016 | hybrid mantle (GK07) | 0–410 Ma | CC BY 4.0 | shapefile |
+| Torsvik & Cocks 2017 | hybrid palaeomagnetic | 0–540 Ma | none stated, local only | shapefile |
 
 Müller is not a rival dataset so much as the same one seen from another frame: its shapes
 and its palaeomagnetic rotation file are byte-identical to Merdith's, and what it adds is
@@ -35,10 +36,12 @@ A model may split its rotations across files by era, and its geometry may arrive
 shapefiles rather than GPML. Both are handled: rotation members merge, and a `.shp`
 member is read with its `.dbf` for plate ids and valid times.
 
-**Torsvik and Cocks (2017) is deliberately absent.** Its CEED6 archive is downloadable
-from earthdynamics.org but carries no licence, only the book's copyright notice, so there
-is no permission to redistribute it or anything derived from it. That is a weaker
-position than the PALEOMAP maps, which at least state that research use is allowed.
+**Torsvik and Cocks (2017) is present but unpublished.** Its CEED6 archive downloads
+freely from earthdynamics.org and carries no licence, only the book's copyright notice,
+so there is no permission to redistribute it or anything derived from it. Its manifest
+therefore sets `publish: false`, which means the viewer offers it only where the site is
+closed behind `ACCESS_KEY`. On an open deployment it is absent from the model list and
+its files return 404. Publishing it needs the authors' say-so.
 
 ```bash
 .venv/bin/python scripts/fetch_plate_model.py               # both, or name one

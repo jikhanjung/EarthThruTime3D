@@ -10,6 +10,8 @@ from django.shortcuts import render
 from django.urls import reverse
 from django.views.decorators.http import require_safe
 
+from core.access import required as access_key_required
+
 # Visually estimated ellipse extents [left, top, right, bottom] in source pixels.
 # These are a preview calibration, not geodetic control points.
 BOUNDS = {
@@ -281,8 +283,18 @@ def plate_path(model, layer):
     return Path(settings.PLATE_MODEL_DIR) / model / f"{layer}.json"
 
 
+def publishable(document):
+    """Whether a model may be offered on this deployment.
+
+    A model whose licence does not permit publication carries publish=false. It is still
+    packed and served locally, but only where the site is closed behind the access key,
+    so it is never handed to the open web.
+    """
+    return document.get("publish", True) or access_key_required()
+
+
 def plate_models():
-    """Every packed plate model, newest publication first, with its attribution.
+    """Every packed plate model this deployment may offer, with its attribution.
 
     Attribution travels with the URLs because each model carries its own licence and
     because a reader has to be able to tell which dataset a line came from.
@@ -291,11 +303,14 @@ def plate_models():
     for path in plate_manifests():
         document = json.loads(path.read_text())
         model = document["id"]
+        if not publishable(document):
+            continue
         if not all(plate_path(model, layer).exists() for layer in ("rotations", "continents")):
             continue
         available.append({
             "id": model,
             "preferred": bool(document.get("preferred")),
+            "published": bool(document.get("publish", True)),
             "title": document["short_title"],
             "short": document.get("menu_title", document["short_title"]),
             "frame": document["reference_frame"],
@@ -390,8 +405,9 @@ def land_field(request, map_id):
 @require_safe
 def plate_file(request, model, layer):
     """Serve one packed plate-model file, by model id and layer name."""
-    known = {path.stem for path in plate_manifests()}
-    if not enabled() or layer not in PLATE_LAYERS or model not in known:
+    known = {path.stem: json.loads(path.read_text()) for path in plate_manifests()}
+    if (not enabled() or layer not in PLATE_LAYERS or model not in known
+            or not publishable(known[model])):
         raise Http404
     try:
         file = plate_path(model, layer).open("rb")
