@@ -44,6 +44,15 @@ def pack_elevation(dem, dem_source, staging, files):
         shutil.copy2(source, target)
         files.append({"path": f"paleodem/{source.name}", "bytes": target.stat().st_size,
                       "sha256": digest(target), "map_id": item["id"]})
+    # The landmasses carried across each gap by the PALEOMAP rotations, from
+    # scripts/paleodem_motions.py; without the file the grids would blend in place.
+    motions = dem_source / "motions.json"
+    if not motions.exists():
+        raise SystemExit(f"Missing {motions}. Run scripts/paleodem_motions.py.")
+    shutil.copy2(motions, staging / "paleodem" / motions.name)
+    files.append({"path": "paleodem/motions.json",
+                  "bytes": (staging / "paleodem" / motions.name).stat().st_size,
+                  "sha256": digest(staging / "paleodem" / motions.name), "dataset": "paleodem2018"})
     # Climate over the grids: one temperature texture per grid and the global mean curve
     # (Scotese 2021, CC BY 4.0), produced by scripts/build_paleotemp.py.
     for item in dem["maps"]:

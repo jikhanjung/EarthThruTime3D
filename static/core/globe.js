@@ -345,7 +345,9 @@ async function selectStop(value, manual = false) {
     applyMotion(place);
     surfaceMesh.visible = true;
     lastPlace = place;
-    showNames(place, masked && !place.mapless);
+    // Names go on any surface without lettering of its own: the mask, and on the
+    // elevation series the relief and the temperature; a photographed map has its own.
+    showNames(place, !place.mapless && (masked || relief || heated));
     await updatePlates(place, ticket);
     if (ticket !== request) return;
     await updateCoastlines(place, ticket);

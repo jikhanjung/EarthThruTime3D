@@ -465,6 +465,24 @@ try {
     await expect(demGlobe).toHaveAttribute('aria-busy', 'false');
     await expect(demGlobe).toHaveAttribute('data-ice', 'true');
     expect(demFrames.length).toBe(112);
+    // Names and motion are borrowed from the atlas where computed: at a stop halfway
+    // between two grids the morph carries landmasses, and the names ride the relief.
+    if (demFrames.every(frame => frame.names.length)) {
+      const demStops = await dem.locator('#globe-stops').textContent().then(JSON.parse);
+      const halfway = demStops.findIndex(([from, , blend]) => demFrames[from]?.id === 'paleodem-0600' && blend === 0.5);
+      expect(halfway).toBeGreaterThan(0);
+      await dem.locator('#timeline').fill(String(halfway));
+      await dem.locator('#timeline').dispatchEvent('input');
+      await expect(demGlobe).toHaveAttribute('data-frame', 'paleodem-0600');
+      await expect(demGlobe).toHaveAttribute('data-blend', '0.50');
+      await expect(demGlobe).toHaveAttribute('aria-busy', 'false');
+      expect(Number(await demGlobe.getAttribute('data-motions'))).toBeGreaterThan(0);
+      await expect(demGlobe).toHaveAttribute('data-surface', 'relief');
+      await dem.screenshot({path:'data/screenshots/globe-elevation-halfway.png', fullPage:false});
+      await dem.locator('#era').selectOption(String(demFrames.length - 1));
+      await expect(demGlobe).toHaveAttribute('data-frame', 'paleodem-0000');
+      console.log('Elevation names and motion passed');
+    }
     // Settings of the surface sit in the inspector; the toolbar keeps the view controls.
     await expect(dem.locator('.globe-toolbar #shading')).toHaveCount(0);
     await expect(dem.locator('.inspector #shading')).toHaveCount(1);

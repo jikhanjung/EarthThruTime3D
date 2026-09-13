@@ -111,6 +111,20 @@ piece identities, so nothing moves as a body. Sea level is inside each grid as i
 datum, so flooded interiors are the reconstruction's; floating ice shelves are sea floor
 in the grids and read as ocean, while grounded ice shows its surface height.
 
+### Names and motion between grids
+
+The grids are never segmented, so they have no pieces of their own. They are the same
+paleogeography as the 2016 atlas, from the same edition, and 81 of the 109 grids sit at
+the age of an atlas map, the rest within 5 Myr of one. `core.globe.piece_report` therefore
+gives a grid the pieces of the nearest atlas map (`nearest_atlas_map`, `NEAREST_ATLAS_MA`),
+which is where its landmass names come from; on a borrowed age a name sits where the atlas
+drew it, a few degrees off at most. `scripts/paleodem_motions.py` does the same for the
+motion between grids: for each gap of the series it takes the plate-group regions of the
+atlas map nearest the older end, carries every centroid from that map's age to the gap's
+older age and on to its newer age with the region's plate, and writes
+`data/derived/paleodem/motions.json` in the form `atlas_motions` reads. The packer ships
+the file with the series. Without it the grids blend in place.
+
 ## Temperature
 
 `sources/paleotemp.json` pins Scotese (2021), *Global Mean Surface Temperatures for 100
