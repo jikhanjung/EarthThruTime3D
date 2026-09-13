@@ -24,9 +24,14 @@ them:
   the file name's stage. The rasters themselves are never served.
 - `scotese2002`: the 17 web maps described in the rest of this document, with names and
   named-landmass motion.
+- `paleodem2018`: the 109 PALEOMAP PaleoDEMs (Scotese & Wright 2018, CC BY 4.0), 0 to
+  540 Ma at 5 Myr, as elevation textures rather than masks, fronted by the three 2016
+  atlas maps older than 540 Ma drawn as masks: 112 stops. See "Elevation series" below.
+  This series is all or nothing: a frame without a field has no map to fall back to, so
+  `mask_source` stays on the default until every field of the series exists.
 
-`MASK_SOURCE` sets the default; `?masks=scotese2002` or `?masks=paleoatlas2016` picks one
-per page, and anything else falls back to the default. `/globe/fields/<id>.png` finds a
+`MASK_SOURCE` sets the default; `?masks=scotese2002`, `?masks=paleoatlas2016` or
+`?masks=paleodem2018` picks one per page, and anything else falls back to the default. `/globe/fields/<id>.png` finds a
 field by map id in either source; `/globe/maps/` only ever has the 2002 maps.
 
 The 2016 maps carry no lettering, so their names come from the plate model.
@@ -61,6 +66,47 @@ The slider carries sub-steps between neighbouring maps, so dragging it moves rat
 than jumps. Only the stops that land on a published map are observations; the ones
 between are interpolated, and the caption, the inspector and the slider's accessible
 value all say so.
+
+## Elevation series
+
+`sources/paleodem.json` pins the Zenodo archives of the PaleoDEMs by SHA-256, the 1°
+and the 6-minute grids; `scripts/fetch_paleodem.py` fetches or verifies them (and any
+other manifest with `--manifest`), and `sources/paleodem-slices.json` catalogues the
+109 grids in the shape the other catalogues use. `scripts/build_paleodem.py` writes one
+texture per grid into `PALEODEM_DERIVED_DIR`, `paleodem-<age×10>-field.png`, 2048 × 1024
+by default from the 6-minute grids (`--width`, `--source`, `--bits`).
+
+Each texture is an RGB PNG on the equirectangular grid. Red is the signed coastline
+distance the segmentations write, taken at the 0 m contour of the bilinearly resampled
+grid, so mask mode, the stop table and the blend between stops work unchanged; the
+distance transform is `scripts/segment_paleoatlas.py`'s. Green is the high byte of
+elevation over -9000 to 6000 m, which puts sea level at 0.6, and blue four more bits
+(`--bits 12`, 3.7 m steps, the default) or nothing (`--bits 8`, 59 m steps, files 1.8
+times smaller); the shader decodes both the same way. A 16-bit low byte was tried and
+dropped: it is noise to the PNG compressor and tripled the set.
+
+A third shader mode colours the height with a hypsometric ramp, blue by depth and green
+through tan to white by height, and decides land against ocean from the distance rather
+than from the height so the coastline stays antialiased. The mask toggle returns to this
+relief view rather than to a photographed map. A frame without heights, the atlas
+prelude, draws as a mask, and so does the gap down to 540 Ma.
+
+Fields are uploaded as raw bytes rather than as decoded images. A Samsung phone was
+found reading both channels low through the `<img>` path, and through an ImageBitmap
+decoded with conversion off, which put the coastline where the distance byte is about
+188 instead of 128 and drew every interior at the lowest height. WebGL colour-converts
+only DOM image sources, so the viewer decodes to a 2D canvas, reads the bytes back and
+uploads a `DataTexture`, which the specification leaves untouched. The texture cache is
+bounded at twelve, least recently used first, and the stage reports its size as
+`data-cached`; without the bound a phone that had scrubbed the whole timeline would hold
+every slice, near a gigabyte at 2048 × 1024.
+
+What this series shows at a published slice is the reconstruction grid as its authors
+released it, not a measurement of ours. Between slices it is the same geometric blend as
+the other sources, of distance and of height, with no travel field: the grids carry no
+piece identities, so nothing moves as a body. Sea level is inside each grid as its 0 m
+datum, so flooded interiors are the reconstruction's; floating ice shelves are sea floor
+in the grids and read as ocean, while grounded ice shows its surface height.
 
 ## Mapping pipeline
 

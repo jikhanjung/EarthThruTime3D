@@ -534,3 +534,36 @@ msgstr "Last Glacial Maximum"
 
 msgid "Torsvik & Cocks 2017 (비공개)"
 msgstr "Torsvik & Cocks 2017 (private)"
+
+msgid "PALEOMAP PaleoDEM 고도 격자 (2018)"
+msgstr "PALEOMAP PaleoDEM elevation grids (2018)"
+
+msgid "고도"
+msgstr "elevation"
+
+msgid "고도 지구본"
+msgstr "elevation globe"
+
+msgid "{period} 고도 지구본을 불러오는 중…"
+msgstr "Loading the {period} elevation globe…"
+
+msgid "PALEOMAP PaleoDEM 1° 고도·수심 격자(Scotese &amp; Wright 2018, CC BY 4.0)를 색으로 칠한 화면입니다. 자료 원본은 <a id=\"source-link\" target=\"_blank\" rel=\"noopener\">Zenodo ↗</a>에 있습니다."
+msgstr "This view colours the PALEOMAP PaleoDEM 1° elevation and bathymetry grids (Scotese &amp; Wright 2018, CC BY 4.0). The source data is on <a id=\"source-link\" target=\"_blank\" rel=\"noopener\">Zenodo ↗</a>."
+
+msgid "해안선은 격자의 0 m 등고선이고 색은 높이와 깊이입니다. 540 Ma 이전은 PaleoAtlas(2016) 지도를 분할한 마스크로 이어지며 높이가 없습니다. 판 운동·기후·해수면을 계산한 모델이 아니라 발표된 복원 격자를 그대로 그린 것입니다."
+msgstr "The coastline is the grid's 0 m contour and the colours are height and depth. Before 540 Ma the timeline continues with masks segmented from the PaleoAtlas (2016) maps, which carry no heights. Nothing here computes plate motion, climate or sea level: it draws the published reconstruction grids as released."
+
+msgid "대륙 마스크 표시 중입니다. 육지와 바다 둘로만 칠한 결과입니다. 고도 격자는 0 m에서 잘랐고, 540 Ma 이전의 PaleoAtlas 지도는 색을 분할해 얻은 해석이라 높이가 없습니다."
+msgstr "Showing the continent mask: land and ocean as two flat colours. The elevation grids are cut at 0 m; the PaleoAtlas maps before 540 Ma are an interpretation segmented from colour and carry no heights."
+
+msgid "5백만 년 간격의 격자 사이를 보간한 화면입니다. 두 시점의 해안선 거리장과 높이를 섞은 중간 형태이며, 판 운동을 계산한 것이 아닙니다."
+msgstr "This is an interpolated view between grids 5 Myr apart: a blend of the two coastline distance fields and heights, not a computation of plate motion."
+
+msgid "PaleoDEM 1° 격자 109장을 2048×1024 정거원통 텍스처로 다시 표본화했습니다. 해안선은 0 m 등고선, 색은 높이와 깊이입니다. 540 Ma 이전은 PaleoAtlas(2016) 지도 3장의 마스크로 이어져 모두 %(count)s개 시점입니다. 시대 이름은 나이에 ICS 경계를 적용해 붙였습니다."
+msgstr "The 109 PaleoDEM 1° grids were resampled to 2048×1024 equirectangular textures. The coastline is the 0 m contour, the colours height and depth. Before 540 Ma three PaleoAtlas (2016) masks continue the timeline, %(count)s stops in all. Period names come from the age with ICS boundaries."
+
+msgid "%(title)s 마스크로 보기"
+msgstr "View with the %(title)s masks"
+
+msgid "고도 격자 시리즈는 이 109장의 1° 고도·수심 격자를 색으로 칠한 것입니다. 해안선은 격자의 0 m 등고선이고, 물에 떠 있는 빙붕은 격자가 해저 깊이를 담고 있어 바다로 나타나며, 땅 위에 얹힌 빙상은 그 표면 높이로 나타납니다. 540 Ma 이전은 PaleoAtlas(2016) 마스크로 이어집니다."
+msgstr "The elevation series colours these 109 one-degree elevation and bathymetry grids. The coastline is the grid's 0 m contour; floating ice shelves read as ocean because the grids hold the sea floor beneath them, while grounded ice shows its surface height. Before 540 Ma the timeline continues with the PaleoAtlas (2016) masks."

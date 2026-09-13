@@ -74,6 +74,20 @@ def main():
                   "sha256": digest(staging / "paleoatlas" / motions.name),
                   "dataset": "paleoatlas2016"})
 
+    # The PaleoDEM elevation textures (Scotese & Wright 2018, CC BY 4.0): one per grid,
+    # coastline distance in red and height in green and blue.
+    dem = json.loads((BASE_DIR / "sources/paleodem-slices.json").read_text())
+    dem_source = BASE_DIR / "data/derived/paleodem"
+    (staging / "paleodem").mkdir()
+    for item in dem["maps"]:
+        source = dem_source / f"{item['id']}-field.png"
+        if not source.exists():
+            raise SystemExit(f"Missing derived file: {source}. Run scripts/build_paleodem.py.")
+        target = staging / "paleodem" / source.name
+        shutil.copy2(source, target)
+        files.append({"path": f"paleodem/{source.name}", "bytes": target.stat().st_size,
+                      "sha256": digest(target), "map_id": item["id"]})
+
     # The fossil-checked coastlines drawn over the 2016 masks.
     coast_dir = BASE_DIR / "data/derived/paleocoastlines"
     if not (coast_dir / "index.json").exists():

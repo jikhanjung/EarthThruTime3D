@@ -1,0 +1,889 @@
+{
+ "schema_version": 1,
+ "dataset": "PALEOMAP PaleoDEMs, 1 degree and 6-minute grids",
+ "author": "Scotese, C. R. and Wright, N. M.",
+ "citation": "Scotese, C. R., & Wright, N. M. (2018). PALEOMAP Paleodigital Elevation Models (PaleoDEMs) for the Phanerozoic. Zenodo. https://doi.org/10.5281/zenodo.5460860",
+ "archive": "sources/paleodem.json pins the Zenodo archives by SHA-256",
+ "license": {
+  "name": "Creative Commons Attribution 4.0 International",
+  "url": "https://creativecommons.org/licenses/by/4.0/",
+  "source": "https://zenodo.org/records/5460860",
+  "note": "License.txt inside each archive states CC BY 4.0."
+ },
+ "directory": "data/sources/paleodem/nc/Scotese_Wright_2018_Maps_1-88_1degX1deg_PaleoDEMS_nc_v2",
+ "processing": "scripts/build_paleodem.py resamples each grid to an equirectangular texture: red is the signed coastline distance at the 0 m contour, green the high byte of elevation over -9000..6000 m and blue four more bits. Frames are the 109 grids, 0-540 Ma at 5 Myr; period labels come from the age with ICS boundaries, the English title from the file name.",
+ "maps": [
+  {
+   "id": "paleodem-5400",
+   "map_number": "88",
+   "label": "Cambrian Precambrian boundary",
+   "age_ma": 540,
+   "age_basis": "file name suffix in millions of years",
+   "file": "Map88_PALEOMAP_1deg_Cambrian_Precambrian boundary_540Ma.nc"
+  },
+  {
+   "id": "paleodem-5350",
+   "map_number": "87.5",
+   "label": "Early Cambrian",
+   "age_ma": 535,
+   "age_basis": "file name suffix in millions of years",
+   "file": "Map87.5_PALEOMAP_1deg_Early_Cambrian_535Ma.nc"
+  },
+  {
+   "id": "paleodem-5300",
+   "map_number": "87",
+   "label": "Early Cambrian",
+   "age_ma": 530,
+   "age_basis": "file name suffix in millions of years",
+   "file": "Map87_PALEOMAP_1deg_Early_Cambrian_530Ma.nc"
+  },
+  {
+   "id": "paleodem-5250",
+   "map_number": "86.5",
+   "label": "Early Cambrian",
+   "age_ma": 525,
+   "age_basis": "file name suffix in millions of years",
+   "file": "Map86.5_PALEOMAP_1deg_Early_Cambrian_525Ma.nc"
+  },
+  {
+   "id": "paleodem-5200",
+   "map_number": "86",
+   "label": "Early Middle Cambrian boundary",
+   "age_ma": 520,
+   "age_basis": "file name suffix in millions of years",
+   "file": "Map86_PALEOMAP_1deg_Early_Middle_Cambrian_boundary_520Ma.nc"
+  },
+  {
+   "id": "paleodem-5150",
+   "map_number": "85",
+   "label": "early Middle Cambrian",
+   "age_ma": 515,
+   "age_basis": "file name suffix in millions of years",
+   "file": "Map85_PALEOMAP_1deg_early_Middle_Cambrian_515Ma.nc"
+  },
+  {
+   "id": "paleodem-5100",
+   "map_number": "84.2",
+   "label": "early Middle Cambrian",
+   "age_ma": 510,
+   "age_basis": "file name suffix in millions of years",
+   "file": "Map84.2_PALEOMAP_1deg_early_Middle_Cambrian_510Ma.nc"
+  },
+  {
+   "id": "paleodem-5050",
+   "map_number": "84.1",
+   "label": "late Middle Cambrian",
+   "age_ma": 505,
+   "age_basis": "file name suffix in millions of years",
+   "file": "Map84.1_PALEOMAP_1deg_late_Middle_Cambrian_505Ma.nc"
+  },
+  {
+   "id": "paleodem-5000",
+   "map_number": "84",
+   "label": "late Middle Cambrian",
+   "age_ma": 500,
+   "age_basis": "file name suffix in millions of years",
+   "file": "Map84_PALEOMAP_1deg_late_Middle_Cambrian_500Ma.nc"
+  },
+  {
+   "id": "paleodem-4950",
+   "map_number": "83.5",
+   "label": "Late Cambrian",
+   "age_ma": 495,
+   "age_basis": "file name suffix in millions of years",
+   "file": "Map83.5_PALEOMAP_1deg_Late_Cambrian_495Ma.nc"
+  },
+  {
+   "id": "paleodem-4900",
+   "map_number": "83",
+   "label": "Late Cambrian",
+   "age_ma": 490,
+   "age_basis": "file name suffix in millions of years",
+   "file": "Map83_PALEOMAP_1deg_Late_Cambrian_490Ma.nc"
+  },
+  {
+   "id": "paleodem-4850",
+   "map_number": "82.5",
+   "label": "Cambro-Ordovician Boundary",
+   "age_ma": 485,
+   "age_basis": "file name suffix in millions of years",
+   "file": "Map82.5_PALEOMAP_1deg_Cambro-Ordovician_Boundary_485Ma.nc"
+  },
+  {
+   "id": "paleodem-4800",
+   "map_number": "82",
+   "label": "Early Ordovician",
+   "age_ma": 480,
+   "age_basis": "file name suffix in millions of years",
+   "file": "Map82_PALEOMAP_1deg_Early_Ordovician_480Ma.nc"
+  },
+  {
+   "id": "paleodem-4750",
+   "map_number": "81.5",
+   "label": "Early Ordovician",
+   "age_ma": 475,
+   "age_basis": "file name suffix in millions of years",
+   "file": "Map81.5_PALEOMAP_1deg_Early_Ordovician_475Ma.nc"
+  },
+  {
+   "id": "paleodem-4700",
+   "map_number": "81",
+   "label": "Early Ordovician",
+   "age_ma": 470,
+   "age_basis": "file name suffix in millions of years",
+   "file": "Map81_PALEOMAP_1deg_Early_Ordovician_470Ma.nc"
+  },
+  {
+   "id": "paleodem-4650",
+   "map_number": "80.5",
+   "label": "Middle Ordovician",
+   "age_ma": 465,
+   "age_basis": "file name suffix in millions of years",
+   "file": "Map80.5_PALEOMAP_1deg_Middle_Ordovician_465Ma.nc"
+  },
+  {
+   "id": "paleodem-4600",
+   "map_number": "80",
+   "label": "Middle Ordovician",
+   "age_ma": 460,
+   "age_basis": "file name suffix in millions of years",
+   "file": "Map80_PALEOMAP_1deg_Middle_Ordovician_460Ma.nc"
+  },
+  {
+   "id": "paleodem-4550",
+   "map_number": "79",
+   "label": "Late Ordovician",
+   "age_ma": 455,
+   "age_basis": "file name suffix in millions of years",
+   "file": "Map79_PALEOMAP_1deg_Late_Ordovician_455Ma.nc"
+  },
+  {
+   "id": "paleodem-4500",
+   "map_number": "78",
+   "label": "Late Ordovician",
+   "age_ma": 450,
+   "age_basis": "file name suffix in millions of years",
+   "file": "Map78_PALEOMAP_1deg_Late_Ordovician_450Ma.nc"
+  },
+  {
+   "id": "paleodem-4450",
+   "map_number": "77",
+   "label": "Late Ordovician",
+   "age_ma": 445,
+   "age_basis": "file name suffix in millions of years",
+   "file": "Map77_PALEOMAP_1deg_Late_Ordovician_445Ma.nc"
+  },
+  {
+   "id": "paleodem-4400",
+   "map_number": "76",
+   "label": "Early Silurian",
+   "age_ma": 440,
+   "age_basis": "file name suffix in millions of years",
+   "file": "Map76_PALEOMAP_1deg_Early_Silurian_440Ma.nc"
+  },
+  {
+   "id": "paleodem-4350",
+   "map_number": "75.5",
+   "label": "Early Silurian",
+   "age_ma": 435,
+   "age_basis": "file name suffix in millions of years",
+   "file": "Map75.5_PALEOMAP_1deg_Early_Silurian_435Ma.nc"
+  },
+  {
+   "id": "paleodem-4300",
+   "map_number": "75",
+   "label": "Middle Silurian",
+   "age_ma": 430,
+   "age_basis": "file name suffix in millions of years",
+   "file": "Map75_PALEOMAP_1deg_Middle_Silurian_430Ma.nc"
+  },
+  {
+   "id": "paleodem-4250",
+   "map_number": "74",
+   "label": "Late Silurian",
+   "age_ma": 425,
+   "age_basis": "file name suffix in millions of years",
+   "file": "Map74_PALEOMAP_1deg_Late_Silurian_425Ma.nc"
+  },
+  {
+   "id": "paleodem-4200",
+   "map_number": "73",
+   "label": "Late Silurian",
+   "age_ma": 420,
+   "age_basis": "file name suffix in millions of years",
+   "file": "Map73_PALEOMAP_1deg_Late_Silurian_420Ma.nc"
+  },
+  {
+   "id": "paleodem-4150",
+   "map_number": "72",
+   "label": "Early Devonian",
+   "age_ma": 415,
+   "age_basis": "file name suffix in millions of years",
+   "file": "Map72_PALEOMAP_1deg_Early_Devonian_415Ma.nc"
+  },
+  {
+   "id": "paleodem-4100",
+   "map_number": "71",
+   "label": "Early Devonian",
+   "age_ma": 410,
+   "age_basis": "file name suffix in millions of years",
+   "file": "Map71_PALEOMAP_1deg_Early_Devonian_410Ma.nc"
+  },
+  {
+   "id": "paleodem-4050",
+   "map_number": "70.5",
+   "label": "Early Devonian",
+   "age_ma": 405,
+   "age_basis": "file name suffix in millions of years",
+   "file": "Map70.5_PALEOMAP_1deg_Early_Devonian_405Ma.nc"
+  },
+  {
+   "id": "paleodem-4000",
+   "map_number": "70",
+   "label": "Early Devonian",
+   "age_ma": 400,
+   "age_basis": "file name suffix in millions of years",
+   "file": "Map70_PALEOMAP_1deg_Early_Devonian_400Ma.nc"
+  },
+  {
+   "id": "paleodem-3950",
+   "map_number": "69",
+   "label": "Early Devonian",
+   "age_ma": 395,
+   "age_basis": "file name suffix in millions of years",
+   "file": "Map69_PALEOMAP_1deg_Early_Devonian_395Ma.nc"
+  },
+  {
+   "id": "paleodem-3905",
+   "map_number": "68",
+   "label": "Middle Devonian",
+   "age_ma": 390.5,
+   "age_basis": "file name suffix in millions of years",
+   "file": "Map68_PALEOMAP_1deg_Middle_Devonian_390.5Ma.nc"
+  },
+  {
+   "id": "paleodem-3852",
+   "map_number": "67.5",
+   "label": "Middle Devonian",
+   "age_ma": 385.2,
+   "age_basis": "file name suffix in millions of years",
+   "file": "Map67.5_PALEOMAP_1deg_Middle_Devonian_385.2Ma.nc"
+  },
+  {
+   "id": "paleodem-3800",
+   "map_number": "67",
+   "label": "Late Devonian",
+   "age_ma": 380,
+   "age_basis": "file name suffix in millions of years",
+   "file": "Map67_PALEOMAP_1deg_Late_Devonian_380Ma.nc"
+  },
+  {
+   "id": "paleodem-3750",
+   "map_number": "66.5",
+   "label": "Late Devonian",
+   "age_ma": 375,
+   "age_basis": "file name suffix in millions of years",
+   "file": "Map66.5_PALEOMAP_1deg_Late_Devonian_375Ma.nc"
+  },
+  {
+   "id": "paleodem-3700",
+   "map_number": "66",
+   "label": "Late Devonian",
+   "age_ma": 370,
+   "age_basis": "file name suffix in millions of years",
+   "file": "Map66_PALEOMAP_1deg_Late_Devonian_370Ma.nc"
+  },
+  {
+   "id": "paleodem-3650",
+   "map_number": "65.5",
+   "label": "Late Devonian",
+   "age_ma": 365,
+   "age_basis": "file name suffix in millions of years",
+   "file": "Map65.5_PALEOMAP_1deg_Late_Devonian_365Ma.nc"
+  },
+  {
+   "id": "paleodem-3600",
+   "map_number": "65",
+   "label": "Devono-Carboniferous Boundary",
+   "age_ma": 360,
+   "age_basis": "file name suffix in millions of years",
+   "file": "Map65_PALEOMAP_1deg_Devono-Carboniferous Boundary_360Ma.nc"
+  },
+  {
+   "id": "paleodem-3550",
+   "map_number": "64.5",
+   "label": "Early Mississippian",
+   "age_ma": 355,
+   "age_basis": "file name suffix in millions of years",
+   "file": "Map64.5_PALEOMAP_1deg_Early_Mississippian_355Ma.nc"
+  },
+  {
+   "id": "paleodem-3500",
+   "map_number": "64",
+   "label": "Early Mississippian",
+   "age_ma": 350,
+   "age_basis": "file name suffix in millions of years",
+   "file": "Map64_PALEOMAP_1deg_Early_Mississippian_350Ma.nc"
+  },
+  {
+   "id": "paleodem-3450",
+   "map_number": "63.5",
+   "label": "Middle Mississippian",
+   "age_ma": 345,
+   "age_basis": "file name suffix in millions of years",
+   "file": "Map63.5_PALEOMAP_1deg_Middle_Mississippian_345Ma.nc"
+  },
+  {
+   "id": "paleodem-3400",
+   "map_number": "63",
+   "label": "Middle Mississippian",
+   "age_ma": 340,
+   "age_basis": "file name suffix in millions of years",
+   "file": "Map63_PALEOMAP_1deg_Middle_Mississippian_340Ma.nc"
+  },
+  {
+   "id": "paleodem-3350",
+   "map_number": "62.5",
+   "label": "Middle Mississippian",
+   "age_ma": 335,
+   "age_basis": "file name suffix in millions of years",
+   "file": "Map62.5_PALEOMAP_1deg_Middle_Mississippian_335Ma.nc"
+  },
+  {
+   "id": "paleodem-3300",
+   "map_number": "62",
+   "label": "Late Mississippian",
+   "age_ma": 330,
+   "age_basis": "file name suffix in millions of years",
+   "file": "Map62_PALEOMAP_1deg_Late_Mississippian_330Ma.nc"
+  },
+  {
+   "id": "paleodem-3250",
+   "map_number": "61",
+   "label": "Late Mississippian",
+   "age_ma": 325,
+   "age_basis": "file name suffix in millions of years",
+   "file": "Map61_PALEOMAP_1deg_Late_Mississippian_325Ma.nc"
+  },
+  {
+   "id": "paleodem-3200",
+   "map_number": "60",
+   "label": "Early Pennsylvanian",
+   "age_ma": 320,
+   "age_basis": "file name suffix in millions of years",
+   "file": "Map60_PALEOMAP_1deg_Early_Pennsylvanian_320Ma.nc"
+  },
+  {
+   "id": "paleodem-3150",
+   "map_number": "59.5",
+   "label": "EarlyMiddleCarboniferous",
+   "age_ma": 315,
+   "age_basis": "file name suffix in millions of years",
+   "file": "Map59.5_PALEOMAP_1deg_EarlyMiddleCarboniferous_315Ma.nc"
+  },
+  {
+   "id": "paleodem-3100",
+   "map_number": "59",
+   "label": "Middle Pennsylvanian",
+   "age_ma": 310,
+   "age_basis": "file name suffix in millions of years",
+   "file": "Map59_PALEOMAP_1deg_Middle_Pennsylvanian_310Ma.nc"
+  },
+  {
+   "id": "paleodem-3050",
+   "map_number": "58",
+   "label": "Late Pennsylvanian",
+   "age_ma": 305,
+   "age_basis": "file name suffix in millions of years",
+   "file": "Map58_PALEOMAP_1deg_Late_Pennsylvanian_305Ma.nc"
+  },
+  {
+   "id": "paleodem-3000",
+   "map_number": "57",
+   "label": "Late Pennsylvanian",
+   "age_ma": 300,
+   "age_basis": "file name suffix in millions of years",
+   "file": "Map57_PALEOMAP_1deg_Late_Pennsylvanian_300Ma.nc"
+  },
+  {
+   "id": "paleodem-2950",
+   "map_number": "56",
+   "label": "Early Permian",
+   "age_ma": 295,
+   "age_basis": "file name suffix in millions of years",
+   "file": "Map56_PALEOMAP_1deg_Early_Permian_295Ma.nc"
+  },
+  {
+   "id": "paleodem-2900",
+   "map_number": "55",
+   "label": "Early Permian",
+   "age_ma": 290,
+   "age_basis": "file name suffix in millions of years",
+   "file": "Map55_PALEOMAP_1deg_Early_Permian_290Ma.nc"
+  },
+  {
+   "id": "paleodem-2850",
+   "map_number": "54.5",
+   "label": "Early Permian",
+   "age_ma": 285,
+   "age_basis": "file name suffix in millions of years",
+   "file": "Map54.5_PALEOMAP_1deg_Early_Permian_285Ma.nc"
+  },
+  {
+   "id": "paleodem-2800",
+   "map_number": "54",
+   "label": "Early Permian",
+   "age_ma": 280,
+   "age_basis": "file name suffix in millions of years",
+   "file": "Map54_PALEOMAP_1deg_Early_Permian_280Ma.nc"
+  },
+  {
+   "id": "paleodem-2750",
+   "map_number": "53",
+   "label": "Early Permian",
+   "age_ma": 275,
+   "age_basis": "file name suffix in millions of years",
+   "file": "Map53_PALEOMAP_1deg_Early_Permian_275Ma.nc"
+  },
+  {
+   "id": "paleodem-2700",
+   "map_number": "52",
+   "label": "Middle Permian",
+   "age_ma": 270,
+   "age_basis": "file name suffix in millions of years",
+   "file": "Map52_PALEOMAP_1deg_Middle_Permian_270Ma.nc"
+  },
+  {
+   "id": "paleodem-2650",
+   "map_number": "51.5",
+   "label": "Middle Permian",
+   "age_ma": 265,
+   "age_basis": "file name suffix in millions of years",
+   "file": "Map51.5_PALEOMAP_1deg_Middle_Permian_265Ma.nc"
+  },
+  {
+   "id": "paleodem-2600",
+   "map_number": "51",
+   "label": "Middle Permian",
+   "age_ma": 260,
+   "age_basis": "file name suffix in millions of years",
+   "file": "Map51_PALEOMAP_1deg_Middle_Permian_260Ma.nc"
+  },
+  {
+   "id": "paleodem-2550",
+   "map_number": "50",
+   "label": "LatePermian",
+   "age_ma": 255,
+   "age_basis": "file name suffix in millions of years",
+   "file": "Map50_PALEOMAP_1deg_LatePermian_255Ma.nc"
+  },
+  {
+   "id": "paleodem-2500",
+   "map_number": "49",
+   "label": "Permo-Triassic Boundary",
+   "age_ma": 250,
+   "age_basis": "file name suffix in millions of years",
+   "file": "Map49_PALEOMAP_1deg_Permo-Triassic Boundary_250Ma.nc"
+  },
+  {
+   "id": "paleodem-2450",
+   "map_number": "48",
+   "label": "Middle Triassic",
+   "age_ma": 245,
+   "age_basis": "file name suffix in millions of years",
+   "file": "Map48_PALEOMAP_1deg_Middle_Triassic_245Ma.nc"
+  },
+  {
+   "id": "paleodem-2400",
+   "map_number": "47",
+   "label": "Middle Triassic",
+   "age_ma": 240,
+   "age_basis": "file name suffix in millions of years",
+   "file": "Map47_PALEOMAP_1deg_Middle_Triassic_240Ma.nc"
+  },
+  {
+   "id": "paleodem-2350",
+   "map_number": "46.5",
+   "label": "Late Triassic",
+   "age_ma": 235,
+   "age_basis": "file name suffix in millions of years",
+   "file": "Map46.5_PALEOMAP_1deg_Late_Triassic_235Ma.nc"
+  },
+  {
+   "id": "paleodem-2300",
+   "map_number": "46",
+   "label": "Late Triassic",
+   "age_ma": 230,
+   "age_basis": "file name suffix in millions of years",
+   "file": "Map46_PALEOMAP_1deg_Late_Triassic_230Ma.nc"
+  },
+  {
+   "id": "paleodem-2250",
+   "map_number": "45.5",
+   "label": "Late Triassic",
+   "age_ma": 225,
+   "age_basis": "file name suffix in millions of years",
+   "file": "Map45.5_PALEOMAP_1deg_Late_Triassic_225Ma.nc"
+  },
+  {
+   "id": "paleodem-2200",
+   "map_number": "45",
+   "label": "Late Triassic",
+   "age_ma": 220,
+   "age_basis": "file name suffix in millions of years",
+   "file": "Map45_PALEOMAP_1deg_Late_Triassic_220Ma.nc"
+  },
+  {
+   "id": "paleodem-2150",
+   "map_number": "44.5",
+   "label": "Late Triassic",
+   "age_ma": 215,
+   "age_basis": "file name suffix in millions of years",
+   "file": "Map44.5_PALEOMAP_1deg_Late_Triassic_215Ma.nc"
+  },
+  {
+   "id": "paleodem-2100",
+   "map_number": "44",
+   "label": "Late Triassic",
+   "age_ma": 210,
+   "age_basis": "file name suffix in millions of years",
+   "file": "Map44_PALEOMAP_1deg_Late_Triassic_210Ma.nc"
+  },
+  {
+   "id": "paleodem-2050",
+   "map_number": "43.5",
+   "label": "Late Triassic",
+   "age_ma": 205,
+   "age_basis": "file name suffix in millions of years",
+   "file": "Map43.5_PALEOMAP_1deg_Late_Triassic_205Ma.nc"
+  },
+  {
+   "id": "paleodem-2000",
+   "map_number": "43",
+   "label": "Late Triassic",
+   "age_ma": 200,
+   "age_basis": "file name suffix in millions of years",
+   "file": "Map43_PALEOMAP_1deg_Late_Triassic_200Ma.nc"
+  },
+  {
+   "id": "paleodem-1950",
+   "map_number": "42",
+   "label": "Early Jurassic",
+   "age_ma": 195,
+   "age_basis": "file name suffix in millions of years",
+   "file": "Map42_PALEOMAP_1deg_Early_Jurassic_195Ma.nc"
+  },
+  {
+   "id": "paleodem-1900",
+   "map_number": "41",
+   "label": "Early Jurassic",
+   "age_ma": 190,
+   "age_basis": "file name suffix in millions of years",
+   "file": "Map41_PALEOMAP_1deg_Early_Jurassic_190Ma.nc"
+  },
+  {
+   "id": "paleodem-1850",
+   "map_number": "40",
+   "label": "Early Jurassic",
+   "age_ma": 185,
+   "age_basis": "file name suffix in millions of years",
+   "file": "Map40_PALEOMAP_1deg_Early_Jurassic_185Ma.nc"
+  },
+  {
+   "id": "paleodem-1800",
+   "map_number": "39",
+   "label": "Early Jurassic",
+   "age_ma": 180,
+   "age_basis": "file name suffix in millions of years",
+   "file": "Map39_PALEOMAP_1deg_Early_Jurassic_180Ma.nc"
+  },
+  {
+   "id": "paleodem-1750",
+   "map_number": "38",
+   "label": "Middle Jurassic",
+   "age_ma": 175,
+   "age_basis": "file name suffix in millions of years",
+   "file": "Map38_PALEOMAP_1deg_Middle_Jurassic_175Ma.nc"
+  },
+  {
+   "id": "paleodem-1700",
+   "map_number": "37",
+   "label": "Middle Jurassic",
+   "age_ma": 170,
+   "age_basis": "file name suffix in millions of years",
+   "file": "Map37_PALEOMAP_1deg_Middle_Jurassic_170Ma.nc"
+  },
+  {
+   "id": "paleodem-1650",
+   "map_number": "36",
+   "label": "Middle Jurassic",
+   "age_ma": 165,
+   "age_basis": "file name suffix in millions of years",
+   "file": "Map36_PALEOMAP_1deg_Middle_Jurassic_165Ma.nc"
+  },
+  {
+   "id": "paleodem-1600",
+   "map_number": "35",
+   "label": "Late Jurassic",
+   "age_ma": 160,
+   "age_basis": "file name suffix in millions of years",
+   "file": "Map35_PALEOMAP_1deg_Late_Jurassic_160Ma.nc"
+  },
+  {
+   "id": "paleodem-1550",
+   "map_number": "34",
+   "label": "Late Jurassic",
+   "age_ma": 155,
+   "age_basis": "file name suffix in millions of years",
+   "file": "Map34_PALEOMAP_1deg_Late_Jurassic_155Ma.nc"
+  },
+  {
+   "id": "paleodem-1500",
+   "map_number": "33",
+   "label": "Late Jurassic",
+   "age_ma": 150,
+   "age_basis": "file name suffix in millions of years",
+   "file": "Map33_PALEOMAP_1deg_Late_Jurassic_150Ma.nc"
+  },
+  {
+   "id": "paleodem-1450",
+   "map_number": "32",
+   "label": "Jurassic Cretaceous Boundary",
+   "age_ma": 145,
+   "age_basis": "file name suffix in millions of years",
+   "file": "Map32_PALEOMAP_1deg_Jurassic_Cretaceous_Boundary_145Ma.nc"
+  },
+  {
+   "id": "paleodem-1400",
+   "map_number": "31",
+   "label": "Early Cretaceous",
+   "age_ma": 140,
+   "age_basis": "file name suffix in millions of years",
+   "file": "Map31_PALEOMAP_1deg_Early_Cretaceous_140Ma.nc"
+  },
+  {
+   "id": "paleodem-1350",
+   "map_number": "30",
+   "label": "Early Cretaceous",
+   "age_ma": 135,
+   "age_basis": "file name suffix in millions of years",
+   "file": "Map30_PALEOMAP_1deg_Early_Cretaceous_135Ma.nc"
+  },
+  {
+   "id": "paleodem-1300",
+   "map_number": "29",
+   "label": "Early Cretaceous",
+   "age_ma": 130,
+   "age_basis": "file name suffix in millions of years",
+   "file": "Map29_PALEOMAP_1deg_Early_Cretaceous_130Ma.nc"
+  },
+  {
+   "id": "paleodem-1250",
+   "map_number": "28",
+   "label": "Early Cretaceous",
+   "age_ma": 125,
+   "age_basis": "file name suffix in millions of years",
+   "file": "Map28_PALEOMAP_1deg_Early_Cretaceous_125Ma.nc"
+  },
+  {
+   "id": "paleodem-1200",
+   "map_number": "27",
+   "label": "Early Cretaceous",
+   "age_ma": 120,
+   "age_basis": "file name suffix in millions of years",
+   "file": "Map27_PALEOMAP_1deg_Early_Cretaceous_120Ma.nc"
+  },
+  {
+   "id": "paleodem-1150",
+   "map_number": "26",
+   "label": "Early Cretaceous",
+   "age_ma": 115,
+   "age_basis": "file name suffix in millions of years",
+   "file": "Map26_PALEOMAP_1deg_Early_Cretaceous_115Ma.nc"
+  },
+  {
+   "id": "paleodem-1100",
+   "map_number": "25",
+   "label": "Early Cretaceous",
+   "age_ma": 110,
+   "age_basis": "file name suffix in millions of years",
+   "file": "Map25_PALEOMAP_1deg_Early_Cretaceous_110Ma.nc"
+  },
+  {
+   "id": "paleodem-1050",
+   "map_number": "24",
+   "label": "Early Cretaceous",
+   "age_ma": 105,
+   "age_basis": "file name suffix in millions of years",
+   "file": "Map24_PALEOMAP_1deg_Early Cretaceous_105Ma.nc"
+  },
+  {
+   "id": "paleodem-1000",
+   "map_number": "23",
+   "label": "Early Cretaceous",
+   "age_ma": 100,
+   "age_basis": "file name suffix in millions of years",
+   "file": "Map23_PALEOMAP_1deg_Early_Cretaceous_100Ma.nc"
+  },
+  {
+   "id": "paleodem-0950",
+   "map_number": "22",
+   "label": "Mid-Cretaceous",
+   "age_ma": 95,
+   "age_basis": "file name suffix in millions of years",
+   "file": "Map22_PALEOMAP_1deg_Mid-Cretaceous_95Ma.nc"
+  },
+  {
+   "id": "paleodem-0900",
+   "map_number": "21",
+   "label": "Mid-Cretaceous",
+   "age_ma": 90,
+   "age_basis": "file name suffix in millions of years",
+   "file": "Map21_PALEOMAP_1deg_Mid-Cretaceous_90Ma.nc"
+  },
+  {
+   "id": "paleodem-0850",
+   "map_number": "20",
+   "label": "Late Cretaceous",
+   "age_ma": 85,
+   "age_basis": "file name suffix in millions of years",
+   "file": "Map20_PALEOMAP_1deg_Late_Cretaceous_85Ma.nc"
+  },
+  {
+   "id": "paleodem-0800",
+   "map_number": "19",
+   "label": "Late Cretaceous",
+   "age_ma": 80,
+   "age_basis": "file name suffix in millions of years",
+   "file": "Map19_PALEOMAP_1deg_Late_Cretaceous_80Ma.nc"
+  },
+  {
+   "id": "paleodem-0750",
+   "map_number": "18",
+   "label": "Late Cretaceous",
+   "age_ma": 75,
+   "age_basis": "file name suffix in millions of years",
+   "file": "Map18_PALEOMAP_1deg_Late_Cretaceous_75Ma.nc"
+  },
+  {
+   "id": "paleodem-0700",
+   "map_number": "17",
+   "label": "Late Cretaceous",
+   "age_ma": 70,
+   "age_basis": "file name suffix in millions of years",
+   "file": "Map17_PALEOMAP_1deg_Late_Cretaceous_70Ma.nc"
+  },
+  {
+   "id": "paleodem-0650",
+   "map_number": "16",
+   "label": "KT Boundary",
+   "age_ma": 65,
+   "age_basis": "file name suffix in millions of years",
+   "file": "Map16_PALEOMAP_1deg_KT_Boundary_65Ma.nc"
+  },
+  {
+   "id": "paleodem-0600",
+   "map_number": "15",
+   "label": "Paleocene",
+   "age_ma": 60,
+   "age_basis": "file name suffix in millions of years",
+   "file": "Map15_PALEOMAP_1deg_Paleocene_60Ma.nc"
+  },
+  {
+   "id": "paleodem-0550",
+   "map_number": "14",
+   "label": "Paleocene Eocene Boundary",
+   "age_ma": 55,
+   "age_basis": "file name suffix in millions of years",
+   "file": "Map14_PALEOMAP_1deg_Paleocene_Eocene_Boundary_55Ma.nc"
+  },
+  {
+   "id": "paleodem-0500",
+   "map_number": "13",
+   "label": "Early Eocene",
+   "age_ma": 50,
+   "age_basis": "file name suffix in millions of years",
+   "file": "Map13_PALEOMAP_1deg_Early_Eocene_50Ma.nc"
+  },
+  {
+   "id": "paleodem-0450",
+   "map_number": "12",
+   "label": "early Middle Eocene",
+   "age_ma": 45,
+   "age_basis": "file name suffix in millions of years",
+   "file": "Map12_PALEOMAP_1deg_early_Middle_Eocene_45Ma.nc"
+  },
+  {
+   "id": "paleodem-0400",
+   "map_number": "11",
+   "label": "late Middle Eocene",
+   "age_ma": 40,
+   "age_basis": "file name suffix in millions of years",
+   "file": "Map11_PALEOMAP_1deg_late_Middle_Eocene_40Ma.nc"
+  },
+  {
+   "id": "paleodem-0350",
+   "map_number": "10",
+   "label": "Late Eocene",
+   "age_ma": 35,
+   "age_basis": "file name suffix in millions of years",
+   "file": "Map10_PALEOMAP_1deg_Late_Eocene_35Ma.nc"
+  },
+  {
+   "id": "paleodem-0300",
+   "map_number": "09",
+   "label": "Early Oligocene",
+   "age_ma": 30,
+   "age_basis": "file name suffix in millions of years",
+   "file": "Map09_PALEOMAP_1deg_Early_Oligocene_30Ma.nc"
+  },
+  {
+   "id": "paleodem-0250",
+   "map_number": "08",
+   "label": "Late Oligocene",
+   "age_ma": 25,
+   "age_basis": "file name suffix in millions of years",
+   "file": "Map08_PALEOMAP_1deg_Late_Oligocene_25Ma.nc"
+  },
+  {
+   "id": "paleodem-0200",
+   "map_number": "07",
+   "label": "Early Miocene",
+   "age_ma": 20,
+   "age_basis": "file name suffix in millions of years",
+   "file": "Map07_PALEOMAP_1deg_Early_Miocene_20Ma.nc"
+  },
+  {
+   "id": "paleodem-0150",
+   "map_number": "06",
+   "label": "Middle Miocene",
+   "age_ma": 15,
+   "age_basis": "file name suffix in millions of years",
+   "file": "Map06_PALEOMAP_1deg_Middle_Miocene_15Ma.nc"
+  },
+  {
+   "id": "paleodem-0100",
+   "map_number": "05",
+   "label": "middle Late Miocene",
+   "age_ma": 10,
+   "age_basis": "file name suffix in millions of years",
+   "file": "Map05_PALEOMAP_1deg_middle_Late_Miocene_10Ma.nc"
+  },
+  {
+   "id": "paleodem-0050",
+   "map_number": "03",
+   "label": "Pliocene",
+   "age_ma": 5,
+   "age_basis": "file name suffix in millions of years",
+   "file": "Map03_PALEOMAP_1deg_Pliocene_5Ma.nc"
+  },
+  {
+   "id": "paleodem-0000",
+   "map_number": "01",
+   "label": "Holocene",
+   "age_ma": 0,
+   "age_basis": "file name suffix in millions of years",
+   "file": "Map01_PALEOMAP_1deg_Holocene_0Ma.nc"
+  }
+ ]
+}

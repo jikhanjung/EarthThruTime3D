@@ -489,3 +489,81 @@ class GlobeTests(TestCase):
             with patch('pathlib.Path.open', side_effect=FileNotFoundError):
                 with patch('core.globe.catalogue', return_value={'maps': [{'id': 'test', 'image': {'path': 'missing.jpg'}}]}):
                     self.assertEqual(self.client.get('/globe/maps/test.jpg').status_code, 404)
+
+
+class PaleodemTests(TestCase):
+    """The elevation series: PaleoDEM grids as a third mask source, fronted by the atlas."""
+
+    def setUp(self):
+        self.dem = TemporaryDirectory()
+        self.atlas = TemporaryDirectory()
+        self.addCleanup(self.dem.cleanup)
+        self.addCleanup(self.atlas.cleanup)
+        override = self.settings(SCOTESE_VIEWER_ENABLED=True, PALEODEM_DERIVED_DIR=self.dem.name,
+                                 PALEOATLAS_DERIVED_DIR=self.atlas.name)
+        override.enable()
+        self.addCleanup(override.disable)
+
+    def build(self, item):
+        globe_module.field_path(item).write_bytes(b'png')
+
+    def test_series_is_the_grids_fronted_by_the_atlas_beyond_540_ma(self):
+        items = globe_module.series_items('paleodem2018')
+        self.assertEqual(len(items), 112)
+        self.assertEqual([item['age_ma'] for item in items[:3]], [750.0, 690.0, 600.0])
+        self.assertEqual(items[3]['id'], 'paleodem-5400')
+        self.assertEqual(items[-1]['id'], 'paleodem-0000')
+        self.assertEqual([globe_module.source_of(items[0]), globe_module.source_of(items[3])],
+                         ['paleoatlas2016', 'paleodem2018'])
+        self.assertEqual(len({item['id'] for item in items}), 112)
+
+    def test_the_series_is_all_or_nothing(self):
+        request = RequestFactory().get('/', {'masks': 'paleodem2018'})
+        self.assertEqual(globe_module.mask_source(request), 'paleoatlas2016')
+        items = globe_module.series_items('paleodem2018')
+        for item in items[1:]:
+            self.build(item)
+        self.assertEqual(globe_module.mask_source(request), 'paleoatlas2016',
+                         'the atlas prelude counts: a partial build has frames that cannot render')
+        self.build(items[0])
+        self.assertEqual(globe_module.mask_source(request), 'paleodem2018')
+        with self.settings(MASK_SOURCE='paleodem2018'):
+            self.assertEqual(globe_module.mask_source(), 'paleodem2018')
+
+    def test_frames_carry_relief_and_period_labels(self):
+        for item in globe_module.series_items('paleodem2018'):
+            self.build(item)
+        response = self.client.get('/', {'masks': 'paleodem2018'})
+        frames = response.context['frames']
+        self.assertEqual(response.context['mask']['id'], 'paleodem2018')
+        self.assertTrue(response.context['mask']['relief'])
+        self.assertEqual(len(frames), 112)
+        self.assertEqual([frame['relief'] for frame in frames[:4]], [False, False, False, True])
+        self.assertTrue(all(frame['relief'] for frame in frames[3:]))
+        self.assertTrue(all(frame['url'] is None and frame['bounds'] is None for frame in frames))
+        self.assertEqual(frames[-1]['label'], '현재')
+        self.assertEqual(frames[3]['title'], 'Cambrian Precambrian boundary')
+        self.assertTrue(all(frame['field'] == f"/globe/fields/{frame['id']}.png" for frame in frames))
+        self.assertEqual(frames[-1]['source'], 'https://zenodo.org/records/5460860')
+        self.assertContains(response, 'id="surface"')
+        self.assertContains(response, 'zenodo.org/records/5460860')
+        self.assertContains(response, '?masks=paleoatlas2016')
+        self.assertContains(response, '?masks=scotese2002')
+        self.assertEqual(sorted(dict(response.context['mask']['others'])), ['paleoatlas2016', 'scotese2002'])
+        self.assertTrue(all(gap == [] for gap in response.context['motions']))
+
+    def test_health_counts_the_series_when_it_is_the_default(self):
+        for item in globe_module.series_items('paleodem2018'):
+            self.build(item)
+        with self.settings(MASK_SOURCE='paleodem2018'):
+            report = self.client.get('/healthz').json()['fields']
+        self.assertEqual((report['source'], report['expected'], report['missing']), ('paleodem2018', 112, 0))
+
+    def test_field_route_serves_a_paleodem_slice(self):
+        item = globe_module.catalogue('paleodem2018')['maps'][-1]
+        self.assertEqual(self.client.get(f"/globe/fields/{item['id']}.png").status_code, 404)
+        self.build(item)
+        response = self.client.get(f"/globe/fields/{item['id']}.png")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['Content-Type'], 'image/png')
+        self.assertEqual(self.client.get(f"/globe/maps/{item['id']}.jpg").status_code, 404)

@@ -40,8 +40,16 @@ MASK_SOURCES = {
     "scotese2002": {"catalogue": "sources/scotese-earth-history.json",
                     "directory": "SCOTESE_DERIVED_DIR",
                     "title": gettext_lazy("Scotese PALEOMAP 웹 지도 (2002)")},
+    # Elevation grids rather than pictures: the 109 PaleoDEMs (Scotese & Wright 2018),
+    # 0-540 Ma at 5 Myr, CC BY 4.0, as textures holding coastline distance and height.
+    # The timeline is fronted by the 2016 atlas maps older than the grids, as masks.
+    "paleodem2018": {"catalogue": "sources/paleodem-slices.json",
+                     "directory": "PALEODEM_DERIVED_DIR",
+                     "title": gettext_lazy("PALEOMAP PaleoDEM 고도 격자 (2018)")},
 }
 DEFAULT_MASK_SOURCE = "paleoatlas2016"
+# Below the oldest grid the elevation timeline continues with these atlas maps.
+DEM_OLDEST_MA = 540.0
 
 # Korean labels for the 2016 maps, derived from each map's age with the boundaries of the
 # ICS International Chronostratigraphic Chart (v2023/09). The age decides the label, so a
@@ -106,8 +114,13 @@ MAX_AREA_RATIO = 3.0
 
 
 def source_of(item):
-    """Which mask source a catalogue entry belongs to: 2002 entries carry an image."""
-    return "scotese2002" if "image" in item else "paleoatlas2016"
+    """Which mask source a catalogue entry belongs to.
+
+    2002 entries carry an image, PaleoDEM entries a grid file, atlas entries neither.
+    """
+    if "image" in item:
+        return "scotese2002"
+    return "paleodem2018" if "file" in item else "paleoatlas2016"
 
 
 def derived_path(item, suffix):
@@ -127,12 +140,33 @@ def catalogue(source="scotese2002"):
     return json.loads((settings.BASE_DIR / MASK_SOURCES[source]["catalogue"]).read_text())
 
 
+def series_items(source):
+    """The catalogue entries a source shows, oldest first.
+
+    The elevation series has no grid older than 540 Ma, and a frame without a field has
+    nothing to fall back to there, so it is fronted by the 2016 atlas maps beyond that
+    age, drawn as masks; the other sources show their own catalogue.
+    """
+    items = catalogue(source)["maps"]
+    if source != "paleodem2018":
+        return items
+    prelude = [item for item in catalogue("paleoatlas2016")["maps"] if item["age_ma"] > DEM_OLDEST_MA]
+    return prelude + items
+
+
 def mask_source(request=None):
-    """The mask source to show: a per-request comparison override, then the setting."""
+    """The mask source to show: a per-request comparison override, then the setting.
+
+    The elevation series is all or nothing: a frame without a field cannot render on
+    it, since there is no map to fall back to, so a partial build stays on the default.
+    """
     asked = request.GET.get("masks") if request is not None else None
     for value in (asked, getattr(settings, "MASK_SOURCE", DEFAULT_MASK_SOURCE)):
-        if value in MASK_SOURCES:
-            return value
+        if value not in MASK_SOURCES:
+            continue
+        if value == "paleodem2018" and not all(field_path(item).exists() for item in series_items(value)):
+            continue
+        return value
     return DEFAULT_MASK_SOURCE
 
 
@@ -190,6 +224,9 @@ def viewer_strings():
         "betweenValue": _("{period} 사이, {age}, 보간"),
         "olderThanMaps": _("가장 오래된 지도보다 이전"),
         "mask": _("대륙 마스크"),
+        "relief": _("고도"),
+        "reliefGlobe": _("고도 지구본"),
+        "loadingRelief": _("{period} 고도 지구본을 불러오는 중…"),
         "noMap": _("지도 없음"),
         "interpolated": _("보간"),
         "sourceAlt": _("{label} ({age}) Scotese 원본 지도"),
@@ -522,7 +559,7 @@ def bundle_report():
     if not enabled():
         return {"required": False, "expected": 0, "missing": 0}
     source = mask_source()
-    maps = catalogue(source)["maps"]
+    maps = series_items(source)
     missing = [item["id"] for item in maps if not field_path(item).exists()]
     return {"required": True, "source": source, "expected": len(maps),
             "missing": len(missing), "missing_ids": missing[:5]}
@@ -543,13 +580,16 @@ def globe(request):
                        for item, korean in zip(document["maps"], KOREAN_LABELS)]
         else:
             # The 2016 rasters are never served, published or not: their licence is not
-            # yet confirmed, so only the fields derived from them reach the page.
+            # yet confirmed, so only the fields derived from them reach the page. The
+            # elevation series is grids, served as textures; its atlas prelude is masks.
             entries = [(item, period_label(item), item["label"], None, None,
-                        document["license"]["source"]) for item in document["maps"]]
+                        catalogue(source_of(item))["license"]["source"])
+                       for item in series_items(source)]
         for item, korean, title, bounds, url, link in entries:
             pieces_by_frame[item["id"]] = piece_report(item)
             frames.append({"id": item["id"], "label": korean, "title": title,
                            "age": item["age_ma"], "bounds": bounds, "url": url,
+                           "relief": source_of(item) == "paleodem2018",
                            "field": (reverse("globe-field", args=[item["id"]])
                                      if field_path(item).exists() else None),
                            "names": landmass_names(pieces_by_frame[item["id"]]),
@@ -567,9 +607,9 @@ def globe(request):
                    "sampling_options": sampling_choice(plan)[1],
                    "source_maps_public": source_maps_public() and source == "scotese2002",
                    "mask": {"id": source, "title": str(MASK_SOURCES[source]["title"]),
-                            "other": next(other for other in MASK_SOURCES if other != source),
-                            "other_title": next(str(value["title"]) for key, value
-                                                in MASK_SOURCES.items() if key != source)},
+                            "relief": source == "paleodem2018",
+                            "others": [(key, str(value["title"])) for key, value
+                                       in MASK_SOURCES.items() if key != source]},
                    "plates": models,
                    "motions": (atlas_motions(frames) if source == "paleoatlas2016"
                                else motions(frames, pieces_by_frame)),

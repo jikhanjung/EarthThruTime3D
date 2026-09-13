@@ -16,6 +16,7 @@
 
 ## 작업 기록
 
+- [035 — PaleoDEM 고도 격자를 세 번째 마스크 소스로](20260913_035_paleodem_elevation.md)
 - [034 — KO|EN 언어 전환](20260913_034_english.md)
 - [033 — 오늘 배포와 정리](20260913_033_releases_and_prune.md)
 - [032 — 헤더 한 줄로, 보간 시점은 그 나이의 시대로](20260913_032_header_and_period.md)

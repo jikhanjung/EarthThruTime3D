@@ -71,7 +71,10 @@ const plateData = new Map();
 // Without the published maps there is nothing to show but the derived surface, so the
 // viewer starts there and the toggle is not rendered at all.
 const sourceMapsPublic = frames.some((frame) => Boolean(frame.url));
-let surface = sourceMapsPublic ? 'map' : 'mask';
+// A relief series carries elevation in its fields, so its plain view is coloured by
+// height rather than by a photographed map, and the mask toggle returns to it.
+const reliefSeries = frames.some((frame) => frame.relief);
+let surface = reliefSeries ? 'relief' : sourceMapsPublic ? 'map' : 'mask';
 let projection = 'globe';
 let surfaceMesh;
 let gridVisible = true;
@@ -128,13 +131,27 @@ function loadImage(source) {
     image.src = source;
   });
 }
+// Textures kept in GPU memory. Two are bound at any stop; the rest are a cache so
+// scrubbing back and forth does not re-download. A phone that has scrubbed the whole
+// timeline would otherwise hold every slice, which at 2048 x 1024 is near a gigabyte.
+const TEXTURE_CACHE = 12;
 function cache(key, build) {
-  if (!textures.has(key)) {
-    const promise = build();
+  if (textures.has(key)) {
+    const promise = textures.get(key);
+    textures.delete(key);       // re-insert so Map order is least recently used first
     textures.set(key, promise);
-    promise.catch(() => textures.delete(key));
+    return promise;
   }
-  return textures.get(key);
+  const promise = build();
+  textures.set(key, promise);
+  promise.catch(() => textures.delete(key));
+  for (const [stale, old] of textures) {
+    if (textures.size <= TEXTURE_CACHE) break;
+    textures.delete(stale);
+    old.then((texture) => texture.dispose(), () => {});
+  }
+  stage.dataset.cached = String(textures.size);
+  return promise;
 }
 function prepare(texture) {
   // The shader decodes colour itself, so every texture is handed over as raw data.
@@ -151,15 +168,36 @@ function loadMap(frame) {
     prepare(new THREE.CanvasTexture(reproject(await loadImage(frame.url), frame.bounds))));
 }
 function loadField(frame) {
-  return cache(`${frame.id}:field`, async () =>
-    prepare(new THREE.Texture(await loadImage(frame.field), THREE.UVMapping)));
+  return loadData(`${frame.id}:field`, frame.field);
+}
+function loadData(key, url) {
+  // A field is data, not a picture: distance in red, height in green and blue.
+  // Decoding it as an <img> lets the browser colour-manage the bytes on the way to
+  // WebGL, which some engines do even when asked not to, and a shifted distance moves
+  // the coastline. WebGL only colour-converts DOM image sources; bytes handed over as
+  // an array are uploaded as they are, by specification. So decode to a 2D canvas,
+  // read the bytes back and upload those.
+  return cache(key, async () => {
+    const response = await fetch(url);
+    if (!response.ok) throw new Error(`Download failed: ${url}`);
+    const bitmap = await createImageBitmap(await response.blob(), {
+      colorSpaceConversion: 'none', premultiplyAlpha: 'none',
+    });
+    const canvas = document.createElement('canvas');
+    canvas.width = bitmap.width;
+    canvas.height = bitmap.height;
+    const context = canvas.getContext('2d', { colorSpace: 'srgb', willReadFrequently: true });
+    context.drawImage(bitmap, 0, 0);
+    bitmap.close();
+    const { data, width, height } = context.getImageData(0, 0, canvas.width, canvas.height);
+    const texture = prepare(new THREE.DataTexture(data, width, height, THREE.RGBAFormat, THREE.UnsignedByteType));
+    texture.flipY = true;   // row 0 of the field is north; the sphere's v runs south to north
+    texture.needsUpdate = true;   // a DataTexture uploads nothing until told to
+    return texture;
+  });
 }
 async function loadSurface(frame) {
-  if ((surface === 'mask' || !frame.url) && frame.field) {
-    const texture = await loadField(frame);
-    texture.needsUpdate = true;
-    return texture;
-  }
+  if ((surface !== 'map' || !frame.url) && frame.field) return loadField(frame);
   return loadMap(frame);
 }
 function stopAt(value) {
@@ -198,8 +236,10 @@ async function selectStop(value, manual = false) {
   selected = place.index;
   const ticket = ++request;
   const between = place.blend > 0;
-  const masked = !place.mapless && (surface === 'mask' || !sourceMapsPublic)
-    && Boolean(place.from.field) && Boolean(place.to.field);
+  const fielded = !place.mapless && Boolean(place.from.field) && Boolean(place.to.field);
+  // A stop needs heights on both sides to be drawn by height; the atlas prelude has none.
+  const relief = surface === 'relief' && fielded && Boolean(place.from.relief) && Boolean(place.to.relief);
+  const masked = !relief && fielded && (surface === 'mask' || !sourceMapsPublic);
   const anchor = place.mapless ? null : (place.blend > 0.5 ? place.to : place.from);
   $('era').value = selected;
   $('timeline').value = stop;
@@ -213,7 +253,7 @@ async function selectStop(value, manual = false) {
     ? L.olderThanMaps
     : (between ? `${place.from.title} → ${place.to.title}` : place.from.title);
   $('globe-age').textContent = [periodLabel(place), ageLabel(place),
-    place.mapless ? null : (masked ? L.mask : null),
+    place.mapless ? null : (masked ? L.mask : relief ? L.relief : null),
     place.mapless ? L.noMap : (between ? L.interpolated : null)].filter(Boolean).join(' / ');
   // Older than any map there is no source to preview, and leaving the last one up
   // would read as if it applied.
@@ -232,13 +272,14 @@ async function selectStop(value, manual = false) {
     : (between ? fmt(L.betweenCount, { age: ageLabel(place) }) : `${selected + 1} / ${frames.length}`);
   if (surfaceToggle) {
     surfaceToggle.disabled = place.mapless || !place.from.field || !place.to.field;
+    surfaceToggle.setAttribute('aria-pressed', String(masked));
   }
   $('surface-note').hidden = !masked;
   $('between-note').hidden = !between;
   if ($('mapless-note')) $('mapless-note').hidden = !place.mapless;
   status.textContent = place.mapless
     ? fmt(L.loadingPlates, { age: ageLabel(place) })
-    : fmt(masked ? L.loadingMask : L.loadingMap, { period: periodLabel(place) });
+    : fmt(masked ? L.loadingMask : relief ? L.loadingRelief : L.loadingMap, { period: periodLabel(place) });
   status.hidden = false;
   status.classList.remove('loaded');
   $('retry').hidden = true;
@@ -255,7 +296,7 @@ async function selectStop(value, manual = false) {
       uniforms.blend.value = place.blend;
       uniforms.blank.value = 0;
     }
-    uniforms.masked.value = masked ? 1 : 0;
+    uniforms.mode.value = relief ? 2 : masked ? 1 : 0;
     applyMotion(place);
     surfaceMesh.visible = true;
     lastPlace = place;
@@ -267,14 +308,15 @@ async function selectStop(value, manual = false) {
     stage.dataset.frame = place.mapless ? 'none' : place.from.id;
     stage.dataset.blend = place.blend.toFixed(2);
     stage.dataset.mapless = String(place.mapless);
+    stage.dataset.surface = place.mapless ? 'none' : relief ? 'relief' : masked ? 'mask' : 'map';
     stage.setAttribute('aria-label', place.mapless
       ? fmt(L.maplessLabel, { age: ageLabel(place) })
       : fmt(L.globeLabel, { period: periodLabel(place), age: ageLabel(place),
-                            surface: masked ? L.maskGlobe : L.globe, between: between ? L.betweenSuffix : '' }));
+                            surface: masked ? L.maskGlobe : relief ? L.reliefGlobe : L.globe, between: between ? L.betweenSuffix : '' }));
     stage.setAttribute('aria-busy', 'false');
     status.textContent = place.mapless
       ? fmt(L.shownPlates, { age: ageLabel(place) })
-      : fmt(L.shownSurface, { period: periodLabel(place), surface: masked ? L.mask : L.globe,
+      : fmt(L.shownSurface, { period: periodLabel(place), surface: masked ? L.mask : relief ? L.relief : L.globe,
                               between: between ? L.shownBetween : '' });
     status.classList.add('loaded');
     scheduleNext();
@@ -356,7 +398,7 @@ function globeMaterial() {
     rgb[0] / 255, rgb[1] / 255, rgb[2] / 255, THREE.SRGBColorSpace);
   uniforms = {
     surfaceA: { value: null }, surfaceB: { value: null },
-    blend: { value: 0 }, masked: { value: 0 },
+    blend: { value: 0 }, mode: { value: 0 },
     land: { value: linear(LAND_COLOUR) }, ocean: { value: linear(OCEAN_COLOUR) },
     projection: { value: 0 },
     meridian: { value: 0 },
@@ -379,7 +421,7 @@ function globeMaterial() {
       uniform sampler2D surfaceA;
       uniform sampler2D surfaceB;
       uniform float blend;
-      uniform float masked;
+      uniform int mode;
       uniform float blank;
       uniform vec3 land;
       uniform vec3 ocean;
@@ -418,6 +460,28 @@ function globeMaterial() {
         return mix(pow((colour + 0.055) / 1.055, vec3(2.4)), colour / 12.92,
                    step(colour, vec3(0.04045)));
       }
+      // Height and depth as colour, the usual hypsometric convention: shallow to deep
+      // blue under water, green through tan to white above it. Which side of the coast
+      // a texel is on comes from the distance field, not from the height alone.
+      vec3 hypsometric(float metres, float landness) {
+        float depth = clamp(-metres / 6000.0, 0.0, 1.0);
+        vec3 sea = mix(decode(vec3(0.53, 0.75, 0.90)), decode(vec3(0.05, 0.14, 0.38)), depth);
+        float rise = clamp(metres / 4000.0, 0.0, 1.0);
+        vec3 ground = rise < 0.35
+          ? mix(decode(vec3(0.27, 0.53, 0.27)), decode(vec3(0.78, 0.70, 0.45)), rise / 0.35)
+          : mix(decode(vec3(0.78, 0.70, 0.45)), decode(vec3(0.95, 0.95, 0.95)), (rise - 0.35) / 0.65);
+        return mix(sea, ground, landness);
+      }
+      // Height in metres at a pair of field coordinates, one per bound texture. Green
+      // holds the high byte and blue four more bits of a 12-bit value over -9000..6000 m;
+      // an 8-bit texture has blue at zero and decodes 9 m low, below its own step.
+      float metresAt(vec2 uvA, vec2 uvB) {
+        vec4 a = texture2D(surfaceA, uvA);
+        vec4 b = texture2D(surfaceB, uvB);
+        float here = (a.g * 16.0 + a.b) * 255.0 / 4095.0;
+        float there = (b.g * 16.0 + b.b) * 255.0 / 4095.0;
+        return mix(here, there, blend) * 15000.0 - 9000.0;
+      }
       // Where on the equirectangular fields this fragment looks. On the sphere the
       // geometry already carries that; on a sheet the projection has to be undone,
       // which is also what decides whether a fragment is on the map at all.
@@ -444,7 +508,7 @@ function globeMaterial() {
           // Older than any published map: bare water, so the reconstruction drawn over
           // it is plainly the only claim being made.
           colour = ocean;
-        } else if (masked > 0.5) {
+        } else if (mode >= 1) {
           // Both textures hold a signed distance to the coastline. Mixing the distances
           // and cutting at the midpoint moves the coastline; mixing pictures would only
           // dissolve one into the other. Sampling each side through the travel field
@@ -452,11 +516,18 @@ function globeMaterial() {
           // around a continent that is moving rather than melting in place.
           vec2 shift = travel(vec2((surfaceUv.x - 0.5) * 360.0, (surfaceUv.y - 0.5) * 180.0));
           vec2 offset = vec2(shift.x / 360.0, shift.y / 180.0);
-          float here = texture2D(surfaceA, surfaceUv - blend * offset).r;
-          float there = texture2D(surfaceB, surfaceUv + (1.0 - blend) * offset).r;
+          vec2 uvA = surfaceUv - blend * offset;
+          vec2 uvB = surfaceUv + (1.0 - blend) * offset;
+          float here = texture2D(surfaceA, uvA).r;
+          float there = texture2D(surfaceB, uvB).r;
           float distance = mix(here, there, blend) - 0.5;
           float edge = fwidth(distance) + 0.0012;
-          colour = mix(ocean, land, smoothstep(-edge, edge, distance));
+          float landness = smoothstep(-edge, edge, distance);
+          if (mode == 2) {
+            colour = hypsometric(metresAt(uvA, uvB), landness);
+          } else {
+            colour = mix(ocean, land, landness);
+          }
         } else {
           colour = mix(decode(texture2D(surfaceA, surfaceUv).rgb),
                        decode(texture2D(surfaceB, surfaceUv).rgb), blend);
@@ -943,7 +1014,7 @@ function init() {
   });
   if (surfaceToggle) {
     surfaceToggle.addEventListener('click', () => {
-      surface = surface === 'mask' ? 'map' : 'mask';
+      surface = surface === 'mask' ? (reliefSeries ? 'relief' : 'map') : 'mask';
       surfaceToggle.setAttribute('aria-pressed', String(surface === 'mask'));
       selectStop(stop, true);
     });
