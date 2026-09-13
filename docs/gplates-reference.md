@@ -114,6 +114,13 @@ In rough order of dependency:
 Steps 1 and 2 are where the scientific content lives; everything else is engineering.
 Until step 3 exists, our intermediate frames must keep saying they are interpolated.
 
+## Reference frames and palaeolongitude
+
+Why models agree in the Mesozoic and diverge by up to 170 degrees of longitude in the
+Palaeozoic, the hypotheses each camp uses to pin longitude, the criticisms of each, and
+this project's own measurements are collected in
+[docs/palaeolongitude.md](palaeolongitude.md).
+
 ## Sources
 
 - [Features of GPlates](https://www.gplates.org/features/)
