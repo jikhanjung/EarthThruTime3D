@@ -447,6 +447,66 @@ try {
   await expect(atlas.locator('#age')).toContainText('254');
   console.log('One million year spacing passed');
   console.log('2016 atlas default passed');
+  // The elevation series, where this checkout has built it: relief at 0 Ma with the
+  // present-day ice, the surface and layer controls where they now live, the fossil
+  // coastlines over the grids, the atlas prelude as a mask, a deep stop, and the English
+  // page with nothing left in Korean. A checkout without the textures is sent back to
+  // the atlas, and the pass is skipped rather than failed.
+  const dem = await browser.newPage({locale: 'ko-KR', viewport: {width:1280, height:1000}});
+  dem.on('pageerror', error => errors.push(error.message));
+  await dem.goto(new URL('?masks=paleodem2018', base).href);
+  const demGlobe = dem.locator('#globe');
+  const demFrames = await dem.locator('#globe-frames').textContent().then(JSON.parse);
+  if (!demFrames.some(frame => frame.relief)) {
+    console.log('Elevation series not built here; skipped');
+  } else {
+    await expect(demGlobe).toHaveAttribute('data-frame', 'paleodem-0000');
+    await expect(demGlobe).toHaveAttribute('data-surface', 'relief');
+    await expect(demGlobe).toHaveAttribute('aria-busy', 'false');
+    await expect(demGlobe).toHaveAttribute('data-ice', 'true');
+    expect(demFrames.length).toBe(112);
+    // Settings of the surface sit in the inspector; the toolbar keeps the view controls.
+    await expect(dem.locator('.globe-toolbar #shading')).toHaveCount(0);
+    await expect(dem.locator('.inspector #shading')).toHaveCount(1);
+    await expect(dem.locator('.inspector #sealevel')).toHaveCount(1);
+    await dem.locator('#shading').selectOption('5');
+    await expect(demGlobe).toHaveAttribute('data-shading', '5');
+    await dem.locator('#sealevel').selectOption('-120');
+    await expect(demGlobe).toHaveAttribute('data-sealevel', '-120');
+    await expect(dem.locator('#sea-note')).toBeVisible();
+    await dem.locator('#sealevel').selectOption('0');
+    await expect(demGlobe).toHaveAttribute('data-sealevel', '0');
+    await dem.locator('#temperature').click();
+    await expect(demGlobe).toHaveAttribute('data-surface', 'temp');
+    await dem.locator('#temperature').click();
+    await expect(demGlobe).toHaveAttribute('data-surface', 'relief');
+    await dem.locator('#surface').click();
+    await expect(demGlobe).toHaveAttribute('data-surface', 'mask');
+    await dem.locator('#surface').click();
+    await expect(demGlobe).toHaveAttribute('data-surface', 'relief');
+    await dem.locator('#ice').click();
+    await expect(demGlobe).toHaveAttribute('data-ice', 'false');
+    await dem.locator('#ice').click();
+    // The fossil coastlines are offered over the grids as over the atlas.
+    await dem.locator('#coastline').check();
+    await expect.poll(async () => Number(await demGlobe.getAttribute('data-coastlines'))).toBeGreaterThan(0);
+    await dem.locator('#coastline').uncheck();
+    // Before 540 Ma the series is the atlas masks; before 750 Ma nothing but a model.
+    await dem.locator('#era').selectOption(String(demFrames.findIndex(frame => frame.id === 'paleoatlas-600')));
+    await expect(demGlobe).toHaveAttribute('data-frame', 'paleoatlas-600');
+    await expect(demGlobe).toHaveAttribute('data-surface', 'mask');
+    await expect(dem.locator('#period')).toHaveText('에디아카라기');
+    await dem.locator('#timeline').fill('0');
+    await dem.locator('#timeline').dispatchEvent('input');
+    await expect(demGlobe).toHaveAttribute('data-mapless', 'true');
+    await expect(demGlobe).toHaveAttribute('aria-busy', 'false');
+    await dem.locator('.lang a[hreflang="en"]').click();
+    await expect(dem.locator('html')).toHaveAttribute('lang', 'en');
+    await expect(demGlobe).toHaveAttribute('aria-busy', 'false');
+    expect(await dem.locator('body').textContent()).not.toMatch(/[가-힣]/);
+    await dem.screenshot({path:'data/screenshots/globe-elevation-english.png', fullPage:true});
+    console.log('Elevation series passed');
+  }
   expect(errors).toEqual([]);
   console.log('Rotation, zoom, playback, rapid switching, mobile layout and failed-load recovery passed');
 } finally { await browser.close(); }
