@@ -95,7 +95,7 @@ times smaller); the shader decodes both the same way. A 16-bit low byte was trie
 dropped: it is noise to the PNG compressor and tripled the set.
 
 A third shader mode colours the height with a hypsometric ramp, blue by depth and green
-through tan to white by height, and decides land against ocean from the distance rather
+through tan to a light grey by height, white being kept for the ice layer, and decides land against ocean from the distance rather
 than from the height so the coastline stays antialiased. The mask toggle returns to this
 relief view rather than to a photographed map. A frame without heights, the atlas
 prelude, draws as a mask, and so does the gap down to 540 Ma.
@@ -193,22 +193,55 @@ heights and takes no offset. This control is why the textures default to 12 bits
 
 ## Ice
 
-Only the present day has an open outline of ice. `scripts/build_ice.py` rasterises
-Natural Earth's 10 m glaciated areas and Antarctic ice shelves, public domain, onto the
-0 Ma grid's texture, `paleodem-0000-ice.png` in `PALEODEM_DERIVED_DIR`: red is grounded
-ice, green a floating shelf. Longitude and latitude map linearly to the equirectangular
-grid, so there is no reprojection; polygon parts are filled one by one, so a hole is
-filled as ice too, which touches a few nunataks and nothing else at this resolution.
-`/globe/ice/<id>.png` serves it and a frame of the elevation series carries `ice` only
-where a mask exists.
+`scripts/build_ice.py` writes one ice mask per grid of the elevation series onto the
+grid's 2048 × 1024 texture, `<id>-ice.png` in `PALEODEM_DERIVED_DIR`: red is grounded
+ice, green a floating shelf, 255 inside and 0 outside, longitude and latitude linear to
+the pixels. `/globe/ice/<id>.png` serves it and a frame carries `ice` only where a mask
+exists.
+
+The present day comes from Natural Earth's 10 m glaciated areas and Antarctic ice
+shelves, public domain; polygon parts are filled one by one, so a hole is filled as ice
+too, which touches a few nunataks and nothing else at this resolution. Every older grid
+takes the ice the 2016 PaleoAtlas paints on the map nearest its age, within 5 Myr and
+the younger map on a tie, as the names and motions are borrowed. `segment_paleoatlas.ice`
+reads it with the same pale threshold and overprint refill as the land masks, then keeps
+only the pale pieces whose centroid lies poleward of 45°. The atlas's own legend has no
+ice; white is "the highest peaks in the mountains", so Tibet, the Altiplano and the
+Central Pangean Mountains come out pale too, and every drawn sheet sits poleward of that
+line while every plateau sits inside it. The continental polygons are not used: they
+leave the cap unfilled where a polygon rings a pole, and the atlas draws one white for
+sheet, shelf and sea ice alike, so all of it goes in the red channel and the sea ice the
+atlas paints, the Arctic at 4 Ma, stays, and a piece under 0.01% of the sphere is a
+speck at the map's polar edge and is dropped. 46 of the 109 grids get a mask, 14 of
+them from a map up to 5 Myr away. A grid whose map paints no ice gets no file, so the
+overlay fades out across that gap, which there means retreat rather than missing data. The atlas
+prelude older than 540 Ma gets none, and no map draws a mountain glacier, so those
+appear only at the present. The relief ramp used to run to white above 4000 m as well;
+its top is now a grey, so white on the globe means ice.
 
 The shader draws grounded ice near-opaque white and shelves paler over whatever
-surface is showing, in relief, mask and temperature modes; a 빙하 toggle hides it. One
-third of the grounded ice lies where the PaleoDEM reads ocean, because the West
-Antarctic ice sheet rests on bedrock below sea level and the grid holds the bed; so the
-overlay ignores what is beneath, and the note says why. Between 5 Ma and now the
-overlay fades, because the 5 Ma grid has no mask; the note says that the fade is
-missing data, not ice loss. Past ice is issue #7.
+surface is showing, in relief, mask and temperature modes, sampled through the same
+motion field as the surface so a sheet rides its continent between stops; a 빙하
+toggle hides it. One third of the present grounded ice lies where the PaleoDEM reads
+ocean, because the West Antarctic ice sheet rests on bedrock below sea level and the
+grid holds the bed; so the overlay ignores what is beneath, and the note says why.
+
+The masks are per map, 5 to 10 Myr apart, so they cannot show glacial cycles; the
+sea-level strip shades the spans where the land-ice estimate says such cycles existed.
+As a check, the glacial deposits Cao et al. (2018) compiled, 394 tillite and diamictite
+localities since the Devonian, CC BY 4.0 and pinned in `sources/ice.json`, ride the
+PALEOMAP plate under them to each map's age and are counted inside the mask, within 5°
+of its edge, inside a pale piece the latitude rule dropped, or farther; `ice-check.json`
+beside the masks holds the counts and lists the far ones. At the Late Palaeozoic peak,
+330 to 290 Ma, 154 of 197 localities are inside or within 5° of the drawn sheets, and
+the two inside a dropped piece sit at the palaeo-equator in the Central Pangean
+Mountains, the debated tropical upland glaciation the rule leaves out. The atlas draws
+less than the deposits say at the ice age's start and end, 380 to 340 Ma and 280 to
+255 Ma, where it paints a small polar cap and the localities sit at 55 to 70°, and it
+draws nothing for the Early Cretaceous dropstone localities or the Miocene mountain and
+tidewater glaciers of Alaska, Iceland and Kamchatka. The compilation has nothing before
+the Devonian, so the Ordovician sheets go unchecked. Coupling the extent to the
+sea-level control is issue #7's next step.
 
 ## Mapping pipeline
 

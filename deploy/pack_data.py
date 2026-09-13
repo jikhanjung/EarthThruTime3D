@@ -77,14 +77,17 @@ def pack_elevation(dem, dem_source, staging, files):
     files.append({"path": "paleodem/sealevel-curve.json",
                   "bytes": (staging / "paleodem" / sea.name).stat().st_size,
                   "sha256": digest(staging / "paleodem" / sea.name), "dataset": "sealevel"})
-    # Present-day ice from Natural Earth (public domain), rasterised onto the 0 Ma grid.
-    ice = dem_source / "paleodem-0000-ice.png"
-    if not ice.exists():
-        raise SystemExit(f"Missing {ice}. Run scripts/build_ice.py.")
-    shutil.copy2(ice, staging / "paleodem" / ice.name)
-    files.append({"path": "paleodem/paleodem-0000-ice.png",
-                  "bytes": (staging / "paleodem" / ice.name).stat().st_size,
-                  "sha256": digest(staging / "paleodem" / ice.name), "map_id": "paleodem-0000"})
+    # Ice masks: Natural Earth (public domain) on the 0 Ma grid, which must exist, and the
+    # atlas's ice on every older grid whose map paints any, from scripts/build_ice.py.
+    for item in dem["maps"]:
+        ice = dem_source / f"{item['id']}-ice.png"
+        if not ice.exists():
+            if item["id"] == "paleodem-0000":
+                raise SystemExit(f"Missing {ice}. Run scripts/build_ice.py.")
+            continue
+        shutil.copy2(ice, staging / "paleodem" / ice.name)
+        files.append({"path": f"paleodem/{ice.name}", "bytes": (staging / "paleodem" / ice.name).stat().st_size,
+                      "sha256": digest(staging / "paleodem" / ice.name), "map_id": item["id"]})
 
 
 def main():
