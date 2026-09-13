@@ -1,9 +1,12 @@
-"""Pack the runtime bundle: the derived land fields and their piece reports.
+"""Pack the runtime bundle: the derived land fields, their piece reports, and the
+packed EarthByte plate model.
 
-The original PALEOMAP JPEGs are deliberately not packed. The licence permits personal,
-teaching, research and scientific-publication use with credit and names websites among
-the commercial uses needing the author's written consent, so the published maps stay on
-the build host. What ships is this project's own measurement of them.
+Two datasets travel together but stay labelled. The original PALEOMAP JPEGs are
+deliberately not packed: that licence permits personal, teaching, research and
+scientific-publication use with credit and names websites among the commercial uses
+needing the author's written consent, so the published maps stay on the build host and
+only this project's own measurement of them ships. The plate model is EarthByte's, under
+CC BY with a citation requirement, and ships whole.
 """
 import hashlib
 import json
@@ -15,6 +18,8 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parents[1]
 SOURCE = BASE_DIR / "data/derived/segmentation"
 SUFFIXES = ("field.png", "pieces.json")
+PLATES = BASE_DIR / "data/derived/plates"
+PLATE_FILES = ("rotations.json", "continents.json", "coastlines.json")
 
 
 def digest(path):
@@ -45,11 +50,23 @@ def main():
             files.append({"path": f"segmentation/{source.name}", "bytes": target.stat().st_size,
                           "sha256": digest(target), "map_id": item["id"]})
 
-    manifest = {"schema_version": 1, "version": version, "files": files,
+    (staging / "plates").mkdir()
+    for name in PLATE_FILES:
+        source = PLATES / name
+        if not source.exists():
+            raise SystemExit(f"Missing plate file: {source}. Run scripts/pack_plates.py.")
+        target = staging / "plates" / name
+        shutil.copy2(source, target)
+        files.append({"path": f"plates/{name}", "bytes": target.stat().st_size,
+                      "sha256": digest(target), "dataset": "earthbyte-merdith2021"})
+
+    manifest = {"schema_version": 2, "version": version, "files": files,
                 "contains_source_maps": False,
                 "note": ("Derived land fields and piece reports produced by "
-                         "scripts/segment_landmass.py from the PALEOMAP maps. The "
-                         "original images are not included.")}
+                         "scripts/segment_landmass.py from the PALEOMAP maps, whose "
+                         "original images are not included, plus the EarthByte "
+                         "Merdith et al. 2021 plate model packed by "
+                         "scripts/pack_plates.py and distributed under CC BY 3.0.")}
     (staging / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
 
     dist = BASE_DIR / "dist"

@@ -193,6 +193,31 @@ inspector scrolls inside it, with a reserved scrollbar gutter so a scrollbar app
 does not shift its text. The browser run asserts the globe panel keeps the same box
 across the plain map, the derived surface and an interpolated stop.
 
+## The plate model overlay
+
+A second toolbar toggle, **판 재구성**, draws EarthByte's Merdith et al. (2021) plate
+model over whatever the globe is showing. This is a different dataset, not a different
+view of the same one: the Scotese surface is this project's measurement of published
+pictures, while these lines are computed from a rotation model. Where the two disagree,
+two models disagree; neither is a correction of the other. The inspector says so
+whenever the overlay is on, and carries the citation the CC BY licence requires.
+
+`scripts/pack_plates.py` repacks the model for the browser. Continent outlines are
+simplified with Douglas-Peucker at 0.12 degrees, which takes 75,000 points down to
+15,000, far finer than a globe a few hundred pixels across can show. The rotation file
+becomes sequences keyed by moving and fixed plate. Both ship in the runtime bundle and
+are served from `/plates/<name>.json` behind a three-name allowlist. Coastlines are
+packed too; the continents layer is the one drawn, because the authors say coastlines
+are mainly meaningful for the past 400 Ma while continents span the billion years.
+
+`static/core/rotation.js` composes a plate's rotation at any age: walk the chain of
+fixed plates to the anchor, and inside a sequence split the rotation from one sample to
+the next. It is the same algorithm as `scripts/rotation_model.py`, which is checked
+against the GPlates Web Service, and `tests/rotation.test.mjs` keeps the two from
+drifting apart. Outlines are rebuilt per stop rather than eased, so the geometry is
+exact at the age on screen. Rings crossing the antimeridian are broken on flat
+projections, where a wrap would otherwise draw a line back across the map.
+
 ## Runtime and data boundaries
 
 Three.js modules and their MIT license are vendored locally using `npm run vendor`.

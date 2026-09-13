@@ -244,6 +244,36 @@ def timeline(frames, plan):
     return stops
 
 
+# The plate model is served whole rather than per map: it is one model, and the viewer
+# reconstructs from it at whatever time the reader has chosen.
+PLATE_FILES = {"rotations": "rotations.json", "continents": "continents.json",
+               "coastlines": "coastlines.json"}
+
+
+def plate_path(name):
+    return Path(settings.PLATE_MODEL_DIR) / PLATE_FILES[name]
+
+
+def plate_model():
+    """URLs and attribution for the plate model, or None when it has not been packed.
+
+    Attribution travels with the URLs because the licence requires it and because a
+    reader has to be able to tell which of the two datasets a line came from.
+    """
+    if not all(plate_path(name).exists() for name in ("rotations", "continents")):
+        return None
+    catalogue = json.loads((settings.BASE_DIR / "sources/earthbyte-merdith2021.json").read_text())
+    return {"rotations": reverse("plate-file", args=["rotations"]),
+            "continents": reverse("plate-file", args=["continents"]),
+            "coastlines": (reverse("plate-file", args=["coastlines"])
+                           if plate_path("coastlines").exists() else None),
+            "model": "Merdith et al. 2021",
+            "citation": catalogue["citation"],
+            "license": catalogue["license"]["name"],
+            "license_url": catalogue["license"]["url"],
+            "limitations": catalogue["limitations"]}
+
+
 def bundle_report():
     """Whether the derived land fields this deployment serves are actually present.
 
@@ -279,6 +309,7 @@ def globe(request):
                   {"frames": frames, "viewer_enabled": enabled(),
                    "stops": timeline(frames, plan), "sampling": plan,
                    "source_maps_public": source_maps_public(),
+                   "plates": plate_model(),
                    "motions": motions(frames, pieces_by_frame),
                    "fields_available": any(frame["field"] for frame in frames)})
 
@@ -312,4 +343,18 @@ def land_field(request, map_id):
         raise Http404("Land field not generated") from None
     response = FileResponse(file, content_type="image/png")
     response["Cache-Control"] = "private, max-age=3600"
+    return response
+
+
+@require_safe
+def plate_file(request, name):
+    """Serve one packed plate-model file. Only the three names above are reachable."""
+    if not enabled() or name not in PLATE_FILES:
+        raise Http404
+    try:
+        file = plate_path(name).open("rb")
+    except FileNotFoundError:
+        raise Http404("Plate model not packed") from None
+    response = FileResponse(file, content_type="application/json")
+    response["Cache-Control"] = "public, max-age=86400"
     return response

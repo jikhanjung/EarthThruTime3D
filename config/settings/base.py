@@ -117,6 +117,11 @@ INTEGRITY_SENTINEL = Path(DATABASES['default']['NAME']).parent / 'INTEGRITY_FAIL
 SCOTESE_DERIVED_DIR = Path(os.environ.get(
     'SCOTESE_DERIVED_DIR', BASE_DIR / 'data' / 'derived' / 'segmentation'))
 
+# Where the packed EarthByte plate model is read from. Kept apart from the Scotese
+# derivatives: different authors, different licence, different limits.
+PLATE_MODEL_DIR = Path(os.environ.get(
+    'PLATE_MODEL_DIR', BASE_DIR / 'data' / 'derived' / 'plates'))
+
 # How the globe's timeline is sampled between the published maps.
 #
 # STEPS divides every gap into the same number of sub-steps, so a stop is a fraction of

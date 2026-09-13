@@ -5,6 +5,7 @@ carrying the published maps, the viewer coming up without its fields, and the li
 decision not being honoured by the running code.
 """
 import json
+import socket
 import subprocess
 import sys
 import tempfile
@@ -14,7 +15,20 @@ import urllib.request
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parents[1]
-PORT = 18014
+
+
+def free_port():
+    """Ask the kernel for an unused port rather than assuming one.
+
+    A fixed port collides with whatever else the build host happens to be running, and
+    the failure surfaces as an unexplained container exit.
+    """
+    with socket.socket() as probe:
+        probe.bind(("127.0.0.1", 0))
+        return probe.getsockname()[1]
+
+
+PORT = free_port()
 
 
 def run(*command, **kwargs):
@@ -83,10 +97,21 @@ def main():
                 raise SystemExit("Surface toggle is offered without the published maps.")
             fetch("/globe/maps/scotese-000.jpg", expect=404)
             fetch("/globe/fields/scotese-000.png")
+            # The plate model is a second dataset with its own licence; it must be both
+            # served and credited, and nothing outside its three files reachable.
+            rotations = json.loads(fetch("/plates/rotations.json"))
+            if not rotations.get("sequences"):
+                raise SystemExit("Plate rotations are empty.")
+            continents = json.loads(fetch("/plates/continents.json"))
+            if len(continents.get("features", [])) < 500:
+                raise SystemExit("Plate continents look truncated.")
+            fetch("/plates/secret.json", expect=404)
+            if "Merdith" not in home or "Creative Commons" not in fetch("/about/").decode():
+                raise SystemExit("The plate model is served without its attribution.")
             fetch("/static/core/globe.js")
             fetch("/about/")
             print(f"Smoke passed: {version}, {report['fields']['expected']} land fields, "
-                  "no published maps served.")
+                  f"{len(continents['features'])} plate shapes, no published maps served.")
         finally:
             subprocess.run(["docker", "stop", container], check=False, capture_output=True)
 

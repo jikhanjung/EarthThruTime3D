@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from '../vendor/three/OrbitControls.js';
 import { placeEquirectangular, placeMollweide, reproject } from './projection.js';
+import { RotationModel, turn } from './rotation.js';
 
 const $ = (id) => document.getElementById(id);
 const frames = JSON.parse($('globe-frames').textContent);
@@ -33,7 +34,17 @@ const PROJECTIONS = {
   equirect: { sheet: [2, 1], code: 1, place: placeEquirectangular, half: [1, 0.5] },
   mollweide: { sheet: [2, 1], code: 2, place: placeMollweide, half: [1, 0.5] },
 };
+// The plate model is a second, unrelated dataset: EarthByte's rotation model rather
+// than a measurement of the Scotese maps. It is drawn as an overlay so the two can be
+// compared at one time without either being mistaken for the other.
+const plates = JSON.parse($('globe-plates')?.textContent ?? 'null');
+const PLATE_COLOUR = 0xff62c0;
 const surfaceToggle = $('surface');
+let plateLayer;
+let plateModel;
+let plateShapes;
+let plateAge = null;
+let showPlates = false;
 // Without the published maps there is nothing to show but the derived surface, so the
 // viewer starts there and the toggle is not rendered at all.
 const sourceMapsPublic = frames.some((frame) => Boolean(frame.url));
@@ -183,6 +194,7 @@ async function selectStop(value, manual = false) {
     applyMotion(place);
     surfaceMesh.visible = true;
     showNames(place, masked);
+    await updatePlates(place, ticket);
     stage.dataset.frame = place.from.id;
     stage.dataset.blend = place.blend.toFixed(2);
     stage.setAttribute('aria-label', `${periodLabel(place)}, ${ageLabel(place)} ${masked ? '대륙 마스크 지구본' : '지구본'}${between ? ', 보간된 중간 형태' : ''}. 드래그 또는 방향키로 회전, 더하기 빼기로 확대 축소.`);
@@ -239,6 +251,7 @@ function setProjection(name) {
     : '드래그로 이동 · 스크롤 / 핀치로 확대';
   stage.dataset.projection = projection;
   nameGroupKey = '';
+  plateAge = null;
   fitCamera();
   resetView();
   selectStop(stop);
@@ -469,6 +482,71 @@ function updateNameVisibility() {
     sprite.visible = sprite.material.opacity > 0.02;
   }
 }
+async function loadPlateModel() {
+  if (plateModel && plateShapes) return true;
+  const [rotations, shapes] = await Promise.all([
+    fetch(plates.rotations).then((response) => response.json()),
+    fetch(plates.continents).then((response) => response.json()),
+  ]);
+  plateModel = new RotationModel(rotations);
+  plateShapes = shapes.features;
+  return true;
+}
+function drawPlates(age) {
+  // Rebuilt per stop rather than animated: the geometry is a few thousand segments and
+  // the rotation is exact at whatever age the reader is on, not an eased approximation.
+  const flat = projection !== 'globe';
+  const lift = flat ? 0.004 : 0.006;
+  const points = [];
+  let visible = 0;
+  for (const feature of plateShapes) {
+    if (age > feature.from + 1e-9 || age < feature.to - 1e-9) continue;
+    const rotation = plateModel.rotation(feature.pid, age);
+    if (rotation === null) continue;
+    visible += 1;
+    for (const ring of feature.rings) {
+      let previous = null;
+      let previousLongitude = 0;
+      for (let index = 0; index < ring.length; index += 2) {
+        const [longitude, latitude] = turn(rotation, ring[index], ring[index + 1]);
+        const here = pointAt(longitude, latitude, lift);
+        // On a sheet a ring that crosses the antimeridian would draw a line straight
+        // back across the map, so the run is broken there instead.
+        const jumped = flat && previous && Math.abs(longitude - previousLongitude) > 180;
+        if (previous && !jumped) points.push(previous, here);
+        previous = here;
+        previousLongitude = longitude;
+      }
+    }
+  }
+  const geometry = new THREE.BufferGeometry().setFromPoints(points);
+  if (plateLayer) {
+    plateLayer.geometry.dispose();
+    plateLayer.geometry = geometry;
+  } else {
+    plateLayer = new THREE.LineSegments(geometry, new THREE.LineBasicMaterial(
+      { color: PLATE_COLOUR, transparent: true, opacity: 0.85 }));
+    plateLayer.renderOrder = 1;
+    earth.add(plateLayer);
+  }
+  plateLayer.visible = true;
+  plateAge = age;
+  stage.dataset.plates = String(visible);
+}
+function clearPlates() {
+  if (plateLayer) plateLayer.visible = false;
+  plateAge = null;
+  stage.dataset.plates = '0';
+}
+async function updatePlates(place, ticket) {
+  if (!showPlates || !plates) {
+    clearPlates();
+    return;
+  }
+  await loadPlateModel();
+  if (ticket !== request) return;
+  drawPlates(Number(place.age.toFixed(3)));
+}
 function createGrid() {
   // Built from longitude and latitude rather than from the mesh, so the same parallels
   // and meridians follow whichever projection is showing, curved or straight.
@@ -587,6 +665,14 @@ function init() {
       surface = surface === 'mask' ? 'map' : 'mask';
       surfaceToggle.setAttribute('aria-pressed', String(surface === 'mask'));
       selectStop(stop, true);
+    });
+  }
+  if ($('plates')) {
+    $('plates').addEventListener('click', () => {
+      showPlates = !showPlates;
+      $('plates').setAttribute('aria-pressed', String(showPlates));
+      $('plate-note').hidden = !showPlates;
+      selectStop(stop);
     });
   }
   $('projection').addEventListener('change', () => setProjection($('projection').value));

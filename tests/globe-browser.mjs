@@ -140,6 +140,29 @@ try {
   await page.screenshot({path:'data/screenshots/globe-mollweide.png',fullPage:true});
   await page.locator('#projection').selectOption('globe');
   await expect(page.locator('#rotate')).toBeEnabled();
+  // The plate model is a second dataset drawn over the first. It must reconstruct at
+  // the stop's own age, say whose data it is, and leave when switched off.
+  const beforePlates = await page.locator('#globe canvas').screenshot();
+  await page.locator('#plates').click();
+  await expect(page.locator('#plates')).toHaveAttribute('aria-pressed', 'true');
+  await expect(globe).toHaveAttribute('aria-busy', 'false');
+  await expect(page.locator('#plate-note')).toBeVisible();
+  expect(await page.locator('#plate-note').textContent()).toContain('Merdith');
+  const withPlates = await page.locator('#globe canvas').screenshot();
+  expect(Buffer.compare(beforePlates, withPlates)).not.toBe(0);
+  const atPresent = Number(await globe.getAttribute('data-plates'));
+  expect(atPresent).toBeGreaterThan(500);
+  await page.locator('#era').selectOption('0');
+  await expect(globe).toHaveAttribute('data-frame', 'scotese-650');
+  await expect(globe).toHaveAttribute('aria-busy', 'false');
+  // Fewer blocks exist at 650 Ma than today, so the count has to fall.
+  expect(Number(await globe.getAttribute('data-plates'))).toBeLessThan(atPresent);
+  await page.locator('#era').selectOption('16');
+  await expect(globe).toHaveAttribute('aria-busy', 'false');
+  await page.locator('#plates').click();
+  await expect(globe).toHaveAttribute('data-plates', '0');
+  await expect(page.locator('#plate-note')).toBeHidden();
+  console.log('Plate reconstruction overlay passed');
   await page.locator('#era').selectOption('8');
   await expect(globe).toHaveAttribute('data-frame','scotese-237');
   await expect(globe).toHaveAttribute('aria-busy','false');

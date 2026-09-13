@@ -73,3 +73,7 @@ header,main,footer{max-width:1440px}main{padding-top:26px;padding-bottom:32px}.v
   .globe-caption{top:auto;bottom:10px;left:14px}
   .gesture{display:none}
 }
+
+/* Citation lines are reference material rather than reading matter, so they sit a step
+   back from the note they belong to. */
+.model-note .cite{display:block;margin-top:6px;font-size:.7rem;color:#8aa3ae;line-height:1.5}

@@ -1,6 +1,6 @@
 FROM python:3.12-slim
 
-ARG APP_VERSION=v0.3.2
+ARG APP_VERSION=v0.4.1
 ARG VCS_REF=unknown
 LABEL org.opencontainers.image.title="EarthThruTime3D" \
       org.opencontainers.image.version=$APP_VERSION \
@@ -10,6 +10,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 \
     DJANGO_SETTINGS_MODULE=config.settings.production \
     EARTHTHRUTIME_VERSION=$APP_VERSION \
     SCOTESE_DERIVED_DIR=/runtime/segmentation \
+    PLATE_MODEL_DIR=/runtime/plates \
     DATABASE_PATH=/var/lib/earththrutime3d/db.sqlite3 \
     STATIC_ROOT=/app/staticfiles \
     MEDIA_ROOT=/app/media \
