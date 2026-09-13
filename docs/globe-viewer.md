@@ -91,8 +91,8 @@ distance the segmentations write, taken at the 0 m contour of the bilinearly res
 grid, so mask mode, the stop table and the blend between stops work unchanged; the
 distance transform is `scripts/segment_paleoatlas.py`'s. Green is the high byte of
 elevation over -9000 to 6000 m, which puts sea level at 0.6, and blue four more bits
-(`--bits 12`, 3.7 m steps, the default) or nothing (`--bits 8`, 59 m steps, files 1.8
-times smaller); the shader decodes both the same way. A 16-bit low byte was tried and
+(`--bits 12`, 3.7 m steps) or nothing (`--bits 8`, 59 m steps, files 1.8 times smaller,
+the default); the shader decodes both the same way. A 16-bit low byte was tried and
 dropped: it is noise to the PNG compressor and tripled the set.
 
 A third shader mode colours the height with a hypsometric ramp, blue by depth and green
@@ -190,7 +190,8 @@ screen-space change; the hypsometric colours follow the new level. The curve cho
 applies only the published curve's departure from the datum the bracketing grids
 already carry, `curve(age) − mix(sea_m_from, sea_m_to, blend)`, because adding the
 curve itself would count the slice's own sea level twice. The atlas prelude has no
-heights and takes no offset. This control is why the textures default to 12 bits.
+heights and takes no offset. With the default 8-bit textures the height is in 59 m steps, so a
+fixed offset moves the coast in those steps; build with `--bits 12` for 3.7 m.
 
 ## Ice
 
