@@ -10,3 +10,6 @@
             border:1px solid #3a5964;background:#142f3b;color:#dcebee}
 .gate button{justify-self:start;padding:10px 18px}
 .gate .wrong{margin:4px 0 0;color:#ffb3b3;font-size:.82rem}
+/* One-line header: the brand and, where a page gives one, a small page title. */
+header{flex-direction:row;align-items:baseline;justify-content:flex-start;gap:14px;padding-top:14px;padding-bottom:14px}
+.page-title{font-size:.95rem;font-weight:500;color:#9fbac4;margin:0}

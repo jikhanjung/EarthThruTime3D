@@ -2,8 +2,8 @@
 {% load static %}
 {% block title %}고지리 지구본{% endblock %}
 {% block extra_head %}<link rel="stylesheet" href="{% static 'core/globe.css' %}?v={{ version }}">{% endblock %}
+{% block header_title %}<h1 class="page-title">시간을 돌려, 지구를 보다</h1>{% endblock %}
 {% block content %}
-<div class="viewer-heading"><div><p class="eyebrow">EARTH THROUGH TIME / PALEOMAP</p><h1>시간을 돌려, 지구를 보다.</h1></div><span class="tag">3D 고지리 탐색</span></div>
 {% if viewer_enabled %}
 <div class="explorer">
   <section class="globe-panel" aria-label="회전 가능한 3D 지구본">
@@ -66,6 +66,7 @@
 {{ frames|json_script:'globe-frames' }}
 {{ stops|json_script:'globe-stops' }}
 {{ sampling|json_script:'globe-sampling' }}
+{{ periods|json_script:'globe-periods' }}
 {% if plates %}{{ plates|json_script:'globe-plates' }}{% endif %}
 {% if coastlines %}{{ coastlines|json_script:'globe-coastlines' }}{% endif %}
 {{ motions|json_script:'globe-motions' }}

@@ -150,6 +150,16 @@ class GlobeTests(TestCase):
             default = self.client.get('/')
         self.assertEqual(default.context['sampling_choice'], 'steps:4')
 
+    def test_the_header_is_one_line_without_a_menu_or_tag(self):
+        with self.settings(SCOTESE_VIEWER_ENABLED=True):
+            response = self.client.get('/')
+        self.assertContains(response, 'class="page-title"')
+        self.assertNotContains(response, '3D 고지리 탐색')
+        self.assertNotContains(response, 'EARTH THROUGH TIME')
+        self.assertNotContains(response, 'aria-label="주 메뉴"')
+        self.assertIn('periods', response.context)
+        self.assertEqual(globe_module.period_label({'id': 'x', 'age_ma': 252.5}), '후기 페름기')
+
     def test_atlas_fields_are_served_by_id(self):
         with self.settings(SCOTESE_VIEWER_ENABLED=False):
             self.assertEqual(self.client.get('/globe/fields/paleoatlas-000.png').status_code, 404)

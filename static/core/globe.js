@@ -22,6 +22,8 @@ const sampling = JSON.parse($('globe-sampling')?.textContent ?? '{}');
 // With a fixed span in Myr, playback moves at one stop per this many milliseconds, so time
 // runs evenly; per-map sampling keeps its pace per source map.
 const INTERVAL_STEP_MS = 300;
+// ICS period boundaries as [upper age, Korean name], to name a stop by its own age.
+const periods = JSON.parse($('globe-periods')?.textContent ?? '[]');
 // Per gap, where each matched landmass sits on both of its maps. These are the control
 // points that carry a continent across the gap instead of dissolving it in place.
 const motions = JSON.parse($('globe-motions')?.textContent ?? '[]');
@@ -90,7 +92,12 @@ let scene, camera, renderer, controls, earth, grid;
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 function ageText(frame) {
-  return frame.age === 0 ? '현재' : frame.age < 1 ? `${(frame.age * 1e6).toLocaleString()}년 전` : `${frame.age} Ma`;
+  return frame.age === 0 ? '0 Ma' : frame.age < 1 ? `${(frame.age * 1e6).toLocaleString()}년 전` : `${frame.age} Ma`;
+}
+function periodAt(age) {
+  if (age === 0) return '현재';
+  for (const [upper, name] of periods) if (age < upper) return name;
+  return '원생대';
 }
 function setPlaying(value) {
   playing = value;
@@ -177,7 +184,8 @@ function ageLabel(place) {
 }
 function periodLabel(place) {
   if (place.mapless) return '지도 없는 시대';
-  return place.blend === 0 ? place.from.label : `${place.from.label} → ${place.to.label}`;
+  // A published map keeps its own label; a stop between two maps is named for its age.
+  return place.blend === 0 ? place.from.label : periodAt(place.age);
 }
 async function selectStop(value, manual = false) {
   if (manual) setPlaying(false);

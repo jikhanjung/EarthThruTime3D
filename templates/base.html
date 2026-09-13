@@ -16,7 +16,7 @@
 </head>
 <body>
   <a class="skip" href="#main">본문으로 이동</a>
-  <header><a class="brand" href="{% url 'home' %}">{{ app_name }}</a><nav aria-label="주 메뉴"><a href="{% url 'about' %}">프로젝트 소개</a></nav></header>
+  <header><a class="brand" href="{% url 'home' %}">{{ app_name }}</a>{% block header_title %}{% endblock %}</header>
   <main id="main">{% block content %}{% endblock %}</main>
   {% include 'includes/footer.html' %}
   {% block scripts %}{% endblock %}

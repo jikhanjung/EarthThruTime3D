@@ -45,7 +45,7 @@ DEFAULT_MASK_SOURCE = "paleoatlas2016"
 # stage name in a file name that disagrees with its age does not carry over. Each entry is
 # the age a label runs up to, exclusive.
 PERIODS = [
-    (2.58, "플라이스토세"), (5.333, "플라이오세"), (23.03, "마이오세"), (33.9, "올리고세"),
+    (0.0117, "홀로세"), (2.58, "플라이스토세"), (5.333, "플라이오세"), (23.03, "마이오세"), (33.9, "올리고세"),
     (56.0, "에오세"), (66.0, "팔레오세"), (100.5, "후기 백악기"), (145.0, "전기 백악기"),
     (161.5, "후기 쥐라기"), (174.7, "중기 쥐라기"), (201.4, "전기 쥐라기"),
     (237.0, "후기 트라이아스기"), (247.2, "중기 트라이아스기"), (251.902, "전기 트라이아스기"),
@@ -505,6 +505,8 @@ def globe(request):
                   {"frames": frames, "viewer_enabled": enabled(),
                    "stops": timeline(frames, plan, deepest), "sampling": plan,
                    "sampling_choice": sampling_choice(plan)[0],
+                   # The same boundaries name an in-between stop by its own age.
+                   "periods": PERIODS,
                    "sampling_options": sampling_choice(plan)[1],
                    "source_maps_public": source_maps_public() and source == "scotese2002",
                    "mask": {"id": source, "title": MASK_SOURCES[source]["title"],

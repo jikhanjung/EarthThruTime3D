@@ -302,6 +302,22 @@ try {
     await expect(atlasGlobe).toHaveAttribute('aria-busy', 'false');
   }
   await expect(atlas.locator('#period')).toHaveText('토니아기');
+  // An in-between stop names the period at its own age rather than "A → B", and the
+  // present reads as 0 Ma.
+  const halfway = (await atlas.locator('#globe-stops').textContent().then(JSON.parse))
+    .findIndex(([from, , blend, age]) => from >= 0 && blend > 0.4 && blend < 0.6 && age > 251.902 && age < 259.51);
+  await atlas.locator('#timeline').fill(String(halfway));
+  await atlas.locator('#timeline').dispatchEvent('input');
+  await expect(atlasGlobe).toHaveAttribute('aria-busy', 'false');
+  await expect(atlas.locator('#period')).toHaveText('후기 페름기');
+  await atlas.locator('#era').selectOption(String(atlasFrames.length - 1));
+  await expect(atlasGlobe).toHaveAttribute('data-frame', 'paleoatlas-000');
+  await expect(atlas.locator('#age')).toHaveText('0 Ma');
+  await expect(atlas.locator('#period')).toHaveText('현재');
+  // The header is one line: brand and a small title, no menu link or tag.
+  await expect(atlas.locator('header nav')).toHaveCount(0);
+  await expect(atlas.locator('.tag')).toHaveCount(0);
+  expect((await atlas.locator('header').boundingBox()).height).toBeLessThan(80);
   // Names come from the plate groups under each piece, and an in-between stop carries
   // control points computed from the PALEOMAP rotations.
   await atlas.locator('#era').selectOption(String(atlasFrames.findIndex(frame => frame.id === 'paleoatlas-255')));
