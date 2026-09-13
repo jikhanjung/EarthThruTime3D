@@ -26,6 +26,7 @@
 {% if plates %}    <div class="model-note derived" id="plate-note" hidden>
       <p>겹쳐 그린 분홍 선은 다른 자료입니다. 판 회전 모델로 같은 시각의 대륙을 재구성한 것이며, Scotese 지도를 분할한 결과와는 출처도 방법도 다릅니다. 두 선이 어긋나는 것은 두 모델이 다르기 때문입니다.</p>
       {% if plates|length > 1 %}<label for="plate-model">회전 모델</label><select id="plate-model">{% for model in plates %}<option value="{{ model.id }}">{{ model.title }} · {{ model.frame }}</option>{% endfor %}</select>{% endif %}
+      <p class="cite" id="plate-note-model"></p>
       <p class="cite" id="plate-cite"></p>
     </div>
 {% endif %}    <p class="model-note derived" id="between-note" hidden>원본 시점 사이를 보간한 화면입니다. 두 시점의 해안선 거리장을 섞어 만든 중간 형태이며, 실제 지각 운동이나 해수면 변화를 계산한 것이 아닙니다.</p>

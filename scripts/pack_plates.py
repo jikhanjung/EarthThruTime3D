@@ -102,10 +102,15 @@ def features(text, tolerance, minimum_points):
                    "rings": rings}
 
 
-def rotations(text):
-    """Sequences keyed by "moving:fixed", each a flat list of time, lat, lon, angle."""
+def rotations(texts):
+    """Sequences keyed by "moving:fixed", each a flat list of time, lat, lon, angle.
+
+    A model may split its rotations across files by era, so they merge here. Samples
+    that repeat at a join are kept once: the files agree there, and a duplicate time
+    would make the interpolation step over a zero-length span.
+    """
     sequences = {}
-    for line in text.splitlines():
+    for line in "\n".join(texts).splitlines():
         body = line.split("!", 1)[0].split()
         if len(body) < 6:
             continue
@@ -117,15 +122,22 @@ def rotations(text):
         if any(math.isnan(value) for value in values):
             continue
         sequences.setdefault(f"{moving}:{fixed}", []).append(values)
-    for samples in sequences.values():
+    packed = {}
+    for key, samples in sequences.items():
         samples.sort(key=lambda sample: sample[0])
-    return {key: [round(value, 6) for sample in samples for value in sample]
-            for key, samples in sequences.items()}
+        unique = []
+        for sample in samples:
+            if unique and abs(unique[-1][0] - sample[0]) < 1e-9:
+                continue
+            unique.append(sample)
+        packed[key] = [round(value, 6) for sample in unique for value in sample]
+    return packed
 
 
 def pack(model, tolerance, minimum_points):
     document = manifest(model)
     roles = {member["role"]: member for member in document["members"]}
+    # Several members can share the "rotation" role; the shape roles are one each.
     attribution = {"model": model, "title": document["short_title"],
                    "citation": document["citation"],
                    "license": document["license"]["name"],
@@ -148,11 +160,15 @@ def pack(model, tolerance, minimum_points):
         (directory / f"{role}.json").write_text(json.dumps(document_out, separators=(",", ":")))
         written.append((f"{role}.json", f"{len(shapes)} features, {points} points"))
 
-    sequences = rotations(read_text(member_path(model, roles["rotation"])))
+    rotation_members = [member for member in document["members"]
+                        if member["role"] == "rotation"]
+    sequences = rotations([read_text(member_path(model, member))
+                           for member in rotation_members])
     (directory / "rotations.json").write_text(json.dumps(
         {"attribution": attribution, "anchor": 0, "sequences": sequences},
         separators=(",", ":")))
-    written.append(("rotations.json", f"{len(sequences)} sequences"))
+    written.append(("rotations.json",
+                    f"{len(sequences)} sequences from {len(rotation_members)} file(s)"))
 
     print(f"{model} ({document['reference_frame']} frame)")
     for name, note in written:

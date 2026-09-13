@@ -1,0 +1,71 @@
+{
+  "schema_version": 2,
+  "id": "cao2024",
+  "title": "Cao et al. (2024) tectonic and plate boundary evolution over 1.8 billion years",
+  "short_title": "Cao et al. 2024",
+  "reference_frame": "palaeomagnetic, extended to 1.8 Ga",
+  "covers_ma": [
+    0,
+    1800
+  ],
+  "preferred": false,
+  "retrieved_at": "2026-09-13",
+  "citation": "Cao, X., Collins, A. S., Pisarevsky, S., Flament, N., Li, S., Hasterok, D., and Müller, R. D., 2024. Earth's tectonic and plate boundary evolution over 1.8 billion years. Geoscience Frontiers, 15(2), 101922.",
+  "license": {
+    "name": "Creative Commons Attribution 4.0 International",
+    "url": "https://creativecommons.org/licenses/by/4.0/",
+    "statement": "The Zenodo record for this dataset states cc-by-4.0.",
+    "source": "https://zenodo.org/records/13340841",
+    "note": "Attribution and citation are required; publishing derived work needs no further consent."
+  },
+  "archive": {
+    "url": "https://zenodo.org/records/13340841/files/1.8Ga_model_GSF.zip?download=1",
+    "path": "data/sources/plates/cao2024/archive.zip",
+    "bytes": 20668049,
+    "sha256": "5fa9fd77ea68445f34889ce45eb6f7640b37f781f031406bad0ea70ac911fcd2",
+    "member_prefix": "1.8Ga_model_GSF/"
+  },
+  "members": [
+    {
+      "role": "rotation",
+      "name": "1000_0_rotfile.rot",
+      "bytes": 625128,
+      "sha256": "e13c16ef5b2f8f116f598635e42a126b016b2c615358b499bcc3433f4a3c735c",
+      "covers_ma": [
+        0,
+        1000
+      ]
+    },
+    {
+      "role": "rotation",
+      "name": "1800_1000_rotfile.rot",
+      "bytes": 36539,
+      "sha256": "db2a57a8b7c7a08891c19840b6334ffb9c279b6a991a2c2eed099edb23445785",
+      "covers_ma": [
+        1000,
+        1800
+      ]
+    },
+    {
+      "role": "continents",
+      "name": "shapes_continents.gpmlz",
+      "bytes": 1243288,
+      "sha256": "0dd15837242e33aa3e06971250935b0a91714e95373a8670b38c0085163704f3"
+    },
+    {
+      "role": "coastlines",
+      "name": "shapes_coasts.gpmlz",
+      "bytes": 1860227,
+      "sha256": "25f6ba13241fb4e2c7cfb655835bec2721172f2e5368b444a844ee31896189ac"
+    },
+    {
+      "role": "readme",
+      "name": "README.txt",
+      "bytes": 358,
+      "sha256": "e730537d441b4265101ec8fd29e3e85866cea4515099088efa70f2e66d45ed91"
+    }
+  ],
+  "relationship": "Built by joining two Proterozoic models, P14 (Pisarevsky et al. 2014) for 1770-1270 Ma and C21 (Condie et al. 2021) elsewhere in 1800-1100 Ma, onto the Phanerozoic line this project already carries. Measured against merdith2021, 96% of their shared rotation sequences are byte-identical and 50 sequences are new, so inside the 0-650 Ma window this viewer shows the two reconstructions nearly coincide. What this model adds is reach: it is the only one here that goes past 1 Ga.",
+  "limitations": "Longitude in the Precambrian rests on palaeomagnetism alone and is weakly constrained. The deep-time half comes from different source models than the Phanerozoic half, so the two are not one continuous reconstruction.",
+  "viewer_note": "The timeline stops at 650 Ma because that is the oldest Scotese map, so the part of this model that is genuinely its own is not reachable yet."
+}

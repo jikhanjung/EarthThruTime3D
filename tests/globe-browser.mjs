@@ -172,6 +172,14 @@ try {
   await page.locator('#plate-model').selectOption('merdith2021');
   await expect(globe).toHaveAttribute('aria-busy', 'false');
   expect(await page.locator('#plate-cite').textContent()).toContain('Merdith');
+  // Every model states how it relates to the others, because two of the three nearly
+  // coincide inside this timeline and a reader should not have to discover that.
+  await page.locator('#plate-model').selectOption('cao2024');
+  await expect(globe).toHaveAttribute('data-plate-model', 'cao2024');
+  await expect(globe).toHaveAttribute('aria-busy', 'false');
+  expect(await page.locator('#plate-note-model').textContent()).toContain('1 Ga');
+  await page.locator('#plate-model').selectOption('merdith2021');
+  await expect(globe).toHaveAttribute('aria-busy', 'false');
   await page.locator('#era').selectOption('16');
   await expect(globe).toHaveAttribute('aria-busy', 'false');
   await page.locator('#plates').click();

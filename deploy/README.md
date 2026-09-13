@@ -1,6 +1,6 @@
 # EarthThruTime3D Docker 배포
 
-이미지: **`honestjung/earththrutime3d:v0.5.0`**, 플랫폼 `linux/amd64`.
+이미지: **`honestjung/earththrutime3d:v0.5.1`**, 플랫폼 `linux/amd64`.
 `../hanyang3d/deploy`의 Gunicorn·버전 이미지·Compose·상태 확인 구성을 참고했고,
 데이터베이스가 있는 서비스이므로 백업과 복구 단계를 더했다.
 
@@ -11,7 +11,7 @@
 - 지구본: https://earththrutime.nopeoplestime.info/
 - 프로젝트 소개: https://earththrutime.nopeoplestime.info/about/
 - 상태 확인: https://earththrutime.nopeoplestime.info/healthz
-- 이미지 ID: `sha256:9a4ade5905ae2a13c60590ff2403352de2de6943f17695c5f17be4610708ac3d`
+- 이미지 ID: `sha256:f4eb42c23a2f343bcce96ef643413ae54ff76ff9ba10b73d4e14dd621adebf9f`
 
 호스트 Nginx의 전용 사이트가 컨테이너의 8014 포트로 연결된다. HTTP는 HTTPS로 보낸다.
 Let's Encrypt 인증서와 webroot 자동 갱신을 설정했고 갱신 후 `nginx -t && systemctl reload nginx`를
@@ -33,7 +33,7 @@ Let's Encrypt 인증서와 webroot 자동 갱신을 설정했고 갱신 후 `ngi
 ## 구성
 
 - 이미지: Django 코드, 템플릿, 정적 파일(빌드 시 collectstatic), 카탈로그, 이름 주석, 배포 도구.
-- 데이터 묶음: 정거원통 거리장 17장, 조각 보고서 17개, 그리고 EarthByte 판 모델 3파일
+- 데이터 묶음: 정거원통 거리장 17장, 조각 보고서 17개, 그리고 판 모델별 3파일
   (회전, 대륙, 해안선). 경로·크기·SHA-256을 `manifest.json`에 기록한다.
 - 컨테이너: Gunicorn, UID/GID `10001`, 읽기 전용 루트, 쓰기 가능한 곳은 DB 볼륨과 `/tmp`뿐.
 - 시작 순서: 설정 검사 → `migrate` → 묶음 해시 검증 → Gunicorn. 버전이 어긋난 묶음으로는 뜨지 않는다.
@@ -43,11 +43,12 @@ Let's Encrypt 인증서와 webroot 자동 갱신을 설정했고 갱신 후 `ngi
 
 | 동작 | 명령 |
 |---|---|
-| preflight·build | `bash deploy/build.sh v0.5.0` (개발 호스트) |
-| deploy | `bash /srv/earththrutime3d/deploy.sh v0.5.0` |
+| preflight·build | `bash deploy/build.sh v0.5.1` (개발 호스트) |
+| deploy | `bash /srv/earththrutime3d/deploy.sh v0.5.1` |
 | backup | `bash /srv/earththrutime3d/backup.sh` |
 | smoke | `bash /srv/earththrutime3d/smoke.sh` |
 | rollback | `bash /srv/earththrutime3d/deploy.sh <이전 버전>` |
+| prune | `bash /srv/earththrutime3d/prune.sh` (`KEEP`, `DRY_RUN=1`) |
 | seed | 없음. 데이터베이스에 지질 기록이 아직 없다. |
 
 `build.sh`는 Django 검사 → 마이그레이션 누락 확인 → 테스트 → 데이터 묶음 → 이미지 빌드 →
@@ -59,10 +60,10 @@ Let's Encrypt 인증서와 webroot 자동 갱신을 설정했고 갱신 후 `ngi
 생성 파일(Git 제외):
 
 ```text
-dist/earththrutime3d-image-v0.5.0.tar.gz
-dist/earththrutime3d-data-v0.5.0.tar.gz
-dist/earththrutime3d-host-v0.5.0.tar.gz
-dist/SHA256SUMS-v0.5.0
+dist/earththrutime3d-image-v0.5.1.tar.gz
+dist/earththrutime3d-data-v0.5.1.tar.gz
+dist/earththrutime3d-host-v0.5.1.tar.gz
+dist/SHA256SUMS-v0.5.1
 ```
 
 ## dolfinid 최초 설치
@@ -75,25 +76,25 @@ Compose 5.5.1. 기존 서비스와 분리해 `/srv/earththrutime3d`, **`127.0.0.
 
 ```bash
 ssh dolfinid 'mkdir -p ~/earththrutime3d-release'
-scp dist/earththrutime3d-*-v0.5.0.tar.gz dist/SHA256SUMS-v0.5.0 dolfinid:~/earththrutime3d-release/
+scp dist/earththrutime3d-*-v0.5.1.tar.gz dist/SHA256SUMS-v0.5.1 dolfinid:~/earththrutime3d-release/
 ```
 
 서버에서:
 
 ```bash
 cd ~/earththrutime3d-release
-sha256sum -c SHA256SUMS-v0.5.0
-docker load -i earththrutime3d-image-v0.5.0.tar.gz
+sha256sum -c SHA256SUMS-v0.5.1
+docker load -i earththrutime3d-image-v0.5.1.tar.gz
 sudo install -d -o "$(id -un)" -g "$(id -gn)" /srv/earththrutime3d
-tar -xzf earththrutime3d-host-v0.5.0.tar.gz -C /srv/earththrutime3d
-mkdir -p /srv/earththrutime3d/data/v0.5.0 /srv/earththrutime3d/db \
+tar -xzf earththrutime3d-host-v0.5.1.tar.gz -C /srv/earththrutime3d
+mkdir -p /srv/earththrutime3d/data/v0.5.1 /srv/earththrutime3d/db \
          /srv/earththrutime3d/backups /srv/earththrutime3d/acme
-tar -xzf earththrutime3d-data-v0.5.0.tar.gz -C /srv/earththrutime3d/data/v0.5.0
+tar -xzf earththrutime3d-data-v0.5.1.tar.gz -C /srv/earththrutime3d/data/v0.5.1
 cd /srv/earththrutime3d
 cp .env.django.example .env.django && chmod 600 .env.django
 # SECRET_KEY를 충분히 긴 무작위 값으로 바꾼다. 값은 출력하지 않는다.
 sudo chown -R 10001:10001 db backups   # 컨테이너가 쓰는 유일한 경로
-bash deploy.sh v0.5.0
+bash deploy.sh v0.5.1
 ```
 
 Nginx는 ACME 검증을 위해 HTTP 전용 설정을 먼저 올리고, 인증서를 받은 뒤 전체 설정으로 바꾼다.
@@ -105,6 +106,13 @@ sudo certbot certonly --webroot --webroot-path /srv/earththrutime3d/acme \
 ```
 
 도메인 없이 확인하려면 `ssh -L 18014:127.0.0.1:8014 dolfinid` 후 `http://localhost:18014/`를 연다.
+
+## 오래된 버전 정리
+
+`prune.sh`가 돌고 있는 버전과 되돌릴 수 있을 만큼의 이전 버전만 남기고 이미지·데이터
+디렉터리·릴리스 묶음을 지운다. 기본 보존 개수는 2이며 `KEEP`으로 바꾸고, `DRY_RUN=1`로
+먼저 확인한다. 이 서비스의 저장소 이름과 경로만 건드린다. 호스트에 다른 서비스가 여럿
+돌고 있어 전역 정리는 하지 않는다.
 
 ## 백업
 

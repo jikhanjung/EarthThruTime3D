@@ -560,6 +560,7 @@ async function updatePlates(place, ticket) {
   if ($('plate-cite')) {
     $('plate-cite').textContent = `${entry.citation} · ${entry.license}`;
   }
+  if ($('plate-note-model')) $('plate-note-model').textContent = entry.note ?? '';
 }
 function createGrid() {
   // Built from longitude and latitude rather than from the mesh, so the same parallels

@@ -281,6 +281,7 @@ def plate_models():
             "license": document["license"]["name"],
             "license_url": document["license"]["url"],
             "limitations": document["limitations"],
+            "note": document.get("relationship", ""),
             "layers": {layer: reverse("plate-file", args=[model, layer])
                        for layer in PLATE_LAYERS if plate_path(model, layer).exists()},
         })
