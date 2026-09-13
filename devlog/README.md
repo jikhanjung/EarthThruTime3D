@@ -16,6 +16,7 @@
 
 ## 작업 기록
 
+- [022 — Scotese 회전 모델로 경도 비교](20260913_022_paleomap_longitude.md)
 - [021 — 경도 고정 문제 정리](20260913_021_palaeolongitude.md)
 - [020 — 접근 키와 비공개 모델](20260913_020_access_key.md)
 - [019 — 버튼을 드롭다운으로, 네 번째 모델](20260913_019_model_dropdown.md)

@@ -12,6 +12,8 @@ Backs the numbers in docs/palaeolongitude.md. Three measurements:
 3. Torsvik & Cocks read against plate 0, which includes the true polar wander layer
    its rotation file places between plate 1 and plate 0, and against plate 1, which
    does not.
+4. Scotese's own PALEOMAP rotation model (scripts/pack_paleomap.py), against the maps
+   segmented here and against the other two models.
 
 Needs the packed plate models (scripts/pack_plates.py) and the segmentation fields
 (scripts/segment_landmass.py), both gitignored.
@@ -149,8 +151,12 @@ def best_roll(land, target):
 
 
 def reach(model_id):
-    manifest = json.loads((ROOT / f"sources/plate-models/{model_id}.json").read_text())
-    return manifest["covers_ma"][1]
+    path = ROOT / f"sources/plate-models/{model_id}.json"
+    if not path.exists():
+        # Models packed for measurement only carry their span in the packed attribution.
+        path = PLATES / model_id / "rotations.json"
+        return json.loads(path.read_text())["attribution"]["covers_ma"][1]
+    return json.loads(path.read_text())["covers_ma"][1]
 
 
 def against_scotese(models):
@@ -179,9 +185,9 @@ def points_between(first_id, second_id, ages):
             print(f"  {age:5.0f} {name:14} {delta:+9.1f}° {pa[1] - pb[1]:+8.1f}°")
 
 
-def torsvik_layers(ages):
-    torsvik, merdith = PackedModel("torsvikcocks2017"), PackedModel("merdith2021")
-    print("\nTorsvik & Cocks latitude minus Merdith, against plate 0 (with TPW) and plate 1")
+def torsvik_layers(ages, reference_id="merdith2021"):
+    torsvik, merdith = PackedModel("torsvikcocks2017"), PackedModel(reference_id)
+    print(f"\nTorsvik & Cocks latitude minus {reference_id}, against plate 0 (with TPW) and plate 1")
     print(f"  {'age':>5} {'plate':14} {'plate 0':>8} {'plate 1':>8}")
     for age in ages:
         for plate, name, longitude, latitude in POINTS:
@@ -195,6 +201,8 @@ def torsvik_layers(ages):
                 row.append(float("nan") if turn is None
                            else rotate(turn, longitude, latitude)[1] - base)
             print(f"  {age:5.0f} {name:14} {row[0]:+7.1f}° {row[1]:+7.1f}°")
+    if reference_id != "merdith2021":
+        return
     print("\nTorsvik & Cocks against the Scotese land, plate 0 and plate 1")
     print(f"  {'age':>5} {'plate 0 shift':>14} {'overlap':>8} {'plate 1 shift':>14} {'overlap':>8}")
     for stem, age in MAP_AGES:
@@ -209,7 +217,7 @@ def torsvik_layers(ages):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("section", nargs="?", default="all",
-                        choices=("all", "scotese", "points", "layers"))
+                        choices=("all", "scotese", "points", "layers", "paleomap"))
     args = parser.parse_args()
     ages = [100.0, 200.0, 255.0, 306.0, 356.0, 425.0, 514.0]
     if args.section in ("all", "scotese"):
@@ -218,6 +226,11 @@ def main():
         points_between("torsvikcocks2017", "merdith2021", ages)
     if args.section in ("all", "layers"):
         torsvik_layers([306.0, 356.0, 425.0, 514.0])
+    if args.section in ("all", "paleomap") and (PLATES / "paleomap2016").exists():
+        against_scotese(["paleomap2016"])
+        points_between("paleomap2016", "merdith2021", ages)
+        points_between("torsvikcocks2017", "paleomap2016", ages)
+        torsvik_layers([306.0, 356.0, 425.0, 514.0], reference_id="paleomap2016")
 
 
 if __name__ == "__main__":
