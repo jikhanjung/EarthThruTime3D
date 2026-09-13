@@ -249,6 +249,23 @@ def motions(frames, pieces_by_frame, limit=MAX_MOTIONS):
     return result
 
 
+def atlas_motions(frames):
+    """Per gap, the 2016 landmasses carried by the PALEOMAP rotations, oldest gap first.
+
+    scripts/atlas_motions.py writes these from the rotation model, so nothing is matched
+    here. The file has to describe exactly these frames in this order; anything else is
+    ignored rather than applied to the wrong gap, and the maps then blend in place.
+    """
+    path = Path(settings.PALEOATLAS_DERIVED_DIR) / "motions.json"
+    if not path.exists():
+        return []
+    gaps = json.loads(path.read_text()).get("gaps", [])
+    expected = list(zip((frame["id"] for frame in frames), (frame["id"] for frame in frames[1:])))
+    if [(gap["from"], gap["to"]) for gap in gaps] != expected:
+        return []
+    return [gap["pairs"][:MAX_MOTIONS] for gap in gaps]
+
+
 def _first_allowed(values, choices, convert):
     for value in values:
         try:
@@ -455,7 +472,8 @@ def globe(request):
                             "other_title": next(value["title"] for key, value
                                                 in MASK_SOURCES.items() if key != source)},
                    "plates": models,
-                   "motions": motions(frames, pieces_by_frame),
+                   "motions": (atlas_motions(frames) if source == "paleoatlas2016"
+                               else motions(frames, pieces_by_frame)),
                    "fields_available": any(frame["field"] for frame in frames)})
 
 

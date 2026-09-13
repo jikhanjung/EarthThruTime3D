@@ -16,9 +16,20 @@ them:
 
 `MASK_SOURCE` sets the default; `?masks=scotese2002` or `?masks=paleoatlas2016` picks one
 per page, and anything else falls back to the default. `/globe/fields/<id>.png` finds a
-field by map id in either source; `/globe/maps/` only ever has the 2002 maps. The 2016
-masks carry no names yet, so they have no name labels and no named motion: between two
-maps the fields are blended alone.
+field by map id in either source; `/globe/maps/` only ever has the 2002 maps.
+
+The 2016 maps carry no lettering, so their names come from the plate model.
+`scripts/segment_paleoatlas.py` rasterises the PALEOMAP polygons at each map's age and
+splits every piece into regions by plate group (`annotations/paleomap-plate-groups.json`,
+an operator-curated table of plate-id families with Korean names and older names such as
+Laurentia and Baltica). The largest region of each group covering at least 0.2% of the
+sphere is named. `scripts/atlas_motions.py` then carries each region's centroid across a
+gap with its dominant plate's rotation, back to present-day coordinates at the older age
+and forward to the newer one, and writes the pairs to `motions.json` in the form the morph
+already reads. `core.globe.atlas_motions` uses that file only if its gaps match the frames
+exactly. Unlike the 2002 motions, nothing here is matched between two segmentations; the
+morph still translates each region's neighbourhood rather than rotating it, so turning
+within a large region is approximated.
 
 The rest of this document describes the 2002 path, which is where the viewer began.
 

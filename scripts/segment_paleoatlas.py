@@ -14,6 +14,11 @@ What counts as land is an operator decision, recorded here:
   lean on the plate model, and it makes floating ice shelves such as the Ross sea.
 - Thin black boundary lines and the red credit are drawn over the map; they are removed
   and refilled from neighbouring map colour, so a coast under a line is interpolated.
+
+Names come from the plate model, not the map: each piece is split into regions by which
+PALEOMAP plate group lies under it (annotations/paleomap-plate-groups.json), and the
+largest region of each group carries that group's name. scripts/atlas_motions.py then
+moves each region between maps with its plate's rotation.
 """
 import argparse
 import io
@@ -36,6 +41,7 @@ from segment_landmass import (FIELD_SCALE, FIELD_WIDTH, FIELD_ZERO, PALETTE,  # 
                               disc, hsv, thin_only)
 
 CATALOGUE = ROOT / "sources/paleomap-atlas-2016.json"
+GROUPS = ROOT / "annotations/paleomap-plate-groups.json"
 OUT = ROOT / "data/derived/paleoatlas"
 MODEL = "paleomap2016"
 
@@ -49,6 +55,9 @@ LINE_RADIUS = 3              # widest overprinted stroke at 3600 px across
 CLEAN_RADIUS = 3
 MIN_AREA_PX = 300            # at 3600 x 1800, about 9 square degrees at the equator
 MIN_THICKNESS_PX = 3.0       # pieces thinner than this are coastline slivers, not islands
+NAME_MIN_FRACTION = 0.002    # a named region covers at least this share of the sphere (~1 Mkm2)
+LABEL_SPACING_DEG = 12.0     # a shown name keeps this far from every larger shown name
+MAX_PLATE_ID = 1000
 
 
 def classify(rgb, continental):
@@ -82,9 +91,36 @@ def clean(land, radius=CLEAN_RADIUS):
     return padded[pad:-pad, pad:-pad]
 
 
-def continental_mask(model, age, width, height):
-    """PALEOMAP continental polygons rotated to `age`, rasterised equirectangularly."""
-    canvas = Image.new("L", (3 * width, height), 0)
+def plate_groups():
+    return json.loads(GROUPS.read_text())["groups"]
+
+
+def group_lookup(groups):
+    """Array from plate id to group index, -1 where no group claims the plate."""
+    lookup = np.full(MAX_PLATE_ID, -1, dtype=np.int32)
+    for index, group in enumerate(groups):
+        claimed = set(group.get("plates", []))
+        for low, high in group.get("ranges", []):
+            claimed.update(range(low, high + 1))
+        claimed -= set(group.get("except", []))
+        for plate in claimed:
+            if 0 <= plate < MAX_PLATE_ID and lookup[plate] < 0:
+                lookup[plate] = index
+    return lookup
+
+
+def group_name(group, age):
+    """The group's name at `age`, taking the oldest older name that applies."""
+    name, name_en = group["name"], group["name_en"]
+    for older in sorted(group.get("older_names", []), key=lambda entry: entry["from_ma"]):
+        if age >= older["from_ma"]:
+            name, name_en = older["name"], older["name_en"]
+    return name, name_en
+
+
+def plate_raster(model, age, width, height):
+    """Plate id under each cell, from the rotated PALEOMAP polygons; 0 where there is none."""
+    canvas = Image.new("I", (3 * width, height), 0)
     draw = ImageDraw.Draw(canvas)
     for feature in model.shapes:
         if not feature["to"] - 1e-9 <= age <= feature["from"] + 1e-9:
@@ -107,8 +143,14 @@ def continental_mask(model, age, width, height):
                 continue
             for shift in (-360, 0, 360):
                 draw.polygon([((x + 180 + shift) / 360 * width + width,
-                               (90 - y) / 180 * height) for x, y in points], fill=255)
-    return np.asarray(canvas)[:, width:2 * width] > 0
+                               (90 - y) / 180 * height) for x, y in points],
+                             fill=int(feature["pid"]))
+    return np.asarray(canvas, dtype=np.int32)[:, width:2 * width]
+
+
+def continental_mask(model, age, width, height):
+    """PALEOMAP continental polygons rotated to `age`, rasterised equirectangularly."""
+    return plate_raster(model, age, width, height) > 0
 
 
 def cell_weights(height, width):
@@ -158,13 +200,25 @@ def spherical_centroid(rows, cols, weights, width, height):
             float(np.degrees(np.arctan2(z, np.hypot(x, y)))))
 
 
+def angular_distance(first, second):
+    """Great-circle distance in degrees between two [lon, lat] points."""
+    lon1, lat1, lon2, lat2 = (np.radians(value) for value in (*first, *second))
+    cosine = (np.sin(lat1) * np.sin(lat2)
+              + np.cos(lat1) * np.cos(lat2) * np.cos(lon2 - lon1))
+    return float(np.degrees(np.arccos(np.clip(cosine, -1.0, 1.0))))
+
+
 def cap_radius(fraction):
     """Angular radius of a spherical cap covering `fraction` of the sphere."""
     return float(np.degrees(np.arccos(1.0 - 2.0 * min(0.5, fraction))))
 
 
-def pieces_of(land):
-    """Measured pieces with the keys the viewer already reads from the 2002 reports."""
+def pieces_of(land, plates=None, age=0.0, groups=None):
+    """Measured pieces with the keys the viewer already reads from the 2002 reports.
+
+    With a plate raster, each piece is also split into plate-group regions and the
+    largest region of each group is named.
+    """
     height, width = land.shape
     weights = cell_weights(height, width)
     total = weights.sum()
@@ -193,7 +247,77 @@ def pieces_of(land):
                        "names": []})
     labels = np.where(keep[labels], labels, 0)
     pieces.sort(key=lambda piece: piece["area_px"], reverse=True)
+    if plates is not None:
+        describe_regions(labels, pieces, plates, weights, thickness, age,
+                         groups if groups is not None else plate_groups())
     return labels, pieces
+
+
+def region_interior(rows, cols):
+    """The cell deepest inside a region, measured against the region's own edge.
+
+    Measuring against the whole piece instead puts every region's label on its border
+    nearest the piece's middle, so in a supercontinent the names crowd together.
+    """
+    top, left = rows.min(), cols.min()
+    mask = np.zeros((rows.max() - top + 3, cols.max() - left + 3), dtype=bool)
+    mask[rows - top + 1, cols - left + 1] = True
+    depth = ndimage.distance_transform_edt(mask)
+    row, col = np.unravel_index(int(np.argmax(depth)), depth.shape)
+    return row + top - 1, col + left - 1
+
+
+def describe_regions(labels, pieces, plates, weights, thickness, age, groups):
+    """Split pieces by plate group, then name the largest region of each group."""
+    height, width = labels.shape
+    total = weights.sum()
+    lookup = group_lookup(groups)
+    slices = ndimage.find_objects(labels)
+    largest = {}
+    for piece in pieces:
+        box = slices[piece["label"] - 1]
+        inside = labels[box] == piece["label"]
+        rows, cols = np.nonzero(inside)
+        rows, cols = rows + box[0].start, cols + box[1].start
+        plate_ids = np.clip(plates[rows, cols], 0, MAX_PLATE_ID - 1)
+        group_ids = lookup[plate_ids]
+        cell = weights[rows, cols]
+        regions = []
+        for group_index in np.unique(group_ids[group_ids >= 0]):
+            chosen = group_ids == group_index
+            area = float(cell[chosen].sum())
+            plate = int(np.bincount(plate_ids[chosen], weights=cell[chosen]).argmax())
+            centroid = spherical_centroid(rows[chosen], cols[chosen], cell[chosen], width, height)
+            inner_row, inner_col = region_interior(rows[chosen], cols[chosen])
+            inner_lon, inner_lat = pixel_lonlat(inner_col, inner_row, width, height)
+            region = {"group": groups[group_index]["key"], "plate": plate,
+                      "area_fraction": round(area / total, 6),
+                      "centroid": [round(centroid[0], 3), round(centroid[1], 3)],
+                      "interior": [round(float(inner_lon), 3), round(float(inner_lat), 3)],
+                      "radius_deg": round(cap_radius(area / total), 3)}
+            regions.append(region)
+            key = region["group"]
+            if key not in largest or area > largest[key][0]:
+                largest[key] = (area, piece, region, groups[group_index])
+        regions.sort(key=lambda region: region["area_fraction"], reverse=True)
+        piece["regions"] = regions
+    shown = []
+    for area, piece, region, group in sorted(largest.values(), key=lambda entry: -entry[0]):
+        if area / total < NAME_MIN_FRACTION or not group.get("label", True):
+            continue
+        # Largest first: a name that would sit on top of a bigger one stays in the report
+        # for tracking but is not drawn, so central Asia does not turn into a pile of text.
+        display = all(angular_distance(region["interior"], other) >= LABEL_SPACING_DEG
+                      for other in shown)
+        if display:
+            shown.append(region["interior"])
+        name, name_en = group_name(group, age)
+        piece["names"].append({"name": name, "name_en": name_en,
+                               "track": f"plate-group:{group['key']}",
+                               "lon": region["interior"][0], "lat": region["interior"][1],
+                               "display": display, "plate": region["plate"],
+                               "area_fraction": region["area_fraction"],
+                               "source": "PALEOMAP plate polygons"})
 
 
 def signed_field(land, width=FIELD_WIDTH):
@@ -248,9 +372,10 @@ def segment(item):
         raw = bundle.read(item["member"])
     rgb = np.asarray(Image.open(io.BytesIO(raw)).convert("RGB")).astype(np.float32)
     height, width = rgb.shape[:2]
-    continental = continental_mask(model, item["age_ma"], width, height)
+    plates = plate_raster(model, item["age_ma"], width, height)
+    continental = plates > 0
     land, overprint = classify(rgb, continental)
-    labels, pieces = pieces_of(land)
+    labels, pieces = pieces_of(land, plates, item["age_ma"])
     kept = labels > 0
     weights = cell_weights(height, width)
     field, small = signed_field(kept)
@@ -277,12 +402,16 @@ def segment(item):
                              "only_inside": f"{MODEL} continental polygons"},
                      "clean_radius": CLEAN_RADIUS, "min_area_px": MIN_AREA_PX,
                      "min_thickness_px": MIN_THICKNESS_PX},
-        "names_note": "No names yet; the 2016 atlas carries no lettering to transcribe.",
+        "names_note": ("The 2016 atlas carries no lettering. Names are the PALEOMAP plate "
+                       "groups under each piece (annotations/paleomap-plate-groups.json); the "
+                       "largest region of each group covering at least "
+                       f"{NAME_MIN_FRACTION} of the sphere is named."),
         "pieces": pieces,
     }
     (OUT / f"{stem}-pieces.json").write_text(json.dumps(report, indent=1))
     return {"id": stem, "age": item["age_ma"], "land": report["land_fraction"],
-            "outside": report["land_outside_plate_polygons"], "pieces": len(pieces)}
+            "outside": report["land_outside_plate_polygons"], "pieces": len(pieces),
+            "names": sum(name["display"] for piece in pieces for name in piece["names"])}
 
 
 def contact_sheet(rows):
@@ -313,7 +442,8 @@ def main():
         contact_sheet(rows)
     for row in rows:
         print(f"{row['id']:16} {row['age']:7.3f} Ma  land {row['land']:.3f}  "
-              f"outside polygons {row['outside']:.3f}  pieces {row['pieces']}")
+              f"outside polygons {row['outside']:.3f}  pieces {row['pieces']}  "
+              f"names {row['names']}")
 
 
 if __name__ == "__main__":

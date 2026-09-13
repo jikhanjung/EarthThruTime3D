@@ -43,7 +43,9 @@
       <p class="cite" id="plate-cite"></p>
     </div>
 {% endif %}    <p class="model-note derived" id="mapless-note" hidden>가장 오래된 Scotese 지도보다 이전입니다. 이 시대의 지도는 없으므로 바다만 칠하고, 켜져 있다면 판 재구성만 그립니다. 지구본 면은 아무 것도 주장하지 않습니다.</p>
-    <p class="model-note derived" id="between-note" hidden>원본 시점 사이를 보간한 화면입니다. 두 시점의 해안선 거리장을 섞어 만든 중간 형태이며, 실제 지각 운동이나 해수면 변화를 계산한 것이 아닙니다.</p>
+{% if mask.id == 'paleoatlas2016' %}    <p class="model-note derived" id="between-note" hidden>원본 시점 사이를 보간한 화면입니다. 대륙마다 그 아래 PALEOMAP 판의 회전으로 중심이 옮겨 가는 길을 계산하고, 그 길을 따라 두 시점의 해안선 거리장을 섞었습니다. 판 운동은 반영하지만 대륙 안의 회전과 해수면 변화는 근사입니다.</p>
+{% else %}    <p class="model-note derived" id="between-note" hidden>원본 시점 사이를 보간한 화면입니다. 두 시점의 해안선 거리장을 섞어 만든 중간 형태이며, 실제 지각 운동이나 해수면 변화를 계산한 것이 아닙니다.</p>
+{% endif %}
     <details><summary>변환 방식과 자료</summary>{% if mask.id == 'paleoatlas2016' %}<p>육지 마스크는 PALEOMAP PaleoAtlas(2016) 지도 {{ frames|length }}장에서 분할했습니다. 원본이 정거원통 도법이라 투영을 가정하지 않고 경위도에 바로 대응합니다. 시대 이름은 각 지도의 나이에 국제연대층서표(ICS 2023/09) 경계를 적용해 붙였고, 영문 제목은 원본 파일 이름 그대로입니다.</p><p>Scotese, C. R., 2016. PALEOMAP PaleoAtlas for GPlates and the PaleoData Plotter Program. PALEOMAP Project (<a href="http://www.scotese.com" target="_blank" rel="noopener">www.scotese.com</a>). <a href="https://doi.org/10.5281/zenodo.10251792" target="_blank" rel="noopener">doi:10.5281/zenodo.10251792</a> · Zenodo 기록 표기 CC BY 4.0</p>{% else %}<p>Mollweide 투영을 가정해 지도 영역을 구면으로 변환했습니다. 원본 투영법과 중앙경선은 미확정이며, 격자는 시각적 참고용입니다. 시대 전환은 원본 {{ frames|length }}장을 순서대로 보여줍니다.</p><p>Plate tectonic maps by C. R. Scotese, PALEOMAP Project (<a href="http://www.scotese.com" target="_blank" rel="noopener">www.scotese.com</a>)<br><a href="http://www.scotese.com/license.htm" target="_blank" rel="noopener">이용 안내</a></p>{% endif %}<p>비교: <a href="?masks={{ mask.other }}">{{ mask.other_title }} 마스크로 보기</a></p>{% for model in plates %}<p>판 재구성 · {{ model.title }} ({{ model.frame }})<br>{{ model.citation }}<br><a href="{{ model.license_url }}" target="_blank" rel="noopener">{{ model.license }}</a></p>{% endfor %}</details>
   </aside>
 </div>

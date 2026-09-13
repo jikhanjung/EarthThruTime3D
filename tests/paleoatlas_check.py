@@ -12,8 +12,10 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
 import numpy as np  # noqa: E402
 
-from scripts.segment_paleoatlas import (cap_radius, cell_weights, classify,  # noqa: E402
-                                        pieces_of, spherical_centroid, wrapped_labels)
+from scripts.segment_paleoatlas import (MAX_PLATE_ID, cap_radius, cell_weights,  # noqa: E402
+                                        classify, group_lookup, group_name, pieces_of,
+                                        plate_groups, spherical_centroid, wrapped_labels)
+from scripts.atlas_motions import carry, separation  # noqa: E402
 
 OCEAN = (20, 60, 100)
 SHELF = (150, 205, 235)
@@ -98,6 +100,100 @@ class GeometryTests(unittest.TestCase):
         self.assertEqual(len(pieces), 1)
         self.assertTrue(labels[430, 850] > 0)
         self.assertEqual(labels[101, 500], 0)
+
+
+
+class PlateGroupTests(unittest.TestCase):
+    def setUp(self):
+        self.groups = plate_groups()
+        self.lookup = group_lookup(self.groups)
+
+    def key(self, plate):
+        index = self.lookup[plate]
+        return None if index < 0 else self.groups[index]["key"]
+
+    def test_specific_ids_win_over_family_ranges(self):
+        self.assertEqual(self.key(102), "greenland")
+        self.assertEqual(self.key(101), "north-america")
+        self.assertEqual(self.key(107), "africa")
+        self.assertEqual(self.key(230), "caribbean")
+        self.assertEqual(self.key(262), "south-america")
+        self.assertEqual(self.key(402), "kazakhstania")
+        self.assertEqual(self.key(401), "siberia")
+        self.assertEqual(self.key(503), "arabia")
+        self.assertEqual(self.key(702), "madagascar")
+        self.assertEqual(self.key(709), "africa")
+        self.assertEqual(self.key(806), "zealandia")
+        self.assertEqual(self.key(802), "antarctica")
+        self.assertEqual(self.key(801), "australia")
+
+    def test_oceanic_plates_belong_to_no_group(self):
+        for plate in (0, 901, 902, 985):
+            self.assertIsNone(self.key(plate))
+        self.assertEqual(len(self.lookup), MAX_PLATE_ID)
+
+    def test_older_names_apply_at_and_before_their_age(self):
+        group = next(group for group in self.groups if group["key"] == "north-america")
+        self.assertEqual(group_name(group, 100.0)[0], "북아메리카")
+        self.assertEqual(group_name(group, 320.0)[0], "로렌시아")
+        self.assertEqual(group_name(group, 450.0)[1], "Laurentia")
+
+    def test_regions_follow_the_plates_under_a_piece(self):
+        land = np.zeros((900, 1800), dtype=bool)
+        land[300:500, 600:1000] = True
+        plates = np.zeros((900, 1800), dtype=np.int32)
+        plates[300:500, 600:800] = 701
+        plates[300:500, 800:1000] = 201
+        _, pieces = pieces_of(land, plates, 200.0, self.groups)
+        self.assertEqual(len(pieces), 1)
+        regions = {region["group"]: region for region in pieces[0]["regions"]}
+        self.assertEqual(set(regions), {"africa", "south-america"})
+        self.assertLess(regions["africa"]["centroid"][0], regions["south-america"]["centroid"][0])
+        self.assertEqual({name["name"] for name in pieces[0]["names"]}, {"아프리카", "남아메리카"})
+        labels = {name["name"]: name for name in pieces[0]["names"]}
+        # Each name sits inside its own half, not on the shared border.
+        self.assertLess(labels["아프리카"]["lon"], -180 + 800 * 0.2)
+        self.assertGreater(labels["남아메리카"]["lon"], -180 + 800 * 0.2)
+
+    def test_close_names_yield_to_the_larger_region_and_umbrellas_are_unnamed(self):
+        land = np.zeros((900, 1800), dtype=bool)
+        land[300:520, 600:700] = True
+        land[300:520, 1300:1500] = True
+        plates = np.zeros((900, 1800), dtype=np.int32)
+        # Each label sits in the middle of its own region: North China's at column 640,
+        # Amuria's at 690, ten degrees apart at 0.2 degrees a column.
+        plates[300:520, 600:680] = 604      # North China, large
+        plates[300:520, 680:700] = 628      # Amuria, small and right beside it
+        plates[300:520, 1300:1500] = 650    # an umbrella east-asia block far away
+        _, pieces = pieces_of(land, plates, 10.0, self.groups)
+        names = {name["name"]: name for piece in pieces for name in piece["names"]}
+        self.assertTrue(names["북중국"]["display"])
+        self.assertFalse(names["아무리아"]["display"])
+        self.assertNotIn("동아시아 지괴", names)
+        moving = {region["group"] for piece in pieces for region in piece["regions"]}
+        self.assertIn("east-asia", moving, "an unnamed umbrella still has a region to move")
+
+
+class MotionTests(unittest.TestCase):
+    def setUp(self):
+        try:
+            from scripts.measure_longitude_offsets import PackedModel
+            self.model = PackedModel("paleomap2016")
+        except FileNotFoundError:
+            self.skipTest("paleomap2016 has not been packed in this checkout")
+
+    def test_a_point_carried_to_its_own_age_stays_put(self):
+        point = carry(self.model, 701, (20.0, 5.0), 250.0, 250.0)
+        self.assertLess(separation((20.0, 5.0), point), 1e-6)
+
+    def test_carrying_there_and_back_returns_the_point(self):
+        there = carry(self.model, 501, (78.0, -30.0), 100.0, 50.0)
+        back = carry(self.model, 501, there, 50.0, 100.0)
+        self.assertLess(separation((78.0, -30.0), back), 1e-6)
+        self.assertGreater(separation((78.0, -30.0), there), 1.0, "India moves in 50 Myr")
+
+    def test_an_unknown_plate_gives_no_target(self):
+        self.assertIsNone(carry(self.model, 12345, (0.0, 0.0), 10.0, 0.0))
 
 
 if __name__ == "__main__":

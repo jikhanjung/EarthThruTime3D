@@ -302,6 +302,18 @@ try {
     await expect(atlasGlobe).toHaveAttribute('aria-busy', 'false');
   }
   await expect(atlas.locator('#period')).toHaveText('토니아기');
+  // Names come from the plate groups under each piece, and an in-between stop carries
+  // control points computed from the PALEOMAP rotations.
+  await atlas.locator('#era').selectOption(String(atlasFrames.findIndex(frame => frame.id === 'paleoatlas-255')));
+  await expect(atlasGlobe).toHaveAttribute('aria-busy', 'false');
+  expect(Number(await atlasGlobe.getAttribute('data-names'))).toBeGreaterThan(3);
+  const atlasStops = await atlas.locator('#globe-stops').textContent().then(JSON.parse);
+  const between = atlasStops.findIndex(([from, , blend]) => from >= 0 && blend > 0.4 && blend < 0.6);
+  await atlas.locator('#timeline').fill(String(between));
+  await atlas.locator('#timeline').dispatchEvent('input');
+  await expect(atlasGlobe).toHaveAttribute('aria-busy', 'false');
+  expect(Number(await atlasGlobe.getAttribute('data-motions'))).toBeGreaterThan(0);
+  await expect(atlas.locator('#between-note')).toContainText('PALEOMAP');
   await atlas.screenshot({path:'data/screenshots/globe-atlas-750.png', fullPage:true});
   await expect(atlas.locator('a[href="?masks=scotese2002"]')).toHaveCount(1);
   console.log('2016 atlas default passed');

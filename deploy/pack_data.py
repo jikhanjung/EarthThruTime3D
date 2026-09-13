@@ -65,6 +65,14 @@ def main():
             shutil.copy2(source, target)
             files.append({"path": f"paleoatlas/{source.name}", "bytes": target.stat().st_size,
                           "sha256": digest(target), "map_id": item["id"]})
+    motions = ATLAS_SOURCE / "motions.json"
+    if not motions.exists():
+        raise SystemExit(f"Missing {motions}. Run scripts/atlas_motions.py.")
+    shutil.copy2(motions, staging / "paleoatlas" / motions.name)
+    files.append({"path": "paleoatlas/motions.json",
+                  "bytes": (staging / "paleoatlas" / motions.name).stat().st_size,
+                  "sha256": digest(staging / "paleoatlas" / motions.name),
+                  "dataset": "paleoatlas2016"})
 
     (staging / "plates").mkdir()
     packed = sorted(path.stem for path in (BASE_DIR / "sources/plate-models").glob("*.json"))

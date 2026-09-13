@@ -186,7 +186,9 @@ What differs from the 2002 masks:
 - Pale white counts as ice, and ice counts as land only inside the PALEOMAP continental
   polygons for that age. That keeps Arctic sea ice as sea, but it also makes floating ice
   shelves sea, and it is the one place these masks depend on the plate model.
-- Pieces carry no names yet: there is no lettering to transcribe.
+- There is no lettering to transcribe, so pieces are named from the PALEOMAP plate groups under
+  them (`annotations/paleomap-plate-groups.json`, an operator-curated table), and
+  `scripts/atlas_motions.py` moves them between maps with the PALEOMAP rotations.
 
 Licence: the Zenodo record lists CC BY 4.0. The record says the atlas first appeared on
 earthbyte.org and the PALEOMAP website's own terms are narrower, so who attached the

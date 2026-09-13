@@ -1,0 +1,267 @@
+{
+ "schema_version": 1,
+ "model": "paleomap2016",
+ "note": "Operator decision, not a source statement. PALEOMAP plate ids are grouped by family into the landmasses the viewer names and moves. Groups are matched in order, so a specific id listed early wins over a range listed later. The rotation tree is not walked: its parents change with age (802 hangs from 701 today and from 501 at 250 Ma), which would change a landmass's identity mid-timeline. Ranges are inclusive. An older name applies at and before its from_ma age. A group with label false is an umbrella for leftover blocks: it still moves, but is not named on the globe. Names closer than the label spacing in scripts/segment_paleoatlas.py yield to the larger region.",
+ "groups": [
+  {
+   "key": "greenland",
+   "name": "그린란드",
+   "name_en": "Greenland",
+   "plates": [
+    102
+   ]
+  },
+  {
+   "key": "north-america",
+   "name": "북아메리카",
+   "name_en": "North America",
+   "ranges": [
+    [
+     100,
+     199
+    ]
+   ],
+   "except": [
+    107
+   ],
+   "older_names": [
+    {
+     "from_ma": 320,
+     "name": "로렌시아",
+     "name_en": "Laurentia"
+    }
+   ]
+  },
+  {
+   "key": "caribbean",
+   "name": "카리브·중앙아메리카",
+   "name_en": "Caribbean and Central America",
+   "ranges": [
+    [
+     204,
+     261
+    ]
+   ],
+   "label": false
+  },
+  {
+   "key": "south-america",
+   "name": "남아메리카",
+   "name_en": "South America",
+   "ranges": [
+    [
+     200,
+     299
+    ]
+   ]
+  },
+  {
+   "key": "europe",
+   "name": "유럽",
+   "name_en": "Europe",
+   "ranges": [
+    [
+     300,
+     399
+    ]
+   ],
+   "older_names": [
+    {
+     "from_ma": 320,
+     "name": "발티카",
+     "name_en": "Baltica"
+    }
+   ]
+  },
+  {
+   "key": "kazakhstania",
+   "name": "카자흐스타니아",
+   "name_en": "Kazakhstania",
+   "plates": [
+    402,
+    407
+   ]
+  },
+  {
+   "key": "siberia",
+   "name": "시베리아",
+   "name_en": "Siberia",
+   "ranges": [
+    [
+     400,
+     499
+    ]
+   ]
+  },
+  {
+   "key": "india",
+   "name": "인도",
+   "name_en": "India",
+   "plates": [
+    501,
+    502
+   ]
+  },
+  {
+   "key": "arabia",
+   "name": "아라비아",
+   "name_en": "Arabia",
+   "plates": [
+    503,
+    508,
+    530,
+    531
+   ]
+  },
+  {
+   "key": "cimmeria",
+   "name": "킴메리아 지괴",
+   "name_en": "Cimmerian blocks",
+   "ranges": [
+    [
+     504,
+     599
+    ]
+   ],
+   "label": false
+  },
+  {
+   "key": "tarim",
+   "name": "타림",
+   "name_en": "Tarim",
+   "plates": [
+    601
+   ]
+  },
+  {
+   "key": "north-china",
+   "name": "북중국",
+   "name_en": "North China",
+   "plates": [
+    604
+   ]
+  },
+  {
+   "key": "south-china",
+   "name": "남중국",
+   "name_en": "South China",
+   "plates": [
+    611
+   ]
+  },
+  {
+   "key": "indochina",
+   "name": "인도차이나",
+   "name_en": "Indochina",
+   "plates": [
+    615
+   ]
+  },
+  {
+   "key": "sibumasu",
+   "name": "시부마수",
+   "name_en": "Sibumasu",
+   "plates": [
+    616
+   ]
+  },
+  {
+   "key": "amuria",
+   "name": "아무리아",
+   "name_en": "Amuria",
+   "plates": [
+    628
+   ]
+  },
+  {
+   "key": "east-asia",
+   "name": "동아시아 지괴",
+   "name_en": "East Asian blocks",
+   "ranges": [
+    [
+     600,
+     699
+    ]
+   ],
+   "label": false
+  },
+  {
+   "key": "madagascar",
+   "name": "마다가스카르",
+   "name_en": "Madagascar",
+   "plates": [
+    702,
+    704,
+    705
+   ]
+  },
+  {
+   "key": "africa",
+   "name": "아프리카",
+   "name_en": "Africa",
+   "plates": [
+    107
+   ],
+   "ranges": [
+    [
+     700,
+     799
+    ]
+   ]
+  },
+  {
+   "key": "zealandia",
+   "name": "질랜디아",
+   "name_en": "Zealandia",
+   "plates": [
+    806,
+    807,
+    813,
+    814,
+    821,
+    833,
+    834
+   ]
+  },
+  {
+   "key": "antarctica",
+   "name": "남극",
+   "name_en": "Antarctica",
+   "plates": [
+    802,
+    803,
+    804,
+    805,
+    811,
+    812,
+    816
+   ],
+   "ranges": [
+    [
+     895,
+     897
+    ]
+   ]
+  },
+  {
+   "key": "australia",
+   "name": "오스트레일리아",
+   "name_en": "Australia",
+   "plates": [
+    800,
+    801,
+    808,
+    810,
+    822,
+    826,
+    840
+   ],
+   "ranges": [
+    [
+     870,
+     888
+    ]
+   ]
+  }
+ ]
+}

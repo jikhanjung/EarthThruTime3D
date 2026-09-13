@@ -92,6 +92,35 @@ class GlobeTests(TestCase):
         self.assertEqual(label({'id': 'paleoatlas-600', 'age_ma': 600.0}), '에디아카라기')
         self.assertEqual(label({'id': 'paleoatlas-750', 'age_ma': 750.0}), '토니아기')
 
+    def test_atlas_frames_carry_plate_names_and_rotation_motions(self):
+        with self.settings(SCOTESE_VIEWER_ENABLED=True):
+            response = self.client.get('/')
+        frames = response.context['frames']
+        motions = response.context['motions']
+        if not motions:
+            self.skipTest('atlas motions have not been computed in this checkout')
+        self.assertEqual(len(motions), len(frames) - 1)
+        named = {frame['id']: {name['name'] for name in frame['names']} for frame in frames}
+        self.assertIn('아프리카', named['paleoatlas-000'])
+        self.assertIn('로렌시아', named['paleoatlas-420'])
+        for gap in motions:
+            self.assertLessEqual(len(gap), globe_module.MAX_MOTIONS)
+            for pair in gap:
+                for key in ('lon', 'lat', 'to_lon', 'to_lat', 'radius'):
+                    self.assertIn(key, pair)
+
+    def test_atlas_motions_that_do_not_match_the_frames_are_ignored(self):
+        frames = [{'id': 'a'}, {'id': 'b'}, {'id': 'c'}]
+        with TemporaryDirectory() as directory:
+            path = Path(directory) / 'motions.json'
+            with self.settings(PALEOATLAS_DERIVED_DIR=directory):
+                self.assertEqual(globe_module.atlas_motions(frames), [])
+                path.write_text('{"gaps": [{"from": "a", "to": "b", "pairs": [{"lon": 1}]}]}')
+                self.assertEqual(globe_module.atlas_motions(frames), [])
+                path.write_text('{"gaps": [{"from": "a", "to": "b", "pairs": [{"lon": 1}]},'
+                                ' {"from": "b", "to": "c", "pairs": []}]}')
+                self.assertEqual(globe_module.atlas_motions(frames), [[{"lon": 1}], []])
+
     def test_atlas_fields_are_served_by_id(self):
         with self.settings(SCOTESE_VIEWER_ENABLED=False):
             self.assertEqual(self.client.get('/globe/fields/paleoatlas-000.png').status_code, 404)
