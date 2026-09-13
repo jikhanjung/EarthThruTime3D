@@ -16,6 +16,7 @@
 
 ## 작업 기록
 
+- [028 — 해양 화석으로 지도 검사](20260913_028_fossil_check.md)
 - [027 — 화석으로 고친 해안선 겹쳐 보기](20260913_027_fossil_coastlines.md)
 - [026 — 다른 고지리 자료 모아서 검토](20260913_026_paleogeography_review.md)
 - [025 — PALEOMAP 판으로 이름 붙이고 회전으로 옮기기](20260913_025_atlas_plate_motion.md)

@@ -1,0 +1,34 @@
+{
+ "schema_version": 1,
+ "id": "pbdb-collections",
+ "title": "Paleobiology Database collections, all records, with present-day and PALEOMAP palaeocoordinates",
+ "citation": "Paleobiology Database (https://paleobiodb.org), data service v1.2. Collections downloaded through colls/list with all_records. Original references are listed per collection in the database.",
+ "retrieved_at": "2026-09-13",
+ "license": {
+  "name": "Creative Commons Attribution 4.0 International",
+  "url": "https://creativecommons.org/licenses/by/4.0/",
+  "statement": "The Paleobiology Database releases its data under CC BY 4.0 (Creative Commons announcement, 2013-12-19). Attribution asks for acknowledgement of the PBDB and citation of the original references.",
+  "source": "https://creativecommons.org/2013/12/19/paleobiology-database-now-cc-by/"
+ },
+ "query": {
+  "url": "https://paleobiodb.org/data1.2/colls/list.csv?all_records&show=loc,paleoloc,geo,crmod&pgm=scotese&vocab=pbdb",
+  "path": "data/sources/paleogeography/pbdb/collections.csv",
+  "note": "A live database: the same query returns more records later. The file is pinned by size and SHA-256 once downloaded, and records carry their own created timestamps, which is what allows out-of-sample tests against datasets built from older downloads.",
+  "bytes": 113664463,
+  "sha256": "0e03f6642309503ad7d175888c8e0adf9d762bbb2a5bea374dc2f02e60a655d8",
+  "records": 278284
+ },
+ "fields_used": [
+  "collection_no",
+  "lng",
+  "lat",
+  "max_ma",
+  "min_ma",
+  "environment",
+  "created",
+  "geoplate",
+  "paleolng",
+  "paleolat"
+ ],
+ "status": "Collected to test land masks against marine and terrestrial fossil localities; not served."
+}

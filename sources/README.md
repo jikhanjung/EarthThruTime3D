@@ -219,6 +219,13 @@ missing, inferred from tectonic history, with Palaeozoic deep oceans fixed at 48
 Where land ends is better constrained than how high it stood, so the review is about
 coastlines.
 
+The Paleobiology Database collections (`paleogeography/pbdb-collections.json`, CC BY 4.0,
+278,284 records on 2026-09-13) are the yardstick: `scripts/check_fossils.py` places each dated
+marine or land collection with the plate model of the map it tests and counts marine fossils on
+land and land fossils at sea. Because PaleoCoastlines and Cao et al. were fitted to earlier
+PBDB downloads, results are also reported for collections created afterwards. Devlog 028 has
+the numbers.
+
 Not yet collected: the Scotese 2021 PaleoDEM update and the Straume et al. 2020
 Cenozoic palaeobathymetry. Their Zenodo records returned 504 on 2026-09-13, so neither
 licence nor contents has been checked.
