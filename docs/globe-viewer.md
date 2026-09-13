@@ -38,7 +38,8 @@ them:
 field by map id in either source; `/globe/maps/` only ever has the 2002 maps.
 
 The 2016 maps carry no lettering, so their names come from the plate model.
-`scripts/segment_paleoatlas.py` rasterises the PALEOMAP polygons at each map's age and
+`scripts/segment_paleoatlas.py` rasterises the PALEOMAP polygons at each map's age, a
+ring that winds around a pole closed through the pole so Antarctica keeps its cap, and
 splits every piece into regions by plate group (`annotations/paleomap-plate-groups.json`,
 an operator-curated table of plate-id families with Korean names and older names such as
 Laurentia and Baltica). The largest region of each group covering at least 0.2% of the
@@ -208,10 +209,10 @@ reads it with the same pale threshold and overprint refill as the land masks, th
 only the pale pieces whose centroid lies poleward of 45°. The atlas's own legend has no
 ice; white is "the highest peaks in the mountains", so Tibet, the Altiplano and the
 Central Pangean Mountains come out pale too, and every drawn sheet sits poleward of that
-line while every plateau sits inside it. The continental polygons are not used: they
-leave the cap unfilled where a polygon rings a pole, and the atlas draws one white for
-sheet, shelf and sea ice alike, so all of it goes in the red channel and the sea ice the
-atlas paints, the Arctic at 4 Ma, stays, and a piece under 0.01% of the sphere is a
+line while every plateau sits inside it. The continental polygons are not used: the
+atlas draws one white for sheet, shelf and sea ice alike, and where a polygon happens to
+end says nothing about which is which, so all of it goes in the red channel and the sea
+ice the atlas paints, the Arctic at 4 Ma, stays, and a piece under 0.01% of the sphere is a
 speck at the map's polar edge and is dropped. 46 of the 109 grids get a mask, 14 of
 them from a map up to 5 Myr away. A grid whose map paints no ice gets no file, so the
 overlay fades out across that gap, which there means retreat rather than missing data. The atlas
