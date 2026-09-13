@@ -41,12 +41,10 @@ header,main,footer{max-width:1440px}main{padding-top:26px;padding-bottom:6px}.vi
   .inspector{order:3;display:block;border:1px solid #29434a;border-top:1px solid #29434a;border-radius:14px;padding:18px 16px}
   .inspector h2{font-size:1.2rem}
   .inspector .age{font-size:1.6rem}
-  /* One row always: wrapping put a second row over the sphere. Anything that does not
-     fit scrolls sideways instead. */
-  .globe-toolbar{bottom:36px;max-width:calc(100% - 20px);overflow-x:auto;padding:2px;
-                 scrollbar-width:none;justify-content:flex-start;
+  .globe-toolbar{bottom:36px;scrollbar-width:none;
                  /* Fade the trailing edge so a control cut off by the screen reads as
-                    something to scroll to rather than something broken. */
+                    something to scroll to rather than something broken. On a phone the
+                    row always overflows; wider up, a thin scrollbar says the same. */
                  -webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 28px),transparent);
                  mask-image:linear-gradient(90deg,#000 calc(100% - 28px),transparent)}
   .globe-toolbar::-webkit-scrollbar{display:none}
@@ -54,6 +52,13 @@ header,main,footer{max-width:1440px}main{padding-top:26px;padding-bottom:6px}.vi
   .toolbar-select{max-width:96px}
   .gesture{bottom:8px;font-size:.68rem}
 }
+
+/* One row always: wrapping put a second row over the sphere. Anything that does not
+   fit scrolls sideways instead. This held only on phones until the elevation series
+   added its own controls, which made the row wider than the panel below about 1350px
+   and left the ends clipped; now it holds at every width. */
+.globe-toolbar{max-width:calc(100% - 20px);overflow-x:auto;padding:2px;
+               justify-content:flex-start;scrollbar-width:thin}
 
 /* Short viewports, which is mostly a phone held sideways: the page chrome costs more
    than it is worth, and the slider has to stay on screen with the globe. */
