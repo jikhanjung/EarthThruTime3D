@@ -140,6 +140,15 @@ def temperature_path(item):
     return derived_path(item, "temp.png")
 
 
+def sealevel_curve():
+    """The long-term and Pleistocene sea-level curves and each grid's datum, as
+    scripts/build_sealevel.py wrote them. Absent until that script has run."""
+    path = Path(settings.PALEODEM_DERIVED_DIR) / "sealevel-curve.json"
+    if not path.exists():
+        return {"long": [], "pleistocene": [], "stops": {}}
+    return json.loads(path.read_text())
+
+
 def temperature_curve():
     """Global mean temperature per map and per stop, as scripts/build_paleotemp.py wrote it.
 
@@ -253,6 +262,9 @@ def viewer_strings():
         "meanTemperature": _("전 지구 평균 기온 약 {value} °C{between}"),
         "meanTemperatureBetween": _(" (보간)"),
         "meanTemperatureNone": _("전 지구 평균 기온: 자료 없음 (540 Ma 이전)"),
+        "seaLevel": _("장기 해수면 약 {value} (현재 대비){offset}"),
+        "seaLevelOffset": _(" · 표시 보정 {value}"),
+        "seaLevelNone": _("장기 해수면: 자료 없음 (540 Ma 이전)"),
         "noMap": _("지도 없음"),
         "interpolated": _("보간"),
         "sourceAlt": _("{label} ({age}) Scotese 원본 지도"),
@@ -597,10 +609,12 @@ def globe(request):
     pieces_by_frame = {}
     source = mask_source(request)
     climate = {"curve": [], "stops": {}}
+    sea = {"long": [], "pleistocene": [], "stops": {}}
     if enabled():
         document = catalogue(source)
         if source == "paleodem2018":
             climate = temperature_curve()
+            sea = sealevel_curve()
         if source == "scotese2002":
             entries = [(item, _(korean), item["image_label"],
                         BOUNDS[item["id"].removeprefix("scotese-")],
@@ -623,6 +637,7 @@ def globe(request):
                            "temp": (reverse("globe-temperature", args=[item["id"]])
                                     if given and temperature_path(item).exists() else None),
                            "mean_c": given["mean_c"] if given else None,
+                           "sea_m": sea["stops"].get(item["id"]),
                            "field": (reverse("globe-field", args=[item["id"]])
                                      if field_path(item).exists() else None),
                            "names": landmass_names(pieces_by_frame[item["id"]]),
@@ -651,6 +666,8 @@ def globe(request):
                    "coastlines": coastlines(source) if enabled() else None,
                    "temperature_curve": climate["curve"],
                    "temperature_available": any(frame.get("temp") for frame in frames),
+                   "sealevel": {"long": sea["long"], "pleistocene": sea["pleistocene"]},
+                   "sealevel_available": bool(sea["long"]),
                    "fields_available": any(frame["field"] for frame in frames)})
 
 

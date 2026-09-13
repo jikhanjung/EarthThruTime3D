@@ -61,6 +61,13 @@ def pack_elevation(dem, dem_source, staging, files):
     files.append({"path": "paleodem/paleotemp-curve.json",
                   "bytes": (staging / "paleodem" / curve.name).stat().st_size,
                   "sha256": digest(staging / "paleodem" / curve.name), "dataset": "paleotemp2021"})
+    sea = dem_source / "sealevel-curve.json"
+    if not sea.exists():
+        raise SystemExit(f"Missing {sea}. Run scripts/build_sealevel.py.")
+    shutil.copy2(sea, staging / "paleodem" / sea.name)
+    files.append({"path": "paleodem/sealevel-curve.json",
+                  "bytes": (staging / "paleodem" / sea.name).stat().st_size,
+                  "sha256": digest(staging / "paleodem" / sea.name), "dataset": "sealevel"})
 
 
 def main():

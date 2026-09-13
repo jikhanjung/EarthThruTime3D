@@ -66,6 +66,13 @@ const surfaceToggle = $('surface');
 // area-weighted mean of the Scotese 2021 maps. Empty until the climate build has run.
 const temperatureCurve = JSON.parse($('globe-temperature')?.textContent ?? '[]');
 const temperatureToggle = $('temperature');
+// Sea level: the long-term Phanerozoic curve as [age Ma, mean, min, max, ice Mkm3]
+// metres above present, oldest first (van der Meer et al. 2022), and the Late
+// Pleistocene stack as [age ka, metres] (Spratt & Lisiecki 2016). Each PaleoDEM already
+// carries the sea level of its time, so the curve is drawn for reading and, when asked,
+// applied only as its departure from the slice's own datum.
+const seaLevel = JSON.parse($('globe-sealevel')?.textContent ?? '{"long":[],"pleistocene":[]}');
+const seaLevelControl = $('sealevel');
 let plateLayer;
 let plateAge = null;
 // Empty means the Scotese surface alone, which is where the viewer starts.
@@ -287,6 +294,9 @@ async function selectStop(value, manual = false) {
   if (temperatureToggle) temperatureToggle.setAttribute('aria-pressed', String(heated));
   if ($('temp-note')) $('temp-note').hidden = !heated;
   showMeanTemperature(place);
+  // Decided here, synchronously, so the readout and the shader agree at every stop.
+  const seaOffset = seaLevelOffset(place, fielded);
+  showSeaLevel(place, seaOffset);
   $('surface-note').hidden = !masked;
   $('between-note').hidden = !between;
   if ($('mapless-note')) $('mapless-note').hidden = !place.mapless;
@@ -318,6 +328,9 @@ async function selectStop(value, manual = false) {
       uniforms.texel.value.set(1 / uniforms.surfaceA.value.image.width, 1 / uniforms.surfaceA.value.image.height);
       uniforms.vegetation.value = vegetationAt(place.age);
     }
+    uniforms.seaLevel.value = seaOffset;
+    if ($('sea-note')) $('sea-note').hidden = seaOffset === 0;
+    stage.dataset.sealevel = String(Math.round(seaOffset));
     applyMotion(place);
     surfaceMesh.visible = true;
     lastPlace = place;
@@ -351,6 +364,151 @@ async function selectStop(value, manual = false) {
     $('retry').hidden = false;
     setPlaying(false);
     console.error(error);
+  }
+}
+// Long-term sea level at an age, metres above present, linear between the 1 Myr
+// points; null outside the curve.
+function seaLevelAt(age) {
+  const curve = seaLevel.long;
+  for (let index = 0; index + 1 < curve.length; index++) {
+    const [older, high] = curve[index];
+    const [newer, low] = curve[index + 1];
+    if (older >= age && age >= newer) {
+      return older === newer ? high : high + (low - high) * (older - age) / (older - newer);
+    }
+  }
+  return null;
+}
+// The offset to apply at a stop, in metres above the slice's own datum. A fixed
+// choice is a what-if; the curve choice is the published curve's departure from the
+// datum the bracketing slices already carry, which is what changes between slices.
+function seaLevelOffset(place, fielded) {
+  if (!seaLevelControl || !fielded || place.mapless || !place.from.relief || !place.to.relief) return 0;
+  const choice = seaLevelControl.value;
+  if (choice !== 'curve') return Number(choice) || 0;
+  const now = seaLevelAt(place.age);
+  const from = place.from.sea_m;
+  const to = place.to.sea_m;
+  if (now == null || from == null || to == null) return 0;
+  return now - (from + (to - from) * place.blend);
+}
+const signed = (value) => `${value >= 0 ? '+' : '−'}${Math.abs(value).toFixed(0)} m`;
+function showSeaLevel(place, offset) {
+  const out = $('sea-level');
+  if (!out) return;
+  const level = place.mapless ? null : seaLevelAt(place.age);
+  out.textContent = level == null
+    ? L.seaLevelNone
+    : fmt(L.seaLevel, { value: signed(level), offset: offset !== 0 ? fmt(L.seaLevelOffset, { value: signed(offset) }) : '' });
+  stage.dataset.seaCurve = level == null ? '' : level.toFixed(0);
+}
+// Tick labels are HTML placed over the chart, because the charts stretch to the
+// slider's width and SVG text would stretch with them.
+function labelAxis(container, ticks) {
+  for (const { top, left, text, align } of ticks) {
+    const label = document.createElement('span');
+    label.className = left == null ? 'axis-tick' : `axis-tick x ${align || 'center'}`;
+    if (top != null) label.style.top = `${top}%`;
+    if (left != null) label.style.left = `${left}%`;
+    label.textContent = text;
+    container.appendChild(label);
+  }
+}
+const SEA_STRIP = { height: 60, lowest: -150, highest: 250 };
+function seaY(metres) {
+  const { height, lowest, highest } = SEA_STRIP;
+  return (height - 2) - (metres - lowest) / (highest - lowest) * (height - 4);
+}
+// The band above the slider: the long-term curve as a line with its min–max band,
+// one column per stop, baseline at present sea level, a metre axis, columns shaded
+// where the same paper's land-ice estimate says glacial cycles exist that a 1 Myr
+// curve smooths over, and a whisker at the present column for the last 800,000 years.
+function drawSeaLevelStrip() {
+  const svg = $('sea-strip');
+  if (!svg || !seaLevel.long.length) return;
+  const { height } = SEA_STRIP;
+  const y = seaY;
+  const n = stops.length;
+  svg.setAttribute('viewBox', `0 0 ${n} ${height}`);
+  svg.setAttribute('preserveAspectRatio', 'none');
+  const ns = 'http://www.w3.org/2000/svg';
+  const make = (tag, attrs) => {
+    const node = document.createElementNS(ns, tag);
+    for (const [key, value] of Object.entries(attrs)) node.setAttribute(key, String(value));
+    return node;
+  };
+  const points = { mean: [], low: [], high: [] };
+  const icy = [];
+  stops.forEach(([, , , age], index) => {
+    const curve = seaLevel.long;
+    let bracket = null;
+    for (let i = 0; i + 1 < curve.length; i++) {
+      if (curve[i][0] >= age && age >= curve[i + 1][0]) { bracket = [curve[i], curve[i + 1]]; break; }
+    }
+    if (!bracket) return;
+    const [a, b] = bracket;
+    const k = a[0] === b[0] ? 0 : (a[0] - age) / (a[0] - b[0]);
+    const lerp = (i) => a[i] + (b[i] - a[i]) * k;
+    points.mean.push(`${index + 0.5},${y(lerp(1)).toFixed(1)}`);
+    points.low.push(`${index + 0.5},${y(lerp(2)).toFixed(1)}`);
+    points.high.push(`${index + 0.5},${y(lerp(3)).toFixed(1)}`);
+    // 5 million km3 of land ice, a fifth of today's, is the cut.
+    if (a.length > 4 && lerp(4) > 5) icy.push(index);
+  });
+  const children = [];
+  for (const index of icy) children.push(make('rect', { x: index, y: 0, width: 1, height, class: 'sea-ice' }));
+  for (const level of [200, 100, -100]) {
+    children.push(make('line', { x1: 0, x2: n, y1: y(level).toFixed(1), y2: y(level).toFixed(1), class: 'sea-grid' }));
+  }
+  children.push(make('polygon', { points: [...points.high, ...points.low.slice().reverse()].join(' '), class: 'sea-band' }));
+  children.push(make('line', { x1: 0, x2: n, y1: y(0).toFixed(1), y2: y(0).toFixed(1), class: 'sea-base' }));
+  children.push(make('polyline', { points: points.mean.join(' '), class: 'sea-line' }));
+  if (seaLevel.pleistocene.length) {
+    const recent = seaLevel.pleistocene.map((point) => point[1]);
+    const x = n - 0.5;
+    children.push(make('line', { x1: x, x2: x, y1: y(Math.max(...recent)).toFixed(1), y2: y(Math.min(...recent)).toFixed(1), class: 'sea-whisker' }));
+  }
+  svg.replaceChildren(...children);
+  const axis = $('sea-axis');
+  if (axis) {
+    axis.replaceChildren();
+    labelAxis(axis, [200, 100, 0, -100].map((level) => ({ top: y(level) / height * 100, text: `${level > 0 ? '+' : ''}${level} m` })));
+  }
+}
+// The last 800,000 years, glacial cycles that no 5 Myr slice can show: a chart of the
+// Pleistocene stack with its own axes, older to the left, present at the right.
+function drawPleistocene() {
+  const svg = $('pleistocene');
+  if (!svg || !seaLevel.pleistocene.length) return;
+  const width = 200;
+  const height = 50;
+  const lowest = -140;
+  const highest = 20;
+  const oldest = seaLevel.pleistocene[seaLevel.pleistocene.length - 1][0];
+  const y = (metres) => (height - 2) - (metres - lowest) / (highest - lowest) * (height - 4);
+  const x = (ka) => width - ka / oldest * width;
+  const ns = 'http://www.w3.org/2000/svg';
+  const make = (tag, attrs) => {
+    const node = document.createElementNS(ns, tag);
+    for (const [key, value] of Object.entries(attrs)) node.setAttribute(key, String(value));
+    return node;
+  };
+  svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+  svg.setAttribute('preserveAspectRatio', 'none');
+  const children = [];
+  for (const level of [-50, -100]) children.push(make('line', { x1: 0, x2: width, y1: y(level).toFixed(1), y2: y(level).toFixed(1), class: 'sea-grid' }));
+  for (const ka of [600, 400, 200]) children.push(make('line', { x1: x(ka).toFixed(1), x2: x(ka).toFixed(1), y1: 0, y2: height, class: 'sea-grid' }));
+  children.push(make('line', { x1: 0, x2: width, y1: y(0).toFixed(1), y2: y(0).toFixed(1), class: 'sea-base' }));
+  children.push(make('polyline', { points: seaLevel.pleistocene.map(([ka, metres]) => `${x(ka).toFixed(1)},${y(metres).toFixed(1)}`).join(' '), class: 'sea-line' }));
+  svg.replaceChildren(...children);
+  const axis = $('pleistocene-axis');
+  if (axis) {
+    axis.replaceChildren();
+    labelAxis(axis, [
+      ...[0, -50, -100].map((level) => ({ top: y(level) / height * 100, text: `${level} m` })),
+      ...[800, 400, 0].map((ka) => ({ left: x(ka) / width * 100, text: ka === 0 ? L.present : `${ka} ka`,
+                                       align: ka === 800 ? 'start' : ka === 0 ? 'end' : 'center' })),
+    ]);
   }
 }
 // Global mean at an age, linear between the published maps; null outside their span.
@@ -479,6 +637,9 @@ function globeMaterial() {
     // exaggerated before lighting. 0 switches the shading off.
     texel: { value: new THREE.Vector2(1 / 2048, 1 / 1024) },
     exaggeration: { value: 1 },
+    // Metres to move sea level from the slice's datum; 0 keeps the distance-field
+    // coastline, anything else cuts the height channel instead.
+    seaLevel: { value: 0 },
     // 1 draws land in vegetated tints, 0 in bare rock. See vegetationAt().
     vegetation: { value: 1 },
     land: { value: linear(LAND_COLOUR) }, ocean: { value: linear(OCEAN_COLOUR) },
@@ -510,6 +671,7 @@ function globeMaterial() {
       uniform vec2 texel;
       uniform float exaggeration;
       uniform float vegetation;
+      uniform float seaLevel;
       const float EARTH_RADIUS = 6371000.0;
       uniform vec3 land;
       uniform vec3 ocean;
@@ -637,6 +799,14 @@ function globeMaterial() {
           float distance = mix(here, there, blend) - 0.5;
           float edge = fwidth(distance) + 0.0012;
           float landness = smoothstep(-edge, edge, distance);
+          float metres = metresAt(uvA, uvB) - seaLevel;
+          if (abs(seaLevel) > 0.0) {
+            // A moved sea level has no distance field, so the coast is cut from the
+            // height itself, antialiased over the height's own screen-space change.
+            float width = fwidth(metres) * 0.75 + 4.0;
+            landness = smoothstep(-width, width, metres);
+            distance = metres / 400.0;
+          }
           if (mode == 3) {
             float celsius = mix(texture2D(tempA, uvA).r, texture2D(tempB, uvB).r, blend) * 120.0 - 60.0;
             // The coastline as a dark line, so the continents stay readable under colour.
@@ -644,7 +814,7 @@ function globeMaterial() {
             colour = thermal(celsius) * (1.0 - 0.55 * coast);
           } else if (mode == 2) {
             float latitude = (surfaceUv.y - 0.5) * 180.0;
-            colour = hypsometric(metresAt(uvA, uvB), landness) * shade(uvA, uvB, latitude);
+            colour = hypsometric(metres, landness) * shade(uvA, uvB, latitude);
           } else {
             colour = mix(ocean, land, landness);
           }
@@ -1146,6 +1316,12 @@ function init() {
     });
   }
   drawTemperatureStrip();
+  drawSeaLevelStrip();
+  drawPleistocene();
+  if (seaLevelControl) {
+    seaLevelControl.value = '0';   // the page state is the authority, not a restored control
+    seaLevelControl.addEventListener('change', () => selectStop(stop, true));
+  }
   if ($('plate-unlock')) {
     // Unlock in place: the reader keeps the age and the view they had set up.
     $('plate-unlock').addEventListener('submit', async (event) => {

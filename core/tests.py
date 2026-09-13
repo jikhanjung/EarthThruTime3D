@@ -619,6 +619,28 @@ class PaleodemTests(TestCase):
         response = self.client.get('/')
         self.assertFalse(response.context['temperature_available'])
 
+    def test_sea_level_is_optional_and_gives_each_grid_a_datum(self):
+        for item in globe_module.series_items('paleodem2018'):
+            self.build(item)
+        response = self.client.get('/', {'masks': 'paleodem2018'})
+        self.assertFalse(response.context['sealevel_available'])
+        self.assertNotContains(response, 'id="sealevel"')
+        self.assertNotContains(response, 'id="sea-strip"')
+        last = globe_module.catalogue('paleodem2018')['maps'][-1]['id']
+        Path(self.dem.name, 'sealevel-curve.json').write_text(json.dumps(
+            {"long": [[540, 48.1, 26.7, 63.9, 0.0], [0, 0, 0, 0, 23.5]], "pleistocene": [[0, 8.5], [798, -92.4]],
+             "stops": {last: 0.0}}))
+        response = self.client.get('/', {'masks': 'paleodem2018'})
+        self.assertTrue(response.context['sealevel_available'])
+        self.assertEqual(response.context['sealevel']['long'][0], [540, 48.1, 26.7, 63.9, 0.0])
+        self.assertEqual(len(response.context['sealevel']['pleistocene']), 2)
+        frames = {frame['id']: frame for frame in response.context['frames']}
+        self.assertEqual(frames[last]['sea_m'], 0.0)
+        self.assertIsNone(frames['paleoatlas-600']['sea_m'])
+        for needle in ('id="sealevel"', 'id="sea-strip"', 'id="pleistocene"', 'id="sea-level"', 'doi.org/10.25921/RD66-5820'):
+            self.assertContains(response, needle)
+        self.assertFalse(self.client.get('/').context['sealevel_available'])
+
     def test_field_route_serves_a_paleodem_slice(self):
         item = globe_module.catalogue('paleodem2018')['maps'][-1]
         self.assertEqual(self.client.get(f"/globe/fields/{item['id']}.png").status_code, 404)

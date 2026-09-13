@@ -135,6 +135,38 @@ global mean is this project's own reduction of the published maps. PhanDA (Judd 
 2024), the current reference curve, is cited and not shipped: its repository carries no
 licence.
 
+## Sea level
+
+Each PaleoDEM is paleotopography and paleobathymetry with its own sea level as the
+0 m datum, so the shoreline the viewer cuts is the reconstructed shoreline of that
+time, flooded interiors included: land covers 28% of the globe at present, 23% at 80
+Ma and 15% at 430 Ma in the grids. What the grids lack is variation inside a 5 Myr gap
+and the glacial cycles inside a slice.
+
+`scripts/build_sealevel.py` writes `sealevel-curve.json` into `PALEODEM_DERIVED_DIR`
+from two pinned curves (`sources/sealevel.json`), both CC BY: the long-term Phanerozoic
+curve of van der Meer et al. (2022) at 1 Myr with min, max and the same paper's land-ice
+volume, and the Late Pleistocene stack of Spratt & Lisiecki (2016) at 1 kyr. The server
+passes both to the page and gives every grid the long-term value at its age as `sea_m`,
+the slice's datum.
+
+The page draws the long-term curve above the slider as a line with its min–max band,
+one column per stop, a baseline at present sea level and a labelled metre axis. Columns
+are shaded where the land-ice estimate exceeds 5 million km³, a fifth of today's ice:
+the spans where glacial cycles exist that a 1 Myr curve smooths over, and the legend
+says so. The present-day column carries a whisker for the range of the last 800,000
+years, −130 to +8 m, which that single column hides. The inspector reads out the value
+at the current stop and shows the last 800,000 years as a chart with its own axes.
+
+A toolbar control moves sea level. It is a what-if and the note says so. A fixed
+choice, −120 to +120 m, shifts the height channel by that much and cuts the coast from
+the height instead of the distance field, antialiased over the height's own
+screen-space change; the hypsometric colours follow the new level. The curve choice
+applies only the published curve's departure from the datum the bracketing grids
+already carry, `curve(age) − mix(sea_m_from, sea_m_to, blend)`, because adding the
+curve itself would count the slice's own sea level twice. The atlas prelude has no
+heights and takes no offset. This control is why the textures default to 12 bits.
+
 ## Mapping pipeline
 
 1. Django exposes only manifest-listed map IDs through `/globe/maps/<id>.jpg`.
