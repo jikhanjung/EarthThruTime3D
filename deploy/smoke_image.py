@@ -70,23 +70,25 @@ def main():
                                  + run("docker", "logs", container))
             if report["status"] != "ok" or report["version"] != version:
                 raise SystemExit(f"Unexpected health report: {report}")
-            if report["fields"]["missing"] or report["fields"]["expected"] != 17:
-                raise SystemExit(f"Land fields not served: {report['fields']}")
+            fields = report["fields"]
+            if fields.get("series") != "paleodem" or fields["missing"] or fields["expected"] != 110:
+                raise SystemExit(f"Elevation series not served: {fields}")
 
             home = fetch("/").decode()
-            for needle in ("globe-frames", "globe-stops", "globe-motions", "scotese.com"):
+            for needle in ("globe-frames", "globe-stops", "globe-motions", "scotese.com",
+                           "zenodo.org/records/5460860"):
                 if needle not in home:
                     raise SystemExit(f"Home page is missing {needle}.")
             if "/globe/maps/" in home:
                 raise SystemExit("Home page offers the published maps.")
-            if 'id="surface"' in home:
-                raise SystemExit("Surface toggle is offered without the published maps.")
             fetch("/globe/maps/scotese-000.jpg", expect=404)
             fetch("/globe/fields/scotese-000.png")
+            fetch("/globe/fields/scotese-650.png")
+            fetch("/globe/fields/paleodem-0000.png")
             fetch("/static/core/globe.js")
             fetch("/about/")
-            print(f"Smoke passed: {version}, {report['fields']['expected']} land fields, "
-                  "no published maps served.")
+            print(f"Smoke passed: {version}, {fields['series']} series, {fields['expected']} "
+                  "fields, no published maps served.")
         finally:
             subprocess.run(["docker", "stop", container], check=False, capture_output=True)
 

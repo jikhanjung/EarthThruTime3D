@@ -1,6 +1,6 @@
 # EarthThruTime3D Docker 배포
 
-이미지: **`honestjung/earththrutime3d:v0.3.2`**, 플랫폼 `linux/amd64`.
+이미지: **`honestjung/earththrutime3d:v0.3.3`**, 플랫폼 `linux/amd64`.
 `../hanyang3d/deploy`의 Gunicorn·버전 이미지·Compose·상태 확인 구성을 참고했고,
 데이터베이스가 있는 서비스이므로 백업과 복구 단계를 더했다.
 
@@ -32,17 +32,17 @@ Let's Encrypt 인증서와 webroot 자동 갱신을 설정했고 갱신 후 `ngi
 ## 구성
 
 - 이미지: Django 코드, 템플릿, 정적 파일(빌드 시 collectstatic), 카탈로그, 이름 주석, 배포 도구.
-- 데이터 묶음: 정거원통 거리장 17장과 조각 보고서 17개. 경로·크기·SHA-256을 `manifest.json`에 기록한다.
+- 데이터 묶음: 정거원통 거리장 17장과 조각 보고서 17개, PaleoDEM 고도 텍스처 109장(2048×1024, 약 93 MB). 경로·크기·SHA-256을 `manifest.json`에 기록한다.
 - 컨테이너: Gunicorn, UID/GID `10001`, 읽기 전용 루트, 쓰기 가능한 곳은 DB 볼륨과 `/tmp`뿐.
 - 시작 순서: 설정 검사 → `migrate` → 묶음 해시 검증 → Gunicorn. 버전이 어긋난 묶음으로는 뜨지 않는다.
-- `/healthz`: 스키마 준비 상태와 거리장 17장의 존재. 하나라도 없으면 503.
+- `/healthz`: 스키마 준비 상태와, 실제 서비스하는 시리즈의 필드 존재(고도 시리즈는 110장). 하나라도 없으면 503. smoke는 시리즈가 `paleodem`인지도 확인한다.
 
 ## 배포 동작
 
 | 동작 | 명령 |
 |---|---|
-| preflight·build | `bash deploy/build.sh v0.3.2` (개발 호스트) |
-| deploy | `bash /srv/earththrutime3d/deploy.sh v0.3.2` |
+| preflight·build | `bash deploy/build.sh v0.3.3` (개발 호스트) |
+| deploy | `bash /srv/earththrutime3d/deploy.sh v0.3.3` |
 | backup | `bash /srv/earththrutime3d/backup.sh` |
 | smoke | `bash /srv/earththrutime3d/smoke.sh` |
 | rollback | `bash /srv/earththrutime3d/deploy.sh <이전 버전>` |
@@ -57,10 +57,10 @@ Let's Encrypt 인증서와 webroot 자동 갱신을 설정했고 갱신 후 `ngi
 생성 파일(Git 제외):
 
 ```text
-dist/earththrutime3d-image-v0.3.2.tar.gz
-dist/earththrutime3d-data-v0.3.2.tar.gz
-dist/earththrutime3d-host-v0.3.2.tar.gz
-dist/SHA256SUMS-v0.3.2
+dist/earththrutime3d-image-v0.3.3.tar.gz
+dist/earththrutime3d-data-v0.3.3.tar.gz
+dist/earththrutime3d-host-v0.3.3.tar.gz
+dist/SHA256SUMS-v0.3.3
 ```
 
 ## dolfinid 최초 설치
@@ -73,25 +73,25 @@ Compose 5.5.1. 기존 서비스와 분리해 `/srv/earththrutime3d`, **`127.0.0.
 
 ```bash
 ssh dolfinid 'mkdir -p ~/earththrutime3d-release'
-scp dist/earththrutime3d-*-v0.3.2.tar.gz dist/SHA256SUMS-v0.3.2 dolfinid:~/earththrutime3d-release/
+scp dist/earththrutime3d-*-v0.3.3.tar.gz dist/SHA256SUMS-v0.3.3 dolfinid:~/earththrutime3d-release/
 ```
 
 서버에서:
 
 ```bash
 cd ~/earththrutime3d-release
-sha256sum -c SHA256SUMS-v0.3.2
-docker load -i earththrutime3d-image-v0.3.2.tar.gz
+sha256sum -c SHA256SUMS-v0.3.3
+docker load -i earththrutime3d-image-v0.3.3.tar.gz
 sudo install -d -o "$(id -un)" -g "$(id -gn)" /srv/earththrutime3d
-tar -xzf earththrutime3d-host-v0.3.2.tar.gz -C /srv/earththrutime3d
-mkdir -p /srv/earththrutime3d/data/v0.3.2 /srv/earththrutime3d/db \
+tar -xzf earththrutime3d-host-v0.3.3.tar.gz -C /srv/earththrutime3d
+mkdir -p /srv/earththrutime3d/data/v0.3.3 /srv/earththrutime3d/db \
          /srv/earththrutime3d/backups /srv/earththrutime3d/acme
-tar -xzf earththrutime3d-data-v0.3.2.tar.gz -C /srv/earththrutime3d/data/v0.3.2
+tar -xzf earththrutime3d-data-v0.3.3.tar.gz -C /srv/earththrutime3d/data/v0.3.3
 cd /srv/earththrutime3d
 cp .env.django.example .env.django && chmod 600 .env.django
 # SECRET_KEY를 충분히 긴 무작위 값으로 바꾼다. 값은 출력하지 않는다.
 sudo chown -R 10001:10001 db backups   # 컨테이너가 쓰는 유일한 경로
-bash deploy.sh v0.3.2
+bash deploy.sh v0.3.3
 ```
 
 Nginx는 ACME 검증을 위해 HTTP 전용 설정을 먼저 올리고, 인증서를 받은 뒤 전체 설정으로 바꾼다.

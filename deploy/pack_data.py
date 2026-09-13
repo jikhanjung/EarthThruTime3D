@@ -1,4 +1,5 @@
-"""Pack the runtime bundle: the derived land fields and their piece reports.
+"""Pack the runtime bundle: the derived land fields, their piece reports, and the
+PaleoDEM elevation textures.
 
 The original PALEOMAP JPEGs are deliberately not packed. The licence permits personal,
 teaching, research and scientific-publication use with credit and names websites among
@@ -34,22 +35,32 @@ def main():
     (staging / "segmentation").mkdir(parents=True)
 
     files = []
+
+    def pack(source, map_id, hint):
+        if not source.exists():
+            raise SystemExit(f"Missing derived file: {source}. Run {hint}.")
+        target = staging / "segmentation" / source.name
+        shutil.copy2(source, target)
+        files.append({"path": f"segmentation/{source.name}", "bytes": target.stat().st_size,
+                      "sha256": digest(target), "map_id": map_id})
+
     for item in catalogue["maps"]:
         stem = Path(item["image"]["path"]).stem
         for suffix in SUFFIXES:
-            source = SOURCE / f"{stem}-{suffix}"
-            if not source.exists():
-                raise SystemExit(f"Missing derived file: {source}. Run scripts/segment_landmass.py.")
-            target = staging / "segmentation" / source.name
-            shutil.copy2(source, target)
-            files.append({"path": f"segmentation/{source.name}", "bytes": target.stat().st_size,
-                          "sha256": digest(target), "map_id": item["id"]})
+            pack(SOURCE / f"{stem}-{suffix}", item["id"], "scripts/segment_landmass.py")
+    # The elevation series: one texture per PaleoDEM slice. The 650 Ma stop it starts
+    # with is the Scotese field packed above.
+    slices = json.loads((BASE_DIR / "sources/paleodem-slices.json").read_text())["slices"]
+    for item in slices:
+        pack(SOURCE / f"{item['id']}-field.png", item["id"], "scripts/build_paleodem.py")
 
     manifest = {"schema_version": 1, "version": version, "files": files,
                 "contains_source_maps": False,
                 "note": ("Derived land fields and piece reports produced by "
-                         "scripts/segment_landmass.py from the PALEOMAP maps. The "
-                         "original images are not included.")}
+                         "scripts/segment_landmass.py from the PALEOMAP maps, and the "
+                         "PaleoDEM textures produced by scripts/build_paleodem.py "
+                         "(Scotese & Wright 2018, CC BY 4.0). The original images are "
+                         "not included.")}
     (staging / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
 
     dist = BASE_DIR / "dist"
@@ -57,7 +68,9 @@ def main():
     archive = dist / f"earththrutime3d-data-{version}.tar.gz"
     with tarfile.open(archive, "w:gz") as bundle:
         for entry in sorted(staging.rglob("*")):
-            bundle.add(entry, arcname=str(entry.relative_to(staging)))
+            # Directories are listed by rglob too; adding them recursively would pack
+            # every file twice.
+            bundle.add(entry, arcname=str(entry.relative_to(staging)), recursive=False)
     total = sum(file["bytes"] for file in files)
     print(f"Packed {len(files)} files ({total} bytes) into {archive.relative_to(BASE_DIR)}")
 
