@@ -44,6 +44,50 @@ def pack_elevation(dem, dem_source, staging, files):
         shutil.copy2(source, target)
         files.append({"path": f"paleodem/{source.name}", "bytes": target.stat().st_size,
                       "sha256": digest(target), "map_id": item["id"]})
+    # The landmasses carried across each gap by the PALEOMAP rotations, from
+    # scripts/paleodem_motions.py; without the file the grids would blend in place.
+    motions = dem_source / "motions.json"
+    if not motions.exists():
+        raise SystemExit(f"Missing {motions}. Run scripts/paleodem_motions.py.")
+    shutil.copy2(motions, staging / "paleodem" / motions.name)
+    files.append({"path": "paleodem/motions.json",
+                  "bytes": (staging / "paleodem" / motions.name).stat().st_size,
+                  "sha256": digest(staging / "paleodem" / motions.name), "dataset": "paleodem2018"})
+    # Climate over the grids: one temperature texture per grid and the global mean curve
+    # (Scotese 2021, CC BY 4.0), produced by scripts/build_paleotemp.py.
+    for item in dem["maps"]:
+        source = dem_source / f"{item['id']}-temp.png"
+        if not source.exists():
+            raise SystemExit(f"Missing derived file: {source}. Run scripts/build_paleotemp.py.")
+        target = staging / "paleodem" / source.name
+        shutil.copy2(source, target)
+        files.append({"path": f"paleodem/{source.name}", "bytes": target.stat().st_size,
+                      "sha256": digest(target), "map_id": item["id"]})
+    curve = dem_source / "paleotemp-curve.json"
+    if not curve.exists():
+        raise SystemExit(f"Missing {curve}. Run scripts/build_paleotemp.py.")
+    shutil.copy2(curve, staging / "paleodem" / curve.name)
+    files.append({"path": "paleodem/paleotemp-curve.json",
+                  "bytes": (staging / "paleodem" / curve.name).stat().st_size,
+                  "sha256": digest(staging / "paleodem" / curve.name), "dataset": "paleotemp2021"})
+    sea = dem_source / "sealevel-curve.json"
+    if not sea.exists():
+        raise SystemExit(f"Missing {sea}. Run scripts/build_sealevel.py.")
+    shutil.copy2(sea, staging / "paleodem" / sea.name)
+    files.append({"path": "paleodem/sealevel-curve.json",
+                  "bytes": (staging / "paleodem" / sea.name).stat().st_size,
+                  "sha256": digest(staging / "paleodem" / sea.name), "dataset": "sealevel"})
+    # Ice masks: Natural Earth (public domain) on the 0 Ma grid, which must exist, and the
+    # atlas's ice on every older grid whose map paints any, from scripts/build_ice.py.
+    for item in dem["maps"]:
+        ice = dem_source / f"{item['id']}-ice.png"
+        if not ice.exists():
+            if item["id"] == "paleodem-0000":
+                raise SystemExit(f"Missing {ice}. Run scripts/build_ice.py.")
+            continue
+        shutil.copy2(ice, staging / "paleodem" / ice.name)
+        files.append({"path": f"paleodem/{ice.name}", "bytes": (staging / "paleodem" / ice.name).stat().st_size,
+                      "sha256": digest(staging / "paleodem" / ice.name), "map_id": item["id"]})
 
 
 def main():
@@ -142,7 +186,9 @@ def main():
     archive = dist / f"earththrutime3d-data-{version}.tar.gz"
     with tarfile.open(archive, "w:gz") as bundle:
         for entry in sorted(staging.rglob("*")):
-            bundle.add(entry, arcname=str(entry.relative_to(staging)))
+            # rglob lists directories too; adding one recursively would pack every
+            # file under it a second time when its own turn comes.
+            bundle.add(entry, arcname=str(entry.relative_to(staging)), recursive=False)
     total = sum(file["bytes"] for file in files)
     print(f"Packed {len(files)} files ({total} bytes) into {archive.relative_to(BASE_DIR)}")
 

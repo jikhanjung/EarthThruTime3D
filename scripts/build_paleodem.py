@@ -6,9 +6,10 @@ signed coastline distance the segmentation writes, so mask mode and the stop tab
 unchanged; green is the high byte of elevation over -9000..6000 m, so sea level sits
 at 0.6, and blue holds four more bits (--bits 12, 3.7 m steps, files 1.8x larger) or
 nothing (--bits 8, 59 m steps, files 1.8x smaller). The viewer decodes both the same
-way, so an 8-bit texture reads 9 m low, below its own step. 12 is the default because
-the sea-level control cuts the coast from the height; for shading alone the two
-renders differ by one grey level.
+way, so an 8-bit texture reads 9 m low, below its own step. 8 is the default, chosen
+by the owner to keep the runtime bundle small (about 83 MB against 150 MB); the cost is
+that the sea-level control cuts the coast from 59 m height steps. For shading alone the
+two renders differ by one grey level. Pass --bits 12 for the finer set.
 The DEM is bilinearly resampled to the texture grid before the sea-level cut, so the
 coastline is the 0 m contour of the grid rather than a staircase of cells.
 
@@ -85,7 +86,7 @@ def main():
     parser.add_argument("--out", default=ROOT / "data/derived/paleodem", type=Path)
     parser.add_argument("--source", type=Path, help="directory of grids; default the catalogue's 1° set")
     parser.add_argument("--width", type=int, default=FIELD_WIDTH, choices=(1024, 2048, 4096))
-    parser.add_argument("--bits", type=int, default=12, choices=(8, 12), help="height precision")
+    parser.add_argument("--bits", type=int, default=8, choices=(8, 12), help="height precision")
     parser.add_argument("ids", nargs="*", help="slice ids to build; default all")
     args = parser.parse_args()
     catalogue = json.loads(CATALOGUE.read_text())

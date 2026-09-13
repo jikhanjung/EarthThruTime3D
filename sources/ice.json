@@ -1,0 +1,33 @@
+{
+  "title": "Ice: Natural Earth 10 m glaciated areas and Antarctic ice shelves for the present, and the glacial deposits of Cao et al. 2018 as a check on the atlas-derived past",
+  "authors": "Natural Earth (naturalearthdata.com), version 4.1.0",
+  "license": "Public domain (Natural Earth terms of use)",
+  "retrieved": "2026-09-13",
+  "note": "The present day from Natural Earth: grounded ice (glaciers and ice sheets) and the floating Antarctic ice shelves as polygons in longitude/latitude; scripts/build_ice.py rasterises them onto the 0 Ma stop's texture grid. Every older grid takes the ice the 2016 PaleoAtlas paints on the nearest map, read by scripts/segment_paleoatlas.ice; no raster of the atlas is served. The third asset is not drawn: it is the compilation of glacial deposits (tillites, diamictites) of Cao et al. 2018, rotated to each map's age to count how many fall inside the drawn ice; see docs/globe-viewer.md \"Ice\".",
+  "assets": [
+    {
+      "path": "data/sources/ice/ne_10m_glaciated_areas.zip",
+      "url": "https://naciscdn.org/naturalearth/10m/physical/ne_10m_glaciated_areas.zip",
+      "bytes": 1644604,
+      "sha256": "de6ff396ab7eee8cbe2146030cc29278ef67c468e5675c748b1372e241ecbbff",
+      "unzip": "glaciated"
+    },
+    {
+      "path": "data/sources/ice/ne_10m_antarctic_ice_shelves_polys.zip",
+      "url": "https://naciscdn.org/naturalearth/10m/physical/ne_10m_antarctic_ice_shelves_polys.zip",
+      "bytes": 163651,
+      "sha256": "1d421d2487e2721a6e0aee8187e008c9bd8f0adbf4a5297b8503f7bf3c30b04d",
+      "unzip": "shelves"
+    },
+    {
+      "path": "data/sources/ice/Cao_etal_2018_GM.zip",
+      "url": "https://www.earthbyte.org/webdav/ftp/Data_Collections/Cao_etal_2018_GM.zip",
+      "bytes": 19071227,
+      "sha256": "bdde0dc9a877b422f848d1df29576877e651021bf5eb49c0cfad974cfe9c6d08",
+      "unzip": "glacial",
+      "license": "Creative Commons Attribution 4.0 International (License.txt in the archive)",
+      "cite": "Cao, W., Williams, S., Flament, N., Zahirovic, S., Scotese, C., & Müller, R. D. (2019). Palaeolatitudinal distribution of lithologic indicators of climate in a palaeogeographic framework. Geological Magazine, 156(2), 331-354. https://doi.org/10.1017/S0016756818000110",
+      "note": "EarthByte supplement: coals, evaporites and glacial deposits since the Devonian as point shapefiles in present-day coordinates, once per plate model. Only PresentDay_LithData_Scotese2008_410-0Ma/PresentDay_GlacialDeposits_Scotese2008_410-0Ma.shp is read: 394 localities with FROMAGE/TOAGE; plates are assigned here from the PALEOMAP polygons at 0 Ma, not taken from the file."
+    }
+  ]
+}
