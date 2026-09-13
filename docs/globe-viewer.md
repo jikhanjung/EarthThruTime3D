@@ -24,13 +24,22 @@ them:
   the file name's stage. The rasters themselves are never served.
 - `scotese2002`: the 17 web maps described in the rest of this document, with names and
   named-landmass motion.
+- `paleodem2018`: the 109 PALEOMAP PaleoDEMs (Scotese & Wright 2018, CC BY 4.0), 0 to
+  540 Ma at 5 Myr, as elevation textures rather than masks, fronted by the three 2016
+  atlas maps older than 540 Ma drawn as masks: 112 stops. See "Elevation series" below.
+  A `?masks=paleodem2018` request is honoured only when every field of the series
+  exists, since a frame without a field has no map to fall back to; `MASK_SOURCE` is
+  trusted like the other sources, and `/healthz` fails on what is missing. The page links
+  to the series for comparison only when it can be shown, and `deploy/pack_data.py` packs
+  it only when `data/derived/paleodem/` exists (then all of it).
 
-`MASK_SOURCE` sets the default; `?masks=scotese2002` or `?masks=paleoatlas2016` picks one
-per page, and anything else falls back to the default. `/globe/fields/<id>.png` finds a
+`MASK_SOURCE` sets the default; `?masks=scotese2002`, `?masks=paleoatlas2016` or
+`?masks=paleodem2018` picks one per page, and anything else falls back to the default. `/globe/fields/<id>.png` finds a
 field by map id in either source; `/globe/maps/` only ever has the 2002 maps.
 
 The 2016 maps carry no lettering, so their names come from the plate model.
-`scripts/segment_paleoatlas.py` rasterises the PALEOMAP polygons at each map's age and
+`scripts/segment_paleoatlas.py` rasterises the PALEOMAP polygons at each map's age, a
+ring that winds around a pole closed through the pole so Antarctica keeps its cap, and
 splits every piece into regions by plate group (`annotations/paleomap-plate-groups.json`,
 an operator-curated table of plate-id families with Korean names and older names such as
 Laurentia and Baltica). The largest region of each group covering at least 0.2% of the
@@ -48,7 +57,13 @@ archive against `sources/paleogeography/paleocoastlines2021.json` and writes one
 age (81 ages, 0-535 Ma, simplified to 0.1 degree) plus an index. The lines are already in
 reconstructed PALEOMAP coordinates, so they are drawn without rotation, in orange, at the
 coastline age nearest the reader's age within 10 Myr; further than that, or older than
-535 Ma, nothing is drawn and the note says why. `/globe/coastlines/<age>.json` serves only
+535 Ma, nothing is drawn and the note says why. Between two maps the surface is carried
+by the gap's motion field, and a coastline published at either end of that gap rides the
+same field (`carryRings`, with `travelAt` as a JavaScript twin of the shader's `travel()`):
+forward by the blend from the older end, back by the rest of the way from the newer end,
+so the line and the coast under it agree and the note says the line was carried. A
+coastline from outside the gap, where both ends are missing from the set, stays where it
+was published. `/globe/coastlines/<age>.json` serves only
 ages the index lists. The layer is not offered over the 2002 maps, whose longitudes drift
 from the PALEOMAP frame. Where the orange line runs inside the mask's edge, marine fossils
 say that ground was sea.
@@ -61,6 +76,174 @@ The slider carries sub-steps between neighbouring maps, so dragging it moves rat
 than jumps. Only the stops that land on a published map are observations; the ones
 between are interpolated, and the caption, the inspector and the slider's accessible
 value all say so.
+
+## Elevation series
+
+`sources/paleodem.json` pins the Zenodo archives of the PaleoDEMs by SHA-256, the 1°
+and the 6-minute grids; `scripts/fetch_paleodem.py` fetches or verifies them (and any
+other manifest with `--manifest`), and `sources/paleodem-slices.json` catalogues the
+109 grids in the shape the other catalogues use. `scripts/build_paleodem.py` writes one
+texture per grid into `PALEODEM_DERIVED_DIR`, `paleodem-<age×10>-field.png`, 2048 × 1024
+by default from the 6-minute grids (`--width`, `--source`, `--bits`).
+
+Each texture is an RGB PNG on the equirectangular grid. Red is the signed coastline
+distance the segmentations write, taken at the 0 m contour of the bilinearly resampled
+grid, so mask mode, the stop table and the blend between stops work unchanged; the
+distance transform is `scripts/segment_paleoatlas.py`'s. Green is the high byte of
+elevation over -9000 to 6000 m, which puts sea level at 0.6, and blue four more bits
+(`--bits 12`, 3.7 m steps) or nothing (`--bits 8`, 59 m steps, files 1.8 times smaller,
+the default); the shader decodes both the same way. A 16-bit low byte was tried and
+dropped: it is noise to the PNG compressor and tripled the set.
+
+A third shader mode colours the height with a hypsometric ramp, blue by depth and green
+through tan to a light grey by height, white being kept for the ice layer, and decides land against ocean from the distance rather
+than from the height so the coastline stays antialiased. The mask toggle returns to this
+relief view rather than to a photographed map. A frame without heights, the atlas
+prelude, draws as a mask, and so does the gap down to 540 Ma.
+
+Fields are uploaded as raw bytes rather than as decoded images. A Samsung phone was
+found reading both channels low through the `<img>` path, and through an ImageBitmap
+decoded with conversion off, which put the coastline where the distance byte is about
+188 instead of 128 and drew every interior at the lowest height. WebGL colour-converts
+only DOM image sources, so the viewer decodes to a 2D canvas, reads the bytes back and
+uploads a `DataTexture`, which the specification leaves untouched. The texture cache is
+bounded at twelve, least recently used first, and the stage reports its size as
+`data-cached`; without the bound a phone that had scrubbed the whole timeline would hold
+every slice, near a gigabyte at 2048 × 1024.
+
+What this series shows at a published slice is the reconstruction grid as its authors
+released it, not a measurement of ours. Between slices it is the same geometric blend as
+the other sources, of distance and of height, with no travel field: the grids carry no
+piece identities, so nothing moves as a body. Sea level is inside each grid as its 0 m
+datum, so flooded interiors are the reconstruction's; floating ice shelves are sea floor
+in the grids and read as ocean, while grounded ice shows its surface height.
+
+### Names and motion between grids
+
+The grids are never segmented, so they have no pieces of their own. They are the same
+paleogeography as the 2016 atlas, from the same edition, and 81 of the 109 grids sit at
+the age of an atlas map, the rest within 5 Myr of one. `core.globe.piece_report` therefore
+gives a grid the pieces of the nearest atlas map (`nearest_atlas_map`, `NEAREST_ATLAS_MA`),
+which is where its landmass names come from; on a borrowed age a name sits where the atlas
+drew it, a few degrees off at most. `scripts/paleodem_motions.py` does the same for the
+motion between grids: for each gap of the series it takes the plate-group regions of the
+atlas map nearest the older end, carries every centroid from that map's age to the gap's
+older age and on to its newer age with the region's plate, and writes
+`data/derived/paleodem/motions.json` in the form `atlas_motions` reads. The packer ships
+the file with the series. Without it the grids blend in place.
+
+## Temperature
+
+`sources/paleotemp.json` pins Scotese (2021), *Global Mean Surface Temperatures for 100
+Phanerozoic Time Intervals*, Zenodo 8238875, CC BY 4.0: 1° surface air temperature maps,
+climate-model output (Valdes et al. 2021) nudged to proxies. `scripts/build_paleotemp.py`
+turns them into one grayscale 1024 × 512 texture per grid of the elevation series,
+`<id>-temp.png` in `PALEODEM_DERIVED_DIR`, encoded over −60..60 °C, taking the nearest
+map within 5 Myr; the atlas prelude has none. It also writes `paleotemp-curve.json`: the
+area-weighted global mean of every map, and the mean each grid was given. The server
+passes the curve to the page and each frame its texture route and mean.
+
+A 기온 toggle switches the surface to a fourth mode: a diverging ramp, blue at −30 °C
+through pale at 0 to red at 40 °C, with the coastline from the distance field drawn as
+a dark line so the continents stay readable. Between stops the two maps are mixed like
+the fields. Above the slider a strip colours every stop by the global mean at its age,
+linear between maps and grey where none reaches, over 5 to 35 °C so an icehouse reads
+blue; the inspector reads out the mean at the current stop, interpolated between the
+neighbouring maps' means when the stop is between them, and adds its difference from
+today's mean. Under the readout a colour key draws the surface ramp with its −30, 0, 20
+and 40 °C marks, today's global mean as a white tick and the stop's mean as a marker,
+so a colour on the globe can be read against the present. It shows only while the
+temperature surface does; `data-delta` on the key carries the difference for tests.
+
+These are model fields nudged to proxies, not observations, and the note says so. The
+global mean is this project's own reduction of the published maps. PhanDA (Judd et al.
+2024), the current reference curve, is cited and not shipped: its repository carries no
+licence.
+
+## Sea level
+
+Each PaleoDEM is paleotopography and paleobathymetry with its own sea level as the
+0 m datum, so the shoreline the viewer cuts is the reconstructed shoreline of that
+time, flooded interiors included: land covers 28% of the globe at present, 23% at 80
+Ma and 15% at 430 Ma in the grids. What the grids lack is variation inside a 5 Myr gap
+and the glacial cycles inside a slice.
+
+`scripts/build_sealevel.py` writes `sealevel-curve.json` into `PALEODEM_DERIVED_DIR`
+from two pinned curves (`sources/sealevel.json`), both CC BY: the long-term Phanerozoic
+curve of van der Meer et al. (2022) at 1 Myr with min, max and the same paper's land-ice
+volume, and the Late Pleistocene stack of Spratt & Lisiecki (2016) at 1 kyr. The server
+passes both to the page and gives every grid the long-term value at its age as `sea_m`,
+the slice's datum.
+
+The page draws the long-term curve above the slider as a line with its min–max band,
+one column per stop, a baseline at present sea level and a labelled metre axis. Columns
+are shaded where the land-ice estimate exceeds 5 million km³, a fifth of today's ice:
+the spans where glacial cycles exist that a 1 Myr curve smooths over, and the legend
+says so. The present-day column carries a whisker for the range of the last 800,000
+years, −130 to +8 m, which that single column hides. The inspector reads out the value
+at the current stop and shows the last 800,000 years as a chart with its own axes.
+
+A control in the inspector moves sea level. It is a what-if and the note says so. A fixed
+choice, −120 to +120 m, shifts the height channel by that much and cuts the coast from
+the height instead of the distance field, antialiased over the height's own
+screen-space change; the hypsometric colours follow the new level. The curve choice
+applies only the published curve's departure from the datum the bracketing grids
+already carry, `curve(age) − mix(sea_m_from, sea_m_to, blend)`, because adding the
+curve itself would count the slice's own sea level twice. The atlas prelude has no
+heights and takes no offset. With the default 8-bit textures the height is in 59 m steps, so a
+fixed offset moves the coast in those steps; build with `--bits 12` for 3.7 m.
+
+## Ice
+
+`scripts/build_ice.py` writes one ice mask per grid of the elevation series onto the
+grid's 2048 × 1024 texture, `<id>-ice.png` in `PALEODEM_DERIVED_DIR`: red is grounded
+ice, green a floating shelf, 255 inside and 0 outside, longitude and latitude linear to
+the pixels. `/globe/ice/<id>.png` serves it and a frame carries `ice` only where a mask
+exists.
+
+The present day comes from Natural Earth's 10 m glaciated areas and Antarctic ice
+shelves, public domain; polygon parts are filled one by one, so a hole is filled as ice
+too, which touches a few nunataks and nothing else at this resolution. Every older grid
+takes the ice the 2016 PaleoAtlas paints on the map nearest its age, within 5 Myr and
+the younger map on a tie, as the names and motions are borrowed. `segment_paleoatlas.ice`
+reads it with the same pale threshold and overprint refill as the land masks, then keeps
+only the pale pieces whose centroid lies poleward of 45°. The atlas's own legend has no
+ice; white is "the highest peaks in the mountains", so Tibet, the Altiplano and the
+Central Pangean Mountains come out pale too, and every drawn sheet sits poleward of that
+line while every plateau sits inside it. The continental polygons are not used: the
+atlas draws one white for sheet, shelf and sea ice alike, and where a polygon happens to
+end says nothing about which is which, so all of it goes in the red channel and the sea
+ice the atlas paints, the Arctic at 4 Ma, stays, and a piece under 0.01% of the sphere is a
+speck at the map's polar edge and is dropped. 46 of the 109 grids get a mask, 14 of
+them from a map up to 5 Myr away. A grid whose map paints no ice gets no file, so the
+overlay fades out across that gap, which there means retreat rather than missing data. The atlas
+prelude older than 540 Ma gets none, and no map draws a mountain glacier, so those
+appear only at the present. The relief ramp used to run to white above 4000 m as well;
+its top is now a grey, so white on the globe means ice.
+
+The shader draws grounded ice near-opaque white and shelves paler over whatever
+surface is showing, in relief, mask and temperature modes, sampled through the same
+motion field as the surface so a sheet rides its continent between stops; a 빙하
+toggle hides it. One third of the present grounded ice lies where the PaleoDEM reads
+ocean, because the West Antarctic ice sheet rests on bedrock below sea level and the
+grid holds the bed; so the overlay ignores what is beneath, and the note says why.
+
+The masks are per map, 5 to 10 Myr apart, so they cannot show glacial cycles; the
+sea-level strip shades the spans where the land-ice estimate says such cycles existed.
+As a check, the glacial deposits Cao et al. (2018) compiled, 394 tillite and diamictite
+localities since the Devonian, CC BY 4.0 and pinned in `sources/ice.json`, ride the
+PALEOMAP plate under them to each map's age and are counted inside the mask, within 5°
+of its edge, inside a pale piece the latitude rule dropped, or farther; `ice-check.json`
+beside the masks holds the counts and lists the far ones. At the Late Palaeozoic peak,
+330 to 290 Ma, 154 of 197 localities are inside or within 5° of the drawn sheets, and
+the two inside a dropped piece sit at the palaeo-equator in the Central Pangean
+Mountains, the debated tropical upland glaciation the rule leaves out. The atlas draws
+less than the deposits say at the ice age's start and end, 380 to 340 Ma and 280 to
+255 Ma, where it paints a small polar cap and the localities sit at 55 to 70°, and it
+draws nothing for the Early Cretaceous dropstone localities or the Miocene mountain and
+tidewater glaciers of Alaska, Iceland and Kamchatka. The compilation has nothing before
+the Devonian, so the Ordovician sheets go unchecked. Coupling the extent to the
+sea-level control is issue #7's next step.
 
 ## Mapping pipeline
 

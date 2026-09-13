@@ -133,6 +133,9 @@ PALEOATLAS_DERIVED_DIR = Path(os.environ.get(
     'PALEOATLAS_DERIVED_DIR', BASE_DIR / 'data' / 'derived' / 'paleoatlas'))
 
 # PaleoCoastlines (Kocsis & Scotese 2021) packed by scripts/pack_coastlines.py.
+# The PaleoDEM elevation textures written by scripts/build_paleodem.py.
+PALEODEM_DERIVED_DIR = Path(os.environ.get(
+    'PALEODEM_DERIVED_DIR', BASE_DIR / 'data' / 'derived' / 'paleodem'))
 PALEOCOASTLINES_DERIVED_DIR = Path(os.environ.get(
     'PALEOCOASTLINES_DERIVED_DIR', BASE_DIR / 'data' / 'derived' / 'paleocoastlines'))
 

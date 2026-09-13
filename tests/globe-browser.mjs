@@ -1,13 +1,14 @@
 import { chromium, expect } from '@playwright/test';
 import { mkdir } from 'node:fs/promises';
-const browser = await chromium.launch({headless: true, args: ['--enable-unsafe-swiftshader']});
+// BROWSER_CHANNEL=chrome runs on the installed Google Chrome when the bundled Chromium is absent.
+const browser = await chromium.launch({headless: true, channel: process.env.BROWSER_CHANNEL, args: ['--enable-unsafe-swiftshader']});
 const errors = [];
 // The long-standing checks below are written against the 2002 web-map masks, whose
 // names and frame ids they know; the 2016 atlas, now the default, gets its own pass.
 const base = process.env.VIEWER_URL || 'http://127.0.0.1:8000/';
 const legacy = new URL('?masks=scotese2002', base).href;
 try {
-  const page = await browser.newPage({viewport: {width:1440, height:1100}});
+  const page = await browser.newPage({locale: 'ko-KR', viewport: {width:1440, height:1100}});
   page.on('pageerror', error => errors.push(error.message));
   await page.goto(legacy);
   const globe = page.locator('#globe');
@@ -89,6 +90,8 @@ try {
   // has nothing to carry.
   await page.locator('#timeline').fill('100');
   await page.locator('#timeline').dispatchEvent('input');
+  // The blend was already 0.50 at the previous stop, so wait on the frame, which changes.
+  await expect(globe).toHaveAttribute('data-frame', 'scotese-050');
   await expect(globe).toHaveAttribute('data-blend', '0.50');
   expect(Number(await globe.getAttribute('data-motions'))).toBeGreaterThan(0);
   await page.locator('#timeline').fill('98');
@@ -277,7 +280,7 @@ try {
   console.log('Phone layout passed');
   await page.setViewportSize({width:390,height:844});
   // Force a missing source in a fresh page and verify retry restores the globe.
-  const broken = await browser.newPage();
+  const broken = await browser.newPage({locale: 'ko-KR'});
   await broken.route('**/globe/maps/scotese-000.jpg', route => route.fulfill({status:404}));
   await broken.goto(legacy);
   await expect(broken.locator('#retry')).toBeVisible();
@@ -286,7 +289,7 @@ try {
   await expect(broken.locator('#globe')).toHaveAttribute('data-frame','scotese-000');
   // The default page shows the 2016 atlas: 90 maps, no originals, no names yet, and a
   // way back to the 2002 masks for comparison.
-  const atlas = await browser.newPage({viewport: {width:1440, height:1100}});
+  const atlas = await browser.newPage({locale: 'ko-KR', viewport: {width:1440, height:1100}});
   atlas.on('pageerror', error => errors.push(error.message));
   await atlas.goto(base);
   const atlasGlobe = atlas.locator('#globe');
@@ -444,6 +447,106 @@ try {
   await expect(atlas.locator('#age')).toContainText('254');
   console.log('One million year spacing passed');
   console.log('2016 atlas default passed');
+  // The elevation series, where this checkout has built it: relief at 0 Ma with the
+  // present-day ice, the surface and layer controls where they now live, the fossil
+  // coastlines over the grids, the atlas prelude as a mask, a deep stop, and the English
+  // page with nothing left in Korean. A checkout without the textures is sent back to
+  // the atlas, and the pass is skipped rather than failed.
+  const dem = await browser.newPage({locale: 'ko-KR', viewport: {width:1280, height:1000}});
+  dem.on('pageerror', error => errors.push(error.message));
+  await dem.goto(new URL('?masks=paleodem2018', base).href);
+  const demGlobe = dem.locator('#globe');
+  const demFrames = await dem.locator('#globe-frames').textContent().then(JSON.parse);
+  if (!demFrames.some(frame => frame.relief)) {
+    console.log('Elevation series not built here; skipped');
+  } else {
+    await expect(demGlobe).toHaveAttribute('data-frame', 'paleodem-0000');
+    await expect(demGlobe).toHaveAttribute('data-surface', 'relief');
+    await expect(demGlobe).toHaveAttribute('aria-busy', 'false');
+    await expect(demGlobe).toHaveAttribute('data-ice', 'true');
+    expect(demFrames.length).toBe(112);
+    // Names and motion are borrowed from the atlas where computed: at a stop halfway
+    // between two grids the morph carries landmasses, and the names ride the relief.
+    if (demFrames.every(frame => frame.names.length)) {
+      const demStops = await dem.locator('#globe-stops').textContent().then(JSON.parse);
+      const halfway = demStops.findIndex(([from, , blend]) => demFrames[from]?.id === 'paleodem-0600' && blend === 0.5);
+      expect(halfway).toBeGreaterThan(0);
+      await dem.locator('#timeline').fill(String(halfway));
+      await dem.locator('#timeline').dispatchEvent('input');
+      await expect(demGlobe).toHaveAttribute('data-frame', 'paleodem-0600');
+      await expect(demGlobe).toHaveAttribute('data-blend', '0.50');
+      await expect(demGlobe).toHaveAttribute('aria-busy', 'false');
+      expect(Number(await demGlobe.getAttribute('data-motions'))).toBeGreaterThan(0);
+      await expect(demGlobe).toHaveAttribute('data-surface', 'relief');
+      // The coastline of the gap's older end rides the same motion field as the surface.
+      await dem.locator('#coastline').check();
+      await expect.poll(async () => await demGlobe.getAttribute('data-coastline-carried')).toBe('true');
+      await expect(dem.locator('#coastline-age')).toContainText('옮겨');
+      await dem.locator('#coastline').uncheck();
+      await dem.screenshot({path:'data/screenshots/globe-elevation-halfway.png', fullPage:false});
+      await dem.locator('#era').selectOption(String(demFrames.length - 1));
+      await expect(demGlobe).toHaveAttribute('data-frame', 'paleodem-0000');
+      console.log('Elevation names and motion passed');
+    }
+    // Settings of the surface sit in the inspector; the toolbar keeps the view controls.
+    await expect(dem.locator('.globe-toolbar #shading')).toHaveCount(0);
+    await expect(dem.locator('.inspector #shading')).toHaveCount(1);
+    await expect(dem.locator('.inspector #sealevel')).toHaveCount(1);
+    await dem.locator('#shading').selectOption('5');
+    await expect(demGlobe).toHaveAttribute('data-shading', '5');
+    await dem.locator('#sealevel').selectOption('-120');
+    await expect(demGlobe).toHaveAttribute('data-sealevel', '-120');
+    await expect(dem.locator('#sea-note')).toBeVisible();
+    await dem.locator('#sealevel').selectOption('0');
+    await expect(demGlobe).toHaveAttribute('data-sealevel', '0');
+    await dem.locator('#temperature').click();
+    await expect(demGlobe).toHaveAttribute('data-surface', 'temp');
+    // The colour key shows with the temperature surface, with the stop's distance from
+    // today's mean filled in; the present stop is 0.0 from itself.
+    await expect(dem.locator('#temp-legend')).toBeVisible();
+    await expect(dem.locator('#temp-legend')).toHaveAttribute('data-delta', /^-?\d+\.\d$/);
+    await dem.locator('#temperature').click();
+    await expect(demGlobe).toHaveAttribute('data-surface', 'relief');
+    await expect(dem.locator('#temp-legend')).toBeHidden();
+    await dem.locator('#surface').click();
+    await expect(demGlobe).toHaveAttribute('data-surface', 'mask');
+    await dem.locator('#surface').click();
+    await expect(demGlobe).toHaveAttribute('data-surface', 'relief');
+    await dem.locator('#ice').click();
+    await expect(demGlobe).toHaveAttribute('data-ice', 'false');
+    await dem.locator('#ice').click();
+    // Past ice: the 300 Ma grid carries the sheet the atlas paints there, the 200 Ma grid none.
+    await dem.locator('#era').selectOption(String(demFrames.findIndex(frame => frame.id === 'paleodem-3000')));
+    await expect(demGlobe).toHaveAttribute('data-frame', 'paleodem-3000');
+    await expect(demGlobe).toHaveAttribute('aria-busy', 'false');
+    await expect(demGlobe).toHaveAttribute('data-ice', 'true');
+    await expect(dem.locator('#ice-note')).toBeVisible();
+    await dem.locator('#era').selectOption(String(demFrames.findIndex(frame => frame.id === 'paleodem-2000')));
+    await expect(demGlobe).toHaveAttribute('data-frame', 'paleodem-2000');
+    await expect(demGlobe).toHaveAttribute('aria-busy', 'false');
+    await expect(demGlobe).toHaveAttribute('data-ice', 'false');
+    await dem.locator('#era').selectOption(String(demFrames.length - 1));
+    await expect(demGlobe).toHaveAttribute('data-frame', 'paleodem-0000');
+    // The fossil coastlines are offered over the grids as over the atlas.
+    await dem.locator('#coastline').check();
+    await expect.poll(async () => Number(await demGlobe.getAttribute('data-coastlines'))).toBeGreaterThan(0);
+    await dem.locator('#coastline').uncheck();
+    // Before 540 Ma the series is the atlas masks; before 750 Ma nothing but a model.
+    await dem.locator('#era').selectOption(String(demFrames.findIndex(frame => frame.id === 'paleoatlas-600')));
+    await expect(demGlobe).toHaveAttribute('data-frame', 'paleoatlas-600');
+    await expect(demGlobe).toHaveAttribute('data-surface', 'mask');
+    await expect(dem.locator('#period')).toHaveText('에디아카라기');
+    await dem.locator('#timeline').fill('0');
+    await dem.locator('#timeline').dispatchEvent('input');
+    await expect(demGlobe).toHaveAttribute('data-mapless', 'true');
+    await expect(demGlobe).toHaveAttribute('aria-busy', 'false');
+    await dem.locator('.lang a[hreflang="en"]').click();
+    await expect(dem.locator('html')).toHaveAttribute('lang', 'en');
+    await expect(demGlobe).toHaveAttribute('aria-busy', 'false');
+    expect(await dem.locator('body').textContent()).not.toMatch(/[가-힣]/);
+    await dem.screenshot({path:'data/screenshots/globe-elevation-english.png', fullPage:true});
+    console.log('Elevation series passed');
+  }
   expect(errors).toEqual([]);
   console.log('Rotation, zoom, playback, rapid switching, mobile layout and failed-load recovery passed');
 } finally { await browser.close(); }

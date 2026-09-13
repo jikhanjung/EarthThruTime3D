@@ -1,0 +1,23 @@
+{
+  "title": "Global mean sea level curves",
+  "retrieved": "2026-09-13",
+  "note": "Two published curves: the long-term Phanerozoic tectono-glacio-eustatic curve of van der Meer et al. (2022), 1 Myr from 0 to 540 Ma with min/max, from the supplementary table of a CC BY 4.0 article; and the Late Pleistocene sea-level stack of Spratt & Lisiecki (2016), 0-798 ka at 1 kyr, from NOAA (CC BY 3.0 per the NOAA landing page). Neither is a measurement: the first is a model driven by strontium isotopes and ice estimates, the second a principal component of seven proxy records. The Haq family of short-term curves is journal copyright and not used.",
+  "cite": [
+    "van der Meer, D. G., Scotese, C. R., Mills, B. J. W., Sluijs, A., van den Berg van Saparoea, A.-P., & van de Weg, R. M. B. (2022). Long-term Phanerozoic global mean sea level: Insights from strontium isotope variations and estimates of continental glaciation. Gondwana Research, 111, 103-121. https://doi.org/10.1016/j.gr.2022.07.014 (CC BY 4.0)",
+    "Spratt, R. M., & Lisiecki, L. E. (2016). A Late Pleistocene sea level stack. Climate of the Past, 12, 1079-1092. https://doi.org/10.5194/cp-12-1079-2016. Data: NOAA/WDS Paleoclimatology, https://doi.org/10.25921/RD66-5820 (CC BY 3.0)"
+  ],
+  "assets": [
+    {"path": "data/sources/sealevel/vandermeer2022-mmc1.xlsx",
+     "url": "https://ars.els-cdn.com/content/image/1-s2.0-S1342937X22002192-mmc1.xlsx",
+     "bytes": 263101, "sha256": "800b34928378ae902426fc16ef002debfc064465f8ac663cbeeb7bd0c77c074f",
+     "note": "Supplementary Table 1: 541 rows, 0-540 Ma; columns 34-36 TGE_SL_isocorr_m AVG/MIN/MAX are the final curve (Fig. 10)"},
+    {"path": "data/sources/sealevel/vandermeer2022-mmc2.xlsx",
+     "url": "https://ars.els-cdn.com/content/image/1-s2.0-S1342937X22002192-mmc2.xlsx",
+     "bytes": 10773, "sha256": "90c64d2e454c542ce6157afacdb9127329b06605b2c26e48746d57e4ac7ec060",
+     "note": "Supplementary Table 2: the 27 tectono-glacio-eustatic lowstand/highstand couplets"},
+    {"path": "data/sources/sealevel/spratt2016-noaa.txt",
+     "url": "https://www.ncei.noaa.gov/pub/data/paleo/contributions_by_author/spratt2016/spratt2016-noaa.txt",
+     "bytes": 51519, "sha256": "02f56f02f709b70ac70fe5e403326272e19b42bf34ee9b1bba3b8322e1375dc1",
+     "note": "NOAA template text; SeaLev_longPC1 covers 0-798 ka, SeaLev_shortPC1 0-430 ka, metres above modern sea level"}
+  ]
+}

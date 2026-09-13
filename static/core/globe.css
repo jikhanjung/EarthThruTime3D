@@ -41,12 +41,10 @@ header,main,footer{max-width:1440px}main{padding-top:26px;padding-bottom:6px}.vi
   .inspector{order:3;display:block;border:1px solid #29434a;border-top:1px solid #29434a;border-radius:14px;padding:18px 16px}
   .inspector h2{font-size:1.2rem}
   .inspector .age{font-size:1.6rem}
-  /* One row always: wrapping put a second row over the sphere. Anything that does not
-     fit scrolls sideways instead. */
-  .globe-toolbar{bottom:36px;max-width:calc(100% - 20px);overflow-x:auto;padding:2px;
-                 scrollbar-width:none;justify-content:flex-start;
+  .globe-toolbar{bottom:36px;scrollbar-width:none;
                  /* Fade the trailing edge so a control cut off by the screen reads as
-                    something to scroll to rather than something broken. */
+                    something to scroll to rather than something broken. On a phone the
+                    row always overflows; wider up, a thin scrollbar says the same. */
                  -webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 28px),transparent);
                  mask-image:linear-gradient(90deg,#000 calc(100% - 28px),transparent)}
   .globe-toolbar::-webkit-scrollbar{display:none}
@@ -54,6 +52,13 @@ header,main,footer{max-width:1440px}main{padding-top:26px;padding-bottom:6px}.vi
   .toolbar-select{max-width:96px}
   .gesture{bottom:8px;font-size:.68rem}
 }
+
+/* One row always: wrapping put a second row over the sphere. Anything that does not
+   fit scrolls sideways instead. This held only on phones until the elevation series
+   added its own controls, which made the row wider than the panel below about 1350px
+   and left the ends clipped; now it holds at every width. */
+.globe-toolbar{max-width:calc(100% - 20px);overflow-x:auto;padding:2px;
+               justify-content:flex-start;scrollbar-width:thin}
 
 /* Short viewports, which is mostly a phone held sideways: the page chrome costs more
    than it is worth, and the slider has to stay on screen with the globe. */
@@ -103,3 +108,50 @@ header,main,footer{max-width:1440px}main{padding-top:26px;padding-bottom:6px}.vi
 .timeline-title{display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0}
 .sampling-select{width:auto;max-width:100%;padding:4px 6px;font-size:.72rem}
 @media(max-width:640px){.timeline-title{flex-direction:column;align-items:flex-start;gap:4px}.sampling-select{font-size:.68rem;padding:3px 4px}}
+
+/* Global mean temperature strip above the slider: one column per stop. */
+#temp-strip { display: block; width: 100%; height: 10px; border-radius: 3px; margin-bottom: 6px; image-rendering: pixelated; }
+.mean-temp { margin: 0.2rem 0 0.6rem; color: #9fb3bd; font-size: 0.9rem; }
+
+/* Long-term sea level above the slider, and the Pleistocene inset in the inspector. */
+#sea-strip { display: block; width: 100%; height: 60px; overflow: visible; }
+.chart { position: relative; margin-bottom: 4px; }
+.axis { position: absolute; inset: 0; pointer-events: none; }
+.axis-tick { position: absolute; left: 4px; transform: translateY(-50%); font-size: 0.68rem; color: #9fb3bd; background: rgba(10, 24, 32, 0.6); padding: 0 3px; border-radius: 2px; line-height: 1.2; white-space: nowrap; }
+.axis-tick.x { top: 100%; transform: translate(-50%, 2px); background: none; }
+.axis-tick.x.start { transform: translate(0, 2px); }
+.axis-tick.x.end { transform: translate(-100%, 2px); }
+.sea-band { fill: rgba(120, 200, 190, 0.18); }
+.sea-base { stroke: rgba(200, 220, 225, 0.45); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.sea-line { fill: none; stroke: #7fd6c9; stroke-width: 1.5; vector-effect: non-scaling-stroke; }
+.sea-grid { stroke: rgba(200, 220, 225, 0.14); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.sea-ice { fill: rgba(120, 170, 235, 0.16); }
+.sea-whisker { stroke: #f4d06f; stroke-width: 3; vector-effect: non-scaling-stroke; stroke-linecap: round; }
+.chart-legend { margin: 0 0 8px; font-size: 0.72rem; color: #9fb3bd; }
+.key { display: inline-block; width: 14px; height: 8px; vertical-align: middle; border-radius: 2px; margin-right: 2px; }
+.key.line { height: 2px; background: #7fd6c9; }
+.key.band { background: rgba(120, 200, 190, 0.35); }
+.key.ice { background: rgba(120, 170, 235, 0.4); }
+.key.whisker { width: 3px; height: 12px; background: #f4d06f; }
+.sea-inset { margin: 0.6rem 0 0; }
+.sea-inset svg { display: block; width: 100%; height: 72px; }
+.sea-inset .chart { margin-bottom: 14px; padding-left: 52px; }
+.sea-inset .axis-tick { background: none; }
+.sea-inset .axis { left: 52px; }
+.sea-inset .axis-tick:not(.x) { left: -48px; }
+.sea-inset figcaption { color: #9fb3bd; font-size: 0.8rem; margin-top: 0.3rem; }
+
+/* Colour key for the temperature surface: the shader's ramp over -30..40 C as a gradient,
+   today's global mean as a white tick, the current stop's mean as a triangle below. */
+.temp-legend{margin:0 0 .9rem;font-size:.68rem;color:#95afbb}
+.temp-bar{position:relative;height:10px;border-radius:3px;margin-top:1.15rem;background:linear-gradient(90deg,rgb(41,69,168) 0%,rgb(240,237,224) 43%,rgb(184,33,28) 100%)}
+.temp-mark{position:absolute;top:0;width:0;transform:translateX(-50%)}
+.temp-mark.today{height:10px;border-left:2px solid #fff}
+.temp-mark.today span{position:absolute;bottom:12px;left:-1px;transform:translateX(-50%);white-space:nowrap;color:#dcebee}
+.temp-mark.now{top:11px;border-left:6px solid transparent;border-right:6px solid transparent;border-bottom:8px solid #88dfcc}
+.temp-legend figcaption{position:relative;height:1.1em;margin-top:10px}
+.temp-legend figcaption span{position:absolute;left:0;transform:translateX(-50%);white-space:nowrap}
+.temp-legend figcaption span:first-child{transform:none}
+.temp-legend figcaption span:nth-child(2){left:43%}
+.temp-legend figcaption span:nth-child(3){left:71%}
+.temp-legend figcaption span:last-child{left:100%;transform:translateX(-100%)}

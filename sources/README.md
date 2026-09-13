@@ -151,6 +151,17 @@ Before mapping to a globe, establish the projection and control points and separ
 map content from labels/legends. The 17 keyframes alone do not constrain 10,000-year
 physical deformation or unique crustal motions.
 
+## PaleoDEM catalogue
+
+`paleodem.json` pins the PALEOMAP PaleoDEMs (Scotese & Wright 2018, Zenodo record
+5460860, CC BY 4.0): 109 elevation/bathymetry grids, 0–540 Ma at 5 Myr, as 1° NetCDF and
+CSV, the 6-minute NetCDF set (207 MB) for the sharper texture build, plus the
+documentation PDF. Fetch or verify with `.venv/bin/python scripts/fetch_paleodem.py`
+(`--verify-only` for offline; `--manifest` for another manifest). `paleodem-slices.json`
+catalogues the grids; `scripts/build_paleodem.py` (needs `requirements-processing.txt`)
+writes the textures into `data/derived/paleodem/`. Unlike the web JPEGs, these grids may
+be redistributed with attribution.
+
 ## Attribution and use
 
 The site's [license information](http://www.scotese.com/license.htm) permits credited
