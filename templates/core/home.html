@@ -11,7 +11,7 @@
     <div class="globe-caption"><span class="live-dot"></span><span id="globe-age">현재</span></div>
     <div id="status" role="status" aria-live="polite">지구본을 준비하고 있습니다…</div>
     <button id="retry" class="retry" hidden>다시 불러오기</button>
-    <div class="globe-toolbar"><label class="sr-only" for="projection">투영 방식</label><select id="projection" class="toolbar-select"><option value="globe">지구본</option><option value="mollweide">몰바이데 지도</option><option value="equirect">정거원통</option></select><button id="rotate" aria-pressed="false">자동 회전</button><button id="grid" aria-pressed="false">격자</button>{% if fields_available and source_maps_public %}<button id="surface" aria-pressed="false">대륙 마스크</button>{% endif %}{% if plates %}<button id="plates" aria-pressed="false">판 재구성</button>{% endif %}<button id="reset">시점 초기화</button></div>
+    <div class="globe-toolbar"><label class="sr-only" for="projection">투영 방식</label><select id="projection" class="toolbar-select"><option value="globe">지구본</option><option value="mollweide">몰바이데 지도</option><option value="equirect">정거원통</option></select><button id="rotate" aria-pressed="false">자동 회전</button><button id="grid" aria-pressed="false">격자</button>{% if fields_available and source_maps_public %}<button id="surface" aria-pressed="false">대륙 마스크</button>{% endif %}{% if plates %}<label class="sr-only" for="plate-overlay">판 재구성 겹쳐 보기</label><select id="plate-overlay" class="toolbar-select"><option value="">겹치지 않음</option>{% for model in plates %}<option value="{{ model.id }}">{{ model.short }}</option>{% endfor %}</select>{% endif %}<button id="reset">시점 초기화</button></div>
     <p class="gesture" id="gesture">드래그로 회전 · 스크롤 / 핀치로 확대</p>
   </section>
   <aside class="inspector">
@@ -23,10 +23,10 @@
 {% endif %}
     <p class="model-note">지도를 구면으로 옮긴 근사 시각화입니다. 원본의 지명·경계선이 남아 있으며, 실제 지형 높이와 판 운동을 계산한 모델은 아닙니다.</p>
     <p class="model-note derived" id="surface-note" hidden>대륙 마스크 표시 중입니다. 원본 지도의 색을 분할해 육지와 바다 둘로만 칠한 결과이며, 원본이 그린 해안선 자체가 아니라 해석입니다. 대륙붕은 바다로 둡니다.</p>
-{% if plates %}    <p class="model-note hint" id="plate-hint">지구본 아래 <strong>판 재구성</strong> 버튼을 누르면 판 회전 모델로 재구성한 같은 시각의 대륙을 겹쳐 볼 수 있습니다. 모델은 {{ plates|length }}가지입니다.</p>
+{% if plates %}    <p class="model-note hint" id="plate-hint">지구본 아래 두 번째 드롭다운에서 판 회전 모델을 고르면, 같은 시각의 대륙을 재구성해 겹쳐 그립니다. 모델은 {{ plates|length }}가지이고 기본은 겹치지 않음입니다.</p>
     <div class="model-note derived" id="plate-note" hidden>
       <p>겹쳐 그린 분홍 선은 다른 자료입니다. 판 회전 모델로 같은 시각의 대륙을 재구성한 것이며, Scotese 지도를 분할한 결과와는 출처도 방법도 다릅니다. 두 선이 어긋나는 것은 두 모델이 다르기 때문입니다.</p>
-      {% if plates|length > 1 %}<label for="plate-model">회전 모델</label><select id="plate-model">{% for model in plates %}<option value="{{ model.id }}">{{ model.title }} · {{ model.frame }}</option>{% endfor %}</select>{% endif %}
+      <p class="cite" id="plate-frame"></p>
       <p class="reach" id="plate-reach" hidden></p>
       <p class="cite" id="plate-note-model"></p>
       <p class="cite" id="plate-cite"></p>

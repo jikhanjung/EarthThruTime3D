@@ -101,13 +101,16 @@ def main():
             # served and credited, and nothing outside its three files reachable.
             about = fetch("/about/").decode()
             shapes = 0
-            for model in ("merdith2021", "muller2022", "cao2024"):
+            for model in ("merdith2021", "muller2022", "cao2024", "matthews2016"):
                 rotations = json.loads(fetch(f"/plates/{model}/rotations.json"))
                 if not rotations.get("sequences"):
                     raise SystemExit(f"{model}: rotations are empty.")
                 continents = json.loads(fetch(f"/plates/{model}/continents.json"))
-                if len(continents.get("features", [])) < 500:
-                    raise SystemExit(f"{model}: continents look truncated.")
+                # Models draw their continents at different granularities, so the floor
+                # only has to catch a bundle that arrived empty or half-written.
+                if len(continents.get("features", [])) < 300:
+                    raise SystemExit(f"{model}: continents look truncated "
+                                     f"({len(continents.get('features', []))} features).")
                 shapes = len(continents["features"])
                 citation = continents["attribution"]["citation"].split(",")[0]
                 if citation not in about:
@@ -119,7 +122,7 @@ def main():
             fetch("/static/core/globe.js")
             fetch("/about/")
             print(f"Smoke passed: {version}, {report['fields']['expected']} land fields, "
-                  f"three plate models, {shapes} shapes in the last, "
+                  f"four plate models, {shapes} shapes in the last, "
                   "no published maps served.")
         finally:
             subprocess.run(["docker", "stop", container], check=False, capture_output=True)

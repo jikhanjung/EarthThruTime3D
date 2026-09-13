@@ -297,6 +297,7 @@ def plate_models():
             "id": model,
             "preferred": bool(document.get("preferred")),
             "title": document["short_title"],
+            "short": document.get("menu_title", document["short_title"]),
             "frame": document["reference_frame"],
             "covers": document["covers_ma"],
             "citation": document["citation"],

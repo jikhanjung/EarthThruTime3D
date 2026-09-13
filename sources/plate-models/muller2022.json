@@ -52,5 +52,6 @@
   ],
   "relationship": "The shapes and the palaeomagnetic rotation file are byte-identical to merdith2021; what this model adds is the optimised mantle reference frame, which is the rotation file packed here. Comparing the two on screen shows what the choice of absolute frame does, with relative motions unchanged.",
   "limitations": "The authors state that climate-sensitive analysis should use the palaeomagnetic frame, and repeat Merdith's warning against Pacific hotspot kinematics and analyses shorter than 5 Ma.",
-  "preferred": false
+  "preferred": false,
+  "menu_title": "Müller 2022"
 }

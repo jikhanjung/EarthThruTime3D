@@ -42,8 +42,8 @@ const PLATE_COLOUR = 0xff62c0;
 const surfaceToggle = $('surface');
 let plateLayer;
 let plateAge = null;
-let showPlates = false;
-let plateChoice = plates.length ? plates[0].id : null;
+// Empty means the Scotese surface alone, which is where the viewer starts.
+let plateChoice = '';
 // One entry per model, so switching back does not refetch.
 const plateData = new Map();
 // Without the published maps there is nothing to show but the derived surface, so the
@@ -526,6 +526,9 @@ function updateNameVisibility() {
 function plateEntry() {
   return plates.find((model) => model.id === plateChoice) ?? null;
 }
+function showPlates() {
+  return Boolean(plateEntry());
+}
 async function loadPlateModel() {
   const entry = plateEntry();
   if (!entry) return null;
@@ -585,12 +588,15 @@ function drawPlates(age, loaded) {
 }
 function clearPlates() {
   if ($('plate-reach')) $('plate-reach').hidden = true;
+  for (const id of ['plate-frame', 'plate-cite', 'plate-note-model']) {
+    if ($(id)) $(id).textContent = '';
+  }
   if (plateLayer) plateLayer.visible = false;
   plateAge = null;
   stage.dataset.plates = '0';
 }
 async function updatePlates(place, ticket) {
-  if (!showPlates || !plates) {
+  if (!showPlates()) {
     clearPlates();
     return;
   }
@@ -615,6 +621,9 @@ async function updatePlates(place, ticket) {
     $('plate-cite').textContent = `${entry.citation} · ${entry.license}`;
   }
   if ($('plate-note-model')) $('plate-note-model').textContent = entry.note ?? '';
+  if ($('plate-frame')) {
+    $('plate-frame').textContent = `${entry.title} · 기준틀 ${entry.frame} · ${entry.covers[1]} Ma까지`;
+  }
 }
 function createGrid() {
   // Built from longitude and latitude rather than from the mesh, so the same parallels
@@ -708,7 +717,7 @@ function init() {
     status.textContent = '그래픽 연결이 끊겼습니다. 페이지를 새로고침해 주세요.';
   });
   stage.dataset.projection = projection;
-  stage.dataset.plateModel = plateChoice ?? '';
+  stage.dataset.plateModel = plateChoice;
   $('projection').value = projection;
   frames.forEach((frame, index) => $('era').add(new Option(`${frame.label} · ${ageText(frame)}`, index)));
   $('timeline').max = stops.length - 1;
@@ -743,20 +752,13 @@ function init() {
       selectStop(stop, true);
     });
   }
-  if ($('plates')) {
-    $('plates').addEventListener('click', () => {
-      showPlates = !showPlates;
-      $('plates').setAttribute('aria-pressed', String(showPlates));
-      $('plate-note').hidden = !showPlates;
-      if ($('plate-hint')) $('plate-hint').hidden = showPlates;
-      selectStop(stop);
-    });
-  }
-  if ($('plate-model')) {
-    $('plate-model').addEventListener('change', () => {
-      plateChoice = $('plate-model').value;
+  if ($('plate-overlay')) {
+    $('plate-overlay').addEventListener('change', () => {
+      plateChoice = $('plate-overlay').value;
       plateAge = null;
       stage.dataset.plateModel = plateChoice;
+      $('plate-note').hidden = !showPlates();
+      if ($('plate-hint')) $('plate-hint').hidden = showPlates();
       selectStop(stop, true);
     });
   }

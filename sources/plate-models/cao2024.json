@@ -67,5 +67,6 @@
   ],
   "relationship": "Built by joining two Proterozoic models, P14 (Pisarevsky et al. 2014) for 1770-1270 Ma and C21 (Condie et al. 2021) elsewhere in 1800-1100 Ma, onto the Phanerozoic line this project already carries. Measured against merdith2021, 96% of their shared rotation sequences are byte-identical and 50 sequences are new, so inside the 0-650 Ma window this viewer shows the two reconstructions nearly coincide. What this model adds is reach: it is the only one here that goes past 1 Ga.",
   "limitations": "Longitude in the Precambrian rests on palaeomagnetism alone and is weakly constrained. The deep-time half comes from different source models than the Phanerozoic half, so the two are not one continuous reconstruction.",
-  "viewer_note": "The timeline stops at 650 Ma because that is the oldest Scotese map, so the part of this model that is genuinely its own is not reachable yet."
+  "viewer_note": "The timeline stops at 650 Ma because that is the oldest Scotese map, so the part of this model that is genuinely its own is not reachable yet.",
+  "menu_title": "Cao 2024"
 }

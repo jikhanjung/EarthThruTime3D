@@ -19,7 +19,9 @@ BASE_DIR = Path(__file__).resolve().parents[1]
 SOURCE = BASE_DIR / "data/derived/segmentation"
 SUFFIXES = ("field.png", "pieces.json")
 PLATES = BASE_DIR / "data/derived/plates"
-PLATE_LAYERS = ("rotations.json", "continents.json", "coastlines.json")
+# Every model has rotations and continents; only some ship a separate coastline layer.
+PLATE_LAYERS = ("rotations.json", "continents.json")
+OPTIONAL_PLATE_LAYERS = ("coastlines.json",)
 
 
 def digest(path):
@@ -56,9 +58,11 @@ def main():
         raise SystemExit("No plate model manifests under sources/plate-models/.")
     for model in packed:
         (staging / "plates" / model).mkdir()
-        for name in PLATE_LAYERS:
+        for name in PLATE_LAYERS + OPTIONAL_PLATE_LAYERS:
             source = PLATES / model / name
             if not source.exists():
+                if name in OPTIONAL_PLATE_LAYERS:
+                    continue
                 raise SystemExit(f"Missing plate file: {source}. Run scripts/pack_plates.py.")
             target = staging / "plates" / model / name
             shutil.copy2(source, target)

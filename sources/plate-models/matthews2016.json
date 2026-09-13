@@ -1,0 +1,71 @@
+{
+  "schema_version": 2,
+  "id": "matthews2016",
+  "title": "Matthews et al. (2016) global plate boundary evolution since the late Paleozoic",
+  "short_title": "Matthews et al. 2016",
+  "reference_frame": "hybrid mantle (GK07)",
+  "covers_ma": [
+    0,
+    410
+  ],
+  "preferred": false,
+  "retrieved_at": "2026-09-13",
+  "citation": "Matthews, K. J., Maloney, K. T., Zahirovic, S., Williams, S. E., Seton, M., and Müller, R. D., 2016. Global plate boundary evolution and kinematics since the late Paleozoic. Global and Planetary Change, 146, 226-250.",
+  "license": {
+    "name": "Creative Commons Attribution 4.0 International",
+    "url": "https://creativecommons.org/licenses/by/4.0/",
+    "statement": "This work is licensed under the Creative Commons Attribution 4.0 International License.",
+    "source": "License.txt inside the archive",
+    "note": "Attribution and citation are required; publishing derived work needs no further consent."
+  },
+  "archive": {
+    "url": "https://zenodo.org/records/10526157/files/Matthews_etal_2016_GPC.zip?download=1",
+    "path": "data/sources/plates/matthews2016/archive.zip",
+    "bytes": 10726585,
+    "sha256": "06d444d22a55ff4c265199955168c537511d1d9feea958850e754e7c5759e33d",
+    "member_prefix": ""
+  },
+  "members": [
+    {
+      "role": "rotation",
+      "name": "CorrectedModel/Rotations/Global_EB_250-0Ma_GK07_Matthews_etal.rot",
+      "bytes": 455982,
+      "sha256": "1c5e9fcbef0492a65128c0b576d4649442f3ba35f38f255e42f1c45656cf7843",
+      "covers_ma": [
+        0,
+        250
+      ]
+    },
+    {
+      "role": "rotation",
+      "name": "CorrectedModel/Rotations/Global_EB_410-250Ma_GK07_Matthews_etal.rot",
+      "bytes": 170285,
+      "sha256": "90326bbe3d7ca6277633f65e06b8e8b84c8b67a35cfa37d2a1c2c83a9350cdf4",
+      "covers_ma": [
+        250,
+        410
+      ]
+    },
+    {
+      "role": "continents",
+      "name": "CorrectedModel/StaticGeometries/ContinentalPolygons/PresentDay_ContinentalPolygons_Matthews.shp",
+      "bytes": 449636,
+      "sha256": "7975c4c11061a661098a6b12b0d2b5f60483820c86863862eb8d45cbbb52669b"
+    },
+    {
+      "role": "attributes",
+      "name": "CorrectedModel/StaticGeometries/ContinentalPolygons/PresentDay_ContinentalPolygons_Matthews.dbf",
+      "bytes": 342424,
+      "sha256": "ab05c70c8bfe2d5b1ea9152cd911681419900a67ec2e1dd1e1f1ad7b2cb86a2a"
+    },
+    {
+      "role": "license",
+      "name": "License.txt",
+      "bytes": 253,
+      "sha256": "93b0e3272777ad090ca5720c30619412559831dcd8fccbac496cf1bec625dc8f"
+    }
+  ],
+  "relationship": "A separate lineage from the Merdith line: published in 2016, built around plate boundary evolution rather than a billion-year synthesis, and carried in shapefiles rather than GPML. It reaches 410 Ma, so it says nothing before that.",
+  "limitations": "Covers the late Palaeozoic onward only. Its geometry is continental polygons rather than the coastline-and-continent pair the other models ship, so the outlines are coarser.",
+  "menu_title": "Matthews 2016"
+}

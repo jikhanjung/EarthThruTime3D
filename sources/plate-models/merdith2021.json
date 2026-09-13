@@ -52,5 +52,6 @@
   ],
   "limitations": "The authors state the model is in a purely palaeomagnetic reference frame and is unsuitable for Pacific hotspot kinematics or for analyses shorter than 5 Ma. Longitude in the Precambrian is weakly constrained by palaeomagnetism alone.",
   "preferred": true,
-  "preferred_note": "Shown first: the palaeomagnetic frame is the one the authors point to for climate-sensitive reading, and it is the fairer comparison against the published maps."
+  "preferred_note": "Shown first: the palaeomagnetic frame is the one the authors point to for climate-sensitive reading, and it is the fairer comparison against the published maps.",
+  "menu_title": "Merdith 2021"
 }

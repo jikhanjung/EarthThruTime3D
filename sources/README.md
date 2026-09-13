@@ -17,15 +17,28 @@ project measures. One manifest per model under `sources/plate-models/`, each pin
 archive and saying which member plays which role, because publishers lay their archives
 out differently and the rest of the pipeline reads the role, never a file name.
 
-| Model | Frame | Covers | Licence |
-| --- | --- | --- | --- |
-| Merdith et al. 2021 | palaeomagnetic | 0–1000 Ma | CC BY 3.0 |
-| Müller et al. 2022 | optimised mantle | 0–1000 Ma | CC BY 4.0 |
+| Model | Frame | Covers | Licence | Geometry |
+| --- | --- | --- | --- | --- |
+| Merdith et al. 2021 | palaeomagnetic | 0–1000 Ma | CC BY 3.0 | GPML |
+| Müller et al. 2022 | optimised mantle | 0–1000 Ma | CC BY 4.0 | GPML |
+| Cao et al. 2024 | palaeomagnetic, to 1.8 Ga | 0–1800 Ma | CC BY 4.0 | GPML |
+| Matthews et al. 2016 | hybrid mantle (GK07) | 0–410 Ma | CC BY 4.0 | shapefile |
 
-The second is not a rival dataset so much as the same one seen from another frame: its
-shapes and its palaeomagnetic rotation file are byte-identical to the first, and what it
-adds is the optimised mantle reference frame. Switching between them in the viewer shows
-what the choice of absolute frame does while relative motions stay put.
+Müller is not a rival dataset so much as the same one seen from another frame: its shapes
+and its palaeomagnetic rotation file are byte-identical to Merdith's, and what it adds is
+the optimised mantle reference frame. Cao shares almost all of Merdith's rotations inside
+the Phanerozoic and earns its place by reaching past 1 Ga. Matthews is the one separate
+lineage, and it differs from Merdith by about 10 degrees of arc at 50 to 200 Ma and 28
+degrees by 400 Ma.
+
+A model may split its rotations across files by era, and its geometry may arrive as
+shapefiles rather than GPML. Both are handled: rotation members merge, and a `.shp`
+member is read with its `.dbf` for plate ids and valid times.
+
+**Torsvik and Cocks (2017) is deliberately absent.** Its CEED6 archive is downloadable
+from earthdynamics.org but carries no licence, only the book's copyright notice, so there
+is no permission to redistribute it or anything derived from it. That is a weaker
+position than the PALEOMAP maps, which at least state that research use is allowed.
 
 ```bash
 .venv/bin/python scripts/fetch_plate_model.py               # both, or name one

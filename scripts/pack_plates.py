@@ -12,6 +12,7 @@ import gzip
 import json
 import math
 import re
+import struct
 import sys
 from pathlib import Path
 
@@ -74,6 +75,81 @@ def simplify(points, tolerance):
             keep[index] = True
             stack.extend([(first, index), (index, last)])
     return [point for point, wanted in zip(points, keep) if wanted]
+
+
+def dbf_records(path):
+    """Attribute rows from a dBASE III table, which is what a shapefile carries.
+
+    Only the fields a plate model needs are wanted, but the format makes it as cheap to
+    read them all: a fixed header, then fixed-width rows of text.
+    """
+    data = path.read_bytes()
+    count, header_length, record_length = struct.unpack_from("<IHH", data, 4)
+    fields = []
+    offset = 32
+    while data[offset] != 0x0D:
+        name = data[offset:offset + 11].split(b"\0")[0].decode("latin-1")
+        length = data[offset + 16]
+        fields.append((name, length))
+        offset += 32
+    rows = []
+    for index in range(count):
+        start = header_length + index * record_length + 1  # the first byte is a delete flag
+        row = {}
+        for name, length in fields:
+            row[name] = data[start:start + length].decode("latin-1").strip()
+            start += length
+        rows.append(row)
+    return rows
+
+
+def shapefile_rings(path):
+    """Polygon rings from a .shp, as lists of (longitude, latitude).
+
+    One entry per record, each a list of rings, so it lines up with the .dbf rows.
+    """
+    data = path.read_bytes()
+    offset = 100  # the file header
+    shapes = []
+    while offset < len(data):
+        _, content_length = struct.unpack_from(">II", data, offset)
+        body = offset + 8
+        shape_type = struct.unpack_from("<I", data, body)[0]
+        rings = []
+        if shape_type == 5:  # polygon
+            parts, points = struct.unpack_from("<II", data, body + 36)
+            starts = struct.unpack_from(f"<{parts}I", data, body + 44)
+            coordinates = struct.unpack_from(f"<{points * 2}d", data, body + 44 + parts * 4)
+            for index, first in enumerate(starts):
+                last = starts[index + 1] if index + 1 < parts else points
+                rings.append([(coordinates[position * 2], coordinates[position * 2 + 1])
+                              for position in range(first, last)])
+        shapes.append(rings)
+        offset = body + content_length * 2
+    return shapes
+
+
+def shapefile_features(path, tolerance, minimum_points):
+    """The same shape of record as the GPML reader, from a shapefile pair."""
+    rows = dbf_records(path.with_suffix(".dbf"))
+    for shape, row in zip(shapefile_rings(path), rows):
+        plate = row.get("PLATEID1") or row.get("PLATEID") or ""
+        if not plate.lstrip("-").isdigit():
+            continue
+        rings = []
+        for points in shape:
+            simplified = simplify(points, tolerance)
+            if len(simplified) >= minimum_points:
+                rings.append([round(value, 3) for point in simplified for value in point])
+        if rings:
+            # Shapefiles write -999 where GPML says distantPast or distantFuture.
+            begin = float(row.get("FROMAGE") or DISTANT_PAST)
+            end = float(row.get("TOAGE") or DISTANT_FUTURE)
+            yield {"pid": int(plate),
+                   "from": DISTANT_PAST if begin <= -900 else begin,
+                   "to": DISTANT_FUTURE if end <= -900 else end,
+                   "name": (row.get("NAME") or "").strip() or None,
+                   "rings": rings}
 
 
 def features(text, tolerance, minimum_points):
@@ -152,8 +228,10 @@ def pack(model, tolerance, minimum_points):
     for role in SHAPE_ROLES:
         if role not in roles:
             continue
-        shapes = list(features(read_text(member_path(model, roles[role])),
-                               tolerance, minimum_points))
+        path = member_path(model, roles[role])
+        shapes = list(shapefile_features(path, tolerance, minimum_points)
+                      if path.suffix == ".shp"
+                      else features(read_text(path), tolerance, minimum_points))
         points = sum(len(ring) // 2 for shape in shapes for ring in shape["rings"])
         document_out = {"attribution": attribution, "layer": role,
                         "tolerance_deg": tolerance, "features": shapes}

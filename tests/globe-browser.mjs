@@ -160,12 +160,12 @@ try {
   // The plate model is a second dataset drawn over the first. It must reconstruct at
   // the stop's own age, say whose data it is, and leave when switched off.
   const beforePlates = await page.locator('#globe canvas').screenshot();
-  // The overlay's button sits at the foot of the globe, so a line in the inspector
-  // points at it until the overlay is on.
+  // The overlay is chosen from a dropdown whose default is the Scotese surface alone,
+  // and a line in the inspector points at it until a model is picked.
+  expect(await page.locator('#plate-overlay').inputValue()).toBe('');
   await expect(page.locator('#plate-hint')).toBeVisible();
-  await page.locator('#plates').click();
+  await page.locator('#plate-overlay').selectOption('merdith2021');
   await expect(page.locator('#plate-hint')).toBeHidden();
-  await expect(page.locator('#plates')).toHaveAttribute('aria-pressed', 'true');
   await expect(globe).toHaveAttribute('aria-busy', 'false');
   await expect(page.locator('#plate-note')).toBeVisible();
   expect(await page.locator('#plate-note').textContent()).toContain('Merdith');
@@ -184,28 +184,31 @@ try {
   // redraw and to re-credit.
   await expect(globe).toHaveAttribute('data-plate-model', 'merdith2021');
   const firstFrame = await page.locator('#globe canvas').screenshot();
-  await page.locator('#plate-model').selectOption('muller2022');
+  await page.locator('#plate-overlay').selectOption('muller2022');
   await expect(globe).toHaveAttribute('data-plate-model', 'muller2022');
   await expect(globe).toHaveAttribute('aria-busy', 'false');
   const secondFrame = await page.locator('#globe canvas').screenshot();
   expect(Buffer.compare(firstFrame, secondFrame)).not.toBe(0);
   expect(await page.locator('#plate-cite').textContent()).toContain('Müller');
-  await page.locator('#plate-model').selectOption('merdith2021');
+  await page.locator('#plate-overlay').selectOption('merdith2021');
   await expect(globe).toHaveAttribute('aria-busy', 'false');
   expect(await page.locator('#plate-cite').textContent()).toContain('Merdith');
   // Every model states how it relates to the others, because two of the three nearly
   // coincide inside this timeline and a reader should not have to discover that.
-  await page.locator('#plate-model').selectOption('cao2024');
+  await page.locator('#plate-overlay').selectOption('cao2024');
   await expect(globe).toHaveAttribute('data-plate-model', 'cao2024');
   await expect(globe).toHaveAttribute('aria-busy', 'false');
   expect(await page.locator('#plate-note-model').textContent()).toContain('1 Ga');
-  await page.locator('#plate-model').selectOption('merdith2021');
+  await page.locator('#plate-overlay').selectOption('merdith2021');
   await expect(globe).toHaveAttribute('aria-busy', 'false');
   await page.locator('#era').selectOption('16');
   await expect(globe).toHaveAttribute('aria-busy', 'false');
-  await page.locator('#plates').click();
+  await page.locator('#plate-overlay').selectOption('');
   await expect(globe).toHaveAttribute('data-plates', '0');
   await expect(page.locator('#plate-note')).toBeHidden();
+  await expect(page.locator('#plate-hint')).toBeVisible();
+  // Four models are offered plus the option of none.
+  expect(await page.locator('#plate-overlay option').count()).toBe(5);
   console.log('Plate reconstruction overlay passed');
   await page.locator('#era').selectOption('8');
   await expect(globe).toHaveAttribute('data-frame','scotese-237');
