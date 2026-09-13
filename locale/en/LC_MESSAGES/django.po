@@ -595,6 +595,12 @@ msgstr "Global mean temperature about {value} °C{between}"
 msgid "전 지구 평균 기온: 자료 없음 (540 Ma 이전)"
 msgstr "Global mean temperature: no data (before 540 Ma)"
 
+msgid " · 현재보다 {delta} °C"
+msgstr " · {delta} °C vs today"
+
+msgid "기온 색 범례"
+msgstr "Temperature colour key"
+
 msgid "지표 기온 표시 중입니다. −30 °C 파랑에서 0 °C 밝은색을 지나 40 °C 빨강까지입니다. <a href=\"https://doi.org/10.1016/j.earscirev.2021.103503\" target=\"_blank\" rel=\"noopener\">Scotese (2021)</a>의 1° 기온 지도로, 기후 모델(<a href=\"https://doi.org/10.5194/cp-17-1483-2021\" target=\"_blank\" rel=\"noopener\">Valdes et al. 2021</a>) 결과를 동위원소·암석 지표에 맞춰 보정한 것입니다. 관측이 아니라 모델과 지표의 절충이며, 시점 사이는 보간입니다. 전 지구 평균은 지도의 면적 가중 평균입니다."
 msgstr "Showing surface air temperature: blue at −30 °C through pale at 0 °C to red at 40 °C. These are the 1° temperature maps of <a href=\"https://doi.org/10.1016/j.earscirev.2021.103503\" target=\"_blank\" rel=\"noopener\">Scotese (2021)</a>, climate-model output (<a href=\"https://doi.org/10.5194/cp-17-1483-2021\" target=\"_blank\" rel=\"noopener\">Valdes et al. 2021</a>) nudged to isotope and rock indicators. A compromise between model and proxies, not an observation; between stops it is interpolated. The global mean is the area-weighted mean of each map."
 
@@ -679,8 +685,8 @@ msgstr "The sea-level control in the toolbar is a what-if. A fixed value shifts 
 msgid "빙하"
 msgstr "Ice"
 
-msgid "빙하 표시 중입니다. 현재의 빙하·빙상(흰색)과 남극 빙붕(옅은 하늘색)은 <a href=\"https://www.naturalearthdata.com/\" target=\"_blank\" rel=\"noopener\">Natural Earth</a> 10 m 자료(공공 영역)로, 현재 시점에만 있습니다. 5 Ma로 가면서 사라지는 것은 자료가 없어서이지 빙하가 없어서가 아닙니다. 서남극 빙상은 해수면 아래 기반암 위에 얹혀 있어 격자가 바다로 그리는 곳 위에도 빙하가 놓입니다."
-msgstr "Showing ice. Today's glaciers and ice sheets (white) and the Antarctic ice shelves (pale blue) come from <a href=\"https://www.naturalearthdata.com/\" target=\"_blank\" rel=\"noopener\">Natural Earth</a> 10 m data (public domain) and exist for the present day only. The fade toward 5 Ma means missing data, not ice loss. The West Antarctic ice sheet rests on bedrock below sea level, so ice is drawn over places the grid shows as ocean."
+msgid "빙하 표시 중입니다. 현재(0 Ma)의 빙하·빙상(흰색)과 남극 빙붕(옅은 하늘색)은 <a href=\"https://www.naturalearthdata.com/\" target=\"_blank\" rel=\"noopener\">Natural Earth</a> 10 m 자료(공공 영역)입니다. 과거의 빙하는 PALEOMAP PaleoAtlas(2016) 지도가 흰색으로 그린 얼음을 이 프로젝트가 분할한 것으로, 각 격자는 5 Myr 안의 가장 가까운 지도를 빌립니다. 지도가 5~10 Myr 간격이라 빙하기 주기는 보이지 않고, 지도가 흰색으로 칠한 해빙도 함께 나타납니다. 지도의 흰색은 가장 높은 땅의 색이기도 해서 위도 45° 안쪽의 고원(티베트 등)은 뺐으며, 산악 빙하는 현재에만 있습니다. 540 Ma 이전에는 자료가 없습니다. 서남극 빙상은 해수면 아래 기반암 위에 얹혀 있어 격자가 바다로 그리는 곳 위에도 빙하가 놓입니다."
+msgstr "Showing ice. The present-day glaciers and ice sheets (white) and the Antarctic ice shelves (pale blue) are <a href=\"https://www.naturalearthdata.com/\" target=\"_blank\" rel=\"noopener\">Natural Earth</a> 10 m data, public domain. Past ice is this project's segmentation of the ice the PALEOMAP PaleoAtlas (2016) maps paint white; each grid borrows the nearest map within 5 Myr. Maps 5 to 10 Myr apart cannot show glacial cycles, and sea ice the maps paint white appears too. White on those maps is also the colour of the highest ground, so plateaus inside 45° of latitude, Tibet among them, are left out, and mountain glaciers appear only at the present. There is no data before 540 Ma. The West Antarctic ice sheet rests on bedrock below sea level, so ice sits where the grid draws ocean."
 
 msgid "현재 빙하"
 msgstr "Present-day ice"

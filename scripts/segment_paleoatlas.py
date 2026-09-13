@@ -35,8 +35,7 @@ from skimage import measure
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from measure_longitude_offsets import PackedModel  # noqa: E402
-from rotation_model import rotate  # noqa: E402
+from measure_longitude_offsets import PackedModel, ring_points  # noqa: E402
 from segment_landmass import (FIELD_SCALE, FIELD_WIDTH, FIELD_ZERO, PALETTE,  # noqa: E402
                               disc, hsv, thin_only)
 
@@ -49,6 +48,8 @@ OCEAN_HUE = (170.0, 260.0)
 OCEAN_BLUE_OVER_RED = 25.0   # shelf cyan and deep blue both clear this; grey-brown land does not
 ICE_SATURATION = 0.12
 ICE_VALUE = 0.55
+ICE_KEEP_LATITUDE = 45.0     # a pale piece centred equatorward of this is high ground, not ice
+ICE_MIN_FRACTION = 1e-4      # an ice piece covers at least this share of the sphere (~50,000 km2)
 INK_VALUE = 0.16             # black boundary lines
 CREDIT_SATURATION = 0.6      # the small red credit in the lower left
 LINE_RADIUS = 3              # widest overprinted stroke at 3600 px across
@@ -60,8 +61,9 @@ LABEL_SPACING_DEG = 12.0     # a shown name keeps this far from every larger sho
 MAX_PLATE_ID = 1000
 
 
-def classify(rgb, continental):
-    """Land booleans and the overprint that was refilled, for one full-size raster."""
+def paint(rgb):
+    """Sea, pale and overprint booleans read from the printed colour of one raster, the
+    overprint refilled from the nearest unprinted neighbour."""
     hue, saturation, value = hsv(rgb)
     blue = ((hue >= OCEAN_HUE[0]) & (hue <= OCEAN_HUE[1])
             & (rgb[..., 2] - rgb[..., 0] >= OCEAN_BLUE_OVER_RED))
@@ -72,8 +74,40 @@ def classify(rgb, continental):
     if overprint.any():
         _, index = ndimage.distance_transform_edt(overprint, return_indices=True)
         blue, pale = blue[tuple(index)], pale[tuple(index)]
+    return blue, pale, overprint
+
+
+def classify(rgb, continental):
+    """Land booleans and the overprint that was refilled, for one full-size raster."""
+    blue, pale, overprint = paint(rgb)
     land = (~blue & ~pale) | (pale & continental)
     return clean(land), overprint
+
+
+def ice(rgb):
+    """Ice as the atlas paints it, and the pale that is not ice, for one full-size raster.
+
+    The atlas legend has no ice: white is "the highest peaks in the mountains", and an ice
+    sheet is white because its surface is the highest thing on the PaleoDEM. So Tibet, the
+    Altiplano and the Central Pangean Mountains come out pale too. Every drawn sheet is
+    centred poleward of ICE_KEEP_LATITUDE and every plateau inside it, so the centroid of
+    each pale piece tells them apart. The continental polygons are not consulted: a polygon
+    that rings a pole leaves the cap unfilled, and the atlas draws one white for sheet,
+    shelf and sea ice alike, so the sea ice it paints stays in.
+    """
+    _, pale, _ = paint(rgb)
+    labels, count = wrapped_labels(clean(pale))
+    height, width = pale.shape
+    weights = cell_weights(height, width)
+    keep = np.zeros(count + 1, dtype=bool)
+    for label in range(1, count + 1):
+        rows, cols = np.nonzero(labels == label)
+        if weights[rows, cols].sum() < ICE_MIN_FRACTION * weights.sum():
+            continue                     # a speck, mostly at the map's polar edge
+        centroid = spherical_centroid(rows, cols, weights[rows, cols], width, height)
+        keep[label] = abs(centroid[1]) >= ICE_KEEP_LATITUDE
+    kept = keep[labels]
+    return kept, (labels > 0) & ~kept
 
 
 def clean(land, radius=CLEAN_RADIUS):
@@ -129,16 +163,7 @@ def plate_raster(model, age, width, height):
         if turn is None:
             continue
         for ring in feature["rings"]:
-            points, last = [], None
-            for index in range(0, len(ring), 2):
-                longitude, latitude = rotate(turn, ring[index], ring[index + 1])
-                if last is not None:
-                    while longitude - last > 180:
-                        longitude -= 360
-                    while longitude - last < -180:
-                        longitude += 360
-                last = longitude
-                points.append((longitude, latitude))
+            points = ring_points(turn, ring)
             if len(points) < 3:
                 continue
             for shift in (-360, 0, 360):

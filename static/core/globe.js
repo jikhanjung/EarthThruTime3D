@@ -187,8 +187,9 @@ function loadField(frame) {
 function loadTemperature(frame) {
   return loadData(`${frame.id}:temp`, frame.temp);
 }
-// Ice masks exist only where an open outline exists, the present day so far. A frame
-// without one contributes no ice, so the overlay fades out across the last gap.
+// Ice masks exist where ice was drawn: Natural Earth at the present, the atlas's white
+// elsewhere. A frame without one contributes no ice, so the overlay fades out across
+// the gap to it, which reads as retreat.
 function loadIce(frame) {
   return frame.ice ? loadData(`${frame.id}:ice`, frame.ice) : Promise.resolve(null);
 }
@@ -301,6 +302,7 @@ async function selectStop(value, manual = false) {
   }
   if (temperatureToggle) temperatureToggle.setAttribute('aria-pressed', String(heated));
   if ($('temp-note')) $('temp-note').hidden = !heated;
+  if ($('temp-legend')) $('temp-legend').hidden = !heated;
   showMeanTemperature(place);
   // Decided here, synchronously, so the readout and the shader agree at every stop.
   const seaOffset = seaLevelOffset(place, fielded);
@@ -557,9 +559,23 @@ function showMeanTemperature(place) {
     if (from != null && to != null) value = from + (to - from) * place.blend;
     else if (place.blend === 0 && from != null) value = from;
   }
-  out.textContent = value == null
+  let text = value == null
     ? L.meanTemperatureNone
     : fmt(L.meanTemperature, { value: value.toFixed(1), between: place.blend > 0 ? L.meanTemperatureBetween : '' });
+  // The colour key: today's global mean as a fixed tick, this stop's mean as a marker,
+  // both on the shader's -30..40 C ramp, and the readout says how far from today.
+  const legend = $('temp-legend');
+  if (legend) {
+    const today = frames.find(frame => frame.age === 0 && frame.mean_c != null)?.mean_c ?? null;
+    const along = celsius => `${(Math.max(0, Math.min(1, (celsius + 30) / 70)) * 100).toFixed(1)}%`;
+    if (today != null) $('temp-today').style.left = along(today);
+    $('temp-now').hidden = value == null;
+    if (value != null) $('temp-now').style.left = along(value);
+    const delta = value != null && today != null ? value - today : null;
+    legend.dataset.delta = delta == null ? '' : delta.toFixed(1);
+    if (delta != null) text += fmt(L.meanTemperatureDelta, { delta: (delta < 0 ? '−' : '+') + Math.abs(delta).toFixed(1) });
+  }
+  out.textContent = text;
   stage.dataset.meanTemp = value == null ? '' : value.toFixed(1);
 }
 // The strip above the slider: one column per stop, coloured by the global mean at that
@@ -752,7 +768,8 @@ function globeMaterial() {
         float rise = clamp(metres / 4000.0, 0.0, 1.0);
         vec3 low = mix(decode(vec3(0.58, 0.49, 0.37)), decode(vec3(0.27, 0.53, 0.27)), vegetation);
         vec3 mid = mix(decode(vec3(0.70, 0.60, 0.47)), decode(vec3(0.78, 0.70, 0.45)), vegetation);
-        vec3 high = decode(vec3(0.95, 0.95, 0.95));
+        // Grey at the top, not white: white is the ice layer's, and Tibet is not ice.
+        vec3 high = decode(vec3(0.80, 0.77, 0.72));
         vec3 ground = rise < 0.35 ? mix(low, mid, rise / 0.35) : mix(mid, high, (rise - 0.35) / 0.65);
         return mix(sea, ground, landness);
       }

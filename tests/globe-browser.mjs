@@ -501,8 +501,13 @@ try {
     await expect(demGlobe).toHaveAttribute('data-sealevel', '0');
     await dem.locator('#temperature').click();
     await expect(demGlobe).toHaveAttribute('data-surface', 'temp');
+    // The colour key shows with the temperature surface, with the stop's distance from
+    // today's mean filled in; the present stop is 0.0 from itself.
+    await expect(dem.locator('#temp-legend')).toBeVisible();
+    await expect(dem.locator('#temp-legend')).toHaveAttribute('data-delta', /^-?\d+\.\d$/);
     await dem.locator('#temperature').click();
     await expect(demGlobe).toHaveAttribute('data-surface', 'relief');
+    await expect(dem.locator('#temp-legend')).toBeHidden();
     await dem.locator('#surface').click();
     await expect(demGlobe).toHaveAttribute('data-surface', 'mask');
     await dem.locator('#surface').click();
@@ -510,6 +515,18 @@ try {
     await dem.locator('#ice').click();
     await expect(demGlobe).toHaveAttribute('data-ice', 'false');
     await dem.locator('#ice').click();
+    // Past ice: the 300 Ma grid carries the sheet the atlas paints there, the 200 Ma grid none.
+    await dem.locator('#era').selectOption(String(demFrames.findIndex(frame => frame.id === 'paleodem-3000')));
+    await expect(demGlobe).toHaveAttribute('data-frame', 'paleodem-3000');
+    await expect(demGlobe).toHaveAttribute('aria-busy', 'false');
+    await expect(demGlobe).toHaveAttribute('data-ice', 'true');
+    await expect(dem.locator('#ice-note')).toBeVisible();
+    await dem.locator('#era').selectOption(String(demFrames.findIndex(frame => frame.id === 'paleodem-2000')));
+    await expect(demGlobe).toHaveAttribute('data-frame', 'paleodem-2000');
+    await expect(demGlobe).toHaveAttribute('aria-busy', 'false');
+    await expect(demGlobe).toHaveAttribute('data-ice', 'false');
+    await dem.locator('#era').selectOption(String(demFrames.length - 1));
+    await expect(demGlobe).toHaveAttribute('data-frame', 'paleodem-0000');
     // The fossil coastlines are offered over the grids as over the atlas.
     await dem.locator('#coastline').check();
     await expect.poll(async () => Number(await demGlobe.getAttribute('data-coastlines'))).toBeGreaterThan(0);

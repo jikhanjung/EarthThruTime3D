@@ -289,6 +289,7 @@ def viewer_strings():
         "meanTemperature": _("전 지구 평균 기온 약 {value} °C{between}"),
         "meanTemperatureBetween": _(" (보간)"),
         "meanTemperatureNone": _("전 지구 평균 기온: 자료 없음 (540 Ma 이전)"),
+        "meanTemperatureDelta": _(" · 현재보다 {delta} °C"),
         "seaLevel": _("장기 해수면 약 {value} (현재 대비){offset}"),
         "seaLevelOffset": _(" · 표시 보정 {value}"),
         "seaLevelNone": _("장기 해수면: 자료 없음 (540 Ma 이전)"),
