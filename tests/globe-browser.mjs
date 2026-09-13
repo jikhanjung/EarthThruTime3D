@@ -501,8 +501,13 @@ try {
     await expect(demGlobe).toHaveAttribute('data-sealevel', '0');
     await dem.locator('#temperature').click();
     await expect(demGlobe).toHaveAttribute('data-surface', 'temp');
+    // The colour key shows with the temperature surface, with the stop's distance from
+    // today's mean filled in; the present stop is 0.0 from itself.
+    await expect(dem.locator('#temp-legend')).toBeVisible();
+    await expect(dem.locator('#temp-legend')).toHaveAttribute('data-delta', /^-?\d+\.\d$/);
     await dem.locator('#temperature').click();
     await expect(demGlobe).toHaveAttribute('data-surface', 'relief');
+    await expect(dem.locator('#temp-legend')).toBeHidden();
     await dem.locator('#surface').click();
     await expect(demGlobe).toHaveAttribute('data-surface', 'mask');
     await dem.locator('#surface').click();

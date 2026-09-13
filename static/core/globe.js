@@ -301,6 +301,7 @@ async function selectStop(value, manual = false) {
   }
   if (temperatureToggle) temperatureToggle.setAttribute('aria-pressed', String(heated));
   if ($('temp-note')) $('temp-note').hidden = !heated;
+  if ($('temp-legend')) $('temp-legend').hidden = !heated;
   showMeanTemperature(place);
   // Decided here, synchronously, so the readout and the shader agree at every stop.
   const seaOffset = seaLevelOffset(place, fielded);
@@ -557,9 +558,23 @@ function showMeanTemperature(place) {
     if (from != null && to != null) value = from + (to - from) * place.blend;
     else if (place.blend === 0 && from != null) value = from;
   }
-  out.textContent = value == null
+  let text = value == null
     ? L.meanTemperatureNone
     : fmt(L.meanTemperature, { value: value.toFixed(1), between: place.blend > 0 ? L.meanTemperatureBetween : '' });
+  // The colour key: today's global mean as a fixed tick, this stop's mean as a marker,
+  // both on the shader's -30..40 C ramp, and the readout says how far from today.
+  const legend = $('temp-legend');
+  if (legend) {
+    const today = frames.find(frame => frame.age === 0 && frame.mean_c != null)?.mean_c ?? null;
+    const along = celsius => `${(Math.max(0, Math.min(1, (celsius + 30) / 70)) * 100).toFixed(1)}%`;
+    if (today != null) $('temp-today').style.left = along(today);
+    $('temp-now').hidden = value == null;
+    if (value != null) $('temp-now').style.left = along(value);
+    const delta = value != null && today != null ? value - today : null;
+    legend.dataset.delta = delta == null ? '' : delta.toFixed(1);
+    if (delta != null) text += fmt(L.meanTemperatureDelta, { delta: (delta < 0 ? '−' : '+') + Math.abs(delta).toFixed(1) });
+  }
+  out.textContent = text;
   stage.dataset.meanTemp = value == null ? '' : value.toFixed(1);
 }
 // The strip above the slider: one column per stop, coloured by the global mean at that

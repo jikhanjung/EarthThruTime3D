@@ -15,7 +15,7 @@
     <p class="gesture" id="gesture">{% trans "드래그로 회전 · 스크롤 / 핀치로 확대" %}</p>
   </section>
   <aside class="inspector">
-    <p class="eyebrow">SELECTED TIME</p><h2 id="period">{% trans "현재" %}</h2><p id="age" class="age">0 <span>Ma</span></p><p id="source-title">Modern World</p>{% if temperature_available %}<p id="mean-temp" class="mean-temp"></p>{% endif %}{% if sealevel_available %}<p id="sea-level" class="mean-temp"></p>{% endif %}
+    <p class="eyebrow">SELECTED TIME</p><h2 id="period">{% trans "현재" %}</h2><p id="age" class="age">0 <span>Ma</span></p><p id="source-title">Modern World</p>{% if temperature_available %}<p id="mean-temp" class="mean-temp"></p><figure id="temp-legend" class="temp-legend" aria-label="{% trans '기온 색 범례' %}" hidden><div class="temp-bar"><span id="temp-today" class="temp-mark today"><span>{% trans "현재" %}</span></span><span id="temp-now" class="temp-mark now" hidden></span></div><figcaption><span>−30 °C</span><span>0</span><span>20</span><span>40 °C</span></figcaption></figure>{% endif %}{% if sealevel_available %}<p id="sea-level" class="mean-temp"></p>{% endif %}
     <label for="era">{% trans "지질시대 선택" %}</label><select id="era"></select>
     <div class="step-buttons"><button id="older">{% trans "← 더 과거" %}</button><button id="newer">{% trans "더 현재 →" %}</button></div>
 {% if mask.relief %}    <label for="shading">{% trans "지형 음영" %}</label><select id="shading" autocomplete="off"><option value="0">{% trans "음영 없음" %}</option><option value="1" selected>{% trans "실제 기복" %}</option><option value="5">{% trans "기복 ×5" %}</option><option value="20">{% trans "기복 ×20" %}</option></select>

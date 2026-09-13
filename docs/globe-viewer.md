@@ -148,7 +148,11 @@ a dark line so the continents stay readable. Between stops the two maps are mixe
 the fields. Above the slider a strip colours every stop by the global mean at its age,
 linear between maps and grey where none reaches, over 5 to 35 °C so an icehouse reads
 blue; the inspector reads out the mean at the current stop, interpolated between the
-neighbouring maps' means when the stop is between them.
+neighbouring maps' means when the stop is between them, and adds its difference from
+today's mean. Under the readout a colour key draws the surface ramp with its −30, 0, 20
+and 40 °C marks, today's global mean as a white tick and the stop's mean as a marker,
+so a colour on the globe can be read against the present. It shows only while the
+temperature surface does; `data-delta` on the key carries the difference for tests.
 
 These are model fields nudged to proxies, not observations, and the note says so. The
 global mean is this project's own reduction of the published maps. PhanDA (Judd et al.

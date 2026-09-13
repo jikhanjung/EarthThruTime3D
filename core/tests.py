@@ -615,6 +615,7 @@ class PaleodemTests(TestCase):
         self.assertEqual(response.context['temperature_curve'], [])
         self.assertNotContains(response, 'id="temperature"')
         self.assertNotContains(response, 'id="temp-strip"')
+        self.assertNotContains(response, 'id="temp-legend"')
         item = globe_module.catalogue('paleodem2018')['maps'][-1]
         Path(self.dem.name, 'paleotemp-curve.json').write_text(json.dumps(
             {"curve": [[540, 27.5], [0, 14.3]], "stops": {item['id']: {"map_ma": 0, "mean_c": 14.31}}}))
@@ -627,7 +628,8 @@ class PaleodemTests(TestCase):
         self.assertEqual(frames[item['id']]['mean_c'], 14.31)
         self.assertIsNone(frames['paleoatlas-600']['temp'])
         self.assertIsNone(frames['paleoatlas-600']['mean_c'])
-        for needle in ('id="temperature"', 'id="temp-strip"', 'id="mean-temp"', 'zenodo.org/records/8238875'):
+        for needle in ('id="temperature"', 'id="temp-strip"', 'id="mean-temp"', 'id="temp-legend"',
+                       'id="temp-today"', 'zenodo.org/records/8238875'):
             self.assertContains(response, needle)
         self.assertEqual(self.client.get(f"/globe/temps/{item['id']}.png").status_code, 200)
         self.assertEqual(self.client.get('/globe/temps/paleoatlas-600.png').status_code, 404)
