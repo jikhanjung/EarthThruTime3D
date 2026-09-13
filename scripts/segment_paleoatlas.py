@@ -35,8 +35,7 @@ from skimage import measure
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from measure_longitude_offsets import PackedModel  # noqa: E402
-from rotation_model import rotate  # noqa: E402
+from measure_longitude_offsets import PackedModel, ring_points  # noqa: E402
 from segment_landmass import (FIELD_SCALE, FIELD_WIDTH, FIELD_ZERO, PALETTE,  # noqa: E402
                               disc, hsv, thin_only)
 
@@ -164,16 +163,7 @@ def plate_raster(model, age, width, height):
         if turn is None:
             continue
         for ring in feature["rings"]:
-            points, last = [], None
-            for index in range(0, len(ring), 2):
-                longitude, latitude = rotate(turn, ring[index], ring[index + 1])
-                if last is not None:
-                    while longitude - last > 180:
-                        longitude -= 360
-                    while longitude - last < -180:
-                        longitude += 360
-                last = longitude
-                points.append((longitude, latitude))
+            points = ring_points(turn, ring)
             if len(points) < 3:
                 continue
             for shift in (-360, 0, 360):

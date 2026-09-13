@@ -186,7 +186,9 @@ def main():
     archive = dist / f"earththrutime3d-data-{version}.tar.gz"
     with tarfile.open(archive, "w:gz") as bundle:
         for entry in sorted(staging.rglob("*")):
-            bundle.add(entry, arcname=str(entry.relative_to(staging)))
+            # rglob lists directories too; adding one recursively would pack every
+            # file under it a second time when its own turn comes.
+            bundle.add(entry, arcname=str(entry.relative_to(staging)), recursive=False)
     total = sum(file["bytes"] for file in files)
     print(f"Packed {len(files)} files ({total} bytes) into {archive.relative_to(BASE_DIR)}")
 

@@ -16,6 +16,8 @@ from scripts.segment_paleoatlas import (MAX_PLATE_ID, cap_radius, cell_weights, 
                                         classify, group_lookup, group_name, pieces_of,
                                         plate_groups, spherical_centroid, wrapped_labels)
 from scripts.atlas_motions import carry, separation  # noqa: E402
+from scripts.rotation_model import IDENTITY  # noqa: E402
+from scripts.segment_paleoatlas import plate_raster  # noqa: E402
 
 OCEAN = (20, 60, 100)
 SHELF = (150, 205, 235)
@@ -25,6 +27,34 @@ ICE = (225, 228, 232)
 
 def image(height, width, fill):
     return np.tile(np.array(fill, dtype=np.float32), (height, width, 1))
+
+
+class StillModel:
+    """One polygon that never moves, enough to rasterise."""
+    def __init__(self, *rings):
+        self.shapes = [{"pid": 802, "from": 1000.0, "to": 0.0, "rings": list(rings)}]
+
+    def rotation(self, plate, age, anchor=0):
+        return IDENTITY
+
+
+class PolarPolygonTests(unittest.TestCase):
+    def test_a_ring_around_the_pole_fills_the_cap(self):
+        ring = []
+        for longitude in range(-180, 180, 30):
+            ring += [longitude, -70.0]
+        plates = plate_raster(StillModel(ring), 0.0, 360, 180)
+        self.assertEqual(plates[179, 0], 802, "the pole is inside")
+        self.assertEqual(plates[165, 200], 802, "75 S is inside")
+        self.assertEqual(plates[150, 200], 0, "60 S is outside")
+
+    def test_a_ring_across_the_antimeridian_stays_off_the_pole(self):
+        ring = [150.0, -50.0, -150.0, -50.0, -150.0, -70.0, 150.0, -70.0]
+        plates = plate_raster(StillModel(ring), 0.0, 360, 180)
+        self.assertEqual(plates[150, 359], 802, "60 S at 179.5 E is inside")
+        self.assertEqual(plates[150, 0], 802, "60 S at 179.5 W is inside")
+        self.assertEqual(plates[150, 180], 0, "60 S at 0.5 E is outside")
+        self.assertEqual(plates[179, 0], 0, "the pole is outside")
 
 
 class ClassifyTests(unittest.TestCase):

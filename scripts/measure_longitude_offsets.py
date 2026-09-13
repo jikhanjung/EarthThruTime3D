@@ -101,6 +101,32 @@ class PackedModel:
         return None if frame is None else multiply(conjugate(frame), total)
 
 
+def ring_points(turn, ring):
+    """A polygon ring rotated by `turn`, as (longitude, latitude) pairs ready to fill.
+
+    Unwrapped, so a ring crossing the antimeridian is drawn whole. A fill closes a ring
+    with a straight edge from its last vertex back to its first; for a ring that winds
+    all the way around a pole the unwrapped last vertex sits a full turn from the first,
+    so that edge is a chord across the whole map and the cap between the ring and the
+    pole is left empty. Antarctica lost everything south of about 78 S that way. Two more
+    vertices along the polar edge close such a ring around the pole instead.
+    """
+    points, last = [], None
+    for index in range(0, len(ring), 2):
+        longitude, latitude = rotate(turn, ring[index], ring[index + 1])
+        if last is not None:
+            while longitude - last > 180:
+                longitude -= 360
+            while longitude - last < -180:
+                longitude += 360
+        last = longitude
+        points.append((longitude, latitude))
+    if len(points) >= 3 and abs(points[-1][0] - points[0][0]) > 180:
+        pole = 90.0 if sum(latitude for _, latitude in points) > 0 else -90.0
+        points += [(points[-1][0], pole), (points[0][0], pole)]
+    return points
+
+
 def rasterise(model, age, anchor=0):
     canvas = Image.new("L", (3 * WIDTH, HEIGHT), 0)
     draw = ImageDraw.Draw(canvas)
@@ -111,17 +137,7 @@ def rasterise(model, age, anchor=0):
         if turn is None:
             continue
         for ring in feature["rings"]:
-            points, last = [], None
-            for index in range(0, len(ring), 2):
-                longitude, latitude = rotate(turn, ring[index], ring[index + 1])
-                if last is not None:
-                    # Unwrap, so a ring crossing the antimeridian is drawn whole.
-                    while longitude - last > 180:
-                        longitude -= 360
-                    while longitude - last < -180:
-                        longitude += 360
-                last = longitude
-                points.append((longitude, latitude))
+            points = ring_points(turn, ring)
             if len(points) < 3:
                 continue
             for shift in (-360, 0, 360):
