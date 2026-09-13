@@ -81,9 +81,21 @@
 경도를 물리적으로 붙잡지 않고 고지자기 기준틀에 관례만 더하는 방법이다. Merdith et al.
 (2021) 자료의 readme는 이 모델이 "purely palaeomagnetic reference frame"에 있다고 적는다.
 Müller et al.(2022) readme는 기후와 관련된 분석에는 고지자기 기준틀을 쓰라고 권한다.
-[Jones & Domeier 2024][jones2024]는 다섯 판 모델(Wright 2013, Matthews 2016, Torsvik & Cocks 2016,
-Scotese 2016, Merdith 2021)의 고(古)위도를 1백만 년 간격 격자로 계산한 자료를 고지자기 기준틀에서 만들어 공개했다. 위도가 필요한
-분석에는 경도 가설이 섞이지 않은 기준틀을 쓴다는 같은 판단이다.
+[Jones & Domeier 2024][jones2024]는 다섯 판 모델(Wright et al. 2013, Matthews et al. 2016,
+Torsvik & Cocks 2016, Scotese 2016, Merdith et al. 2021)로 대륙 위 격자점의 옛 좌표를 540~0 Ma에 걸쳐
+1백만 년 간격으로 계산해 공개했다. 모두 고지자기 기준틀을 썼고, 그 이유를 이렇게 적었다.
+
+> Often, and especially for palaeoclimatic and palaeobiological investigations, 'true'
+> palaeolatitudes are required. In these cases, GPMs that are provided in the palaeomagnetic
+> reference frame are appropriate. Nevertheless, large spatial differences in palaeogeographic
+> reconstructions between such models can still exist, and palaeogeographic uncertainty should
+> be considered.
+
+같은 글은 "MA16 and TC16 also have a version in the mantle reference frame"이라고 적는다. 즉 T&C에는
+고지자기 기준틀 판이 따로 있고, 이 프로젝트가 가진 CEED6 회전 파일(판 0번과 1번)은 그와 다른
+맨틀 기준틀 판이다. 앞 인용에서 가리키는 두 글은 [Seton et al. 2023][seton2023]의 기술 총설과,
+판 모델 선택이 고생물학 결과를 바꾼다는 [Buffan et al. 2023][buffan2023]이다.
+책 출판 연도는 이 글이 2016, 이 프로젝트의 목록 파일이 2017로 적는다.
 
 ## 3. 쟁점
 
@@ -276,6 +288,8 @@ T&C 위도에서 Merdith 위도를 뺀 값을, 판 0번과 판 1번 기준으로
 - Müller, R. D., et al., 2022. A tectonic-rules-based mantle reference frame since 1 billion years ago – implications for supercontinent cycles and plate–mantle system evolution. Solid Earth, 13, 1127–1159. <https://se.copernicus.org/articles/13/1127/2022/>
 - Wagenaar, S., Vaes, B., and van Hinsbergen, D. J. J., 2025. Journal of Geophysical Research: Solid Earth (minimum-continent-motion reference frame). <https://doi.org/10.1029/2024JB030430>
 - Jones, L. A., and Domeier, M., 2024. A Phanerozoic gridded dataset for palaeogeographic reconstructions. Scientific Data, 11, 710. <https://doi.org/10.1038/s41597-024-03468-w>
+- Seton, M., Williams, S., Domeier, M., Collins, A., and Sigloch, K., 2023. Deconstructing plate tectonic reconstructions. Nature Reviews Earth & Environment, 4, 185–204. <https://doi.org/10.1038/s43017-022-00384-8>
+- Buffan, L., Jones, L. A., Domeier, M., Scotese, C. R., Zahirovic, S., and Varela, S., 2023. Mind the uncertainty: Global plate model choice impacts deep-time palaeobiological studies. Methods in Ecology and Evolution, 14, 3007–3019. <https://doi.org/10.1111/2041-210X.14204>
 - Conrad, C. P., Steinberger, B., and Torsvik, T. H., 2013. Stability of active mantle upwelling revealed by net characteristics of plate tectonics. Nature, 498, 479–482. <https://pubmed.ncbi.nlm.nih.gov/23803848/>
 - Rudolph, M. L., and Zhong, S., 2013. Does quadrupole stability imply LLSVP fixity? Nature, 503, E3–E4. <https://www.nature.com/articles/nature12792>
 - Conrad, C. P., Steinberger, B., and Torsvik, T. H., 2013. Conrad et al. reply. Nature, 503. <https://www.nature.com/articles/nature12793>
@@ -302,6 +316,8 @@ T&C 위도에서 Merdith 위도를 뺀 값을, 판 0번과 판 1번 기준으로
 [muller2022]: https://se.copernicus.org/articles/13/1127/2022/
 [wagenaar2025]: https://doi.org/10.1029/2024JB030430
 [jones2024]: https://doi.org/10.1038/s41597-024-03468-w
+[seton2023]: https://doi.org/10.1038/s43017-022-00384-8
+[buffan2023]: https://doi.org/10.1111/2041-210X.14204
 [conrad2013]: https://pubmed.ncbi.nlm.nih.gov/23803848/
 [quadrupole-comment]: https://www.nature.com/articles/nature12792
 [quadrupole-reply]: https://www.nature.com/articles/nature12793
