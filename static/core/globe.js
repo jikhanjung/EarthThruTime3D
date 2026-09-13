@@ -1127,7 +1127,7 @@ function loadCoastline(entry) {
   }
   return coastlineData.get(entry.age);
 }
-function drawCoastline(entry, rings) {
+function drawCoastline(entry, rings, key = `${entry.age}|${projection}`) {
   const flat = projection !== 'globe';
   const lift = flat ? 0.005 : 0.007;
   const points = [];
@@ -1153,7 +1153,7 @@ function drawCoastline(entry, rings) {
     coastlineLayer.renderOrder = 1;
     earth.add(coastlineLayer);
   }
-  coastlineKey = `${entry.age}|${projection}`;
+  coastlineKey = key;
   lastCoastline = { entry, rings };
   stage.dataset.coastlines = String(rings.length);
   stage.dataset.coastlineAge = String(entry.age);
@@ -1162,6 +1162,7 @@ function hideCoastline() {
   if (coastlineLayer) coastlineLayer.visible = false;
   stage.dataset.coastlines = '0';
   stage.dataset.coastlineAge = '';
+  stage.dataset.coastlineCarried = 'false';
 }
 async function updateCoastlines(place, ticket) {
   const toggle = $('coastline');
@@ -1180,13 +1181,64 @@ async function updateCoastlines(place, ticket) {
   }
   const { rings } = await loadCoastline(entry);
   if (ticket !== request) return;
-  if (coastlineKey !== `${entry.age}|${projection}`) drawCoastline(entry, rings);
+  // Between two maps the surface is carried by the gap's motion field. A coastline
+  // published at either end of the gap rides the same field, so the line and the coast
+  // under it agree; one from outside the gap stays where it was published.
+  const carried = carryRings(rings, entry.age, place);
+  const moved = carried !== rings;
+  const key = `${entry.age}|${projection}` + (moved ? `|${place.from.id}|${place.blend.toFixed(5)}` : '');
+  if (coastlineKey !== key) drawCoastline(entry, carried, key);
   coastlineLayer.visible = true;
   stage.dataset.coastlines = String(rings.length);
   stage.dataset.coastlineAge = String(entry.age);
+  stage.dataset.coastlineCarried = String(moved);
   $('coastline-age').textContent = Math.abs(entry.age - place.age) < 1e-6
     ? fmt(L.coastlineAt, { age: entry.age })
-    : fmt(L.coastlineNearest, { age: entry.age, now: ageLabel(place) });
+    : fmt(moved ? L.coastlineCarried : L.coastlineNearest, { age: entry.age, now: ageLabel(place) });
+}
+// The coastline's rings moved along the current gap's motion field: forward by the
+// blend from the older end, or back by the rest of the way from the newer end. The
+// rings come back untouched when there is nothing to carry them with.
+function carryRings(rings, age, place) {
+  const gap = place.blend > 0 ? motions[frames.indexOf(place.from)] ?? [] : [];
+  const older = Math.abs(age - place.from.age) < 1e-6;
+  const newer = Math.abs(age - place.to.age) < 1e-6;
+  if (!gap.length || (!older && !newer)) return rings;
+  const share = older ? place.blend : -(1 - place.blend);
+  return rings.map((ring) => {
+    const out = new Array(ring.length);
+    for (let index = 0; index < ring.length; index += 2) {
+      const [east, north] = travelAt(ring[index], ring[index + 1], gap);
+      out[index] = ((ring[index] + share * east + 540) % 360) - 180;
+      out[index + 1] = Math.max(-90, Math.min(90, ring[index + 1] + share * north));
+    }
+    return out;
+  });
+}
+// The shader's travel() again, for line geometry: each control point pulls its
+// neighbourhood by the distance its landmass travels across the gap, with a Gaussian
+// falling off over the piece's own angular size. Kept in step with the shader.
+function travelAt(longitude, latitude, gap) {
+  let east = 0;
+  let north = 0;
+  let weight = 0;
+  const count = Math.min(gap.length, MAX_MOTIONS);
+  for (let index = 0; index < count; index++) {
+    const point = gap[index];
+    const eastward = ((longitude - point.lon + 540) % 360) - 180;
+    const northward = latitude - point.lat;
+    const shrink = Math.cos(THREE.MathUtils.degToRad(0.5 * (latitude + point.lat)));
+    const span = Math.hypot(eastward * shrink, northward);
+    const radius = Math.max(point.radius, 1);
+    const pull = Math.exp(-0.5 * span * span / (radius * radius));
+    east += pull * (((point.to_lon - point.lon + 540) % 360) - 180);
+    north += pull * (point.to_lat - point.lat);
+    weight += pull;
+  }
+  if (weight <= 0) return [0, 0];
+  const t = Math.max(0, Math.min(1, (weight - 0.05) / 0.4));
+  const ease = t * t * (3 - 2 * t);
+  return [east / weight * ease, north / weight * ease];
 }
 function createGrid() {
   // Built from longitude and latitude rather than from the mesh, so the same parallels

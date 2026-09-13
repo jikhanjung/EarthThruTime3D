@@ -56,7 +56,13 @@ archive against `sources/paleogeography/paleocoastlines2021.json` and writes one
 age (81 ages, 0-535 Ma, simplified to 0.1 degree) plus an index. The lines are already in
 reconstructed PALEOMAP coordinates, so they are drawn without rotation, in orange, at the
 coastline age nearest the reader's age within 10 Myr; further than that, or older than
-535 Ma, nothing is drawn and the note says why. `/globe/coastlines/<age>.json` serves only
+535 Ma, nothing is drawn and the note says why. Between two maps the surface is carried
+by the gap's motion field, and a coastline published at either end of that gap rides the
+same field (`carryRings`, with `travelAt` as a JavaScript twin of the shader's `travel()`):
+forward by the blend from the older end, back by the rest of the way from the newer end,
+so the line and the coast under it agree and the note says the line was carried. A
+coastline from outside the gap, where both ends are missing from the set, stays where it
+was published. `/globe/coastlines/<age>.json` serves only
 ages the index lists. The layer is not offered over the 2002 maps, whose longitudes drift
 from the PALEOMAP frame. Where the orange line runs inside the mask's edge, marine fossils
 say that ground was sea.

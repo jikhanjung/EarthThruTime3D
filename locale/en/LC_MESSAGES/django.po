@@ -690,3 +690,6 @@ msgstr "public domain"
 
 msgid "현재 시점의 빙하·빙상과 남극 빙붕은 <a href=\"https://www.naturalearthdata.com/\" target=\"_blank\" rel=\"noopener\">Natural Earth</a> 10 m 자료(공공 영역)를 격자에 옮긴 것입니다. 과거 시점의 빙하 윤곽은 공개된 자료가 없어 그리지 않습니다. 5 Ma로 가면서 빙하가 옅어지는 것은 자료가 없어서이지 빙하가 없어서가 아닙니다. 서남극 빙상은 해수면 아래 기반암 위에 얹혀 있어, 격자가 바다로 그리는 곳 위에도 빙하가 놓입니다."
 msgstr "Today's glaciers, ice sheets and Antarctic ice shelves are <a href=\"https://www.naturalearthdata.com/\" target=\"_blank\" rel=\"noopener\">Natural Earth</a> 10 m data (public domain) placed on the grid. No open outline of past ice exists, so none is drawn. The fade toward 5 Ma means missing data, not ice loss. The West Antarctic ice sheet rests on bedrock below sea level, so ice is drawn over places the grid shows as ocean."
+
+msgid "{age} Ma 해안선을 판 운동을 따라 {now}까지 옮겨 그렸습니다."
+msgstr "The {age} Ma coastline, carried by the plate motion to {now}."

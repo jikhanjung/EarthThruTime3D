@@ -319,6 +319,7 @@ def viewer_strings():
         "noCoastline": _("{age}에서 {reach} Myr 안에 해안선 자료가 없습니다. 자료는 0~{oldest} Ma입니다."),
         "coastlineAt": _("{age} Ma 해안선"),
         "coastlineNearest": _("가장 가까운 {age} Ma 해안선을 그렸습니다 (지금 {now})."),
+        "coastlineCarried": _("{age} Ma 해안선을 판 운동을 따라 {now}까지 옮겨 그렸습니다."),
         "contextLost": _("그래픽 연결이 끊겼습니다. 페이지를 새로고침해 주세요."),
         "oldestNoMap": _("{age} Ma · 지도 없음"),
         "oldestPast": _("{age} Ma · 과거"),

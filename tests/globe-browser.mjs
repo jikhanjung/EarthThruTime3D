@@ -478,6 +478,11 @@ try {
       await expect(demGlobe).toHaveAttribute('aria-busy', 'false');
       expect(Number(await demGlobe.getAttribute('data-motions'))).toBeGreaterThan(0);
       await expect(demGlobe).toHaveAttribute('data-surface', 'relief');
+      // The coastline of the gap's older end rides the same motion field as the surface.
+      await dem.locator('#coastline').check();
+      await expect.poll(async () => await demGlobe.getAttribute('data-coastline-carried')).toBe('true');
+      await expect(dem.locator('#coastline-age')).toContainText('옮겨');
+      await dem.locator('#coastline').uncheck();
       await dem.screenshot({path:'data/screenshots/globe-elevation-halfway.png', fullPage:false});
       await dem.locator('#era').selectOption(String(demFrames.length - 1));
       await expect(demGlobe).toHaveAttribute('data-frame', 'paleodem-0000');
