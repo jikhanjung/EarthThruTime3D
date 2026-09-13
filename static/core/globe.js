@@ -297,6 +297,10 @@ async function selectStop(value, manual = false) {
       uniforms.blank.value = 0;
     }
     uniforms.mode.value = relief ? 2 : masked ? 1 : 0;
+    if (!place.mapless) {
+      uniforms.texel.value.set(1 / uniforms.surfaceA.value.image.width, 1 / uniforms.surfaceA.value.image.height);
+      uniforms.vegetation.value = vegetationAt(place.age);
+    }
     applyMotion(place);
     surfaceMesh.visible = true;
     lastPlace = place;
@@ -331,6 +335,11 @@ async function selectStop(value, manual = false) {
     setPlaying(false);
     console.error(error);
   }
+}
+// Land plants appear in the Ordovician, about 470 Ma, and forests by the Middle
+// Devonian, about 385 Ma. Before that the land is drawn bare; between, the tints blend.
+function vegetationAt(age) {
+  return THREE.MathUtils.clamp((470 - age) / (470 - 385), 0, 1);
 }
 function selectFrame(index, manual = false) {
   return selectStop(frameStops[Math.max(0, Math.min(frames.length - 1, index))], manual);
@@ -399,6 +408,12 @@ function globeMaterial() {
   uniforms = {
     surfaceA: { value: null }, surfaceB: { value: null },
     blend: { value: 0 }, mode: { value: 0 },
+    // Shaded relief: texel spacing of the bound fields, and how much the slopes are
+    // exaggerated before lighting. 0 switches the shading off.
+    texel: { value: new THREE.Vector2(1 / 2048, 1 / 1024) },
+    exaggeration: { value: 1 },
+    // 1 draws land in vegetated tints, 0 in bare rock. See vegetationAt().
+    vegetation: { value: 1 },
     land: { value: linear(LAND_COLOUR) }, ocean: { value: linear(OCEAN_COLOUR) },
     projection: { value: 0 },
     meridian: { value: 0 },
@@ -423,6 +438,10 @@ function globeMaterial() {
       uniform float blend;
       uniform int mode;
       uniform float blank;
+      uniform vec2 texel;
+      uniform float exaggeration;
+      uniform float vegetation;
+      const float EARTH_RADIUS = 6371000.0;
       uniform vec3 land;
       uniform vec3 ocean;
       const float PI = 3.141592653589793;
@@ -462,14 +481,17 @@ function globeMaterial() {
       }
       // Height and depth as colour, the usual hypsometric convention: shallow to deep
       // blue under water, green through tan to white above it. Which side of the coast
-      // a texel is on comes from the distance field, not from the height alone.
+      // a texel is on comes from the distance field, not from the height alone. Land
+      // plants are Ordovician and forests Devonian, so before that the land is drawn in
+      // bare rock tones rather than green; vegetation blends the two ramps.
       vec3 hypsometric(float metres, float landness) {
         float depth = clamp(-metres / 6000.0, 0.0, 1.0);
         vec3 sea = mix(decode(vec3(0.53, 0.75, 0.90)), decode(vec3(0.05, 0.14, 0.38)), depth);
         float rise = clamp(metres / 4000.0, 0.0, 1.0);
-        vec3 ground = rise < 0.35
-          ? mix(decode(vec3(0.27, 0.53, 0.27)), decode(vec3(0.78, 0.70, 0.45)), rise / 0.35)
-          : mix(decode(vec3(0.78, 0.70, 0.45)), decode(vec3(0.95, 0.95, 0.95)), (rise - 0.35) / 0.65);
+        vec3 low = mix(decode(vec3(0.58, 0.49, 0.37)), decode(vec3(0.27, 0.53, 0.27)), vegetation);
+        vec3 mid = mix(decode(vec3(0.70, 0.60, 0.47)), decode(vec3(0.78, 0.70, 0.45)), vegetation);
+        vec3 high = decode(vec3(0.95, 0.95, 0.95));
+        vec3 ground = rise < 0.35 ? mix(low, mid, rise / 0.35) : mix(mid, high, (rise - 0.35) / 0.65);
         return mix(sea, ground, landness);
       }
       // Height in metres at a pair of field coordinates, one per bound texture. Green
@@ -481,6 +503,20 @@ function globeMaterial() {
         float here = (a.g * 16.0 + a.b) * 255.0 / 4095.0;
         float there = (b.g * 16.0 + b.b) * 255.0 / 4095.0;
         return mix(here, there, blend) * 15000.0 - 9000.0;
+      }
+      // Shaded relief from the height gradient, lit from the upper left. Texel spacing
+      // is converted to metres so a slope is a true slope before exaggeration.
+      float shade(vec2 uvA, vec2 uvB, float latitude) {
+        if (exaggeration <= 0.0) return 1.0;
+        vec2 du = vec2(texel.x, 0.0);
+        vec2 dv = vec2(0.0, texel.y);
+        float east = metresAt(uvA + du, uvB + du) - metresAt(uvA - du, uvB - du);
+        float north = metresAt(uvA + dv, uvB + dv) - metresAt(uvA - dv, uvB - dv);
+        float spanEast = 2.0 * texel.x * 2.0 * PI * EARTH_RADIUS * max(cos(radians(latitude)), 0.05);
+        float spanNorth = 2.0 * texel.y * PI * EARTH_RADIUS;
+        vec3 normal = normalize(vec3(-east / spanEast * exaggeration, -north / spanNorth * exaggeration, 1.0));
+        vec3 light = normalize(vec3(-0.6, 0.6, 0.55));
+        return 0.45 + 0.55 * clamp(dot(normal, light), 0.0, 1.0);
       }
       // Where on the equirectangular fields this fragment looks. On the sphere the
       // geometry already carries that; on a sheet the projection has to be undone,
@@ -524,7 +560,8 @@ function globeMaterial() {
           float edge = fwidth(distance) + 0.0012;
           float landness = smoothstep(-edge, edge, distance);
           if (mode == 2) {
-            colour = hypsometric(metresAt(uvA, uvB), landness);
+            float latitude = (surfaceUv.y - 0.5) * 180.0;
+            colour = hypsometric(metresAt(uvA, uvB), landness) * shade(uvA, uvB, latitude);
           } else {
             colour = mix(ocean, land, landness);
           }
@@ -1050,6 +1087,15 @@ function init() {
   }
   if ($('coastline')) $('coastline').addEventListener('change', () => selectStop(stop, true));
   $('projection').addEventListener('change', () => setProjection($('projection').value));
+  if ($('shading')) {
+    const apply = () => {
+      uniforms.exaggeration.value = Number($('shading').value);
+      stage.dataset.shading = $('shading').value;
+    };
+    $('shading').value = '1';   // the page state is the authority, not a restored control
+    $('shading').addEventListener('change', apply);
+    apply();
+  }
   $('reset').addEventListener('click', resetView);
   stage.addEventListener('keydown', (event) => {
     const keys = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', '+', '=', '-'];

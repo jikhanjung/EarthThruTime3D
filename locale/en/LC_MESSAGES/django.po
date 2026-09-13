@@ -550,8 +550,23 @@ msgstr "Loading the {period} elevation globe…"
 msgid "PALEOMAP PaleoDEM 1° 고도·수심 격자(Scotese &amp; Wright 2018, CC BY 4.0)를 색으로 칠한 화면입니다. 자료 원본은 <a id=\"source-link\" target=\"_blank\" rel=\"noopener\">Zenodo ↗</a>에 있습니다."
 msgstr "This view colours the PALEOMAP PaleoDEM 1° elevation and bathymetry grids (Scotese &amp; Wright 2018, CC BY 4.0). The source data is on <a id=\"source-link\" target=\"_blank\" rel=\"noopener\">Zenodo ↗</a>."
 
-msgid "해안선은 격자의 0 m 등고선이고 색은 높이와 깊이입니다. 540 Ma 이전은 PaleoAtlas(2016) 지도를 분할한 마스크로 이어지며 높이가 없습니다. 판 운동·기후·해수면을 계산한 모델이 아니라 발표된 복원 격자를 그대로 그린 것입니다."
-msgstr "The coastline is the grid's 0 m contour and the colours are height and depth. Before 540 Ma the timeline continues with masks segmented from the PaleoAtlas (2016) maps, which carry no heights. Nothing here computes plate motion, climate or sea level: it draws the published reconstruction grids as released."
+msgid "지형 음영"
+msgstr "Relief shading"
+
+msgid "음영 없음"
+msgstr "No shading"
+
+msgid "실제 기복"
+msgstr "True relief"
+
+msgid "기복 ×5"
+msgstr "Relief ×5"
+
+msgid "기복 ×20"
+msgstr "Relief ×20"
+
+msgid "해안선은 격자의 0 m 등고선이고 색은 높이와 깊이입니다. 음영은 격자의 경사를 왼쪽 위에서 비춘 것이며 ×5·×20은 경사를 과장한 것입니다. 육상 식물이 퍼진 470~385 Ma 이전의 육지는 식생 없는 바위색으로 칠합니다. 540 Ma 이전은 PaleoAtlas(2016) 지도를 분할한 마스크로 이어지며 높이가 없습니다. 판 운동·기후·해수면을 계산한 모델이 아니라 발표된 복원 격자를 그대로 그린 것입니다."
+msgstr "The coastline is the grid's 0 m contour and the colours are height and depth. Shading lights the grid's slopes from the upper left; ×5 and ×20 exaggerate the slopes. Before land plants spread, 470 to 385 Ma, land is drawn in bare rock tones. Before 540 Ma the timeline continues with masks segmented from the PaleoAtlas (2016) maps, which carry no heights. Nothing here computes plate motion, climate or sea level: it draws the published reconstruction grids as released."
 
 msgid "대륙 마스크 표시 중입니다. 육지와 바다 둘로만 칠한 결과입니다. 고도 격자는 0 m에서 잘랐고, 540 Ma 이전의 PaleoAtlas 지도는 색을 분할해 얻은 해석이라 높이가 없습니다."
 msgstr "Showing the continent mask: land and ocean as two flat colours. The elevation grids are cut at 0 m; the PaleoAtlas maps before 540 Ma are an interpretation segmented from colour and carry no heights."

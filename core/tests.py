@@ -575,6 +575,7 @@ class PaleodemTests(TestCase):
         self.assertTrue(all(frame['field'] == f"/globe/fields/{frame['id']}.png" for frame in frames))
         self.assertEqual(frames[-1]['source'], 'https://zenodo.org/records/5460860')
         self.assertContains(response, 'id="surface"')
+        self.assertContains(response, 'id="shading"')
         self.assertContains(response, 'zenodo.org/records/5460860')
         self.assertContains(response, '?masks=paleoatlas2016')
         self.assertContains(response, '?masks=scotese2002')

@@ -16,6 +16,7 @@
 
 ## 작업 기록
 
+- [036 — 음영 기복과 식생 없는 육지색](20260913_036_relief_shading.md)
 - [035 — PaleoDEM 고도 격자를 세 번째 마스크 소스로](20260913_035_paleodem_elevation.md)
 - [034 — KO|EN 언어 전환](20260913_034_english.md)
 - [033 — 오늘 배포와 정리](20260913_033_releases_and_prune.md)
