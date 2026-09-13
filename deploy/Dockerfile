@@ -35,10 +35,10 @@ COPY scripts/compile_messages.py scripts/compile_messages.py
 COPY manage.py ./
 # Collect at build time: the running container has a read-only root filesystem, and a
 # build-time failure is better than a first-request one.
-RUN SECRET_KEY=build-only-not-a-runtime-secret-000000000000000000000000000000 \
+RUN python scripts/compile_messages.py \
+    && SECRET_KEY=build-only-not-a-runtime-secret-000000000000000000000000000000 \
     ALLOWED_HOSTS=localhost SECURE_SSL_REDIRECT=false \
-    python scripts/compile_messages.py \
-    && python manage.py collectstatic --noinput \
+    python manage.py collectstatic --noinput \
     && SECRET_KEY=build-only-not-a-runtime-secret-000000000000000000000000000000 \
     ALLOWED_HOSTS=localhost python manage.py check \
     && mkdir -p /var/lib/earththrutime3d \
