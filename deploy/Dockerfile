@@ -1,6 +1,6 @@
 FROM python:3.12-slim
 
-ARG APP_VERSION=v0.8.0
+ARG APP_VERSION=v0.8.1
 ARG VCS_REF=unknown
 LABEL org.opencontainers.image.title="EarthThruTime3D" \
       org.opencontainers.image.version=$APP_VERSION \

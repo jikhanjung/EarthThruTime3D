@@ -1,6 +1,6 @@
 # EarthThruTime3D Docker 배포
 
-이미지: **`honestjung/earththrutime3d:v0.8.0`**, 플랫폼 `linux/amd64`.
+이미지: **`honestjung/earththrutime3d:v0.8.1`**, 플랫폼 `linux/amd64`.
 `../hanyang3d/deploy`의 Gunicorn·버전 이미지·Compose·상태 확인 구성을 참고했고,
 데이터베이스가 있는 서비스이므로 백업과 복구 단계를 더했다.
 
@@ -11,7 +11,7 @@
 - 지구본: https://earththrutime.nopeoplestime.info/
 - 프로젝트 소개: https://earththrutime.nopeoplestime.info/about/
 - 상태 확인: https://earththrutime.nopeoplestime.info/healthz
-- 이미지 ID: `sha256:aca6840b07b0efa369b0ac0f5682bb6d9795ba82949b6ffb770252f56b9f8add`
+- 이미지 ID: `sha256:a99eb178be051ee95dfacb59e55291a25b8d482d16b161d8ce15fcf10eb265f4`
 
 호스트 Nginx의 전용 사이트가 컨테이너의 8014 포트로 연결된다. HTTP는 HTTPS로 보낸다.
 Let's Encrypt 인증서와 webroot 자동 갱신을 설정했고 갱신 후 `nginx -t && systemctl reload nginx`를
@@ -43,8 +43,8 @@ Let's Encrypt 인증서와 webroot 자동 갱신을 설정했고 갱신 후 `ngi
 
 | 동작 | 명령 |
 |---|---|
-| preflight·build | `bash deploy/build.sh v0.8.0` (개발 호스트) |
-| deploy | `bash /srv/earththrutime3d/deploy.sh v0.8.0` |
+| preflight·build | `bash deploy/build.sh v0.8.1` (개발 호스트) |
+| deploy | `bash /srv/earththrutime3d/deploy.sh v0.8.1` |
 | backup | `bash /srv/earththrutime3d/backup.sh` |
 | smoke | `bash /srv/earththrutime3d/smoke.sh` |
 | rollback | `bash /srv/earththrutime3d/deploy.sh <이전 버전>` |
@@ -60,10 +60,10 @@ Let's Encrypt 인증서와 webroot 자동 갱신을 설정했고 갱신 후 `ngi
 생성 파일(Git 제외):
 
 ```text
-dist/earththrutime3d-image-v0.8.0.tar.gz
-dist/earththrutime3d-data-v0.8.0.tar.gz
-dist/earththrutime3d-host-v0.8.0.tar.gz
-dist/SHA256SUMS-v0.8.0
+dist/earththrutime3d-image-v0.8.1.tar.gz
+dist/earththrutime3d-data-v0.8.1.tar.gz
+dist/earththrutime3d-host-v0.8.1.tar.gz
+dist/SHA256SUMS-v0.8.1
 ```
 
 ## dolfinid 최초 설치
@@ -76,25 +76,25 @@ Compose 5.5.1. 기존 서비스와 분리해 `/srv/earththrutime3d`, **`127.0.0.
 
 ```bash
 ssh dolfinid 'mkdir -p ~/earththrutime3d-release'
-scp dist/earththrutime3d-*-v0.8.0.tar.gz dist/SHA256SUMS-v0.8.0 dolfinid:~/earththrutime3d-release/
+scp dist/earththrutime3d-*-v0.8.1.tar.gz dist/SHA256SUMS-v0.8.1 dolfinid:~/earththrutime3d-release/
 ```
 
 서버에서:
 
 ```bash
 cd ~/earththrutime3d-release
-sha256sum -c SHA256SUMS-v0.8.0
-docker load -i earththrutime3d-image-v0.8.0.tar.gz
+sha256sum -c SHA256SUMS-v0.8.1
+docker load -i earththrutime3d-image-v0.8.1.tar.gz
 sudo install -d -o "$(id -un)" -g "$(id -gn)" /srv/earththrutime3d
-tar -xzf earththrutime3d-host-v0.8.0.tar.gz -C /srv/earththrutime3d
-mkdir -p /srv/earththrutime3d/data/v0.8.0 /srv/earththrutime3d/db \
+tar -xzf earththrutime3d-host-v0.8.1.tar.gz -C /srv/earththrutime3d
+mkdir -p /srv/earththrutime3d/data/v0.8.1 /srv/earththrutime3d/db \
          /srv/earththrutime3d/backups /srv/earththrutime3d/acme
-tar -xzf earththrutime3d-data-v0.8.0.tar.gz -C /srv/earththrutime3d/data/v0.8.0
+tar -xzf earththrutime3d-data-v0.8.1.tar.gz -C /srv/earththrutime3d/data/v0.8.1
 cd /srv/earththrutime3d
 cp .env.django.example .env.django && chmod 600 .env.django
 # SECRET_KEY를 충분히 긴 무작위 값으로 바꾼다. 값은 출력하지 않는다.
 sudo chown -R 10001:10001 db backups   # 컨테이너가 쓰는 유일한 경로
-bash deploy.sh v0.8.0
+bash deploy.sh v0.8.1
 ```
 
 Nginx는 ACME 검증을 위해 HTTP 전용 설정을 먼저 올리고, 인증서를 받은 뒤 전체 설정으로 바꾼다.
@@ -116,14 +116,15 @@ sudo certbot certonly --webroot --webroot-path /srv/earththrutime3d/acme \
 
 ## 접근 키
 
-`ACCESS_KEY`를 채우면 사이트가 닫힌다. 첫 접속에서 한 번 묻고, 맞으면 세션에 기록해 30일
-동안 다시 묻지 않는다. 계정이 아니라 공유 키 하나이며, 키를 가진 사람은 모두 같은 방문자다.
-`/healthz`와 `/static/`은 열어 둔다. 컨테이너 자체 검사가 앞의 것을 쓰고, 뒤의 것은 키가
-지키는 내용을 담지 않는다.
+사이트 자체는 열려 있다. 키는 게시를 허락받지 못한 자료 하나를 여는 데만 쓴다.
 
-이 스위치가 자료 공개 범위와도 연결된다. 이용 조건이 게시를 허락하지 않는 판 모델은
-목록 파일에 `publish: false`로 적히고, 키가 설정된 배포에서만 제공된다. 열린 사이트에서는
-목록에도 나오지 않고 경로도 404다.
+이용 조건이 없는 판 모델은 목록 파일에 `publish: false`로 적는다. `ACCESS_KEY`가 설정된
+배포에서는 드롭다운에 나오되 잠겨 있고, 고르면 그 자리에서 키를 묻는다. 화면을 떠나지
+않으므로 보고 있던 시대와 시점이 그대로 남는다. 맞으면 세션에 기록해 30일 동안 묻지
+않는다. `ACCESS_KEY`가 비어 있으면 그 모델은 목록에도 나오지 않고 경로도 404다.
+
+계정이 아니다. 사용자도 없고 키를 가진 사람은 모두 같은 방문자다. 키는 상수 시간으로
+비교하고, 돌아갈 주소는 내부 경로만 받는다.
 
 ## 백업
 
@@ -144,7 +145,7 @@ sudo certbot certonly --webroot --webroot-path /srv/earththrutime3d/acme \
 | `SECRET_KEY` | 50자 이상. 짧거나 비어 있으면 기동 거부 |
 | `ALLOWED_HOSTS` | 명시 필수. 와일드카드 거부 |
 | `DATABASE_PATH` | 이미지 기본 `/var/lib/earththrutime3d/db.sqlite3` |
-| `ACCESS_KEY` | 공유 접근 키. 비우면 공개, 채우면 첫 접속에 한 번 묻는다 |
+| `ACCESS_KEY` | 비공개 자료를 여는 공유 키. 비우면 그 자료를 아예 제공하지 않는다 |
 | `SCOTESE_VIEWER_ENABLED` | 뷰어 사용 여부 |
 | `SCOTESE_SOURCE_MAPS_PUBLIC` | 원본 지도 제공 여부. 기본 꺼짐 |
 | `SCOTESE_DERIVED_DIR` | 컨테이너 기본 `/runtime/segmentation` |

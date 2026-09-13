@@ -90,3 +90,13 @@ header,main,footer{max-width:1440px}main{padding-top:26px;padding-bottom:32px}.v
 .model-note.hint:not([hidden]){display:block;border-left:2px solid #88dfcc;padding-left:10px;
                                color:#bcd6dd}
 
+
+/* Unlocking happens where the locked thing was chosen, rather than on a page of its own,
+   so the reader does not lose the time and the view they had set up. */
+.model-note .unlock:not([hidden]){display:grid;gap:6px;margin-top:8px;padding:9px 10px;
+                                  border-radius:6px;background:#20313c}
+.model-note .unlock p{margin:0 0 2px;font-size:.74rem;color:#c3d6dd;line-height:1.6}
+.model-note .unlock input{font:inherit;font-size:.8rem;padding:8px 9px;border-radius:6px;
+                          border:1px solid #3a5964;background:#142f3b;color:#dcebee}
+.model-note .unlock button{justify-self:start;padding:8px 14px}
+.model-note .unlock .wrong:not([hidden]){color:#ffb3b3;font-size:.74rem}

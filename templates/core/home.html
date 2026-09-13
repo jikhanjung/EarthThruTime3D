@@ -27,6 +27,14 @@
     <div class="model-note derived" id="plate-note" hidden>
       <p>겹쳐 그린 분홍 선은 다른 자료입니다. 판 회전 모델로 같은 시각의 대륙을 재구성한 것이며, Scotese 지도를 분할한 결과와는 출처도 방법도 다릅니다. 두 선이 어긋나는 것은 두 모델이 다르기 때문입니다.</p>
       <p class="cite" id="plate-frame"></p>
+      <form class="unlock" id="plate-unlock" method="post" action="{% url 'access-gate' %}" hidden>
+        {% csrf_token %}
+        <p>이 모델은 이용 조건이 없어 공개하지 않습니다. 키를 넣으면 이 브라우저에서 볼 수 있습니다.</p>
+        <label for="plate-key">접근 키</label>
+        <input type="password" id="plate-key" name="key" autocomplete="off" spellcheck="false">
+        <button type="submit">잠금 해제</button>
+        <span class="wrong" id="unlock-wrong" hidden role="alert">키가 맞지 않습니다.</span>
+      </form>
       <p class="reach" id="plate-reach" hidden></p>
       <p class="cite" id="plate-note-model"></p>
       <p class="cite" id="plate-cite"></p>

@@ -6,11 +6,6 @@ try {
   const page = await browser.newPage({viewport: {width:1440, height:1100}});
   page.on('pageerror', error => errors.push(error.message));
   await page.goto(process.env.VIEWER_URL || 'http://127.0.0.1:8000/');
-  // A deployment may be closed behind the shared key; pass VIEWER_KEY to get in.
-  if (process.env.VIEWER_KEY && new URL(page.url()).pathname === '/access/') {
-    await page.fill('#key', process.env.VIEWER_KEY);
-    await page.click('button[type=submit]');
-  }
   const globe = page.locator('#globe');
   await expect(globe).toHaveAttribute('data-frame', 'scotese-000');
   await mkdir('data/screenshots', {recursive:true});
@@ -208,15 +203,34 @@ try {
   await expect(globe).toHaveAttribute('aria-busy', 'false');
   await page.locator('#era').selectOption('16');
   await expect(globe).toHaveAttribute('aria-busy', 'false');
+  // Every model the page declares, plus the option of none. The count varies with the
+  // deployment: a model whose licence forbids publication is listed only where a key
+  // exists to unlock it.
+  const declaredModels = await page.locator('#globe-plates').textContent().then(JSON.parse);
+  expect(await page.locator('#plate-overlay option').count()).toBe(declaredModels.length + 1);
+  expect(declaredModels.length).toBeGreaterThanOrEqual(4);
+  // A model whose licence forbids publication is listed but locked, and unlocking
+  // happens in place so the reader keeps the age and the view they had.
+  const restricted = declaredModels.find((model) => model.locked);
+  if (restricted && process.env.VIEWER_KEY) {
+    await page.locator('#plate-overlay').selectOption(restricted.id);
+    await expect(globe).toHaveAttribute('aria-busy', 'false');
+    await expect(page.locator('#plate-unlock')).toBeVisible();
+    await expect(globe).toHaveAttribute('data-plates', '0');
+    await page.fill('#plate-key', 'not-the-key');
+    await page.click('#plate-unlock button');
+    await expect(page.locator('#unlock-wrong')).toBeVisible();
+    await page.fill('#plate-key', process.env.VIEWER_KEY);
+    await page.click('#plate-unlock button');
+    await expect(page.locator('#plate-unlock')).toBeHidden();
+    await expect(globe).toHaveAttribute('aria-busy', 'false');
+    expect(Number(await globe.getAttribute('data-plates'))).toBeGreaterThan(0);
+    console.log('Locked-model unlock passed');
+  }
   await page.locator('#plate-overlay').selectOption('');
   await expect(globe).toHaveAttribute('data-plates', '0');
   await expect(page.locator('#plate-note')).toBeHidden();
   await expect(page.locator('#plate-hint')).toBeVisible();
-  // Every model the page declares, plus the option of none. The count varies with the
-  // deployment: a model whose licence forbids publication appears only behind the key.
-  const declared = await page.locator('#globe-plates').textContent().then(JSON.parse);
-  expect(await page.locator('#plate-overlay option').count()).toBe(declared.length + 1);
-  expect(declared.length).toBeGreaterThanOrEqual(4);
   console.log('Plate reconstruction overlay passed');
   await page.locator('#era').selectOption('8');
   await expect(globe).toHaveAttribute('data-frame','scotese-237');
@@ -259,10 +273,6 @@ try {
   const broken = await browser.newPage();
   await broken.route('**/globe/maps/scotese-000.jpg', route => route.fulfill({status:404}));
   await broken.goto(process.env.VIEWER_URL || 'http://127.0.0.1:8000/');
-  if (process.env.VIEWER_KEY && new URL(broken.url()).pathname === '/access/') {
-    await broken.fill('#key', process.env.VIEWER_KEY);
-    await broken.click('button[type=submit]');
-  }
   await expect(broken.locator('#retry')).toBeVisible();
   await broken.unroute('**/globe/maps/scotese-000.jpg');
   await broken.locator('#retry').click();

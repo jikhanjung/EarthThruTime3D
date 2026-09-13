@@ -5,12 +5,13 @@ from functools import lru_cache
 from pathlib import Path
 
 from django.conf import settings
-from django.http import FileResponse, Http404
+from django.http import FileResponse, Http404, JsonResponse
 from django.shortcuts import render
 from django.urls import reverse
 from django.views.decorators.http import require_safe
 
-from core.access import required as access_key_required
+from core.access import configured as access_key_configured
+from core.access import granted as access_granted
 
 # Visually estimated ellipse extents [left, top, right, bottom] in source pixels.
 # These are a preview calibration, not geodetic control points.
@@ -283,17 +284,17 @@ def plate_path(model, layer):
     return Path(settings.PLATE_MODEL_DIR) / model / f"{layer}.json"
 
 
-def publishable(document):
-    """Whether a model may be offered on this deployment.
-
-    A model whose licence does not permit publication carries publish=false. It is still
-    packed and served locally, but only where the site is closed behind the access key,
-    so it is never handed to the open web.
-    """
-    return document.get("publish", True) or access_key_required()
+def restricted(document):
+    """Whether this model needs the shared key before it may be handed over."""
+    return not document.get("publish", True)
 
 
-def plate_models():
+def offerable(document):
+    """A restricted model is listed only where a key exists to unlock it."""
+    return not restricted(document) or access_key_configured()
+
+
+def plate_models(request=None):
     """Every packed plate model this deployment may offer, with its attribution.
 
     Attribution travels with the URLs because each model carries its own licence and
@@ -303,14 +304,15 @@ def plate_models():
     for path in plate_manifests():
         document = json.loads(path.read_text())
         model = document["id"]
-        if not publishable(document):
+        if not offerable(document):
             continue
         if not all(plate_path(model, layer).exists() for layer in ("rotations", "continents")):
             continue
         available.append({
             "id": model,
             "preferred": bool(document.get("preferred")),
-            "published": bool(document.get("publish", True)),
+            "published": not restricted(document),
+            "locked": restricted(document) and not access_granted(request),
             "title": document["short_title"],
             "short": document.get("menu_title", document["short_title"]),
             "frame": document["reference_frame"],
@@ -359,7 +361,7 @@ def globe(request):
                            "names": landmass_names(pieces_by_frame[item["id"]]),
                            "source": item["page"]["url"]})
     plan = sampling(request)
-    models = plate_models()
+    models = plate_models(request)
     deepest = max((model["covers"][1] for model in models), default=None)
     return render(request, "core/home.html",
                   {"frames": frames, "viewer_enabled": enabled(),
@@ -407,8 +409,11 @@ def plate_file(request, model, layer):
     """Serve one packed plate-model file, by model id and layer name."""
     known = {path.stem: json.loads(path.read_text()) for path in plate_manifests()}
     if (not enabled() or layer not in PLATE_LAYERS or model not in known
-            or not publishable(known[model])):
+            or not offerable(known[model])):
         raise Http404
+    if restricted(known[model]) and not access_granted(request):
+        # Locked rather than absent: the viewer offers to unlock it.
+        return JsonResponse({"locked": True, "unlock": reverse("access-gate")}, status=403)
     try:
         file = plate_path(model, layer).open("rb")
     except FileNotFoundError:

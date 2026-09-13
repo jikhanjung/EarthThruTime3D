@@ -529,9 +529,13 @@ function plateEntry() {
 function showPlates() {
   return Boolean(plateEntry());
 }
+function locked() {
+  const entry = plateEntry();
+  return Boolean(entry && entry.locked);
+}
 async function loadPlateModel() {
   const entry = plateEntry();
-  if (!entry) return null;
+  if (!entry || entry.locked) return null;
   if (!plateData.has(entry.id)) {
     plateData.set(entry.id, (async () => {
       const [rotations, shapes] = await Promise.all([
@@ -596,7 +600,8 @@ function clearPlates() {
   stage.dataset.plates = '0';
 }
 async function updatePlates(place, ticket) {
-  if (!showPlates()) {
+  if ($('plate-unlock')) $('plate-unlock').hidden = !locked();
+  if (!showPlates() || locked()) {
     clearPlates();
     return;
   }
@@ -749,6 +754,25 @@ function init() {
     surfaceToggle.addEventListener('click', () => {
       surface = surface === 'mask' ? 'map' : 'mask';
       surfaceToggle.setAttribute('aria-pressed', String(surface === 'mask'));
+      selectStop(stop, true);
+    });
+  }
+  if ($('plate-unlock')) {
+    // Unlock in place: the reader keeps the age and the view they had set up.
+    $('plate-unlock').addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const form = $('plate-unlock');
+      const response = await fetch(form.action, {
+        method: 'POST',
+        headers: { Accept: 'application/json' },
+        body: new FormData(form),
+      });
+      const granted = response.ok && (await response.json()).granted;
+      $('unlock-wrong').hidden = Boolean(granted);
+      if (!granted) return;
+      for (const model of plates) model.locked = false;
+      $('plate-key').value = '';
+      form.hidden = true;
       selectStop(stop, true);
     });
   }

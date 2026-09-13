@@ -39,9 +39,10 @@ member is read with its `.dbf` for plate ids and valid times.
 **Torsvik and Cocks (2017) is present but unpublished.** Its CEED6 archive downloads
 freely from earthdynamics.org and carries no licence, only the book's copyright notice,
 so there is no permission to redistribute it or anything derived from it. Its manifest
-therefore sets `publish: false`, which means the viewer offers it only where the site is
-closed behind `ACCESS_KEY`. On an open deployment it is absent from the model list and
-its files return 404. Publishing it needs the authors' say-so.
+therefore sets `publish: false`: the viewer lists it where `ACCESS_KEY` is set but keeps
+it locked until the key is entered, and where no key is set it is not offered at all and
+its files return 404. Looking at it is one thing and handing it to the open web is
+another; publishing it needs the authors' say-so.
 
 ```bash
 .venv/bin/python scripts/fetch_plate_model.py               # both, or name one
