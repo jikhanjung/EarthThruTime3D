@@ -276,16 +276,18 @@ T&C 위도에서 Merdith 위도를 뺀 값을, 판 0번과 판 1번 기준으로
 
 ## 출처
 
+내려받은 PDF와 받지 못한 문헌의 목록은 [docs/pdf/README.md](pdf/README.md)에 있다.
+
 - Apparent polar wander. Wikipedia. <https://en.wikipedia.org/wiki/Apparent_polar_wander>
-- Torsvik, T. H., et al., 2012. Phanerozoic polar wander, palaeogeography and dynamics. Earth-Science Reviews, 114. <https://www.sciencedirect.com/science/article/abs/pii/S0012825212000797>
+- Torsvik, T. H., et al., 2012. Phanerozoic polar wander, palaeogeography and dynamics. Earth-Science Reviews, 114, 325–368. <https://www.sciencedirect.com/science/article/abs/pii/S0012825212000797>
 - Burke, K., and Torsvik, T. H., 2004. Derivation of Large Igneous Provinces of the past 200 million years from long-term heterogeneities in the deep mantle. Earth and Planetary Science Letters, 227, 531–538. <https://doi.org/10.1016/j.epsl.2004.09.015>
 - Torsvik, T. H., Smethurst, M. A., Burke, K., and Steinberger, B., 2006. Large igneous provinces generated from the margins of the large low-velocity provinces in the deep mantle. Geophysical Journal International, 167, 1447–1460. <https://doi.org/10.1111/j.1365-246X.2006.03158.x>
-- Burke, K., Steinberger, B., Torsvik, T. H., and Smethurst, M. A., 2008. Plume Generation Zones at the margins of Large Low Shear Velocity Provinces on the core–mantle boundary. Earth and Planetary Science Letters, 265. <https://www.sciencedirect.com/science/article/abs/pii/S0012821X07006036>
+- Burke, K., Steinberger, B., Torsvik, T. H., and Smethurst, M. A., 2008. Plume Generation Zones at the margins of Large Low Shear Velocity Provinces on the core–mantle boundary. Earth and Planetary Science Letters, 265, 49–60. <https://www.sciencedirect.com/science/article/abs/pii/S0012821X07006036>
 - Torsvik, T. H., Burke, K., Steinberger, B., Webb, S. J., and Ashwal, L. D., 2010. Diamonds sampled by plumes from the core–mantle boundary. Nature, 466, 352–355. <https://www.nature.com/articles/nature09216>
-- Torsvik, T. H., van der Voo, R., Doubrovine, P. V., Burke, K., Steinberger, B., et al., 2014. Deep mantle structure as a reference frame for movements in and on the Earth. PNAS, 111. <https://doi.org/10.1073/pnas.1318135111>
+- Torsvik, T. H., van der Voo, R., Doubrovine, P. V., Burke, K., Steinberger, B., et al., 2014. Deep mantle structure as a reference frame for movements in and on the Earth. PNAS, 111, 8735–8740. <https://doi.org/10.1073/pnas.1318135111>
 - Steinberger, B., and Torsvik, T. H., 2008. Absolute plate motions and true polar wander in the absence of hotspot tracks. Nature, 452, 620–623. <https://www.nature.com/articles/nature06824>
 - van der Meer, D. G., Spakman, W., van Hinsbergen, D. J. J., Amaru, M. L., and Torsvik, T. H., 2010. Towards absolute plate motions constrained by lower-mantle slab remnants. Nature Geoscience, 3, 36–40. <https://doi.org/10.1038/ngeo708>
-- Tetley, M. G., Williams, S. E., Gurnis, M., Flament, N., and Müller, R. D., 2019. Constraining absolute plate motions since the Triassic. Journal of Geophysical Research: Solid Earth, 124. <https://doi.org/10.1029/2019JB017442>
+- Tetley, M. G., Williams, S. E., Gurnis, M., Flament, N., and Müller, R. D., 2019. Constraining absolute plate motions since the Triassic. Journal of Geophysical Research: Solid Earth, 124, 7231–7258. <https://doi.org/10.1029/2019JB017442>
 - Müller, R. D., et al., 2022. A tectonic-rules-based mantle reference frame since 1 billion years ago – implications for supercontinent cycles and plate–mantle system evolution. Solid Earth, 13, 1127–1159. <https://se.copernicus.org/articles/13/1127/2022/>
 - Wagenaar, S., Vaes, B., and van Hinsbergen, D. J. J., 2025. Journal of Geophysical Research: Solid Earth (minimum-continent-motion reference frame). <https://doi.org/10.1029/2024JB030430>
 - Jones, L. A., and Domeier, M., 2024. A Phanerozoic gridded dataset for palaeogeographic reconstructions. Scientific Data, 11, 710. <https://doi.org/10.1038/s41597-024-03468-w>
@@ -293,13 +295,13 @@ T&C 위도에서 Merdith 위도를 뺀 값을, 판 0번과 판 1번 기준으로
 - Buffan, L., Jones, L. A., Domeier, M., Scotese, C. R., Zahirovic, S., and Varela, S., 2023. Mind the uncertainty: Global plate model choice impacts deep-time palaeobiological studies. Methods in Ecology and Evolution, 14, 3007–3019. <https://doi.org/10.1111/2041-210X.14204>
 - Conrad, C. P., Steinberger, B., and Torsvik, T. H., 2013. Stability of active mantle upwelling revealed by net characteristics of plate tectonics. Nature, 498, 479–482. <https://pubmed.ncbi.nlm.nih.gov/23803848/>
 - Rudolph, M. L., and Zhong, S., 2013. Does quadrupole stability imply LLSVP fixity? Nature, 503, E3–E4. <https://www.nature.com/articles/nature12792>
-- Conrad, C. P., Steinberger, B., and Torsvik, T. H., 2013. Conrad et al. reply. Nature, 503. <https://www.nature.com/articles/nature12793>
+- Conrad, C. P., Steinberger, B., and Torsvik, T. H., 2013. Conrad et al. reply. Nature, 503, E4. <https://www.nature.com/articles/nature12793>
 - Flament, N., Williams, S., Müller, R. D., Gurnis, M., and Bower, D. J., 2017. Origin and evolution of the deep thermochemical structure beneath Eurasia. Nature Communications, 8, 14164. <https://www.nature.com/articles/ncomms14164>
-- Davaille, A., and Romanowicz, B., 2020. Deflating the LLSVPs: Bundles of mantle thermochemical plumes rather than thick stagnant “piles”. Tectonics, 39. <https://doi.org/10.1029/2020TC006265>
+- Davaille, A., and Romanowicz, B., 2020. Deflating the LLSVPs: Bundles of mantle thermochemical plumes rather than thick stagnant “piles”. Tectonics, 39(10). <https://doi.org/10.1029/2020TC006265>
 - Cucchiaro, A., Flament, N., Arnould, M., et al., 2025. Communications Earth & Environment (large eruptions sourced above mobile basal mantle structures). <https://www.nature.com/articles/s43247-025-02482-z>
 - Austermann, J., Kaye, B. T., Mitrovica, J. X., and Huybers, P., 2014. A statistical analysis of the correlation between large igneous provinces and lower mantle seismic structure. Geophysical Journal International, 197, 1–9. <https://academic.oup.com/gji/article/197/1/1/683265>
-- Davies, D. R., Goes, S., and Sambridge, M., 2015. On the relationship between volcanic hotspot locations, the reconstructed eruption sites of large igneous provinces and deep mantle seismic structure. Earth and Planetary Science Letters, 411. <https://www.sciencedirect.com/science/article/abs/pii/S0012821X14007523>
-- Doubrovine, P. V., Steinberger, B., and Torsvik, T. H., 2016. A failure to reject: Testing the correlation between large igneous provinces and deep mantle structures with EDF statistics. Geochemistry, Geophysics, Geosystems, 17. <https://doi.org/10.1002/2015GC006044>
+- Davies, D. R., Goes, S., and Sambridge, M., 2015. On the relationship between volcanic hotspot locations, the reconstructed eruption sites of large igneous provinces and deep mantle seismic structure. Earth and Planetary Science Letters, 411, 121–130. <https://www.sciencedirect.com/science/article/abs/pii/S0012821X14007523>
+- Doubrovine, P. V., Steinberger, B., and Torsvik, T. H., 2016. A failure to reject: Testing the correlation between large igneous provinces and deep mantle structures with EDF statistics. Geochemistry, Geophysics, Geosystems, 17, 1130–1163. <https://doi.org/10.1002/2015GC006044>
 - Scotese, C. R., 2016. PALEOMAP PaleoAtlas for GPlates and the PaleoData Plotter Program. PALEOMAP Project; GSA North-Central Section abstract. <https://gsa.confex.com/gsa/2016NC/webprogram/Paper275387.html>
 - Torsvik & Cocks 2017, *Earth History and Palaeogeography*, Cambridge University Press. 회전 파일 머리말은 CEED6 묶음에서 읽었다. 목록 파일 `sources/plate-models/torsvikcocks2017.json`.
 - Merdith et al. 2021, Müller et al. 2022 모델 readme. 목록 파일 `sources/plate-models/`.

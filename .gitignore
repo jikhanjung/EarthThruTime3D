@@ -21,3 +21,6 @@ playwright-report/
 dist/
 .build/
 !deploy/host/.env.django.example
+
+# Reference PDFs stay local; only the bibliography is tracked.
+docs/pdf/*.pdf
