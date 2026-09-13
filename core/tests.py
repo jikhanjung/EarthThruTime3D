@@ -285,11 +285,16 @@ class PaleodemTests(TestCase):
         for item in items:
             self.assertRegex(item['id'], r'^paleodem-\d{4}$')
 
-    def test_falls_back_to_scotese_until_the_fields_are_built(self):
+    def test_falls_back_to_scotese_until_every_field_is_built(self):
         self.assertEqual(globe_module.series(RequestFactory().get('/')), 'scotese')
         response = self.client.get('/')
         self.assertEqual(response.context['series'], 'scotese')
-        self.build(globe_module.paleodem_items()[0])
+        items = globe_module.paleodem_items()
+        for item in items[:-1]:
+            self.build(item)
+        self.assertEqual(globe_module.series(RequestFactory().get('/')), 'scotese',
+                         'a partial build has frames that cannot render')
+        self.build(items[-1])
         self.assertEqual(globe_module.series(RequestFactory().get('/')), 'paleodem')
         self.assertEqual(globe_module.series(RequestFactory().get('/?series=scotese')), 'scotese')
         self.assertEqual(globe_module.series(RequestFactory().get('/?series=nope')), 'paleodem')
@@ -308,6 +313,17 @@ class PaleodemTests(TestCase):
         self.assertContains(response, 'id="surface"')
         self.assertContains(response, 'zenodo.org/records/5460860')
         self.assertNotContains(response, 'source-preview')
+
+    def test_health_validates_the_series_actually_served(self):
+        report = self.client.get('/healthz').json()
+        self.assertEqual((report['fields']['series'], report['fields']['expected']), ('scotese', 17))
+        for item in globe_module.paleodem_items():
+            self.build(item)
+        response = self.client.get('/healthz')
+        report = response.json()
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual((report['fields']['series'], report['fields']['expected'],
+                          report['fields']['missing']), ('paleodem', 109, 0))
 
     def test_field_route_serves_a_paleodem_slice(self):
         item = globe_module.paleodem_items()[-1]

@@ -85,10 +85,14 @@ def paleodem_items():
 
 
 def series(request=None):
-    """Which timeline to show. PaleoDEM is preferred but needs its fields built."""
+    """Which timeline to show. PaleoDEM is preferred but needs every field built.
+
+    All or nothing: a frame without a field cannot render on this series, since there
+    is no photographed map to fall back to, so a partial build stays on Scotese.
+    """
     asked = request.GET.get("series") if request is not None else None
     chosen = asked if asked in SERIES else settings.GLOBE_SERIES
-    if chosen == "paleodem" and not any(field_path(item).exists() for item in paleodem_items()):
+    if chosen == "paleodem" and not all(field_path(item).exists() for item in paleodem_items()):
         return "scotese"
     return chosen if chosen in SERIES else "scotese"
 
@@ -285,10 +289,13 @@ def bundle_report():
     """
     if not enabled():
         return {"required": False, "expected": 0, "missing": 0}
-    maps = catalogue()["maps"]
-    missing = [item["id"] for item in maps if not field_path(item).exists()]
-    return {"required": True, "expected": len(maps), "missing": len(missing),
-            "missing_ids": missing[:5]}
+    # Validate the series the viewer actually serves. A configured PaleoDEM series that
+    # is not fully built falls back to Scotese, and the report says so by name.
+    shown = series()
+    items = paleodem_items() if shown == "paleodem" else catalogue()["maps"]
+    missing = [item["id"] for item in items if not field_path(item).exists()]
+    return {"required": True, "series": shown, "expected": len(items),
+            "missing": len(missing), "missing_ids": missing[:5]}
 
 
 @require_safe

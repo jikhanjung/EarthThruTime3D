@@ -253,8 +253,10 @@ view rather than to a photographed map.
 
 `GLOBE_SERIES` picks the series (`paleodem` by default, `scotese` for the 17 web maps);
 `?series=` overrides per request through the same allowlist. A checkout or deployment
-without any PaleoDEM texture falls back to the Scotese series, so the runtime bundle,
-which does not yet pack these textures, keeps serving what it has. The browser check
+without the complete set of PaleoDEM textures falls back to the Scotese series, all or
+nothing, because a frame without a field has no map to fall back to; so the runtime
+bundle, which does not yet pack these textures, keeps serving what it has. `/healthz`
+validates whichever series is served and names it. The browser check
 pins `?series=scotese` because its assertions count that series' names and motions.
 
 Fields are uploaded as raw bytes rather than as decoded images. A Samsung phone was
