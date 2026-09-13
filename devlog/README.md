@@ -16,6 +16,7 @@
 
 ## 작업 기록
 
+- [024 — 2016 PaleoAtlas를 기본 마스크로](20260913_024_atlas_frames.md)
 - [023 — 2016 PaleoAtlas로 육지 마스크 다시 만들기](20260913_023_paleoatlas_masks.md)
 - [022 — Scotese 회전 모델로 경도 비교](20260913_022_paleomap_longitude.md)
 - [021 — 경도 고정 문제 정리](20260913_021_palaeolongitude.md)

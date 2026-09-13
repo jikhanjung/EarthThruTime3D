@@ -122,6 +122,15 @@ INTEGRITY_SENTINEL = Path(DATABASES['default']['NAME']).parent / 'INTEGRITY_FAIL
 SCOTESE_DERIVED_DIR = Path(os.environ.get(
     'SCOTESE_DERIVED_DIR', BASE_DIR / 'data' / 'derived' / 'segmentation'))
 
+# The 2016 PaleoAtlas fields, from scripts/segment_paleoatlas.py. Same layout as above.
+PALEOATLAS_DERIVED_DIR = Path(os.environ.get(
+    'PALEOATLAS_DERIVED_DIR', BASE_DIR / 'data' / 'derived' / 'paleoatlas'))
+
+# Which land masks the globe shows by default: 'paleoatlas2016' (the 2016 atlas, same
+# edition as the PALEOMAP rotation model) or 'scotese2002' (the 2002 web maps). A page
+# can still ask for the other with ?masks=, for comparison.
+MASK_SOURCE = os.environ.get('MASK_SOURCE', 'paleoatlas2016')
+
 # Where the packed EarthByte plate model is read from. Kept apart from the Scotese
 # derivatives: different authors, different licence, different limits.
 PLATE_MODEL_DIR = Path(os.environ.get(

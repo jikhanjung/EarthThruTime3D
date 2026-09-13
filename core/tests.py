@@ -53,9 +53,58 @@ class SiteTests(TestCase):
 
 
 class GlobeTests(TestCase):
+    def test_the_2016_atlas_is_the_default_mask_source(self):
+        with self.settings(SCOTESE_VIEWER_ENABLED=True, SCOTESE_SOURCE_MAPS_PUBLIC=True):
+            response = self.client.get('/')
+        frames = response.context['frames']
+        self.assertEqual(response.context['mask']['id'], 'paleoatlas2016')
+        self.assertEqual(len(frames), 90)
+        self.assertEqual(frames[0]['age'], 750.0)
+        self.assertEqual(frames[-1]['id'], 'paleoatlas-000')
+        ages = [frame['age'] for frame in frames]
+        self.assertEqual(ages, sorted(ages, reverse=True))
+        for frame in frames:
+            # The 2016 rasters are never offered, even where the 2002 maps are public.
+            self.assertIsNone(frame['url'])
+            self.assertIsNone(frame['bounds'])
+            self.assertTrue(frame['label'])
+        self.assertFalse(response.context['source_maps_public'])
+        self.assertNotContains(response, 'id="surface"')
+        self.assertContains(response, '?masks=scotese2002')
+        self.assertEqual(self.client.get('/globe/maps/paleoatlas-000.jpg').status_code, 404)
+
+    def test_the_mask_source_can_be_switched_for_comparison_and_falls_back(self):
+        for asked, expected in (('scotese2002', 'scotese2002'), ('bogus', 'paleoatlas2016'),
+                                (None, 'paleoatlas2016')):
+            request = RequestFactory().get('/', {'masks': asked} if asked else {})
+            self.assertEqual(globe_module.mask_source(request), expected)
+        with self.settings(MASK_SOURCE='scotese2002'):
+            self.assertEqual(globe_module.mask_source(), 'scotese2002')
+        with self.settings(MASK_SOURCE='nonsense'):
+            self.assertEqual(globe_module.mask_source(), 'paleoatlas2016')
+
+    def test_period_labels_follow_the_age_not_the_file_name(self):
+        label = globe_module.period_label
+        self.assertEqual(label({'id': 'paleoatlas-000', 'age_ma': 0.0}), '현재')
+        self.assertEqual(label({'id': 'paleoatlas-lgm', 'age_ma': 0.021}), '최후빙기 최성기')
+        self.assertEqual(label({'id': 'paleoatlas-120', 'age_ma': 120.0}), '전기 백악기')
+        self.assertEqual(label({'id': 'paleoatlas-255', 'age_ma': 255.0}), '후기 페름기')
+        self.assertEqual(label({'id': 'paleoatlas-600', 'age_ma': 600.0}), '에디아카라기')
+        self.assertEqual(label({'id': 'paleoatlas-750', 'age_ma': 750.0}), '토니아기')
+
+    def test_atlas_fields_are_served_by_id(self):
+        with self.settings(SCOTESE_VIEWER_ENABLED=False):
+            self.assertEqual(self.client.get('/globe/fields/paleoatlas-000.png').status_code, 404)
+        with self.settings(SCOTESE_VIEWER_ENABLED=True):
+            if not globe_module.field_path(globe_module.find_map('paleoatlas-000')).exists():
+                self.skipTest('the 2016 atlas has not been segmented in this checkout')
+            response = self.client.get('/globe/fields/paleoatlas-000.png')
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response['Content-Type'], 'image/png')
+
     def test_all_frames_have_calibration_and_local_routes(self):
         with self.settings(SCOTESE_VIEWER_ENABLED=True):
-            response = self.client.get('/')
+            response = self.client.get('/', {'masks': 'scotese2002'})
         frames = response.context['frames']
         self.assertEqual(len(frames), 17)
         self.assertEqual(frames[5]['age'], 356)
@@ -100,7 +149,7 @@ class GlobeTests(TestCase):
 
     def test_frames_carry_named_landmass_points(self):
         with self.settings(SCOTESE_VIEWER_ENABLED=True):
-            frames = self.client.get('/').context['frames']
+            frames = self.client.get('/', {'masks': 'scotese2002'}).context['frames']
         named = {frame['id']: [name['name'] for name in frame['names']] for frame in frames}
         if not any(named.values()):
             self.skipTest('segmentation has not been run in this checkout')
@@ -262,12 +311,13 @@ class GlobeTests(TestCase):
             self.assertNotContains(response, 'id="source-preview"')
             self.assertContains(response, 'scotese.com')
         with self.settings(SCOTESE_VIEWER_ENABLED=True, SCOTESE_SOURCE_MAPS_PUBLIC=True):
-            response = self.client.get('/')
+            response = self.client.get('/', {'masks': 'scotese2002'})
             self.assertTrue(response.context['source_maps_public'])
             self.assertTrue(all(frame['url'] for frame in response.context['frames']))
 
     def test_health_fails_when_the_runtime_bundle_is_missing(self):
-        with self.settings(SCOTESE_VIEWER_ENABLED=True, SCOTESE_DERIVED_DIR='/nonexistent'):
+        with self.settings(SCOTESE_VIEWER_ENABLED=True, SCOTESE_DERIVED_DIR='/nonexistent',
+                           PALEOATLAS_DERIVED_DIR='/nonexistent'):
             response = self.client.get('/healthz')
         self.assertEqual(response.status_code, 503)
         body = response.json()

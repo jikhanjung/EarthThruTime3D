@@ -84,7 +84,8 @@ def main():
                                  + run("docker", "logs", container))
             if report["status"] != "ok" or report["version"] != version:
                 raise SystemExit(f"Unexpected health report: {report}")
-            if report["fields"]["missing"] or report["fields"]["expected"] != 17:
+            if (report["fields"]["missing"] or report["fields"]["expected"] != 90
+                    or report["fields"].get("source") != "paleoatlas2016"):
                 raise SystemExit(f"Land fields not served: {report['fields']}")
 
             home = fetch("/").decode()
@@ -97,6 +98,10 @@ def main():
                 raise SystemExit("Surface toggle is offered without the published maps.")
             fetch("/globe/maps/scotese-000.jpg", expect=404)
             fetch("/globe/fields/scotese-000.png")
+            fetch("/globe/fields/paleoatlas-000.png")
+            fetch("/globe/maps/paleoatlas-000.jpg", expect=404)
+            if "globe-frames" not in fetch("/?masks=scotese2002").decode():
+                raise SystemExit("The 2002 comparison masks are not reachable.")
             # The plate model is a second dataset with its own licence; it must be both
             # served and credited, and nothing outside its three files reachable.
             about = fetch("/about/").decode()

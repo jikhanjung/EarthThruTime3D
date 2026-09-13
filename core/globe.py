@@ -26,13 +26,59 @@ BOUNDS = {
     "014": [14, 39, 706, 388], "lgm": [14, 38, 706, 382],
     "000": [15, 41, 706, 387],
 }
+# Two sources of land masks. The 2016 PaleoAtlas is the default: it is the same edition as
+# the PALEOMAP rotation model, so its coastlines and that model's plates agree. The 2002
+# web maps stay available for comparison. Each source is a catalogue plus the directory
+# its derived fields are read from.
+MASK_SOURCES = {
+    "paleoatlas2016": {"catalogue": "sources/paleomap-atlas-2016.json",
+                       "directory": "PALEOATLAS_DERIVED_DIR",
+                       "title": "PALEOMAP PaleoAtlas (2016)"},
+    "scotese2002": {"catalogue": "sources/scotese-earth-history.json",
+                    "directory": "SCOTESE_DERIVED_DIR",
+                    "title": "Scotese PALEOMAP 웹 지도 (2002)"},
+}
+DEFAULT_MASK_SOURCE = "paleoatlas2016"
+
+# Korean labels for the 2016 maps, derived from each map's age with the boundaries of the
+# ICS International Chronostratigraphic Chart (v2023/09). The age decides the label, so a
+# stage name in a file name that disagrees with its age does not carry over. Each entry is
+# the age a label runs up to, exclusive.
+PERIODS = [
+    (2.58, "플라이스토세"), (5.333, "플라이오세"), (23.03, "마이오세"), (33.9, "올리고세"),
+    (56.0, "에오세"), (66.0, "팔레오세"), (100.5, "후기 백악기"), (145.0, "전기 백악기"),
+    (161.5, "후기 쥐라기"), (174.7, "중기 쥐라기"), (201.4, "전기 쥐라기"),
+    (237.0, "후기 트라이아스기"), (247.2, "중기 트라이아스기"), (251.902, "전기 트라이아스기"),
+    (259.51, "후기 페름기"), (273.01, "중기 페름기"), (298.9, "전기 페름기"),
+    (323.2, "후기 석탄기"), (358.9, "전기 석탄기"), (382.7, "후기 데본기"), (393.3, "중기 데본기"),
+    (419.2, "전기 데본기"), (427.4, "후기 실루리아기"), (433.4, "중기 실루리아기"),
+    (443.8, "전기 실루리아기"), (458.4, "후기 오르도비스기"), (470.0, "중기 오르도비스기"),
+    (485.4, "전기 오르도비스기"), (497.0, "후기 캄브리아기"), (506.5, "중기 캄브리아기"),
+    (538.8, "전기 캄브리아기"), (635.0, "에디아카라기"), (720.0, "크라이오제니아기"),
+    (1000.0, "토니아기"),
+]
+
+
+def period_label(item):
+    """Korean label for a 2016 atlas map, from its age alone."""
+    if item["id"].endswith("-lgm"):
+        return "최후빙기 최성기"
+    if item["age_ma"] == 0:
+        return "현재"
+    for upper, label in PERIODS:
+        if item["age_ma"] < upper:
+            return label
+    return "원생대"
+
+
 KOREAN_LABELS = ["후기 원생대", "후기 캄브리아기", "중기 오르도비스기", "중기 실루리아기",
                  "전기 데본기", "전기 석탄기", "후기 석탄기", "후기 페름기", "전기 트라이아스기",
                  "전기 쥐라기", "후기 쥐라기", "후기 백악기", "백악기 말 경계", "중기 에오세",
                  "중기 마이오세", "최후빙기극대기", "현재"]
 
 
-# Derived land masks produced by scripts/segment_landmass.py. They are an
+# Derived land masks produced by scripts/segment_landmass.py (2002 maps) and
+# scripts/segment_paleoatlas.py (2016 atlas). They are an
 # interpretation of the published maps, not source data, and they are absent until
 # that script has been run, so the viewer has to work without them.
 
@@ -56,9 +102,16 @@ MIN_MOTION_RADIUS_DEG = 4.0
 MAX_AREA_RATIO = 3.0
 
 
+def source_of(item):
+    """Which mask source a catalogue entry belongs to: 2002 entries carry an image."""
+    return "scotese2002" if "image" in item else "paleoatlas2016"
+
+
 def derived_path(item, suffix):
-    stem = Path(item["image"]["path"]).stem
-    return Path(settings.SCOTESE_DERIVED_DIR) / f"{stem}-{suffix}"
+    source = source_of(item)
+    stem = Path(item["image"]["path"]).stem if source == "scotese2002" else item["id"]
+    directory = getattr(settings, MASK_SOURCES[source]["directory"])
+    return Path(directory) / f"{stem}-{suffix}"
 
 
 def field_path(item):
@@ -66,9 +119,27 @@ def field_path(item):
     return derived_path(item, "field.png")
 
 
-@lru_cache(maxsize=1)
-def catalogue():
-    return json.loads((settings.BASE_DIR / "sources/scotese-earth-history.json").read_text())
+@lru_cache(maxsize=4)
+def catalogue(source="scotese2002"):
+    return json.loads((settings.BASE_DIR / MASK_SOURCES[source]["catalogue"]).read_text())
+
+
+def mask_source(request=None):
+    """The mask source to show: a per-request comparison override, then the setting."""
+    asked = request.GET.get("masks") if request is not None else None
+    for value in (asked, getattr(settings, "MASK_SOURCE", DEFAULT_MASK_SOURCE)):
+        if value in MASK_SOURCES:
+            return value
+    return DEFAULT_MASK_SOURCE
+
+
+def find_map(map_id):
+    """A catalogue entry by id, from whichever source has it."""
+    for source in MASK_SOURCES:
+        item = next((item for item in catalogue(source)["maps"] if item["id"] == map_id), None)
+        if item is not None:
+            return item
+    return None
 
 
 def enabled():
@@ -339,34 +410,50 @@ def bundle_report():
     """
     if not enabled():
         return {"required": False, "expected": 0, "missing": 0}
-    maps = catalogue()["maps"]
+    source = mask_source()
+    maps = catalogue(source)["maps"]
     missing = [item["id"] for item in maps if not field_path(item).exists()]
-    return {"required": True, "expected": len(maps), "missing": len(missing),
-            "missing_ids": missing[:5]}
+    return {"required": True, "source": source, "expected": len(maps),
+            "missing": len(missing), "missing_ids": missing[:5]}
 
 
 @require_safe
 def globe(request):
     frames = []
     pieces_by_frame = {}
+    source = mask_source(request)
     if enabled():
-        for item, korean in zip(catalogue()["maps"], KOREAN_LABELS):
+        document = catalogue(source)
+        if source == "scotese2002":
+            entries = [(item, korean, item["image_label"],
+                        BOUNDS[item["id"].removeprefix("scotese-")],
+                        reverse("globe-map", args=[item["id"]]) if source_maps_public() else None,
+                        item["page"]["url"])
+                       for item, korean in zip(document["maps"], KOREAN_LABELS)]
+        else:
+            # The 2016 rasters are never served, published or not: their licence is not
+            # yet confirmed, so only the fields derived from them reach the page.
+            entries = [(item, period_label(item), item["label"], None, None,
+                        document["license"]["source"]) for item in document["maps"]]
+        for item, korean, title, bounds, url, link in entries:
             pieces_by_frame[item["id"]] = piece_report(item)
-            frames.append({"id": item["id"], "label": korean, "title": item["image_label"],
-                           "age": item["age_ma"], "bounds": BOUNDS[item["id"].removeprefix("scotese-")],
-                           "url": (reverse("globe-map", args=[item["id"]])
-                                   if source_maps_public() else None),
+            frames.append({"id": item["id"], "label": korean, "title": title,
+                           "age": item["age_ma"], "bounds": bounds, "url": url,
                            "field": (reverse("globe-field", args=[item["id"]])
                                      if field_path(item).exists() else None),
                            "names": landmass_names(pieces_by_frame[item["id"]]),
-                           "source": item["page"]["url"]})
+                           "source": link})
     plan = sampling(request)
     models = plate_models(request)
     deepest = max((model["covers"][1] for model in models), default=None)
     return render(request, "core/home.html",
                   {"frames": frames, "viewer_enabled": enabled(),
                    "stops": timeline(frames, plan, deepest), "sampling": plan,
-                   "source_maps_public": source_maps_public(),
+                   "source_maps_public": source_maps_public() and source == "scotese2002",
+                   "mask": {"id": source, "title": MASK_SOURCES[source]["title"],
+                            "other": next(other for other in MASK_SOURCES if other != source),
+                            "other_title": next(value["title"] for key, value
+                                                in MASK_SOURCES.items() if key != source)},
                    "plates": models,
                    "motions": motions(frames, pieces_by_frame),
                    "fields_available": any(frame["field"] for frame in frames)})
@@ -376,7 +463,7 @@ def globe(request):
 def source_map(request, map_id):
     if not enabled() or not source_maps_public():
         raise Http404
-    item = next((item for item in catalogue()["maps"] if item["id"] == map_id), None)
+    item = next((item for item in catalogue("scotese2002")["maps"] if item["id"] == map_id), None)
     if item is None:
         raise Http404
     try:
@@ -392,7 +479,7 @@ def source_map(request, map_id):
 def land_field(request, map_id):
     if not enabled():
         raise Http404
-    item = next((item for item in catalogue()["maps"] if item["id"] == map_id), None)
+    item = find_map(map_id)
     if item is None:
         raise Http404
     try:

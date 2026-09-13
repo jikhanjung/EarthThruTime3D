@@ -10,6 +10,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 \
     DJANGO_SETTINGS_MODULE=config.settings.production \
     EARTHTHRUTIME_VERSION=$APP_VERSION \
     SCOTESE_DERIVED_DIR=/runtime/segmentation \
+    PALEOATLAS_DERIVED_DIR=/runtime/paleoatlas \
     PLATE_MODEL_DIR=/runtime/plates \
     DATABASE_PATH=/var/lib/earththrutime3d/db.sqlite3 \
     STATIC_ROOT=/app/staticfiles \

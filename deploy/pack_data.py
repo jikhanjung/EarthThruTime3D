@@ -17,6 +17,7 @@ from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parents[1]
 SOURCE = BASE_DIR / "data/derived/segmentation"
+ATLAS_SOURCE = BASE_DIR / "data/derived/paleoatlas"
 SUFFIXES = ("field.png", "pieces.json")
 PLATES = BASE_DIR / "data/derived/plates"
 # Every model has rotations and continents; only some ship a separate coastline layer.
@@ -52,6 +53,19 @@ def main():
             files.append({"path": f"segmentation/{source.name}", "bytes": target.stat().st_size,
                           "sha256": digest(target), "map_id": item["id"]})
 
+    # The 2016 PaleoAtlas fields, the default masks. Their rasters are never packed.
+    atlas = json.loads((BASE_DIR / "sources/paleomap-atlas-2016.json").read_text())
+    (staging / "paleoatlas").mkdir()
+    for item in atlas["maps"]:
+        for suffix in SUFFIXES:
+            source = ATLAS_SOURCE / f"{item['id']}-{suffix}"
+            if not source.exists():
+                raise SystemExit(f"Missing derived file: {source}. Run scripts/segment_paleoatlas.py.")
+            target = staging / "paleoatlas" / source.name
+            shutil.copy2(source, target)
+            files.append({"path": f"paleoatlas/{source.name}", "bytes": target.stat().st_size,
+                          "sha256": digest(target), "map_id": item["id"]})
+
     (staging / "plates").mkdir()
     packed = sorted(path.stem for path in (BASE_DIR / "sources/plate-models").glob("*.json"))
     if not packed:
@@ -72,8 +86,9 @@ def main():
     manifest = {"schema_version": 2, "version": version, "files": files,
                 "contains_source_maps": False,
                 "note": ("Derived land fields and piece reports produced by "
-                         "scripts/segment_landmass.py from the PALEOMAP maps, whose "
-                         "original images are not included, plus the EarthByte "
+                         "scripts/segment_landmass.py from the 2002 PALEOMAP maps and by "
+                         "scripts/segment_paleoatlas.py from the 2016 PaleoAtlas, whose "
+                         "original images are not included, plus the "
                          "plate models packed by scripts/pack_plates.py, each under "
                          "its own Creative Commons Attribution licence.")}
     (staging / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")

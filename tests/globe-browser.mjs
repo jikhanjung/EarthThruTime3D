@@ -2,10 +2,14 @@ import { chromium, expect } from '@playwright/test';
 import { mkdir } from 'node:fs/promises';
 const browser = await chromium.launch({headless: true, args: ['--enable-unsafe-swiftshader']});
 const errors = [];
+// The long-standing checks below are written against the 2002 web-map masks, whose
+// names and frame ids they know; the 2016 atlas, now the default, gets its own pass.
+const base = process.env.VIEWER_URL || 'http://127.0.0.1:8000/';
+const legacy = new URL('?masks=scotese2002', base).href;
 try {
   const page = await browser.newPage({viewport: {width:1440, height:1100}});
   page.on('pageerror', error => errors.push(error.message));
-  await page.goto(process.env.VIEWER_URL || 'http://127.0.0.1:8000/');
+  await page.goto(legacy);
   const globe = page.locator('#globe');
   await expect(globe).toHaveAttribute('data-frame', 'scotese-000');
   await mkdir('data/screenshots', {recursive:true});
@@ -16,7 +20,7 @@ try {
     await expect(globe).toHaveAttribute('data-frame', frames[index].id);
     await expect(globe).toHaveAttribute('aria-busy', 'false');
   }
-  console.log('All 17 frames rendered');
+  console.log(`All ${frames.length} 2002 frames rendered`);
   const before = await page.locator('#globe canvas').screenshot();
   await globe.focus();
   await page.keyboard.press('ArrowRight');
@@ -272,11 +276,35 @@ try {
   // Force a missing source in a fresh page and verify retry restores the globe.
   const broken = await browser.newPage();
   await broken.route('**/globe/maps/scotese-000.jpg', route => route.fulfill({status:404}));
-  await broken.goto(process.env.VIEWER_URL || 'http://127.0.0.1:8000/');
+  await broken.goto(legacy);
   await expect(broken.locator('#retry')).toBeVisible();
   await broken.unroute('**/globe/maps/scotese-000.jpg');
   await broken.locator('#retry').click();
   await expect(broken.locator('#globe')).toHaveAttribute('data-frame','scotese-000');
+  // The default page shows the 2016 atlas: 90 maps, no originals, no names yet, and a
+  // way back to the 2002 masks for comparison.
+  const atlas = await browser.newPage({viewport: {width:1440, height:1100}});
+  atlas.on('pageerror', error => errors.push(error.message));
+  await atlas.goto(base);
+  const atlasGlobe = atlas.locator('#globe');
+  await expect(atlasGlobe).toHaveAttribute('data-frame', 'paleoatlas-000');
+  await expect(atlasGlobe).toHaveAttribute('aria-busy', 'false');
+  const atlasFrames = await atlas.locator('#globe-frames').textContent().then(JSON.parse);
+  expect(atlasFrames.length).toBe(90);
+  expect(atlasFrames.every(frame => frame.url === null && frame.field)).toBe(true);
+  await expect(atlas.locator('#surface')).toHaveCount(0);
+  await expect(atlas.locator('#source-preview')).toHaveCount(0);
+  await expect(atlas.locator('#frame-number')).toHaveText('90 / 90');
+  await expect(atlas.locator('#timeline-oldest')).toContainText('Ma');
+  for (const id of ['paleoatlas-255', 'paleoatlas-510', 'paleoatlas-750']) {
+    await atlas.locator('#era').selectOption(String(atlasFrames.findIndex(frame => frame.id === id)));
+    await expect(atlasGlobe).toHaveAttribute('data-frame', id);
+    await expect(atlasGlobe).toHaveAttribute('aria-busy', 'false');
+  }
+  await expect(atlas.locator('#period')).toHaveText('토니아기');
+  await atlas.screenshot({path:'data/screenshots/globe-atlas-750.png', fullPage:true});
+  await expect(atlas.locator('a[href="?masks=scotese2002"]')).toHaveCount(1);
+  console.log('2016 atlas default passed');
   expect(errors).toEqual([]);
   console.log('Rotation, zoom, playback, rapid switching, mobile layout and failed-load recovery passed');
 } finally { await browser.close(); }

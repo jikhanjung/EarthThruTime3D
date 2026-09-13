@@ -1,5 +1,27 @@
 # Reference globe viewer
 
+## Mask sources
+
+The globe can draw its land masks from two sources, and `core.globe.MASK_SOURCES` lists
+them:
+
+- `paleoatlas2016`, the default: 90 maps from the PALEOMAP PaleoAtlas for GPlates
+  (Scotese 2016), 750 Ma to present, segmented by `scripts/segment_paleoatlas.py`. They
+  are the same edition as the PALEOMAP rotation model, so their land and that model's
+  plates agree. The rasters are equirectangular, so no projection is assumed. Korean
+  period labels come from each map's age with ICS 2023/09 boundaries; the English title is
+  the file name's stage. The rasters themselves are never served.
+- `scotese2002`: the 17 web maps described in the rest of this document, with names and
+  named-landmass motion.
+
+`MASK_SOURCE` sets the default; `?masks=scotese2002` or `?masks=paleoatlas2016` picks one
+per page, and anything else falls back to the default. `/globe/fields/<id>.png` finds a
+field by map id in either source; `/globe/maps/` only ever has the 2002 maps. The 2016
+masks carry no names yet, so they have no name labels and no named motion: between two
+maps the fields are blended alone.
+
+The rest of this document describes the 2002 path, which is where the viewer began.
+
 The home page renders the 17 Scotese reference maps with Three.js 0.186.0. Selectors
 use original image ages from the provenance catalogue, including 356 Ma and 50.2 Ma.
 The slider carries sub-steps between neighbouring maps, so dragging it moves rather
