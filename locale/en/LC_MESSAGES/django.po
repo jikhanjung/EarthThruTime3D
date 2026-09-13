@@ -579,3 +579,123 @@ msgstr "The 109 PaleoDEM 1° grids were resampled to 2048×1024 equirectangular 
 
 msgid "고도 격자 시리즈는 이 109장의 1° 고도·수심 격자를 색으로 칠한 것입니다. 해안선은 격자의 0 m 등고선이고, 물에 떠 있는 빙붕은 격자가 해저 깊이를 담고 있어 바다로 나타나며, 땅 위에 얹힌 빙상은 그 표면 높이로 나타납니다. 540 Ma 이전은 PaleoAtlas(2016) 마스크로 이어집니다."
 msgstr "The elevation series colours these 109 one-degree elevation and bathymetry grids. The coastline is the grid's 0 m contour; floating ice shelves read as ocean because the grids hold the sea floor beneath them, while grounded ice shows its surface height. Before 540 Ma the timeline continues with the PaleoAtlas (2016) masks."
+
+msgid "기온"
+msgstr "Temperature"
+
+msgid "기온 지구본"
+msgstr "temperature globe"
+
+msgid "{period} 기온 지도를 불러오는 중…"
+msgstr "Loading the {period} temperature map…"
+
+msgid "전 지구 평균 기온 약 {value} °C{between}"
+msgstr "Global mean temperature about {value} °C{between}"
+
+msgid "전 지구 평균 기온: 자료 없음 (540 Ma 이전)"
+msgstr "Global mean temperature: no data (before 540 Ma)"
+
+msgid " · 현재보다 {delta} °C"
+msgstr " · {delta} °C vs today"
+
+msgid "기온 색 범례"
+msgstr "Temperature colour key"
+
+msgid "지표 기온 표시 중입니다. −30 °C 파랑에서 0 °C 밝은색을 지나 40 °C 빨강까지입니다. <a href=\"https://doi.org/10.1016/j.earscirev.2021.103503\" target=\"_blank\" rel=\"noopener\">Scotese (2021)</a>의 1° 기온 지도로, 기후 모델(<a href=\"https://doi.org/10.5194/cp-17-1483-2021\" target=\"_blank\" rel=\"noopener\">Valdes et al. 2021</a>) 결과를 동위원소·암석 지표에 맞춰 보정한 것입니다. 관측이 아니라 모델과 지표의 절충이며, 시점 사이는 보간입니다. 전 지구 평균은 지도의 면적 가중 평균입니다."
+msgstr "Showing surface air temperature: blue at −30 °C through pale at 0 °C to red at 40 °C. These are the 1° temperature maps of <a href=\"https://doi.org/10.1016/j.earscirev.2021.103503\" target=\"_blank\" rel=\"noopener\">Scotese (2021)</a>, climate-model output (<a href=\"https://doi.org/10.5194/cp-17-1483-2021\" target=\"_blank\" rel=\"noopener\">Valdes et al. 2021</a>) nudged to isotope and rock indicators. A compromise between model and proxies, not an observation; between stops it is interpolated. The global mean is the area-weighted mean of each map."
+
+msgid "전 지구 평균 기온, 시대순"
+msgstr "Global mean temperature through time"
+
+msgid "전 지구 평균 기온 (Scotese 2021): 파랑 추움, 빨강 더움"
+msgstr "Global mean temperature (Scotese 2021): blue cold, red warm"
+
+msgid "고도 격자 시리즈의 기온 화면과 슬라이더 위의 색띠는 이 1° 지표 기온 지도 100장에서 옵니다. 기후 모델 결과를 산소 동위원소와 기후 지시 암석(증발암·석탄·빙성 퇴적물 등)에 맞춰 보정한 것으로, 관측이 아니라 모델과 지표의 절충입니다. 전 지구 평균은 각 지도의 면적 가중 평균으로 이 프로젝트가 계산했습니다. 540 Ma 이전은 자료가 없습니다. 색띠에서 파란 구간이 빙하기입니다: 후기 오르도비스기(약 445 Ma), 후기 고생대 빙하기(약 360~260 Ma), 신생대 후기(약 34 Ma 이후)."
+msgstr "The elevation series' temperature view and the strip above the slider come from these 100 one-degree surface air temperature maps: climate-model output nudged to oxygen isotopes and climate-indicating rocks (evaporites, coals, glacial deposits), a compromise between model and proxies rather than an observation. The global mean is the area-weighted mean of each map, computed by this project. There is no data before 540 Ma. Blue spans on the strip are icehouses: the Late Ordovician (~445 Ma), the Late Palaeozoic Ice Age (~360–260 Ma) and the late Cenozoic (from ~34 Ma)."
+
+msgid "장기 해수면 약 {value} (현재 대비){offset}"
+msgstr "Long-term sea level about {value} (relative to present){offset}"
+
+msgid " · 표시 보정 {value}"
+msgstr " · display offset {value}"
+
+msgid "장기 해수면: 자료 없음 (540 Ma 이전)"
+msgstr "Long-term sea level: no data (before 540 Ma)"
+
+msgid "해수면"
+msgstr "Sea level"
+
+msgid "복원 해수면"
+msgstr "Reconstructed sea level"
+
+msgid "곡선 편차 적용"
+msgstr "Apply curve departure"
+
+msgid "해수면 −120 m"
+msgstr "Sea level −120 m"
+
+msgid "해수면 −60 m"
+msgstr "Sea level −60 m"
+
+msgid "해수면 +60 m"
+msgstr "Sea level +60 m"
+
+msgid "해수면 +120 m"
+msgstr "Sea level +120 m"
+
+msgid "해수면 보정 표시 중입니다. 격자의 높이를 그 시점의 기준 해수면에서 옮겨 해안선을 다시 자른 가정 화면이며, 복원이 아닙니다. '곡선 편차 적용'은 <a href=\"https://doi.org/10.1016/j.gr.2022.07.014\" target=\"_blank\" rel=\"noopener\">van der Meer et al. 2022</a>의 장기 곡선이 양쪽 격자의 기준에서 벗어난 만큼만 옮깁니다. 격자 자체가 이미 그 시점의 해수면을 담고 있어 곡선 값을 그대로 더하지 않습니다."
+msgstr "Showing a sea-level offset: a what-if view that shifts the grid's heights from that stop's own sea level and recuts the coast; not a reconstruction. 'Apply curve departure' moves it only by how far the long-term curve of <a href=\"https://doi.org/10.1016/j.gr.2022.07.014\" target=\"_blank\" rel=\"noopener\">van der Meer et al. 2022</a> departs from the datum of the two bracketing grids. The grids already carry the sea level of their time, so the curve's value is never added outright."
+
+msgid "최근 80만 년"
+msgstr "Last 800,000 years"
+
+msgid "자료"
+msgstr "data"
+
+msgid "장기 해수면, 현재 대비 미터, 시대순"
+msgstr "Long-term sea level, metres relative to present, through time"
+
+msgid "장기 해수면 평균"
+msgstr "Long-term mean sea level"
+
+msgid "최소–최대"
+msgstr "min–max"
+
+msgid "대륙 빙하 5백만 km³ 이상(같은 논문의 추정): 1백만 년 곡선이 뭉갠 빙하기 주기가 있는 구간"
+msgstr "continental ice above 5 million km³ (the same paper's estimate): spans where a 1 Myr curve smooths over glacial cycles"
+
+msgid "현재 열의 최근 80만 년 범위 −130~+8 m"
+msgstr "range of the last 800,000 years in the present-day column, −130 to +8 m"
+
+msgid "최근 80만 년 해수면"
+msgstr "Sea level over the last 800,000 years"
+
+msgid "최근 80만 년의 해수면, 현재 대비 m (<a href=\"https://doi.org/10.5194/cp-12-1079-2016\" target=\"_blank\" rel=\"noopener\">Spratt &amp; Lisiecki 2016</a>). 왼쪽이 과거, 가로선이 현재 해수면, 빙하기 최저 약 −130 m. 5백만 년 간격의 격자로는 보이지 않는 변동입니다."
+msgstr "Sea level over the last 800,000 years, metres relative to present (<a href=\"https://doi.org/10.5194/cp-12-1079-2016\" target=\"_blank\" rel=\"noopener\">Spratt &amp; Lisiecki 2016</a>). Older to the left, the horizontal line is present sea level, glacial minima about −130 m. Variation no 5 Myr grid can show."
+
+msgid "각 PaleoDEM 격자는 그 시점의 해수면을 이미 담고 있습니다. 화면의 해안선은 격자의 0 m 등고선이고, 백악기의 내륙해나 고생대의 물에 잠긴 대륙은 복원 자체에 들어 있습니다. 격자 사이 5백만 년 안의 변동과 빙하기의 짧은 변동은 격자에 없습니다."
+msgstr "Each PaleoDEM grid already carries the sea level of its time. The coastline shown is the grid's 0 m contour, and the Cretaceous interior seaways or the drowned Palaeozoic cratons are part of the reconstruction itself. What the grids lack is variation within a 5 Myr gap and the short glacial cycles."
+
+msgid "그래서 두 발표 곡선을 함께 보여 줍니다. van der Meer, D. G. et al. (2022). <em><a href=\"https://doi.org/10.1016/j.gr.2022.07.014\" target=\"_blank\" rel=\"noopener\">Long-term Phanerozoic global mean sea level</a>.</em> Gondwana Research 111, 103–121, CC BY 4.0: 스트론튬 동위원소와 빙하 추정에서 얻은 장기 곡선으로, 1백만 년 간격, 현재 대비 약 0~+217 m. Spratt, R. M. &amp; Lisiecki, L. E. (2016). <em><a href=\"https://doi.org/10.5194/cp-12-1079-2016\" target=\"_blank\" rel=\"noopener\">A Late Pleistocene sea level stack</a>.</em> Climate of the Past 12, 1079–1092, 자료는 <a href=\"https://doi.org/10.25921/RD66-5820\" target=\"_blank\" rel=\"noopener\">NOAA</a>, CC BY 3.0: 최근 80만 년의 빙하기 주기, 최저 약 −130 m. 둘 다 측정이 아니라 재구성입니다. Haq 계열의 단기 곡선은 저작권 때문에 쓰지 않았습니다."
+msgstr "So two published curves are shown alongside. van der Meer, D. G. et al. (2022). <em><a href=\"https://doi.org/10.1016/j.gr.2022.07.014\" target=\"_blank\" rel=\"noopener\">Long-term Phanerozoic global mean sea level</a>.</em> Gondwana Research 111, 103–121, CC BY 4.0: a long-term curve from strontium isotopes and ice estimates, 1 Myr resolution, about 0 to +217 m relative to present. Spratt, R. M. &amp; Lisiecki, L. E. (2016). <em><a href=\"https://doi.org/10.5194/cp-12-1079-2016\" target=\"_blank\" rel=\"noopener\">A Late Pleistocene sea level stack</a>.</em> Climate of the Past 12, 1079–1092, data at <a href=\"https://doi.org/10.25921/RD66-5820\" target=\"_blank\" rel=\"noopener\">NOAA</a>, CC BY 3.0: the glacial cycles of the last 800,000 years, minima about −130 m. Both are reconstructions, not measurements. The Haq family of short-term curves is not used, for copyright reasons."
+
+msgid "툴바의 해수면 선택은 가정 화면입니다. 고정값은 격자의 높이를 그만큼 옮겨 해안선을 다시 자르고, '곡선 편차 적용'은 장기 곡선이 양쪽 격자의 기준에서 벗어난 만큼만 옮깁니다. 격자가 이미 그 시점의 해수면을 담고 있으므로 곡선 값을 그대로 더하지 않습니다."
+msgstr "The sea-level control in the toolbar is a what-if. A fixed value shifts the grid's heights by that much and recuts the coastline; 'Apply curve departure' moves it only by how far the long-term curve departs from the two bracketing grids' datum. The grids already carry the sea level of their time, so the curve's value is never added outright."
+
+msgid "빙하"
+msgstr "Ice"
+
+msgid "빙하 표시 중입니다. 현재(0 Ma)의 빙하·빙상(흰색)과 남극 빙붕(옅은 하늘색)은 <a href=\"https://www.naturalearthdata.com/\" target=\"_blank\" rel=\"noopener\">Natural Earth</a> 10 m 자료(공공 영역)입니다. 과거의 빙하는 PALEOMAP PaleoAtlas(2016) 지도가 흰색으로 그린 얼음을 이 프로젝트가 분할한 것으로, 각 격자는 5 Myr 안의 가장 가까운 지도를 빌립니다. 지도가 5~10 Myr 간격이라 빙하기 주기는 보이지 않고, 지도가 흰색으로 칠한 해빙도 함께 나타납니다. 지도의 흰색은 가장 높은 땅의 색이기도 해서 위도 45° 안쪽의 고원(티베트 등)은 뺐으며, 산악 빙하는 현재에만 있습니다. 540 Ma 이전에는 자료가 없습니다. 서남극 빙상은 해수면 아래 기반암 위에 얹혀 있어 격자가 바다로 그리는 곳 위에도 빙하가 놓입니다."
+msgstr "Showing ice. The present-day glaciers and ice sheets (white) and the Antarctic ice shelves (pale blue) are <a href=\"https://www.naturalearthdata.com/\" target=\"_blank\" rel=\"noopener\">Natural Earth</a> 10 m data, public domain. Past ice is this project's segmentation of the ice the PALEOMAP PaleoAtlas (2016) maps paint white; each grid borrows the nearest map within 5 Myr. Maps 5 to 10 Myr apart cannot show glacial cycles, and sea ice the maps paint white appears too. White on those maps is also the colour of the highest ground, so plateaus inside 45° of latitude, Tibet among them, are left out, and mountain glaciers appear only at the present. There is no data before 540 Ma. The West Antarctic ice sheet rests on bedrock below sea level, so ice sits where the grid draws ocean."
+
+msgid "현재 빙하"
+msgstr "Present-day ice"
+
+msgid "공공 영역"
+msgstr "public domain"
+
+msgid "현재 시점의 빙하·빙상과 남극 빙붕은 <a href=\"https://www.naturalearthdata.com/\" target=\"_blank\" rel=\"noopener\">Natural Earth</a> 10 m 자료(공공 영역)를 격자에 옮긴 것입니다. 과거 시점의 빙하 윤곽은 공개된 자료가 없어 그리지 않습니다. 5 Ma로 가면서 빙하가 옅어지는 것은 자료가 없어서이지 빙하가 없어서가 아닙니다. 서남극 빙상은 해수면 아래 기반암 위에 얹혀 있어, 격자가 바다로 그리는 곳 위에도 빙하가 놓입니다."
+msgstr "Today's glaciers, ice sheets and Antarctic ice shelves are <a href=\"https://www.naturalearthdata.com/\" target=\"_blank\" rel=\"noopener\">Natural Earth</a> 10 m data (public domain) placed on the grid. No open outline of past ice exists, so none is drawn. The fade toward 5 Ma means missing data, not ice loss. The West Antarctic ice sheet rests on bedrock below sea level, so ice is drawn over places the grid shows as ocean."
+
+msgid "{age} Ma 해안선을 판 운동을 따라 {now}까지 옮겨 그렸습니다."
+msgstr "The {age} Ma coastline, carried by the plate motion to {now}."

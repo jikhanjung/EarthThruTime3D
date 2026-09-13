@@ -135,6 +135,37 @@ def field_path(item):
     return derived_path(item, "field.png")
 
 
+def ice_path(item):
+    """Present-day ice mask rasterised by scripts/build_ice.py; only the 0 Ma grid has one."""
+    return derived_path(item, "ice.png")
+
+
+def temperature_path(item):
+    """Surface air temperature texture from the Scotese 2021 maps, built for the grids."""
+    return derived_path(item, "temp.png")
+
+
+def sealevel_curve():
+    """The long-term and Pleistocene sea-level curves and each grid's datum, as
+    scripts/build_sealevel.py wrote them. Absent until that script has run."""
+    path = Path(settings.PALEODEM_DERIVED_DIR) / "sealevel-curve.json"
+    if not path.exists():
+        return {"long": [], "pleistocene": [], "stops": {}}
+    return json.loads(path.read_text())
+
+
+def temperature_curve():
+    """Global mean temperature per map and per stop, as scripts/build_paleotemp.py wrote it.
+
+    Absent until that script has run. The curve is an area-weighted mean of published
+    1 degree maps, so it is a derived number, not a proxy measurement.
+    """
+    path = Path(settings.PALEODEM_DERIVED_DIR) / "paleotemp-curve.json"
+    if not path.exists():
+        return {"curve": [], "stops": {}}
+    return json.loads(path.read_text())
+
+
 @lru_cache(maxsize=4)
 def catalogue(source="scotese2002"):
     return json.loads((settings.BASE_DIR / MASK_SOURCES[source]["catalogue"]).read_text())
@@ -197,8 +228,30 @@ def source_maps_public():
     return getattr(settings, "SCOTESE_SOURCE_MAPS_PUBLIC", False)
 
 
+# A grid borrows the segmentation of the atlas map nearest its age; beyond this distance
+# there is nothing of the same paleogeography to borrow.
+NEAREST_ATLAS_MA = 5.0
+
+
+def nearest_atlas_map(age):
+    """The 2016 atlas map nearest an age, within NEAREST_ATLAS_MA; None beyond that."""
+    maps = catalogue("paleoatlas2016")["maps"]
+    item = min(maps, key=lambda entry: (abs(entry["age_ma"] - age), entry["age_ma"]))
+    return item if abs(item["age_ma"] - age) <= NEAREST_ATLAS_MA else None
+
+
 def piece_report(item):
-    """The segmentation report's pieces for one map, or an empty list."""
+    """The segmentation report's pieces for one map, or an empty list.
+
+    A PaleoDEM grid is never segmented. It is the same paleogeography as the 2016 atlas,
+    from the same edition, so it borrows the pieces of the atlas map nearest its age: 81
+    of the 109 grids share an age with a map, the rest are within 5 Myr of one. The names
+    then sit where the atlas drew them, a few degrees off at most on the borrowed ages.
+    """
+    if source_of(item) == "paleodem2018":
+        item = nearest_atlas_map(item["age_ma"])
+        if item is None:
+            return []
     path = derived_path(item, "pieces.json")
     if not path.exists():
         return []
@@ -230,6 +283,16 @@ def viewer_strings():
         "relief": _("고도"),
         "reliefGlobe": _("고도 지구본"),
         "loadingRelief": _("{period} 고도 지구본을 불러오는 중…"),
+        "temperature": _("기온"),
+        "temperatureGlobe": _("기온 지구본"),
+        "loadingTemperature": _("{period} 기온 지도를 불러오는 중…"),
+        "meanTemperature": _("전 지구 평균 기온 약 {value} °C{between}"),
+        "meanTemperatureBetween": _(" (보간)"),
+        "meanTemperatureNone": _("전 지구 평균 기온: 자료 없음 (540 Ma 이전)"),
+        "meanTemperatureDelta": _(" · 현재보다 {delta} °C"),
+        "seaLevel": _("장기 해수면 약 {value} (현재 대비){offset}"),
+        "seaLevelOffset": _(" · 표시 보정 {value}"),
+        "seaLevelNone": _("장기 해수면: 자료 없음 (540 Ma 이전)"),
         "noMap": _("지도 없음"),
         "interpolated": _("보간"),
         "sourceAlt": _("{label} ({age}) Scotese 원본 지도"),
@@ -257,6 +320,7 @@ def viewer_strings():
         "noCoastline": _("{age}에서 {reach} Myr 안에 해안선 자료가 없습니다. 자료는 0~{oldest} Ma입니다."),
         "coastlineAt": _("{age} Ma 해안선"),
         "coastlineNearest": _("가장 가까운 {age} Ma 해안선을 그렸습니다 (지금 {now})."),
+        "coastlineCarried": _("{age} Ma 해안선을 판 운동을 따라 {now}까지 옮겨 그렸습니다."),
         "contextLost": _("그래픽 연결이 끊겼습니다. 페이지를 새로고침해 주세요."),
         "oldestNoMap": _("{age} Ma · 지도 없음"),
         "oldestPast": _("{age} Ma · 과거"),
@@ -343,14 +407,16 @@ def motions(frames, pieces_by_frame, limit=MAX_MOTIONS):
     return result
 
 
-def atlas_motions(frames):
-    """Per gap, the 2016 landmasses carried by the PALEOMAP rotations, oldest gap first.
+def atlas_motions(frames, source="paleoatlas2016"):
+    """Per gap, the landmasses carried by the PALEOMAP rotations, oldest gap first.
 
-    scripts/atlas_motions.py writes these from the rotation model, so nothing is matched
-    here. The file has to describe exactly these frames in this order; anything else is
-    ignored rather than applied to the wrong gap, and the maps then blend in place.
+    scripts/atlas_motions.py writes these for the 2016 atlas and scripts/paleodem_motions.py
+    for the elevation series, each from the rotation model, so nothing is matched here.
+    The file, in the source's own directory, has to describe exactly these frames in this
+    order; anything else is ignored rather than applied to the wrong gap, and the maps
+    then blend in place.
     """
-    path = Path(settings.PALEOATLAS_DERIVED_DIR) / "motions.json"
+    path = Path(getattr(settings, MASK_SOURCES[source]["directory"])) / "motions.json"
     if not path.exists():
         return []
     gaps = json.loads(path.read_text()).get("gaps", [])
@@ -573,8 +639,13 @@ def globe(request):
     frames = []
     pieces_by_frame = {}
     source = mask_source(request)
+    climate = {"curve": [], "stops": {}}
+    sea = {"long": [], "pleistocene": [], "stops": {}}
     if enabled():
         document = catalogue(source)
+        if source == "paleodem2018":
+            climate = temperature_curve()
+            sea = sealevel_curve()
         if source == "scotese2002":
             entries = [(item, _(korean), item["image_label"],
                         BOUNDS[item["id"].removeprefix("scotese-")],
@@ -590,9 +661,16 @@ def globe(request):
                        for item in series_items(source)]
         for item, korean, title, bounds, url, link in entries:
             pieces_by_frame[item["id"]] = piece_report(item)
+            given = climate["stops"].get(item["id"])
             frames.append({"id": item["id"], "label": korean, "title": title,
                            "age": item["age_ma"], "bounds": bounds, "url": url,
                            "relief": source_of(item) == "paleodem2018",
+                           "temp": (reverse("globe-temperature", args=[item["id"]])
+                                    if given and temperature_path(item).exists() else None),
+                           "mean_c": given["mean_c"] if given else None,
+                           "sea_m": sea["stops"].get(item["id"]),
+                           "ice": (reverse("globe-ice", args=[item["id"]])
+                                   if source == "paleodem2018" and ice_path(item).exists() else None),
                            "field": (reverse("globe-field", args=[item["id"]])
                                      if field_path(item).exists() else None),
                            "names": landmass_names(pieces_by_frame[item["id"]]),
@@ -616,9 +694,14 @@ def globe(request):
                                        in MASK_SOURCES.items()
                                        if key != source and (key != "paleodem2018" or complete(key))]},
                    "plates": models,
-                   "motions": (atlas_motions(frames) if source == "paleoatlas2016"
-                               else motions(frames, pieces_by_frame)),
+                   "motions": (motions(frames, pieces_by_frame) if source == "scotese2002"
+                               else atlas_motions(frames, source)),
                    "coastlines": coastlines(source) if enabled() else None,
+                   "temperature_curve": climate["curve"],
+                   "temperature_available": any(frame.get("temp") for frame in frames),
+                   "sealevel": {"long": sea["long"], "pleistocene": sea["pleistocene"]},
+                   "sealevel_available": bool(sea["long"]),
+                   "ice_available": any(frame.get("ice") for frame in frames),
                    "fields_available": any(frame["field"] for frame in frames)})
 
 
@@ -649,6 +732,38 @@ def land_field(request, map_id):
         file = field_path(item).open("rb")
     except FileNotFoundError:
         raise Http404("Land field not generated") from None
+    response = FileResponse(file, content_type="image/png")
+    response["Cache-Control"] = "private, max-age=3600"
+    return response
+
+
+@require_safe
+def ice_mask(request, map_id):
+    if not enabled():
+        raise Http404
+    item = find_map(map_id)
+    if item is None:
+        raise Http404
+    try:
+        file = ice_path(item).open("rb")
+    except FileNotFoundError:
+        raise Http404("Ice mask not generated") from None
+    response = FileResponse(file, content_type="image/png")
+    response["Cache-Control"] = "private, max-age=3600"
+    return response
+
+
+@require_safe
+def temperature_map(request, map_id):
+    if not enabled():
+        raise Http404
+    item = find_map(map_id)
+    if item is None:
+        raise Http404
+    try:
+        file = temperature_path(item).open("rb")
+    except FileNotFoundError:
+        raise Http404("Temperature texture not generated") from None
     response = FileResponse(file, content_type="image/png")
     response["Cache-Control"] = "private, max-age=3600"
     return response
