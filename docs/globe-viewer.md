@@ -229,6 +229,19 @@ The viewer can show a second timeline: the 1° PALEOMAP PaleoDEMs of Scotese and
 fetches the pinned archives and `scripts/build_paleodem.py` writes one texture per
 slice, `paleodem-<age×10>-field.png`, beside the segmentation fields.
 
+Two builds exist. The default reads the 1° grids into 1024 × 512 textures, which is
+already a 2.8× upsample and shows all that data has. The sharper build reads the
+6-minute grids (0.1°, the same slices, 207 MB archive) into 2048 × 1024:
+
+```bash
+.venv/bin/python scripts/build_paleodem.py --width 2048 \
+  --source data/sources/paleodem/nc6/<unzipped directory>
+```
+
+About 1 MB per slice instead of 180 KB; the 6-minute source is bilinearly downsampled
+about 1.8× on the way, so it aliases slightly rather than smearing. 4096 was measured
+and rejected: 3 MB per stop on mobile data and 34 MB of GPU memory per texture.
+
 Each texture is an RGB PNG on the same 1024 × 512 equirectangular grid. Red is the
 signed coastline distance the segmentation writes, taken at the 0 m contour of the
 bilinearly resampled grid, so mask mode, the stop table and the blend between stops work
@@ -243,6 +256,18 @@ view rather than to a photographed map.
 without any PaleoDEM texture falls back to the Scotese series, so the runtime bundle,
 which does not yet pack these textures, keeps serving what it has. The browser check
 pins `?series=scotese` because its assertions count that series' names and motions.
+
+Fields are uploaded as raw bytes rather than as decoded images. A Samsung phone was
+found reading both channels low through the `<img>` path, and through an ImageBitmap
+decoded with conversion off, which put the coastline where the distance byte is about
+188 instead of 128 and drew every interior at the lowest height. WebGL colour-converts
+only DOM image sources, so the viewer decodes to a 2D canvas, reads the bytes back and
+uploads a `DataTexture`, which the specification leaves untouched.
+
+The texture cache is bounded at twelve, least recently used first, and the stage reports
+its size as `data-cached`. Two textures are bound at any stop; the rest only save a
+re-download when scrubbing back. Without the bound a phone that had scrubbed the whole
+timeline would hold every slice, near a gigabyte at 2048 × 1024.
 
 What this series shows at a published slice is the reconstruction grid as its authors
 released it, not a measurement of ours. Between slices it is the same geometric blend as

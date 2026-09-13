@@ -47,7 +47,7 @@ def main():
             out = SOURCE_DIR / asset["unzip"]
             if not out.exists():
                 with zipfile.ZipFile(target) as z:
-                    z.extractall(out, [n for n in z.namelist() if not n.endswith(".gplates.cache")])
+                    z.extractall(out, [n for n in z.namelist() if not n.endswith(".gplates.cache") and not n.startswith("__MACOSX")])
                 print(f"   unzipped -> {out.relative_to(ROOT)}")
     print(f"Verified {len(manifest['assets'])} assets.")
 

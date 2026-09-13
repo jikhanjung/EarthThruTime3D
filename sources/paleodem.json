@@ -4,16 +4,34 @@
   "record": "https://zenodo.org/records/5460860",
   "license": "CC BY 4.0 (License.txt inside each archive)",
   "retrieved": "2026-09-12",
-  "note": "1 degree grids only; the 6-minute archive (207 MB) and the PaleoAtlas rasters are not pinned. GPlates *.gplates.cache files are deleted after unzip.",
+  "note": "1 degree grids plus the 6-minute grids for the 2048-wide texture build; the PaleoAtlas rasters are not pinned. GPlates *.gplates.cache files and __MACOSX are not extracted.",
   "assets": [
-    {"path": "data/sources/paleodem/Scotese_Wright2018_PALEOMAP_PaleoDEMs.pdf",
-     "url": "https://zenodo.org/records/5460860/files/Scotese_Wright2018_PALEOMAP_PaleoDEMs.pdf?download=1",
-     "bytes": 6840972, "sha256": "8a5fca14f9860d148427a56cec241b4fc5b4108ff91bb867e8b68bde1392edac"},
-    {"path": "data/sources/paleodem/Scotese_Wright_2018_Maps_1-88_1degX1deg_PaleoDEMS_nc.zip",
-     "url": "https://zenodo.org/records/5460860/files/Scotese_Wright_2018_Maps_1-88_1degX1deg_PaleoDEMS_nc.zip?download=1",
-     "bytes": 9302291, "sha256": "7014767a168c28d3762f55117ebafcd0f6b6b90029a495e2d14fd23f94abc16d", "unzip": "nc"},
-    {"path": "data/sources/paleodem/PaleoDEMS_long_lat_elev_csv_v2.zip",
-     "url": "https://zenodo.org/records/5460860/files/PaleoDEMS_long_lat_elev_csv_v2.zip?download=1",
-     "bytes": 20302272, "sha256": "db43e6261411ff468c9030ca240778a73f224bf34bf8186c735477e41454c873", "unzip": "csv"}
+    {
+      "path": "data/sources/paleodem/Scotese_Wright2018_PALEOMAP_PaleoDEMs.pdf",
+      "url": "https://zenodo.org/records/5460860/files/Scotese_Wright2018_PALEOMAP_PaleoDEMs.pdf?download=1",
+      "bytes": 6840972,
+      "sha256": "8a5fca14f9860d148427a56cec241b4fc5b4108ff91bb867e8b68bde1392edac"
+    },
+    {
+      "path": "data/sources/paleodem/Scotese_Wright_2018_Maps_1-88_1degX1deg_PaleoDEMS_nc.zip",
+      "url": "https://zenodo.org/records/5460860/files/Scotese_Wright_2018_Maps_1-88_1degX1deg_PaleoDEMS_nc.zip?download=1",
+      "bytes": 9302291,
+      "sha256": "7014767a168c28d3762f55117ebafcd0f6b6b90029a495e2d14fd23f94abc16d",
+      "unzip": "nc"
+    },
+    {
+      "path": "data/sources/paleodem/PaleoDEMS_long_lat_elev_csv_v2.zip",
+      "url": "https://zenodo.org/records/5460860/files/PaleoDEMS_long_lat_elev_csv_v2.zip?download=1",
+      "bytes": 20302272,
+      "sha256": "db43e6261411ff468c9030ca240778a73f224bf34bf8186c735477e41454c873",
+      "unzip": "csv"
+    },
+    {
+      "path": "data/sources/paleodem/Scotese_Wright_2018_Maps_1-88_6minX6min_PaleoDEMS_nc.zip",
+      "url": "https://zenodo.org/records/5460860/files/Scotese_Wright_2018_Maps_1-88_6minX6min_PaleoDEMS_nc.zip?download=1",
+      "bytes": 207273848,
+      "sha256": "ab360184d8260a815ef5ed6b8b4e0abdbf99ef5ee8aa87dfd070af323ceb42da",
+      "unzip": "nc6"
+    }
   ]
 }

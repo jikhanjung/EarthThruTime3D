@@ -84,13 +84,27 @@ function loadImage(source) {
     image.src = source;
   });
 }
+// Textures kept in GPU memory. Two are bound at any stop; the rest are a cache so
+// scrubbing back and forth does not re-download. A phone that has scrubbed the whole
+// timeline would otherwise hold every slice, which at 2048 x 1024 is near a gigabyte.
+const TEXTURE_CACHE = 12;
 function cache(key, build) {
-  if (!textures.has(key)) {
-    const promise = build();
+  if (textures.has(key)) {
+    const promise = textures.get(key);
+    textures.delete(key);       // re-insert so Map order is least recently used first
     textures.set(key, promise);
-    promise.catch(() => textures.delete(key));
+    return promise;
   }
-  return textures.get(key);
+  const promise = build();
+  textures.set(key, promise);
+  promise.catch(() => textures.delete(key));
+  for (const [stale, old] of textures) {
+    if (textures.size <= TEXTURE_CACHE) break;
+    textures.delete(stale);
+    old.then((texture) => texture.dispose(), () => {});
+  }
+  stage.dataset.cached = String(textures.size);
+  return promise;
 }
 function prepare(texture) {
   // The shader decodes colour itself, so every texture is handed over as raw data.

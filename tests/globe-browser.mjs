@@ -16,6 +16,8 @@ try {
     await expect(globe).toHaveAttribute('data-frame', frames[index].id);
     await expect(globe).toHaveAttribute('aria-busy', 'false');
   }
+  // Walking every frame must not keep every texture: the cache is bounded.
+  expect(Number(await globe.getAttribute('data-cached'))).toBeLessThanOrEqual(12);
   console.log('All 17 frames rendered');
   const before = await page.locator('#globe canvas').screenshot();
   await globe.focus();
