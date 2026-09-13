@@ -748,6 +748,7 @@ function init() {
       showPlates = !showPlates;
       $('plates').setAttribute('aria-pressed', String(showPlates));
       $('plate-note').hidden = !showPlates;
+      if ($('plate-hint')) $('plate-hint').hidden = showPlates;
       selectStop(stop);
     });
   }

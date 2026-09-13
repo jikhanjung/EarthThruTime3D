@@ -160,7 +160,11 @@ try {
   // The plate model is a second dataset drawn over the first. It must reconstruct at
   // the stop's own age, say whose data it is, and leave when switched off.
   const beforePlates = await page.locator('#globe canvas').screenshot();
+  // The overlay's button sits at the foot of the globe, so a line in the inspector
+  // points at it until the overlay is on.
+  await expect(page.locator('#plate-hint')).toBeVisible();
   await page.locator('#plates').click();
+  await expect(page.locator('#plate-hint')).toBeHidden();
   await expect(page.locator('#plates')).toHaveAttribute('aria-pressed', 'true');
   await expect(globe).toHaveAttribute('aria-busy', 'false');
   await expect(page.locator('#plate-note')).toBeVisible();

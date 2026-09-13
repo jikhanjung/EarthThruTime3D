@@ -84,3 +84,8 @@ header,main,footer{max-width:1440px}main{padding-top:26px;padding-bottom:32px}.v
    supposed to keep this line out of the way. */
 .model-note .reach:not([hidden]){display:block;margin-top:8px;padding:7px 9px;border-radius:6px;
                    background:#3a2a1e;color:#f0c99a;font-size:.74rem;line-height:1.6}
+
+/* The overlay is worth finding, and its button sits at the foot of the globe where a
+   laptop screen ends. This line says it exists, and steps aside once it is on. */
+.model-note.hint:not([hidden]){display:block;border-left:2px solid #88dfcc;padding-left:10px;
+                               color:#bcd6dd}
