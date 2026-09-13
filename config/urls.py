@@ -3,13 +3,14 @@ from django.urls import path
 from django.views.generic import TemplateView
 from core.views import healthz, language
 from core.access import gate
-from core.globe import temperature_map, coastline_file, globe, land_field, plate_file, source_map
+from core.globe import ice_mask, temperature_map, coastline_file, globe, land_field, plate_file, source_map
 
 urlpatterns = [
     path('', globe, name='home'),
     path('globe/maps/<slug:map_id>.jpg', source_map, name='globe-map'),
     path('globe/fields/<slug:map_id>.png', land_field, name='globe-field'),
     path('globe/temps/<slug:map_id>.png', temperature_map, name='globe-temperature'),
+    path('globe/ice/<slug:map_id>.png', ice_mask, name='globe-ice'),
     path('globe/coastlines/<int:age>.json', coastline_file, name='globe-coastline'),
     path('plates/<slug:model>/<slug:layer>.json', plate_file, name='plate-file'),
     path('access/', gate, name='access-gate'),

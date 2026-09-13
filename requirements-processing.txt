@@ -6,3 +6,7 @@ scipy==1.17.1
 scikit-image==0.26.0
 # scripts/build_paleodem.py reads the PaleoDEM grids.
 netCDF4==1.7.4
+# scripts/build_sealevel.py reads the van der Meer 2022 supplementary spreadsheet.
+openpyxl==3.1.5
+# scripts/build_ice.py reads the Natural Earth shapefiles.
+pyshp==3.1.6

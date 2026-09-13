@@ -111,6 +111,24 @@ class GlobeTests(TestCase):
                 for key in ('lon', 'lat', 'to_lon', 'to_lat', 'radius'):
                     self.assertIn(key, pair)
 
+    def test_the_elevation_series_carries_names_and_rotation_motions_where_computed(self):
+        with self.settings(SCOTESE_VIEWER_ENABLED=True):
+            response = self.client.get('/', {'masks': 'paleodem2018'})
+        if response.context['mask']['id'] != 'paleodem2018':
+            self.skipTest('the elevation series has not been built in this checkout')
+        frames = response.context['frames']
+        motions = response.context['motions']
+        if not motions:
+            self.skipTest('elevation motions have not been computed in this checkout')
+        self.assertEqual(len(motions), len(frames) - 1)
+        self.assertTrue(all(frame['names'] for frame in frames), 'every grid borrows its names')
+        named = {frame['id']: {name['name'] for name in frame['names']} for frame in frames}
+        self.assertIn('아프리카', named['paleodem-0000'])
+        self.assertIn('로렌시아', named['paleodem-4200'])
+        self.assertTrue(all(gap for gap in motions), 'every gap carries at least one landmass')
+        for gap in motions:
+            self.assertLessEqual(len(gap), globe_module.MAX_MOTIONS)
+
     def test_atlas_motions_that_do_not_match_the_frames_are_ignored(self):
         frames = [{'id': 'a'}, {'id': 'b'}, {'id': 'c'}]
         with TemporaryDirectory() as directory:
@@ -581,7 +599,6 @@ class PaleodemTests(TestCase):
         self.assertContains(response, '?masks=paleoatlas2016')
         self.assertContains(response, '?masks=scotese2002')
         self.assertEqual(sorted(dict(response.context['mask']['others'])), ['paleoatlas2016', 'scotese2002'])
-        self.assertTrue(all(gap == [] for gap in response.context['motions']))
 
     def test_health_counts_the_series_when_it_is_the_default(self):
         for item in globe_module.series_items('paleodem2018'):
@@ -598,6 +615,7 @@ class PaleodemTests(TestCase):
         self.assertEqual(response.context['temperature_curve'], [])
         self.assertNotContains(response, 'id="temperature"')
         self.assertNotContains(response, 'id="temp-strip"')
+        self.assertNotContains(response, 'id="temp-legend"')
         item = globe_module.catalogue('paleodem2018')['maps'][-1]
         Path(self.dem.name, 'paleotemp-curve.json').write_text(json.dumps(
             {"curve": [[540, 27.5], [0, 14.3]], "stops": {item['id']: {"map_ma": 0, "mean_c": 14.31}}}))
@@ -610,7 +628,8 @@ class PaleodemTests(TestCase):
         self.assertEqual(frames[item['id']]['mean_c'], 14.31)
         self.assertIsNone(frames['paleoatlas-600']['temp'])
         self.assertIsNone(frames['paleoatlas-600']['mean_c'])
-        for needle in ('id="temperature"', 'id="temp-strip"', 'id="mean-temp"', 'zenodo.org/records/8238875'):
+        for needle in ('id="temperature"', 'id="temp-strip"', 'id="mean-temp"', 'id="temp-legend"',
+                       'id="temp-today"', 'zenodo.org/records/8238875'):
             self.assertContains(response, needle)
         self.assertEqual(self.client.get(f"/globe/temps/{item['id']}.png").status_code, 200)
         self.assertEqual(self.client.get('/globe/temps/paleoatlas-600.png').status_code, 404)
@@ -618,6 +637,79 @@ class PaleodemTests(TestCase):
         # The other sources never carry temperature.
         response = self.client.get('/')
         self.assertFalse(response.context['temperature_available'])
+
+    def test_sea_level_is_optional_and_gives_each_grid_a_datum(self):
+        for item in globe_module.series_items('paleodem2018'):
+            self.build(item)
+        response = self.client.get('/', {'masks': 'paleodem2018'})
+        self.assertFalse(response.context['sealevel_available'])
+        self.assertNotContains(response, 'id="sealevel"')
+        self.assertNotContains(response, 'id="sea-strip"')
+        last = globe_module.catalogue('paleodem2018')['maps'][-1]['id']
+        Path(self.dem.name, 'sealevel-curve.json').write_text(json.dumps(
+            {"long": [[540, 48.1, 26.7, 63.9, 0.0], [0, 0, 0, 0, 23.5]], "pleistocene": [[0, 8.5], [798, -92.4]],
+             "stops": {last: 0.0}}))
+        response = self.client.get('/', {'masks': 'paleodem2018'})
+        self.assertTrue(response.context['sealevel_available'])
+        self.assertEqual(response.context['sealevel']['long'][0], [540, 48.1, 26.7, 63.9, 0.0])
+        self.assertEqual(len(response.context['sealevel']['pleistocene']), 2)
+        frames = {frame['id']: frame for frame in response.context['frames']}
+        self.assertEqual(frames[last]['sea_m'], 0.0)
+        self.assertIsNone(frames['paleoatlas-600']['sea_m'])
+        for needle in ('id="sealevel"', 'id="sea-strip"', 'id="pleistocene"', 'id="sea-level"', 'doi.org/10.25921/RD66-5820'):
+            self.assertContains(response, needle)
+        self.assertFalse(self.client.get('/').context['sealevel_available'])
+
+    def test_ice_mask_is_offered_only_where_built(self):
+        for item in globe_module.series_items('paleodem2018'):
+            self.build(item)
+        response = self.client.get('/', {'masks': 'paleodem2018'})
+        self.assertTrue(all(frame['ice'] is None for frame in response.context['frames']))
+        self.assertFalse(response.context['ice_available'])
+        self.assertNotContains(response, 'id="ice"')
+        present = globe_module.catalogue('paleodem2018')['maps'][-1]
+        self.assertEqual(self.client.get(f"/globe/ice/{present['id']}.png").status_code, 404)
+        globe_module.ice_path(present).write_bytes(b'png')
+        response = self.client.get('/', {'masks': 'paleodem2018'})
+        frames = {frame['id']: frame for frame in response.context['frames']}
+        self.assertEqual(frames[present['id']]['ice'], f"/globe/ice/{present['id']}.png")
+        self.assertIsNone(frames['paleodem-0050']['ice'])
+        self.assertTrue(response.context['ice_available'])
+        self.assertContains(response, 'id="ice"')
+        self.assertEqual(self.client.get(f"/globe/ice/{present['id']}.png").status_code, 200)
+        self.assertEqual(self.client.get('/globe/ice/nope.png').status_code, 404)
+        past = next(item for item in globe_module.catalogue('paleodem2018')['maps'] if item['id'] == 'paleodem-3000')
+        globe_module.ice_path(past).write_bytes(b'png')
+        frames = {frame['id']: frame for frame in self.client.get('/', {'masks': 'paleodem2018'}).context['frames']}
+        self.assertEqual(frames['paleodem-3000']['ice'], '/globe/ice/paleodem-3000.png')
+        self.assertIsNone(frames['paleodem-2000']['ice'])
+        self.assertFalse(self.client.get('/').context['ice_available'])
+
+    def test_grids_borrow_the_pieces_of_the_nearest_atlas_map(self):
+        def report(name):
+            return json.dumps({'pieces': [{'names': [{'name': name, 'lon': 1.0, 'lat': 2.0}]}]})
+        (Path(self.atlas.name) / 'paleoatlas-255-pieces.json').write_text(report('아프리카'))
+        (Path(self.atlas.name) / 'paleoatlas-200-pieces.json').write_text(report('로렌시아'))
+        grid = lambda age: {'id': f'paleodem-{int(age * 10):04d}', 'age_ma': age, 'file': 'x.nc'}
+        names = lambda item: [name['name'] for name in globe_module.landmass_names(globe_module.piece_report(item))]
+        self.assertEqual(globe_module.nearest_atlas_map(255)['id'], 'paleoatlas-255')
+        self.assertEqual(names(grid(255)), ['아프리카'], 'the same age: the map itself')
+        self.assertEqual(names(grid(205)), ['로렌시아'], 'no map at 205 Ma: the nearest within 5 Myr')
+        self.assertIsNone(globe_module.nearest_atlas_map(650), 'nothing within 5 Myr')
+        self.assertEqual(names(grid(650)), [])
+
+    def test_series_motions_come_from_their_own_packed_file(self):
+        frames = [{'id': item['id']} for item in globe_module.series_items('paleodem2018')]
+        self.assertEqual(globe_module.atlas_motions(frames, 'paleodem2018'), [])
+        gaps = [{'from': a['id'], 'to': b['id'], 'pairs': [{'lon': 1}]} for a, b in zip(frames, frames[1:])]
+        (Path(self.dem.name) / 'motions.json').write_text(json.dumps({'gaps': gaps}))
+        self.assertEqual(len(globe_module.atlas_motions(frames, 'paleodem2018')), 111)
+        self.assertEqual(globe_module.atlas_motions(frames), [], 'the atlas keeps its own file')
+        for item in globe_module.series_items('paleodem2018'):
+            self.build(item)
+        response = self.client.get('/', {'masks': 'paleodem2018'})
+        self.assertEqual(len(response.context['motions']), 111)
+        self.assertEqual(response.context['motions'][0], [{'lon': 1}])
 
     def test_field_route_serves_a_paleodem_slice(self):
         item = globe_module.catalogue('paleodem2018')['maps'][-1]
