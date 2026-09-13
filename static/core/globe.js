@@ -817,6 +817,11 @@ function init() {
   stage.dataset.projection = projection;
   stage.dataset.plateModel = plateChoice;
   stage.dataset.coastlines = '0';
+  // Browsers restore a form control's last value on reload, which left the dropdown
+  // naming a model while nothing was drawn. The page state is the authority: start both
+  // overlays off and make the controls say so.
+  if ($('plate-overlay')) $('plate-overlay').value = plateChoice;
+  if ($('coastline')) $('coastline').checked = false;
   $('projection').value = projection;
   frames.forEach((frame, index) => $('era').add(new Option(`${frame.label} · ${ageText(frame)}`, index)));
   $('timeline').max = stops.length - 1;

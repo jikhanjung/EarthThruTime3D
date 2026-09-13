@@ -337,6 +337,26 @@ try {
   console.log('Fossil coastline layer passed');
   await atlas.screenshot({path:'data/screenshots/globe-atlas-750.png', fullPage:true});
   await expect(atlas.locator('a[href="?masks=scotese2002"]')).toHaveCount(1);
+  // The overlay dropdown starts at "경계선 없음" whatever the browser remembers, and any
+  // model draws its boundaries over the mask rather than instead of it.
+  await expect(atlas.locator('#plate-overlay option[value=""]')).toHaveText('경계선 없음');
+  await atlas.locator('#plate-overlay').selectOption('paleomap2016');
+  await expect(atlasGlobe).toHaveAttribute('aria-busy', 'false');
+  expect(Number(await atlasGlobe.getAttribute('data-plates'))).toBeGreaterThan(0);
+  await atlas.reload();
+  await expect(atlasGlobe).toHaveAttribute('data-frame', 'paleoatlas-000');
+  await expect(atlasGlobe).toHaveAttribute('aria-busy', 'false');
+  expect(await atlas.locator('#plate-overlay').inputValue()).toBe('');
+  await expect(atlasGlobe).toHaveAttribute('data-plates', '0');
+  for (const model of ['paleomap2016', 'merdith2021']) {
+    await atlas.locator('#plate-overlay').selectOption(model);
+    await expect(atlasGlobe).toHaveAttribute('data-plate-model', model);
+    await expect(atlasGlobe).toHaveAttribute('aria-busy', 'false');
+    expect(Number(await atlasGlobe.getAttribute('data-plates'))).toBeGreaterThan(0);
+    await expect(atlas.locator('#globe-age')).toContainText('대륙 마스크');
+  }
+  await atlas.locator('#plate-overlay').selectOption('');
+  await expect(atlasGlobe).toHaveAttribute('data-plates', '0');
   console.log('2016 atlas default passed');
   expect(errors).toEqual([]);
   console.log('Rotation, zoom, playback, rapid switching, mobile layout and failed-load recovery passed');
