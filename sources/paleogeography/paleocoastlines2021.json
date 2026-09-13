@@ -1,0 +1,22 @@
+{
+ "schema_version": 1,
+ "id": "paleocoastlines2021",
+ "title": "PaleoMAP PaleoCoastlines data, version 7.1",
+ "citation": "Kocsis, A. T., and Scotese, C. R., 2021. Mapping paleocoastlines and continental flooding during the Phanerozoic. Earth-Science Reviews, 213, 103463. Data: doi:10.5281/zenodo.4297693",
+ "retrieved_at": "2026-09-13",
+ "license": {
+  "name": "Creative Commons Attribution 4.0 International",
+  "url": "https://creativecommons.org/licenses/by/4.0/",
+  "statement": "The Zenodo record lists cc-by-4.0 and Data/Readme.md in the archive states 'Licence: CC-BY 4.0'.",
+  "source": "https://zenodo.org/records/4297693"
+ },
+ "archive": {
+  "url": "https://zenodo.org/api/records/4297693/files/PaleoCoastlines_v7.1.zip/content",
+  "path": "data/sources/paleogeography/paleocoastlines2021/PaleoCoastlines_v7.1.zip",
+  "bytes": 88660667,
+  "sha256": "4d039888bce4548f8126e0ad70a4ecb21472daad7671a4560c06a6bcd7734ddd"
+ },
+ "contents": "Data/CS: coastline polygons at 81 ages, 0-535 Ma, in reconstructed coordinates (shapefile and GPML). Data/CM: continental margins, the -1400 m isobath of the PaleoDEMs. Data/paleomap_model_v19o_r1c: the PALEOMAP rotation file and partitioning polygons they were made with. Equirectangular and Mollweide PNG and PDF plots.",
+ "evidence": "Coastlines start from the PALEOMAP PaleoDEMs and are moved to the maximum transgressive surface indicated by stage-level marine fossil occurrences in the Paleobiology Database.",
+ "status": "Collected for review; not used by the viewer."
+}

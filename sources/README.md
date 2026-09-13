@@ -11,6 +11,8 @@ one it came from.
   under `sources/plate-models/`.
 - [PALEOMAP PaleoAtlas 2016](#paleomap-paleoatlas-2016): 90 map rasters, 750 Ma to present,
   the same edition as the PALEOMAP rotation model. `paleomap-atlas-2016.json`.
+- [Other palaeogeographies](#other-palaeogeographies): collected for review, not used by the
+  viewer. `paleogeography/*.json`.
 
 # Plate models
 
@@ -196,4 +198,26 @@ licence is unconfirmed. Until it is, only the derived land fields are served, ne
 rasters. The file names carry small quirks, recorded as notes in the catalogue: map 27 at
 120 Ma is labelled Early Albian between Late Aptian and Barremian, and maps 79 and 80 sit
 at 460 and 461 Ma.
+
+# Other palaeogeographies
+
+Collected to review the masks against, not used by the viewer. Each manifest under
+`paleogeography/` pins its archive by size and SHA-256 and records where its licence is
+stated. `scripts/compare_paleogeography.py` compares their land with the 2016 PaleoAtlas
+masks; devlog 026 has the results.
+
+| Dataset | What it is | Evidence | Licence |
+| --- | --- | --- | --- |
+| PaleoCoastlines v7.1 (Kocsis & Scotese 2021) | Coastlines and continental margins at 81 ages, 0-535 Ma, reconstructed | PaleoDEM coastlines moved to the maximum transgression marine fossils in the Paleobiology Database indicate | CC BY 4.0 (Zenodo record and archive Readme) |
+| Cao et al. 2017 | Golonka's palaeogeography, 402-2 Ma in 24 intervals, revised with marine fossils and reconstructed in Matthews et al. 2016 | An independent lineage from PALEOMAP, tested against Paleobiology Database collections | CC BY 4.0 (License.txt in the archive; the download page states none) |
+
+Why these and not the PaleoDEM heights: the PaleoDEM report describes its land
+elevations as present-day topography edited with modern analogues and, where rocks are
+missing, inferred from tectonic history, with Palaeozoic deep oceans fixed at 4800 m.
+Where land ends is better constrained than how high it stood, so the review is about
+coastlines.
+
+Not yet collected: the Scotese 2021 PaleoDEM update and the Straume et al. 2020
+Cenozoic palaeobathymetry. Their Zenodo records returned 504 on 2026-09-13, so neither
+licence nor contents has been checked.
 

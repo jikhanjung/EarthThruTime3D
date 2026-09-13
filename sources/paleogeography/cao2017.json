@@ -1,0 +1,22 @@
+{
+ "schema_version": 1,
+ "id": "cao2017",
+ "title": "Cao et al. (2017) supplement: palaeogeography since the late Palaeozoic revised with palaeobiology",
+ "citation": "Cao, W., Zahirovic, S., Flament, N., Williams, S., Golonka, J., and Müller, R. D., 2017. Improving global paleogeography since the late Paleozoic using paleobiology. Biogeosciences, 14, 5425-5439. doi:10.5194/bg-14-5425-2017",
+ "retrieved_at": "2026-09-13",
+ "license": {
+  "name": "Creative Commons Attribution 4.0 International",
+  "url": "https://creativecommons.org/licenses/by/4.0/",
+  "statement": "License.txt in the archive states the work is licensed under CC BY 4.0. The EarthByte download page itself states no licence.",
+  "source": "https://www.earthbyte.org/improving-global-paleogeography-since-the-late-paleozoic-using-paleobiology/"
+ },
+ "archive": {
+  "url": "https://www.earthbyte.org/webdav/ftp/Data_Collections/Cao_etal_2017_BG_Supplement.zip",
+  "path": "data/sources/paleogeography/cao2017/Cao_etal_2017_BG_Supplement.zip",
+  "bytes": 94002837,
+  "sha256": "a2ace1de72e77727e4ac0e527a2e3e1aca805853b3a1a1a197409c569733631a"
+ },
+ "contents": "Golonka et al. (2006) palaeogeography digitised into ice sheet, mountain, landmass and shallow-marine shapefiles at present-day coordinates for 24 intervals, 402-2 Ma, with its rotations; the same revised against Paleobiology Database marine fossils and attached to the Matthews et al. (2016) plate model; 24 reconstructed GeoTIFFs (6001 x 3001, WGS84); the consistent and inconsistent marine fossil collections used in the test.",
+ "evidence": "An independent lineage from PALEOMAP: Golonka's maps, tested and revised against marine fossil collections downloaded from the Paleobiology Database on 2016-09-07.",
+ "status": "Collected for review; not used by the viewer."
+}
