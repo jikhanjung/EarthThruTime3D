@@ -167,7 +167,9 @@ class GlobeTests(TestCase):
         response = self.client.get('/lang/en/', {'next': '/about/'})
         self.assertEqual(response['Location'], '/about/')
         self.client.cookies[settings.LANGUAGE_COOKIE_NAME] = 'en'
-        with self.settings(SCOTESE_VIEWER_ENABLED=True):
+        # With a key configured the locked model is listed too, and its menu title must
+        # translate like everything else.
+        with self.settings(SCOTESE_VIEWER_ENABLED=True, ACCESS_KEY="a-key-for-the-test"):
             for url in ('/', '/?masks=scotese2002', '/about/', '/privacy/', '/contact/'):
                 with self.subTest(url=url):
                     page = self.client.get(url)

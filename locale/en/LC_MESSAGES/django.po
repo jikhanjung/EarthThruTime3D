@@ -531,3 +531,6 @@ msgstr "Middle Miocene"
 
 msgid "최후빙기극대기"
 msgstr "Last Glacial Maximum"
+
+msgid "Torsvik & Cocks 2017 (비공개)"
+msgstr "Torsvik & Cocks 2017 (private)"

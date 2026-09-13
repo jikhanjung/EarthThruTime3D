@@ -494,7 +494,9 @@ def plate_models(request=None):
             "published": not restricted(document),
             "locked": restricted(document) and not access_granted(request),
             "title": document["short_title"],
-            "short": document.get("menu_title", document["short_title"]),
+            # A menu title may carry a Korean note such as "(비공개)"; the catalogue is
+            # the source string and locale/ holds its English.
+            "short": _(document.get("menu_title", document["short_title"])),
             "frame": document["reference_frame"],
             "covers": document["covers_ma"],
             "citation": document["citation"],
