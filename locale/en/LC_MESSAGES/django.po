@@ -675,3 +675,18 @@ msgstr "So two published curves are shown alongside. van der Meer, D. G. et al. 
 
 msgid "툴바의 해수면 선택은 가정 화면입니다. 고정값은 격자의 높이를 그만큼 옮겨 해안선을 다시 자르고, '곡선 편차 적용'은 장기 곡선이 양쪽 격자의 기준에서 벗어난 만큼만 옮깁니다. 격자가 이미 그 시점의 해수면을 담고 있으므로 곡선 값을 그대로 더하지 않습니다."
 msgstr "The sea-level control in the toolbar is a what-if. A fixed value shifts the grid's heights by that much and recuts the coastline; 'Apply curve departure' moves it only by how far the long-term curve departs from the two bracketing grids' datum. The grids already carry the sea level of their time, so the curve's value is never added outright."
+
+msgid "빙하"
+msgstr "Ice"
+
+msgid "빙하 표시 중입니다. 현재의 빙하·빙상(흰색)과 남극 빙붕(옅은 하늘색)은 <a href=\"https://www.naturalearthdata.com/\" target=\"_blank\" rel=\"noopener\">Natural Earth</a> 10 m 자료(공공 영역)로, 현재 시점에만 있습니다. 5 Ma로 가면서 사라지는 것은 자료가 없어서이지 빙하가 없어서가 아닙니다. 서남극 빙상은 해수면 아래 기반암 위에 얹혀 있어 격자가 바다로 그리는 곳 위에도 빙하가 놓입니다."
+msgstr "Showing ice. Today's glaciers and ice sheets (white) and the Antarctic ice shelves (pale blue) come from <a href=\"https://www.naturalearthdata.com/\" target=\"_blank\" rel=\"noopener\">Natural Earth</a> 10 m data (public domain) and exist for the present day only. The fade toward 5 Ma means missing data, not ice loss. The West Antarctic ice sheet rests on bedrock below sea level, so ice is drawn over places the grid shows as ocean."
+
+msgid "현재 빙하"
+msgstr "Present-day ice"
+
+msgid "공공 영역"
+msgstr "public domain"
+
+msgid "현재 시점의 빙하·빙상과 남극 빙붕은 <a href=\"https://www.naturalearthdata.com/\" target=\"_blank\" rel=\"noopener\">Natural Earth</a> 10 m 자료(공공 영역)를 격자에 옮긴 것입니다. 과거 시점의 빙하 윤곽은 공개된 자료가 없어 그리지 않습니다. 5 Ma로 가면서 빙하가 옅어지는 것은 자료가 없어서이지 빙하가 없어서가 아닙니다. 서남극 빙상은 해수면 아래 기반암 위에 얹혀 있어, 격자가 바다로 그리는 곳 위에도 빙하가 놓입니다."
+msgstr "Today's glaciers, ice sheets and Antarctic ice shelves are <a href=\"https://www.naturalearthdata.com/\" target=\"_blank\" rel=\"noopener\">Natural Earth</a> 10 m data (public domain) placed on the grid. No open outline of past ice exists, so none is drawn. The fade toward 5 Ma means missing data, not ice loss. The West Antarctic ice sheet rests on bedrock below sea level, so ice is drawn over places the grid shows as ocean."

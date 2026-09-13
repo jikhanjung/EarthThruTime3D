@@ -1,0 +1,15 @@
+{
+  "title": "Present-day ice: Natural Earth 10 m glaciated areas and Antarctic ice shelves",
+  "authors": "Natural Earth (naturalearthdata.com), version 4.1.0",
+  "license": "Public domain (Natural Earth terms of use)",
+  "retrieved": "2026-09-13",
+  "note": "Only the present day. Grounded ice (glaciers and ice sheets) and the floating Antarctic ice shelves as polygons in longitude/latitude; the builder rasterises them onto the 0 Ma stop's texture grid. No open source gives ice outlines through the Phanerozoic; see issue #7 for what the van der Meer 2022 table offers instead.",
+  "assets": [
+    {"path": "data/sources/ice/ne_10m_glaciated_areas.zip",
+     "url": "https://naciscdn.org/naturalearth/10m/physical/ne_10m_glaciated_areas.zip",
+     "bytes": 1644604, "sha256": "de6ff396ab7eee8cbe2146030cc29278ef67c468e5675c748b1372e241ecbbff", "unzip": "glaciated"},
+    {"path": "data/sources/ice/ne_10m_antarctic_ice_shelves_polys.zip",
+     "url": "https://naciscdn.org/naturalearth/10m/physical/ne_10m_antarctic_ice_shelves_polys.zip",
+     "bytes": 163651, "sha256": "1d421d2487e2721a6e0aee8187e008c9bd8f0adbf4a5297b8503f7bf3c30b04d", "unzip": "shelves"}
+  ]
+}

@@ -135,6 +135,11 @@ def field_path(item):
     return derived_path(item, "field.png")
 
 
+def ice_path(item):
+    """Present-day ice mask rasterised by scripts/build_ice.py; only the 0 Ma grid has one."""
+    return derived_path(item, "ice.png")
+
+
 def temperature_path(item):
     """Surface air temperature texture from the Scotese 2021 maps, built for the grids."""
     return derived_path(item, "temp.png")
@@ -638,6 +643,8 @@ def globe(request):
                                     if given and temperature_path(item).exists() else None),
                            "mean_c": given["mean_c"] if given else None,
                            "sea_m": sea["stops"].get(item["id"]),
+                           "ice": (reverse("globe-ice", args=[item["id"]])
+                                   if source == "paleodem2018" and ice_path(item).exists() else None),
                            "field": (reverse("globe-field", args=[item["id"]])
                                      if field_path(item).exists() else None),
                            "names": landmass_names(pieces_by_frame[item["id"]]),
@@ -668,6 +675,7 @@ def globe(request):
                    "temperature_available": any(frame.get("temp") for frame in frames),
                    "sealevel": {"long": sea["long"], "pleistocene": sea["pleistocene"]},
                    "sealevel_available": bool(sea["long"]),
+                   "ice_available": any(frame.get("ice") for frame in frames),
                    "fields_available": any(frame["field"] for frame in frames)})
 
 
@@ -698,6 +706,22 @@ def land_field(request, map_id):
         file = field_path(item).open("rb")
     except FileNotFoundError:
         raise Http404("Land field not generated") from None
+    response = FileResponse(file, content_type="image/png")
+    response["Cache-Control"] = "private, max-age=3600"
+    return response
+
+
+@require_safe
+def ice_mask(request, map_id):
+    if not enabled():
+        raise Http404
+    item = find_map(map_id)
+    if item is None:
+        raise Http404
+    try:
+        file = ice_path(item).open("rb")
+    except FileNotFoundError:
+        raise Http404("Ice mask not generated") from None
     response = FileResponse(file, content_type="image/png")
     response["Cache-Control"] = "private, max-age=3600"
     return response

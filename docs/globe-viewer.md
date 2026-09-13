@@ -167,6 +167,25 @@ already carry, `curve(age) − mix(sea_m_from, sea_m_to, blend)`, because adding
 curve itself would count the slice's own sea level twice. The atlas prelude has no
 heights and takes no offset. This control is why the textures default to 12 bits.
 
+## Ice
+
+Only the present day has an open outline of ice. `scripts/build_ice.py` rasterises
+Natural Earth's 10 m glaciated areas and Antarctic ice shelves, public domain, onto the
+0 Ma grid's texture, `paleodem-0000-ice.png` in `PALEODEM_DERIVED_DIR`: red is grounded
+ice, green a floating shelf. Longitude and latitude map linearly to the equirectangular
+grid, so there is no reprojection; polygon parts are filled one by one, so a hole is
+filled as ice too, which touches a few nunataks and nothing else at this resolution.
+`/globe/ice/<id>.png` serves it and a frame of the elevation series carries `ice` only
+where a mask exists.
+
+The shader draws grounded ice near-opaque white and shelves paler over whatever
+surface is showing, in relief, mask and temperature modes; a 빙하 toggle hides it. One
+third of the grounded ice lies where the PaleoDEM reads ocean, because the West
+Antarctic ice sheet rests on bedrock below sea level and the grid holds the bed; so the
+overlay ignores what is beneath, and the note says why. Between 5 Ma and now the
+overlay fades, because the 5 Ma grid has no mask; the note says that the fade is
+missing data, not ice loss. Past ice is issue #7.
+
 ## Mapping pipeline
 
 1. Django exposes only manifest-listed map IDs through `/globe/maps/<id>.jpg`.

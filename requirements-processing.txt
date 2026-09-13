@@ -8,3 +8,5 @@ scikit-image==0.26.0
 netCDF4==1.7.4
 # scripts/build_sealevel.py reads the van der Meer 2022 supplementary spreadsheet.
 openpyxl==3.1.5
+# scripts/build_ice.py reads the Natural Earth shapefiles.
+pyshp==3.1.6
