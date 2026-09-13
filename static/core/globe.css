@@ -140,3 +140,18 @@ header,main,footer{max-width:1440px}main{padding-top:26px;padding-bottom:6px}.vi
 .sea-inset .axis { left: 52px; }
 .sea-inset .axis-tick:not(.x) { left: -48px; }
 .sea-inset figcaption { color: #9fb3bd; font-size: 0.8rem; margin-top: 0.3rem; }
+
+/* Colour key for the temperature surface: the shader's ramp over -30..40 C as a gradient,
+   today's global mean as a white tick, the current stop's mean as a triangle below. */
+.temp-legend{margin:0 0 .9rem;font-size:.68rem;color:#95afbb}
+.temp-bar{position:relative;height:10px;border-radius:3px;margin-top:1.15rem;background:linear-gradient(90deg,rgb(41,69,168) 0%,rgb(240,237,224) 43%,rgb(184,33,28) 100%)}
+.temp-mark{position:absolute;top:0;width:0;transform:translateX(-50%)}
+.temp-mark.today{height:10px;border-left:2px solid #fff}
+.temp-mark.today span{position:absolute;bottom:12px;left:-1px;transform:translateX(-50%);white-space:nowrap;color:#dcebee}
+.temp-mark.now{top:11px;border-left:6px solid transparent;border-right:6px solid transparent;border-bottom:8px solid #88dfcc}
+.temp-legend figcaption{position:relative;height:1.1em;margin-top:10px}
+.temp-legend figcaption span{position:absolute;left:0;transform:translateX(-50%);white-space:nowrap}
+.temp-legend figcaption span:first-child{transform:none}
+.temp-legend figcaption span:nth-child(2){left:43%}
+.temp-legend figcaption span:nth-child(3){left:71%}
+.temp-legend figcaption span:last-child{left:100%;transform:translateX(-100%)}
