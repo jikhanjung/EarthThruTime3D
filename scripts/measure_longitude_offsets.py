@@ -12,7 +12,7 @@ Backs the numbers in docs/palaeolongitude.md. Three measurements:
 3. Torsvik & Cocks read against plate 0, which includes the true polar wander layer
    its rotation file places between plate 1 and plate 0, and against plate 1, which
    does not.
-4. Scotese's own PALEOMAP rotation model (scripts/pack_paleomap.py), against the maps
+4. Scotese's own PALEOMAP rotation model (manifest paleomap2016), against the maps
    segmented here and against the other two models.
 
 Needs the packed plate models (scripts/pack_plates.py) and the segmentation fields

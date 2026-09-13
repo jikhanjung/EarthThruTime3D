@@ -235,6 +235,10 @@ def pack(model, tolerance, minimum_points):
         shapes = list(shapefile_features(path, tolerance, minimum_points)
                       if path.suffix == ".shp"
                       else features(read_text(path), tolerance, minimum_points))
+        if document.get("pack", {}).get("drop_zero_span"):
+            # Opt-in per model: a few zero-span shapes elsewhere are harmless and already
+            # deployed, so the filter only runs where a manifest asks for it.
+            shapes = [shape for shape in shapes if shape["from"] - shape["to"] > 1e-9]
         points = sum(len(ring) // 2 for shape in shapes for ring in shape["rings"])
         document_out = {"attribution": attribution, "layer": role,
                         "tolerance_deg": tolerance, "features": shapes}

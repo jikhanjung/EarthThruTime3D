@@ -23,6 +23,7 @@ out differently and the rest of the pipeline reads the role, never a file name.
 | Müller et al. 2022 | optimised mantle | 0–1000 Ma | CC BY 4.0 | GPML |
 | Cao et al. 2024 | palaeomagnetic, to 1.8 Ga | 0–1800 Ma | CC BY 4.0 | GPML |
 | Matthews et al. 2016 | hybrid mantle (GK07) | 0–410 Ma | CC BY 4.0 | shapefile |
+| Scotese 2016 PALEOMAP | PALEOMAP | 0–1100 Ma | CC BY 4.0 (Zenodo) | GPML |
 | Torsvik & Cocks 2017 | hybrid palaeomagnetic | 0–540 Ma | none stated, local only | shapefile |
 
 Müller is not a rival dataset so much as the same one seen from another frame: its shapes
@@ -31,6 +32,13 @@ the optimised mantle reference frame. Cao shares almost all of Merdith's rotatio
 the Phanerozoic and earns its place by reaching past 1 Ga. Matthews is the one separate
 lineage, and it differs from Merdith by about 10 degrees of arc at 50 to 200 Ma and 28
 degrees by 400 Ma.
+
+PALEOMAP 2016 is Scotese's own rotation model, taken from the PALEOMAP PaleoAtlas for
+GPlates archive on Zenodo, whose record is CC BY 4.0. Only the rotation file and plate
+polygons are read from it; the map rasters in the same archive are never unpacked. The
+maps this viewer measures are the 2002 edition, so the model is the same lineage but not
+the same version. Its manifest opts into dropping polygons valid only from 0 Ma to 0 Ma,
+which otherwise cover nearly the whole globe at the present instant.
 
 A model may split its rotations across files by era, and its geometry may arrive as
 shapefiles rather than GPML. Both are handled: rotation members merge, and a `.shp`

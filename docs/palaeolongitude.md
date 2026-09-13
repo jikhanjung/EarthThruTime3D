@@ -169,7 +169,7 @@ Torsvik & Cocks 2016, Scotese 2016, Merdith et al. 2021)로 대륙 위 격자점
 모든 수치는 다음 명령으로 재현된다. 판 모델 묶음과 분할 결과가 필요하다.
 
 ```bash
-.venv/bin/python scripts/pack_paleomap.py        # 5.4용. docs/pdf/Scotese_PaleoAtlas_v3.zip에서 읽는다
+.venv/bin/python scripts/fetch_plate_model.py && .venv/bin/python scripts/pack_plates.py
 .venv/bin/python scripts/measure_longitude_offsets.py all
 ```
 
@@ -238,8 +238,8 @@ T&C 위도에서 Merdith 위도를 뺀 값을, 판 0번과 판 1번 기준으로
 
 Scotese의 PALEOMAP PaleoAtlas 묶음([Scotese 2016][scotese2016])에는 지도와 함께 GPlates용 회전
 모델(`PALEOMAP_PlateModel.rot`, m15g60_v2d3, 2016-02-01)과 판 다각형이 들어 있다.
-`scripts/pack_paleomap.py`가 이를 다른 모델과 같은 형식으로 묶는다. 이 모델은 측정에만 쓰고
-뷰어에는 싣지 않는다.
+목록 파일 `sources/plate-models/paleomap2016.json`으로 다른 모델과 같이 받아 묶고, 뷰어의
+드롭다운에도 있다. Zenodo 기록의 이용 조건은 CC BY 4.0이며, 같은 묶음의 지도 이미지는 쓰지 않는다.
 
 회전 파일이 스스로 적은 것은 이 정도다. 판 001은 "Hot Spot to PMAG"라는 주석과 함께 모든
 시각에서 회전각이 0이다. 아프리카(701)는 0에 직접 매달리고, 5~65 Ma 극에는
@@ -289,7 +289,7 @@ T&C 판 1번 층의 위도에서 PALEOMAP 위도를 빼면 발티카는 425 Ma +
 
 측정상 주의할 점이 둘 있다. PALEOMAP 다각형은 대륙붕까지 포함해 현재 육지 면적 비율이 0.38로,
 분할한 지도(0.26)보다 넓다. 그래서 겹침이 T&C보다 낮게 나온다. 또 다각형 약 200개는 유효 기간이
-0 Ma에서 0 Ma까지라 현재 시각에만 지구 거의 전체를 덮으므로, 묶을 때 뺐다.
+0 Ma에서 0 Ma까지라 현재 시각에만 지구 거의 전체를 덮으므로, 목록 파일의 `pack.drop_zero_span`으로 묶을 때 뺀다.
 
 ### 5.5 측정의 한계
 

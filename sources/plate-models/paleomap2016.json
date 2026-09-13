@@ -1,0 +1,50 @@
+{
+  "schema_version": 2,
+  "id": "paleomap2016",
+  "title": "Scotese (2016) PALEOMAP Global Plate Model, from the PALEOMAP PaleoAtlas for GPlates",
+  "short_title": "Scotese 2016 PALEOMAP",
+  "menu_title": "PALEOMAP 2016 (Scotese)",
+  "reference_frame": "PALEOMAP (plate 001 'Hot Spot to PMAG' is the identity)",
+  "covers_ma": [
+    0,
+    1100
+  ],
+  "preferred": false,
+  "publish": true,
+  "retrieved_at": "2026-09-13",
+  "citation": "Scotese, C. R., 2016. PALEOMAP PaleoAtlas for GPlates and the PaleoData Plotter Program. PALEOMAP Project. doi:10.5281/zenodo.10251792",
+  "license": {
+    "name": "Creative Commons Attribution 4.0 International",
+    "url": "https://creativecommons.org/licenses/by/4.0/",
+    "statement": "The Zenodo record for the PALEOMAP PaleoAtlas for GPlates lists its licence as cc-by-4.0.",
+    "source": "https://zenodo.org/records/10251792",
+    "note": "Only the rotation file and the plate polygons are used. The paleogeographic map rasters in the same archive are not unpacked, packed or served: the maps the viewer measures are governed by the separate PALEOMAP website terms, and this project keeps to publishing masks derived from them."
+  },
+  "archive": {
+    "url": "https://zenodo.org/api/records/10251792/files/Scotese_PaleoAtlas_v3.zip/content",
+    "path": "data/sources/plates/paleomap2016/archive.zip",
+    "bytes": 58089990,
+    "sha256": "7bf15709970645465df17542e20f9e2e9ed01d20797f38513ed83621e4ace2a0",
+    "member_prefix": "Scotese PaleoAtlas_v3/PALEOMAP Global Plate Model/"
+  },
+  "members": [
+    {
+      "role": "rotation",
+      "name": "PALEOMAP_PlateModel.rot",
+      "bytes": 79521,
+      "sha256": "d56846bb3c6260805d088171066bc18e9d54e831892b660fd31315260e288022"
+    },
+    {
+      "role": "continents",
+      "name": "PALEOMAP_PlatePolygons.gpml",
+      "bytes": 5287072,
+      "sha256": "4925c064a415cfa6e7fd3f5e0682585baa9908f01bee9e053ca5dea0b0dc57ca"
+    }
+  ],
+  "pack": {
+    "drop_zero_span": true,
+    "note": "About 200 polygons are valid from 0 Ma to 0 Ma. Active only at that instant, they cover nearly the whole globe, so they are dropped when packing."
+  },
+  "relationship": "Scotese's own rotation model, the lineage behind the published maps this viewer measures, though the maps are the 2002 edition and this model is dated 2016-02-01. Independent of the EarthByte and Torsvik & Cocks models. Its polygons include continental shelves, so its land reaches further than the land segmented from the maps.",
+  "limitations": "The rotation file states no rule for Palaeozoic longitude; plate 001 'Hot Spot to PMAG' is the identity at every age. Polygons are continental blocks with shelves, not coastlines. Rotations reach 1100 Ma."
+}
