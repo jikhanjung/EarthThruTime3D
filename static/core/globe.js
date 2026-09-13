@@ -73,6 +73,9 @@ const temperatureToggle = $('temperature');
 // applied only as its departure from the slice's own datum.
 const seaLevel = JSON.parse($('globe-sealevel')?.textContent ?? '{"long":[],"pleistocene":[]}');
 const seaLevelControl = $('sealevel');
+// The ice overlay can be hidden in any surface mode; the masks stay loaded.
+const iceToggle = $('ice');
+let iceVisible = true;
 let plateLayer;
 let plateAge = null;
 // Empty means the Scotese surface alone, which is where the viewer starts.
@@ -184,6 +187,12 @@ function loadField(frame) {
 function loadTemperature(frame) {
   return loadData(`${frame.id}:temp`, frame.temp);
 }
+// Ice masks exist where ice was drawn: Natural Earth at the present, the atlas's white
+// elsewhere. A frame without one contributes no ice, so the overlay fades out across
+// the gap to it, which reads as retreat.
+function loadIce(frame) {
+  return frame.ice ? loadData(`${frame.id}:ice`, frame.ice) : Promise.resolve(null);
+}
 function loadData(key, url) {
   // A field is data, not a picture: distance in red, height in green and blue.
   // Decoding it as an <img> lets the browser colour-manage the bytes on the way to
@@ -293,6 +302,7 @@ async function selectStop(value, manual = false) {
   }
   if (temperatureToggle) temperatureToggle.setAttribute('aria-pressed', String(heated));
   if ($('temp-note')) $('temp-note').hidden = !heated;
+  if ($('temp-legend')) $('temp-legend').hidden = !heated;
   showMeanTemperature(place);
   // Decided here, synchronously, so the readout and the shader agree at every stop.
   const seaOffset = seaLevelOffset(place, fielded);
@@ -311,15 +321,18 @@ async function selectStop(value, manual = false) {
     if (place.mapless) {
       uniforms.blank.value = 1;
       uniforms.blend.value = 0;
+      applyIce(null, null);
     } else {
-      const [first, second, warmA, warmB] = await Promise.all([
+      const [first, second, warmA, warmB, iceA, iceB] = await Promise.all([
         loadSurface(place.from), loadSurface(place.to),
-        heated ? loadTemperature(place.from) : null, heated ? loadTemperature(place.to) : null]);
+        heated ? loadTemperature(place.from) : null, heated ? loadTemperature(place.to) : null,
+        fielded ? loadIce(place.from) : null, fielded ? loadIce(place.to) : null]);
       if (ticket !== request) return;
       uniforms.surfaceA.value = first;
       uniforms.surfaceB.value = second;
       uniforms.tempA.value = warmA;
       uniforms.tempB.value = warmB;
+      applyIce(iceA, iceB);
       uniforms.blend.value = place.blend;
       uniforms.blank.value = 0;
     }
@@ -334,7 +347,9 @@ async function selectStop(value, manual = false) {
     applyMotion(place);
     surfaceMesh.visible = true;
     lastPlace = place;
-    showNames(place, masked && !place.mapless);
+    // Names go on any surface without lettering of its own: the mask, and on the
+    // elevation series the relief and the temperature; a photographed map has its own.
+    showNames(place, !place.mapless && (masked || relief || heated));
     await updatePlates(place, ticket);
     if (ticket !== request) return;
     await updateCoastlines(place, ticket);
@@ -364,6 +379,18 @@ async function selectStop(value, manual = false) {
     $('retry').hidden = false;
     setPlaying(false);
     console.error(error);
+  }
+}
+function applyIce(iceA, iceB) {
+  const shown = iceVisible && Boolean(iceA || iceB);
+  uniforms.iceA.value = iceA;
+  uniforms.iceB.value = iceB;
+  uniforms.iceWeight.value.set(iceVisible && iceA ? 1 : 0, iceVisible && iceB ? 1 : 0);
+  stage.dataset.ice = String(shown);
+  if ($('ice-note')) $('ice-note').hidden = !shown;
+  if (iceToggle) {
+    iceToggle.setAttribute('aria-pressed', String(iceVisible));
+    iceToggle.disabled = !(iceA || iceB);
   }
 }
 // Long-term sea level at an age, metres above present, linear between the 1 Myr
@@ -532,9 +559,23 @@ function showMeanTemperature(place) {
     if (from != null && to != null) value = from + (to - from) * place.blend;
     else if (place.blend === 0 && from != null) value = from;
   }
-  out.textContent = value == null
+  let text = value == null
     ? L.meanTemperatureNone
     : fmt(L.meanTemperature, { value: value.toFixed(1), between: place.blend > 0 ? L.meanTemperatureBetween : '' });
+  // The colour key: today's global mean as a fixed tick, this stop's mean as a marker,
+  // both on the shader's -30..40 C ramp, and the readout says how far from today.
+  const legend = $('temp-legend');
+  if (legend) {
+    const today = frames.find(frame => frame.age === 0 && frame.mean_c != null)?.mean_c ?? null;
+    const along = celsius => `${(Math.max(0, Math.min(1, (celsius + 30) / 70)) * 100).toFixed(1)}%`;
+    if (today != null) $('temp-today').style.left = along(today);
+    $('temp-now').hidden = value == null;
+    if (value != null) $('temp-now').style.left = along(value);
+    const delta = value != null && today != null ? value - today : null;
+    legend.dataset.delta = delta == null ? '' : delta.toFixed(1);
+    if (delta != null) text += fmt(L.meanTemperatureDelta, { delta: (delta < 0 ? '−' : '+') + Math.abs(delta).toFixed(1) });
+  }
+  out.textContent = text;
   stage.dataset.meanTemp = value == null ? '' : value.toFixed(1);
 }
 // The strip above the slider: one column per stop, coloured by the global mean at that
@@ -632,6 +673,9 @@ function globeMaterial() {
   uniforms = {
     surfaceA: { value: null }, surfaceB: { value: null },
     tempA: { value: null }, tempB: { value: null },
+    iceA: { value: null }, iceB: { value: null },
+    // Which of the two bound ice masks exist; a missing one counts as no ice.
+    iceWeight: { value: new THREE.Vector2(0, 0) },
     blend: { value: 0 }, mode: { value: 0 },
     // Shaded relief: texel spacing of the bound fields, and how much the slopes are
     // exaggerated before lighting. 0 switches the shading off.
@@ -665,6 +709,9 @@ function globeMaterial() {
       uniform sampler2D surfaceB;
       uniform sampler2D tempA;
       uniform sampler2D tempB;
+      uniform sampler2D iceA;
+      uniform sampler2D iceB;
+      uniform vec2 iceWeight;
       uniform float blend;
       uniform int mode;
       uniform float blank;
@@ -721,7 +768,8 @@ function globeMaterial() {
         float rise = clamp(metres / 4000.0, 0.0, 1.0);
         vec3 low = mix(decode(vec3(0.58, 0.49, 0.37)), decode(vec3(0.27, 0.53, 0.27)), vegetation);
         vec3 mid = mix(decode(vec3(0.70, 0.60, 0.47)), decode(vec3(0.78, 0.70, 0.45)), vegetation);
-        vec3 high = decode(vec3(0.95, 0.95, 0.95));
+        // Grey at the top, not white: white is the ice layer's, and Tibet is not ice.
+        vec3 high = decode(vec3(0.80, 0.77, 0.72));
         vec3 ground = rise < 0.35 ? mix(low, mid, rise / 0.35) : mix(mid, high, (rise - 0.35) / 0.65);
         return mix(sea, ground, landness);
       }
@@ -821,6 +869,19 @@ function globeMaterial() {
         } else {
           colour = mix(decode(texture2D(surfaceA, surfaceUv).rgb),
                        decode(texture2D(surfaceB, surfaceUv).rgb), blend);
+        }
+        // Ice over whatever is beneath: grounded ice near-opaque white, floating shelf
+        // ice paler, since a shelf rests on ocean the grid still shows as ocean.
+        if (blank < 0.5 && mode >= 1 && (iceWeight.x + iceWeight.y) > 0.0) {
+          vec2 shiftIce = travel(vec2((surfaceUv.x - 0.5) * 360.0, (surfaceUv.y - 0.5) * 180.0));
+          vec2 offsetIce = vec2(shiftIce.x / 360.0, shiftIce.y / 180.0);
+          vec2 a = texture2D(iceA, surfaceUv - blend * offsetIce).rg * iceWeight.x;
+          vec2 b = texture2D(iceB, surfaceUv + (1.0 - blend) * offsetIce).rg * iceWeight.y;
+          vec2 ice = mix(a, b, blend);
+          float grounded = smoothstep(0.3, 0.7, ice.x);
+          float shelf = smoothstep(0.3, 0.7, ice.y) * (1.0 - grounded);
+          colour = mix(colour, decode(vec3(0.96, 0.97, 0.98)), 0.9 * grounded);
+          colour = mix(colour, decode(vec3(0.85, 0.92, 0.97)), 0.65 * shelf);
         }
         // Limb shading gives the sphere volume without reading height from colour. A
         // flat sheet has no limb, so it is left alone.
@@ -1083,7 +1144,7 @@ function loadCoastline(entry) {
   }
   return coastlineData.get(entry.age);
 }
-function drawCoastline(entry, rings) {
+function drawCoastline(entry, rings, key = `${entry.age}|${projection}`) {
   const flat = projection !== 'globe';
   const lift = flat ? 0.005 : 0.007;
   const points = [];
@@ -1109,7 +1170,7 @@ function drawCoastline(entry, rings) {
     coastlineLayer.renderOrder = 1;
     earth.add(coastlineLayer);
   }
-  coastlineKey = `${entry.age}|${projection}`;
+  coastlineKey = key;
   lastCoastline = { entry, rings };
   stage.dataset.coastlines = String(rings.length);
   stage.dataset.coastlineAge = String(entry.age);
@@ -1118,6 +1179,7 @@ function hideCoastline() {
   if (coastlineLayer) coastlineLayer.visible = false;
   stage.dataset.coastlines = '0';
   stage.dataset.coastlineAge = '';
+  stage.dataset.coastlineCarried = 'false';
 }
 async function updateCoastlines(place, ticket) {
   const toggle = $('coastline');
@@ -1136,13 +1198,64 @@ async function updateCoastlines(place, ticket) {
   }
   const { rings } = await loadCoastline(entry);
   if (ticket !== request) return;
-  if (coastlineKey !== `${entry.age}|${projection}`) drawCoastline(entry, rings);
+  // Between two maps the surface is carried by the gap's motion field. A coastline
+  // published at either end of the gap rides the same field, so the line and the coast
+  // under it agree; one from outside the gap stays where it was published.
+  const carried = carryRings(rings, entry.age, place);
+  const moved = carried !== rings;
+  const key = `${entry.age}|${projection}` + (moved ? `|${place.from.id}|${place.blend.toFixed(5)}` : '');
+  if (coastlineKey !== key) drawCoastline(entry, carried, key);
   coastlineLayer.visible = true;
   stage.dataset.coastlines = String(rings.length);
   stage.dataset.coastlineAge = String(entry.age);
+  stage.dataset.coastlineCarried = String(moved);
   $('coastline-age').textContent = Math.abs(entry.age - place.age) < 1e-6
     ? fmt(L.coastlineAt, { age: entry.age })
-    : fmt(L.coastlineNearest, { age: entry.age, now: ageLabel(place) });
+    : fmt(moved ? L.coastlineCarried : L.coastlineNearest, { age: entry.age, now: ageLabel(place) });
+}
+// The coastline's rings moved along the current gap's motion field: forward by the
+// blend from the older end, or back by the rest of the way from the newer end. The
+// rings come back untouched when there is nothing to carry them with.
+function carryRings(rings, age, place) {
+  const gap = place.blend > 0 ? motions[frames.indexOf(place.from)] ?? [] : [];
+  const older = Math.abs(age - place.from.age) < 1e-6;
+  const newer = Math.abs(age - place.to.age) < 1e-6;
+  if (!gap.length || (!older && !newer)) return rings;
+  const share = older ? place.blend : -(1 - place.blend);
+  return rings.map((ring) => {
+    const out = new Array(ring.length);
+    for (let index = 0; index < ring.length; index += 2) {
+      const [east, north] = travelAt(ring[index], ring[index + 1], gap);
+      out[index] = ((ring[index] + share * east + 540) % 360) - 180;
+      out[index + 1] = Math.max(-90, Math.min(90, ring[index + 1] + share * north));
+    }
+    return out;
+  });
+}
+// The shader's travel() again, for line geometry: each control point pulls its
+// neighbourhood by the distance its landmass travels across the gap, with a Gaussian
+// falling off over the piece's own angular size. Kept in step with the shader.
+function travelAt(longitude, latitude, gap) {
+  let east = 0;
+  let north = 0;
+  let weight = 0;
+  const count = Math.min(gap.length, MAX_MOTIONS);
+  for (let index = 0; index < count; index++) {
+    const point = gap[index];
+    const eastward = ((longitude - point.lon + 540) % 360) - 180;
+    const northward = latitude - point.lat;
+    const shrink = Math.cos(THREE.MathUtils.degToRad(0.5 * (latitude + point.lat)));
+    const span = Math.hypot(eastward * shrink, northward);
+    const radius = Math.max(point.radius, 1);
+    const pull = Math.exp(-0.5 * span * span / (radius * radius));
+    east += pull * (((point.to_lon - point.lon + 540) % 360) - 180);
+    north += pull * (point.to_lat - point.lat);
+    weight += pull;
+  }
+  if (weight <= 0) return [0, 0];
+  const t = Math.max(0, Math.min(1, (weight - 0.05) / 0.4));
+  const ease = t * t * (3 - 2 * t);
+  return [east / weight * ease, north / weight * ease];
 }
 function createGrid() {
   // Built from longitude and latitude rather than from the mesh, so the same parallels
@@ -1307,6 +1420,12 @@ function init() {
       surface = surface === 'mask' ? (reliefSeries ? 'relief' : 'map') : 'mask';
       surfaceToggle.setAttribute('aria-pressed', String(surface === 'mask'));
       selectStop(stop, true);
+    });
+  }
+  if (iceToggle) {
+    iceToggle.addEventListener('click', () => {
+      iceVisible = !iceVisible;
+      applyIce(uniforms.iceA.value, uniforms.iceB.value);
     });
   }
   if (temperatureToggle) {
