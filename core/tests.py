@@ -678,6 +678,11 @@ class PaleodemTests(TestCase):
         self.assertContains(response, 'id="ice"')
         self.assertEqual(self.client.get(f"/globe/ice/{present['id']}.png").status_code, 200)
         self.assertEqual(self.client.get('/globe/ice/nope.png').status_code, 404)
+        past = next(item for item in globe_module.catalogue('paleodem2018')['maps'] if item['id'] == 'paleodem-3000')
+        globe_module.ice_path(past).write_bytes(b'png')
+        frames = {frame['id']: frame for frame in self.client.get('/', {'masks': 'paleodem2018'}).context['frames']}
+        self.assertEqual(frames['paleodem-3000']['ice'], '/globe/ice/paleodem-3000.png')
+        self.assertIsNone(frames['paleodem-2000']['ice'])
         self.assertFalse(self.client.get('/').context['ice_available'])
 
     def test_grids_borrow_the_pieces_of_the_nearest_atlas_map(self):

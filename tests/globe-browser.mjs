@@ -515,6 +515,18 @@ try {
     await dem.locator('#ice').click();
     await expect(demGlobe).toHaveAttribute('data-ice', 'false');
     await dem.locator('#ice').click();
+    // Past ice: the 300 Ma grid carries the sheet the atlas paints there, the 200 Ma grid none.
+    await dem.locator('#era').selectOption(String(demFrames.findIndex(frame => frame.id === 'paleodem-3000')));
+    await expect(demGlobe).toHaveAttribute('data-frame', 'paleodem-3000');
+    await expect(demGlobe).toHaveAttribute('aria-busy', 'false');
+    await expect(demGlobe).toHaveAttribute('data-ice', 'true');
+    await expect(dem.locator('#ice-note')).toBeVisible();
+    await dem.locator('#era').selectOption(String(demFrames.findIndex(frame => frame.id === 'paleodem-2000')));
+    await expect(demGlobe).toHaveAttribute('data-frame', 'paleodem-2000');
+    await expect(demGlobe).toHaveAttribute('aria-busy', 'false');
+    await expect(demGlobe).toHaveAttribute('data-ice', 'false');
+    await dem.locator('#era').selectOption(String(demFrames.length - 1));
+    await expect(demGlobe).toHaveAttribute('data-frame', 'paleodem-0000');
     // The fossil coastlines are offered over the grids as over the atlas.
     await dem.locator('#coastline').check();
     await expect.poll(async () => Number(await demGlobe.getAttribute('data-coastlines'))).toBeGreaterThan(0);
