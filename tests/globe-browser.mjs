@@ -65,7 +65,7 @@ try {
   // Sub-steps: each interpolated stop must render a different sphere, and the page
   // must say it is interpolated rather than observed.
   const stops = [];
-  for (const value of [56, 57, 58, 59, 60]) {
+  for (const value of [102, 103, 104, 105, 106]) {
     await page.locator('#timeline').fill(String(value));
     await page.locator('#timeline').dispatchEvent('input');
     await expect(globe).toHaveAttribute('aria-busy', 'false');
@@ -74,20 +74,20 @@ try {
   for (let index = 1; index < stops.length; index++) {
     expect(Buffer.compare(stops[index - 1], stops[index])).not.toBe(0);
   }
-  await page.locator('#timeline').fill('58');
+  await page.locator('#timeline').fill('104');
   await page.locator('#timeline').dispatchEvent('input');
   await expect(globe).toHaveAttribute('data-blend', '0.50');
   await expect(page.locator('#between-note')).toBeVisible();
   // A stop inside a gap with matched landmasses carries them; a stop on a source map
   // has nothing to carry.
-  await page.locator('#timeline').fill('54');
+  await page.locator('#timeline').fill('100');
   await page.locator('#timeline').dispatchEvent('input');
   await expect(globe).toHaveAttribute('data-blend', '0.50');
   expect(Number(await globe.getAttribute('data-motions'))).toBeGreaterThan(0);
-  await page.locator('#timeline').fill('52');
+  await page.locator('#timeline').fill('98');
   await page.locator('#timeline').dispatchEvent('input');
   await expect(globe).toHaveAttribute('data-motions', '0');
-  await page.locator('#timeline').fill('58');
+  await page.locator('#timeline').fill('104');
   await page.locator('#timeline').dispatchEvent('input');
   await expect(globe).toHaveAttribute('data-blend', '0.50');
   // The notes about the derived surface and the interpolated stop must not resize the
@@ -98,18 +98,32 @@ try {
   expect(await page.locator('.inspector').evaluate((node) =>
     node.scrollHeight > node.clientHeight)).toBe(true);
   expect(await page.locator('#globe-age').textContent()).toContain('보간');
-  await page.locator('#timeline').fill('60');
+  await page.locator('#timeline').fill('106');
   await page.locator('#timeline').dispatchEvent('input');
   await expect(globe).toHaveAttribute('data-blend', '0.00');
   await expect(page.locator('#between-note')).toBeHidden();
-  // Both ends of the slider land on a source map, never on an interpolated stop.
-  for (const [value, id] of [['0', 'scotese-650'], ['64', 'scotese-000']]) {
+  // Both ends of the map range land on a source map, never on an interpolated stop.
+  for (const [value, id] of [['46', 'scotese-650'], ['110', 'scotese-000']]) {
     await page.locator('#timeline').fill(value);
     await page.locator('#timeline').dispatchEvent('input');
     await expect(globe).toHaveAttribute('data-frame', id);
     await expect(globe).toHaveAttribute('data-blend', '0.00');
   }
-  expect(await page.locator('#timeline').getAttribute('max')).toBe('64');
+  expect(await page.locator('#timeline').getAttribute('max')).toBe('110');
+  // Older than any map: bare ocean, no surface claim, no stale preview, and the model
+  // says whether it reaches that far.
+  await page.locator('#timeline').fill('0');
+  await page.locator('#timeline').dispatchEvent('input');
+  await expect(globe).toHaveAttribute('data-mapless', 'true');
+  await expect(globe).toHaveAttribute('aria-busy', 'false');
+  await expect(page.locator('#mapless-note')).toBeVisible();
+  await expect(page.locator('#source-figure')).toBeHidden();
+  expect(await page.locator('#globe-age').textContent()).toContain('지도 없음');
+  await page.locator('#timeline').fill('46');
+  await page.locator('#timeline').dispatchEvent('input');
+  await expect(globe).toHaveAttribute('data-mapless', 'false');
+  await expect(page.locator('#mapless-note')).toBeHidden();
+  console.log('Deep-time stops passed');
   console.log('Interpolated sub-steps passed');
   const painted = await page.evaluate(() => {
     const canvas = document.querySelector('#globe canvas');
@@ -136,6 +150,9 @@ try {
     }
   }
   await page.locator('#projection').selectOption('mollweide');
+  await page.locator('#era').selectOption('16');
+  await expect(globe).toHaveAttribute('data-frame', 'scotese-000');
+  await expect(globe).toHaveAttribute('aria-busy', 'false');
   await expect(globe).toHaveAttribute('data-names', '7');
   await page.screenshot({path:'data/screenshots/globe-mollweide.png',fullPage:true});
   await page.locator('#projection').selectOption('globe');

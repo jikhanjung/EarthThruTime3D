@@ -36,6 +36,9 @@ KOREAN_LABELS = ["후기 원생대", "후기 캄브리아기", "중기 오르도
 # Control points the morph shader can hold at once. Every map has fewer named pieces
 # than this, so the cap only ever trims the smallest.
 MAX_MOTIONS = 16
+# Spacing for the stops older than any map. Coarse on purpose: there is no surface to
+# morph there, only a reconstruction to turn.
+DEEP_STEP_MA = 25.0
 # India crossed the Tethys at roughly 18 to 20 cm a year, about 2 degrees of arc per
 # million years, and that is the fastest anyone measures. Pairs above it are reported,
 # not dropped: the identity comes from a shared name, which is a stronger statement than
@@ -217,7 +220,25 @@ def _stop(ages, age):
     return [index, index + 1, round(blend, 5), round(age, 4)]
 
 
-def timeline(frames, plan):
+def deep_stops(oldest_map, deepest_model, step=DEEP_STEP_MA):
+    """Stops older than any map, where only a plate model has anything to say.
+
+    The published maps stop at 650 Ma but two of the plate models reach 1000 and one
+    reaches 1800. Rather than pretend the surface is unknown there, these stops carry no
+    map at all: the viewer paints bare ocean and draws the reconstruction over it, and
+    says as much. A map frame index of -1 is what marks them.
+    """
+    if not deepest_model or deepest_model <= oldest_map + step:
+        return []
+    stops = []
+    age = deepest_model
+    while age > oldest_map + step / 2:
+        stops.append([-1, -1, 0.0, round(age, 4)])
+        age -= step
+    return stops
+
+
+def timeline(frames, plan, deepest_model=None):
     """The slider's stops as [from frame, to frame, blend, age].
 
     Sending the stops rather than a rule lets the sampling change without the viewer
@@ -227,13 +248,14 @@ def timeline(frames, plan):
     ages = [frame["age"] for frame in frames]
     if len(ages) < 2:
         return [[0, 0, 0.0, ages[0]]] if ages else []
+    deep = deep_stops(ages[0], deepest_model)
     if plan["interval_ma"]:
         marks = set(ages)
         age = ages[0]
         while age > ages[-1]:
             age = max(ages[-1], age - plan["interval_ma"])
             marks.add(round(age, 4))
-        return [_stop(ages, age) for age in sorted(marks, reverse=True)]
+        return deep + [_stop(ages, age) for age in sorted(marks, reverse=True)]
     stops = []
     for index in range(len(ages) - 1):
         for step in range(plan["steps"]):
@@ -241,7 +263,7 @@ def timeline(frames, plan):
             stops.append([index, index + 1, round(blend, 5),
                           round(ages[index] + (ages[index + 1] - ages[index]) * blend, 4)])
     stops.append([len(ages) - 1, len(ages) - 1, 0.0, ages[-1]])
-    return stops
+    return deep + stops
 
 
 # Plate models are served whole rather than per map: each is one model, and the viewer
@@ -321,11 +343,13 @@ def globe(request):
                            "names": landmass_names(pieces_by_frame[item["id"]]),
                            "source": item["page"]["url"]})
     plan = sampling(request)
+    models = plate_models()
+    deepest = max((model["covers"][1] for model in models), default=None)
     return render(request, "core/home.html",
                   {"frames": frames, "viewer_enabled": enabled(),
-                   "stops": timeline(frames, plan), "sampling": plan,
+                   "stops": timeline(frames, plan, deepest), "sampling": plan,
                    "source_maps_public": source_maps_public(),
-                   "plates": plate_models(),
+                   "plates": models,
                    "motions": motions(frames, pieces_by_frame),
                    "fields_available": any(frame["field"] for frame in frames)})
 

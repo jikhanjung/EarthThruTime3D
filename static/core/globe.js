@@ -130,8 +130,13 @@ async function loadSurface(frame) {
 function stopAt(value) {
   const clamped = Math.max(0, Math.min(stops.length - 1, Math.round(value)));
   const [from, to, blend, age] = stops[clamped];
+  // A map frame index of -1 marks a stop older than any published map: there is a plate
+  // model to reconstruct there but no surface to show.
+  if (from < 0) {
+    return { value: clamped, blend: 0, age, from: null, to: null, index: 0, mapless: true };
+  }
   return { value: clamped, blend, age, from: frames[from], to: frames[to],
-           index: blend > 0.5 ? to : from };
+           index: blend > 0.5 ? to : from, mapless: false };
 }
 function neighbourStop(direction) {
   const marks = frameStops.filter((mark) => direction < 0 ? mark < stop : mark > stop);
@@ -139,12 +144,14 @@ function neighbourStop(direction) {
   return direction < 0 ? Math.max(...marks) : Math.min(...marks);
 }
 function ageLabel(place) {
+  if (place.mapless) return `${place.age} Ma`;
   if (place.blend === 0) return ageText(place.from);
   return place.age < 1
     ? `${Math.round(place.age * 1e6).toLocaleString()}년 전`
     : `${place.age.toFixed(1)} Ma`;
 }
 function periodLabel(place) {
+  if (place.mapless) return '지도 없는 시대';
   return place.blend === 0 ? place.from.label : `${place.from.label} → ${place.to.label}`;
 }
 async function selectStop(value, manual = false) {
@@ -155,52 +162,79 @@ async function selectStop(value, manual = false) {
   selected = place.index;
   const ticket = ++request;
   const between = place.blend > 0;
-  const masked = (surface === 'mask' || !sourceMapsPublic)
+  const masked = !place.mapless && (surface === 'mask' || !sourceMapsPublic)
     && Boolean(place.from.field) && Boolean(place.to.field);
-  const anchor = place.blend > 0.5 ? place.to : place.from;
+  const anchor = place.mapless ? null : (place.blend > 0.5 ? place.to : place.from);
   $('era').value = selected;
   $('timeline').value = stop;
-  $('timeline').setAttribute('aria-valuetext',
-    between ? `${periodLabel(place)} 사이, ${ageLabel(place)}, 보간` : `${place.from.label}, ${ageText(place.from)}`);
+  $('timeline').setAttribute('aria-valuetext', place.mapless
+    ? `${ageLabel(place)}, 지도 없음, 판 재구성만`
+    : (between ? `${periodLabel(place)} 사이, ${ageLabel(place)}, 보간`
+               : `${place.from.label}, ${ageText(place.from)}`));
   $('period').textContent = periodLabel(place);
   $('age').textContent = ageLabel(place);
-  $('source-title').textContent = between ? `${place.from.title} → ${place.to.title}` : place.from.title;
+  $('source-title').textContent = place.mapless
+    ? '가장 오래된 지도보다 이전'
+    : (between ? `${place.from.title} → ${place.to.title}` : place.from.title);
   $('globe-age').textContent = [periodLabel(place), ageLabel(place),
-    masked ? '대륙 마스크' : null, between ? '보간' : null].filter(Boolean).join(' / ');
-  $('source-link').href = anchor.source;
-  if ($('source-preview')) {
-    $('source-preview').src = anchor.url;
-    $('source-preview').alt = `${anchor.label} (${ageText(anchor)}) Scotese 원본 지도`;
+    place.mapless ? null : (masked ? '대륙 마스크' : null),
+    place.mapless ? '지도 없음' : (between ? '보간' : null)].filter(Boolean).join(' / ');
+  // Older than any map there is no source to preview, and leaving the last one up
+  // would read as if it applied.
+  if ($('source-figure')) $('source-figure').hidden = place.mapless;
+  if (anchor) {
+    $('source-link').href = anchor.source;
+    if ($('source-preview')) {
+      $('source-preview').src = anchor.url;
+      $('source-preview').alt = `${anchor.label} (${ageText(anchor)}) Scotese 원본 지도`;
+    }
   }
-  $('older').disabled = stop <= frameStops[0];
+  $('older').disabled = stop <= 0;
   $('newer').disabled = stop >= frameStops[frames.length - 1];
-  $('frame-number').textContent = between
-    ? `${ageLabel(place)} · 보간`
-    : `${selected + 1} / ${frames.length}`;
-  if (surfaceToggle) surfaceToggle.disabled = !place.from.field || !place.to.field;
+  $('frame-number').textContent = place.mapless
+    ? `${place.age} Ma · 지도 없음`
+    : (between ? `${ageLabel(place)} · 보간` : `${selected + 1} / ${frames.length}`);
+  if (surfaceToggle) {
+    surfaceToggle.disabled = place.mapless || !place.from.field || !place.to.field;
+  }
   $('surface-note').hidden = !masked;
   $('between-note').hidden = !between;
-  status.textContent = `${periodLabel(place)} ${masked ? '대륙 마스크를' : '지도를'} 불러오는 중…`;
+  if ($('mapless-note')) $('mapless-note').hidden = !place.mapless;
+  status.textContent = place.mapless
+    ? `${ageLabel(place)} 판 재구성을 불러오는 중…`
+    : `${periodLabel(place)} ${masked ? '대륙 마스크를' : '지도를'} 불러오는 중…`;
   status.hidden = false;
   status.classList.remove('loaded');
   $('retry').hidden = true;
   stage.setAttribute('aria-busy', 'true');
   try {
-    const [first, second] = await Promise.all([loadSurface(place.from), loadSurface(place.to)]);
-    if (ticket !== request) return;
-    uniforms.surfaceA.value = first;
-    uniforms.surfaceB.value = second;
-    uniforms.blend.value = place.blend;
+    if (place.mapless) {
+      uniforms.blank.value = 1;
+      uniforms.blend.value = 0;
+    } else {
+      const [first, second] = await Promise.all([loadSurface(place.from), loadSurface(place.to)]);
+      if (ticket !== request) return;
+      uniforms.surfaceA.value = first;
+      uniforms.surfaceB.value = second;
+      uniforms.blend.value = place.blend;
+      uniforms.blank.value = 0;
+    }
     uniforms.masked.value = masked ? 1 : 0;
     applyMotion(place);
     surfaceMesh.visible = true;
-    showNames(place, masked);
+    showNames(place, masked && !place.mapless);
     await updatePlates(place, ticket);
-    stage.dataset.frame = place.from.id;
+    if (ticket !== request) return;
+    stage.dataset.frame = place.mapless ? 'none' : place.from.id;
     stage.dataset.blend = place.blend.toFixed(2);
-    stage.setAttribute('aria-label', `${periodLabel(place)}, ${ageLabel(place)} ${masked ? '대륙 마스크 지구본' : '지구본'}${between ? ', 보간된 중간 형태' : ''}. 드래그 또는 방향키로 회전, 더하기 빼기로 확대 축소.`);
+    stage.dataset.mapless = String(place.mapless);
+    stage.setAttribute('aria-label', place.mapless
+      ? `${ageLabel(place)}. 이 시대의 지도는 없고 판 재구성만 표시합니다.`
+      : `${periodLabel(place)}, ${ageLabel(place)} ${masked ? '대륙 마스크 지구본' : '지구본'}${between ? ', 보간된 중간 형태' : ''}. 드래그 또는 방향키로 회전, 더하기 빼기로 확대 축소.`);
     stage.setAttribute('aria-busy', 'false');
-    status.textContent = `${periodLabel(place)} ${masked ? '대륙 마스크' : '지구본'} 표시 완료${between ? ' (보간)' : ''}`;
+    status.textContent = place.mapless
+      ? `${ageLabel(place)} 판 재구성 표시 완료`
+      : `${periodLabel(place)} ${masked ? '대륙 마스크' : '지구본'} 표시 완료${between ? ' (보간)' : ''}`;
     status.classList.add('loaded');
     scheduleNext();
   } catch (error) {
@@ -265,6 +299,7 @@ function globeMaterial() {
     blend: { value: 0 }, masked: { value: 0 },
     land: { value: linear(LAND_COLOUR) }, ocean: { value: linear(OCEAN_COLOUR) },
     projection: { value: 0 },
+    blank: { value: 0 },
     motionCount: { value: 0 },
     motionPoints: { value: Array.from({ length: MAX_MOTIONS }, () => new THREE.Vector4()) },
     motionRadius: { value: new Float32Array(MAX_MOTIONS) },
@@ -284,6 +319,7 @@ function globeMaterial() {
       uniform sampler2D surfaceB;
       uniform float blend;
       uniform float masked;
+      uniform float blank;
       uniform vec3 land;
       uniform vec3 ocean;
       const float PI = 3.141592653589793;
@@ -339,7 +375,11 @@ function globeMaterial() {
         vec2 surfaceUv;
         if (!locate(surfaceUv)) discard;
         vec3 colour;
-        if (masked > 0.5) {
+        if (blank > 0.5) {
+          // Older than any published map: bare water, so the reconstruction drawn over
+          // it is plainly the only claim being made.
+          colour = ocean;
+        } else if (masked > 0.5) {
           // Both textures hold a signed distance to the coastline. Mixing the distances
           // and cutting at the midpoint moves the coastline; mixing pictures would only
           // dissolve one into the other. Sampling each side through the travel field
@@ -544,6 +584,7 @@ function drawPlates(age, loaded) {
   stage.dataset.plates = String(visible);
 }
 function clearPlates() {
+  if ($('plate-reach')) $('plate-reach').hidden = true;
   if (plateLayer) plateLayer.visible = false;
   plateAge = null;
   stage.dataset.plates = '0';
@@ -557,6 +598,19 @@ async function updatePlates(place, ticket) {
   if (ticket !== request || !loaded) return;
   drawPlates(Number(place.age.toFixed(3)), loaded);
   const entry = plateEntry();
+  if ($('plate-reach')) {
+    // An empty globe here means the model stops short of this age, not that anything
+    // failed. Name the models that do reach it.
+    const short = place.age > entry.covers[1] + 1e-9;
+    const deeper = plates.filter((model) => model.covers[1] >= place.age - 1e-9)
+                         .map((model) => model.title);
+    $('plate-reach').hidden = !short;
+    $('plate-reach').textContent = short
+      ? (`${entry.title} 모델은 ${entry.covers[1]} Ma까지입니다. `
+         + (deeper.length ? `${deeper.join(', ')}를 고르면 이 시대가 나옵니다.`
+                          : '이 시대에 닿는 모델이 아직 없습니다.'))
+      : '';
+  }
   if ($('plate-cite')) {
     $('plate-cite').textContent = `${entry.citation} · ${entry.license}`;
   }
@@ -658,6 +712,12 @@ function init() {
   $('projection').value = projection;
   frames.forEach((frame, index) => $('era').add(new Option(`${frame.label} · ${ageText(frame)}`, index)));
   $('timeline').max = stops.length - 1;
+  const oldest = stops[0];
+  if ($('timeline-oldest')) {
+    $('timeline-oldest').textContent = oldest[0] < 0
+      ? `${oldest[3]} Ma · 지도 없음`
+      : `${oldest[3]} Ma · 과거`;
+  }
   $('era').addEventListener('change', () => selectFrame(Number($('era').value), true));
   $('timeline').addEventListener('input', () => selectStop(Number($('timeline').value), true));
   $('older').addEventListener('click', () => selectStop(neighbourStop(-1), true));

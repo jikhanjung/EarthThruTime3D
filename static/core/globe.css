@@ -77,3 +77,10 @@ header,main,footer{max-width:1440px}main{padding-top:26px;padding-bottom:32px}.v
 /* Citation lines are reference material rather than reading matter, so they sit a step
    back from the note they belong to. */
 .model-note .cite{display:block;margin-top:6px;font-size:.7rem;color:#8aa3ae;line-height:1.5}
+
+/* A model that does not reach the chosen age leaves the globe bare, which needs saying
+   rather than looking like a failure. */
+/* :not([hidden]) matters: a bare display:block would override the attribute that is
+   supposed to keep this line out of the way. */
+.model-note .reach:not([hidden]){display:block;margin-top:8px;padding:7px 9px;border-radius:6px;
+                   background:#3a2a1e;color:#f0c99a;font-size:.74rem;line-height:1.6}

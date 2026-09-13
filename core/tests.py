@@ -149,6 +149,30 @@ class GlobeTests(TestCase):
                     self.assertTrue(0.0 <= blend < 1.0)
                     self.assertTrue(frames[newer]['age'] <= age <= frames[older]['age'])
 
+    def test_deep_stops_reach_past_the_oldest_map(self):
+        frames = [{'age': age} for age in [650, 100, 0]]
+        plan = {'interval_ma': None, 'steps': 2}
+        without = globe_module.timeline(frames, plan)
+        with_deep = globe_module.timeline(frames, plan, deepest_model=1800)
+        self.assertEqual(len(with_deep) - len(without), 46)
+        deep = [stop for stop in with_deep if stop[0] < 0]
+        self.assertEqual(deep, with_deep[:len(deep)])
+        self.assertEqual(deep[0][3], 1800)
+        self.assertGreater(deep[-1][3], 650)
+        ages = [stop[3] for stop in with_deep]
+        self.assertEqual(ages, sorted(ages, reverse=True))
+        for stop in deep:
+            self.assertEqual(stop[:3], [-1, -1, 0.0])
+
+    def test_no_deep_stops_without_a_model_that_reaches_further(self):
+        frames = [{'age': age} for age in [650, 0]]
+        plan = {'interval_ma': None, 'steps': 4}
+        self.assertEqual(globe_module.timeline(frames, plan, deepest_model=650),
+                         globe_module.timeline(frames, plan))
+        self.assertEqual(globe_module.timeline(frames, plan, deepest_model=None),
+                         globe_module.timeline(frames, plan))
+        self.assertEqual(globe_module.deep_stops(650, 660), [])
+
     def test_timeline_step_count_follows_the_plan(self):
         frames = [{'age': age} for age in [100, 50, 0]]
         self.assertEqual(len(globe_module.timeline(frames, {'interval_ma': None, 'steps': 1})), 3)

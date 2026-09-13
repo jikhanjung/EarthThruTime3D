@@ -193,6 +193,21 @@ inspector scrolls inside it, with a reserved scrollbar gutter so a scrollbar app
 does not shift its text. The browser run asserts the globe panel keeps the same box
 across the plain map, the derived surface and an interpolated stop.
 
+## Older than any map
+
+The published maps stop at 650 Ma, but the plate models reach 1000 and one reaches 1800.
+The slider now runs past the oldest map, every 25 Ma, into stops that carry no map at
+all. A map frame index of -1 is what marks them on the wire.
+
+At such a stop the globe is painted bare ocean and the reconstruction is drawn over it.
+Nothing about the surface is being claimed: there is no measurement of land there, and
+the inspector says so. The source preview is hidden, because leaving the last map up
+would read as if it applied. Coming back inside the map range restores everything.
+
+A model that does not reach the chosen age leaves the globe empty, which looks like a
+failure and is not one, so the inspector names the models that do reach it. With Merdith
+selected at 1300 Ma the note points at Cao; with Cao selected the reconstruction appears.
+
 ## The plate model overlay
 
 A second toolbar toggle, **판 재구성**, draws EarthByte's Merdith et al. (2021) plate
