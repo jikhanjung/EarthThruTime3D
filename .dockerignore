@@ -15,6 +15,9 @@
 !annotations/**
 !deploy/
 !deploy/**
+!locale/
+!locale/**
+!scripts/compile_messages.py
 **/__pycache__/**
 **/*.pyc
 **/.env
