@@ -11,8 +11,8 @@ one it came from.
   under `sources/plate-models/`.
 - [PALEOMAP PaleoAtlas 2016](#paleomap-paleoatlas-2016): 90 map rasters, 750 Ma to present,
   the same edition as the PALEOMAP rotation model. `paleomap-atlas-2016.json`.
-- [Other palaeogeographies](#other-palaeogeographies): collected for review, not used by the
-  viewer. `paleogeography/*.json`.
+- [Other palaeogeographies](#other-palaeogeographies): collected for review; PaleoCoastlines is
+  also an optional viewer layer. `paleogeography/*.json`.
 
 # Plate models
 
@@ -201,7 +201,9 @@ at 460 and 461 Ma.
 
 # Other palaeogeographies
 
-Collected to review the masks against, not used by the viewer. Each manifest under
+Collected to review the masks against. PaleoCoastlines is also drawn in the viewer as an
+optional layer over the 2016 masks (`scripts/pack_coastlines.py`); Cao et al. 2017 is not
+used by the viewer. Each manifest under
 `paleogeography/` pins its archive by size and SHA-256 and records where its licence is
 stated. `scripts/compare_paleogeography.py` compares their land with the 2016 PaleoAtlas
 masks; devlog 026 has the results.

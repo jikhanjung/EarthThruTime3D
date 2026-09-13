@@ -74,6 +74,18 @@ def main():
                   "sha256": digest(staging / "paleoatlas" / motions.name),
                   "dataset": "paleoatlas2016"})
 
+    # The fossil-checked coastlines drawn over the 2016 masks.
+    coast_dir = BASE_DIR / "data/derived/paleocoastlines"
+    if not (coast_dir / "index.json").exists():
+        raise SystemExit(f"Missing {coast_dir / 'index.json'}. Run scripts/pack_coastlines.py.")
+    (staging / "paleocoastlines").mkdir()
+    coast_index = json.loads((coast_dir / "index.json").read_text())
+    for name in ["index.json"] + [entry["file"] for entry in coast_index["ages"]]:
+        target = staging / "paleocoastlines" / name
+        shutil.copy2(coast_dir / name, target)
+        files.append({"path": f"paleocoastlines/{name}", "bytes": target.stat().st_size,
+                      "sha256": digest(target), "dataset": "paleocoastlines2021"})
+
     (staging / "plates").mkdir()
     packed = sorted(path.stem for path in (BASE_DIR / "sources/plate-models").glob("*.json"))
     if not packed:

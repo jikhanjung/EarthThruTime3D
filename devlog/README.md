@@ -16,6 +16,7 @@
 
 ## 작업 기록
 
+- [027 — 화석으로 고친 해안선 겹쳐 보기](20260913_027_fossil_coastlines.md)
 - [026 — 다른 고지리 자료 모아서 검토](20260913_026_paleogeography_review.md)
 - [025 — PALEOMAP 판으로 이름 붙이고 회전으로 옮기기](20260913_025_atlas_plate_motion.md)
 - [024 — 2016 PaleoAtlas를 기본 마스크로](20260913_024_atlas_frames.md)

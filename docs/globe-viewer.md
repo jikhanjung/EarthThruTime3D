@@ -31,6 +31,17 @@ exactly. Unlike the 2002 motions, nothing here is matched between two segmentati
 morph still translates each region's neighbourhood rather than rotating it, so turning
 within a large region is approximated.
 
+Over the 2016 masks the inspector also offers a checkbox for the fossil-checked coastlines of
+PaleoCoastlines v7.1 (Kocsis & Scotese 2021). `scripts/pack_coastlines.py` verifies the
+archive against `sources/paleogeography/paleocoastlines2021.json` and writes one JSON per
+age (81 ages, 0-535 Ma, simplified to 0.1 degree) plus an index. The lines are already in
+reconstructed PALEOMAP coordinates, so they are drawn without rotation, in orange, at the
+coastline age nearest the reader's age within 10 Myr; further than that, or older than
+535 Ma, nothing is drawn and the note says why. `/globe/coastlines/<age>.json` serves only
+ages the index lists. The layer is not offered over the 2002 maps, whose longitudes drift
+from the PALEOMAP frame. Where the orange line runs inside the mask's edge, marine fossils
+say that ground was sea.
+
 The rest of this document describes the 2002 path, which is where the viewer began.
 
 The home page renders the 17 Scotese reference maps with Three.js 0.186.0. Selectors

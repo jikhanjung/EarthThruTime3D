@@ -121,6 +121,23 @@ class GlobeTests(TestCase):
                                 ' {"from": "b", "to": "c", "pairs": []}]}')
                 self.assertEqual(globe_module.atlas_motions(frames), [[{"lon": 1}], []])
 
+    def test_fossil_coastlines_are_offered_over_the_atlas_only(self):
+        with self.settings(SCOTESE_VIEWER_ENABLED=True):
+            response = self.client.get('/')
+            layer = response.context['coastlines']
+            if layer is None:
+                self.skipTest('PaleoCoastlines have not been packed in this checkout')
+            self.assertEqual(len(layer['ages']), 81)
+            self.assertContains(response, 'id="coastline"')
+            self.assertIsNone(self.client.get('/', {'masks': 'scotese2002'}).context['coastlines'])
+            served = self.client.get('/globe/coastlines/255.json')
+            self.assertEqual(served.status_code, 200)
+            body = b''.join(served.streaming_content)
+            self.assertIn(b'"rings"', body)
+            self.assertEqual(self.client.get('/globe/coastlines/3.json').status_code, 404)
+        with self.settings(SCOTESE_VIEWER_ENABLED=False):
+            self.assertEqual(self.client.get('/globe/coastlines/0.json').status_code, 404)
+
     def test_atlas_fields_are_served_by_id(self):
         with self.settings(SCOTESE_VIEWER_ENABLED=False):
             self.assertEqual(self.client.get('/globe/fields/paleoatlas-000.png').status_code, 404)

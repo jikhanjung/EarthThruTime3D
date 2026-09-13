@@ -39,6 +39,18 @@ const PROJECTIONS = {
 // compared at one time without either being mistaken for the other.
 const plates = JSON.parse($('globe-plates')?.textContent ?? '[]');
 const PLATE_COLOUR = 0xff62c0;
+// PaleoCoastlines (Kocsis & Scotese 2021): coastlines moved to where marine fossils say
+// the sea reached. Same PALEOMAP frame as the 2016 masks, so drawn without rotation.
+const coastlines = JSON.parse($('globe-coastlines')?.textContent ?? 'null');
+// Amber vanished against the tan land; this reads on land and on sea, and is not the
+// plate overlay's pink.
+const COASTLINE_COLOUR = 0xff4d1a;
+// The coastline ages run every 5 Myr with a few wider gaps; further than this from the
+// reader's age, the nearest one would be a different coastline, so none is drawn.
+const COASTLINE_REACH_MA = 10;
+const coastlineData = new Map();
+let coastlineLayer;
+let coastlineKey = '';
 const surfaceToggle = $('surface');
 let plateLayer;
 let plateAge = null;
@@ -224,6 +236,8 @@ async function selectStop(value, manual = false) {
     surfaceMesh.visible = true;
     showNames(place, masked && !place.mapless);
     await updatePlates(place, ticket);
+    if (ticket !== request) return;
+    await updateCoastlines(place, ticket);
     if (ticket !== request) return;
     stage.dataset.frame = place.mapless ? 'none' : place.from.id;
     stage.dataset.blend = place.blend.toFixed(2);
@@ -630,6 +644,85 @@ async function updatePlates(place, ticket) {
     $('plate-frame').textContent = `${entry.title} · 기준틀 ${entry.frame} · ${entry.covers[1]} Ma까지`;
   }
 }
+function coastlineEntry(age) {
+  if (!coastlines) return null;
+  let best = null;
+  for (const entry of coastlines.ages) {
+    if (!best || Math.abs(entry.age - age) < Math.abs(best.age - age)) best = entry;
+  }
+  return best && Math.abs(best.age - age) <= COASTLINE_REACH_MA + 1e-9 ? best : null;
+}
+function loadCoastline(entry) {
+  if (!coastlineData.has(entry.age)) {
+    const loading = fetch(entry.url).then((response) => {
+      if (!response.ok) throw new Error(`Coastlines unavailable: ${entry.url}`);
+      return response.json();
+    });
+    coastlineData.set(entry.age, loading);
+    loading.catch(() => coastlineData.delete(entry.age));
+  }
+  return coastlineData.get(entry.age);
+}
+function drawCoastline(entry, rings) {
+  const flat = projection !== 'globe';
+  const lift = flat ? 0.005 : 0.007;
+  const points = [];
+  for (const ring of rings) {
+    let previous = null;
+    let previousLongitude = 0;
+    for (let index = 0; index < ring.length; index += 2) {
+      const longitude = ring[index];
+      const here = pointAt(longitude, ring[index + 1], lift);
+      const jumped = flat && previous && Math.abs(longitude - previousLongitude) > 180;
+      if (previous && !jumped) points.push(previous, here);
+      previous = here;
+      previousLongitude = longitude;
+    }
+  }
+  const geometry = new THREE.BufferGeometry().setFromPoints(points);
+  if (coastlineLayer) {
+    coastlineLayer.geometry.dispose();
+    coastlineLayer.geometry = geometry;
+  } else {
+    coastlineLayer = new THREE.LineSegments(geometry, new THREE.LineBasicMaterial(
+      { color: COASTLINE_COLOUR, transparent: true, opacity: 1 }));
+    coastlineLayer.renderOrder = 1;
+    earth.add(coastlineLayer);
+  }
+  coastlineKey = `${entry.age}|${projection}`;
+  stage.dataset.coastlines = String(rings.length);
+  stage.dataset.coastlineAge = String(entry.age);
+}
+function hideCoastline() {
+  if (coastlineLayer) coastlineLayer.visible = false;
+  stage.dataset.coastlines = '0';
+  stage.dataset.coastlineAge = '';
+}
+async function updateCoastlines(place, ticket) {
+  const toggle = $('coastline');
+  if (!toggle) return;
+  $('coastline-note').hidden = !toggle.checked;
+  if (!toggle.checked) {
+    hideCoastline();
+    return;
+  }
+  const entry = place.mapless ? null : coastlineEntry(place.age);
+  if (!entry) {
+    hideCoastline();
+    const oldest = coastlines.ages[coastlines.ages.length - 1].age;
+    $('coastline-age').textContent = `${ageLabel(place)}에서 ${COASTLINE_REACH_MA} Myr 안에 해안선 자료가 없습니다. 자료는 0~${oldest} Ma입니다.`;
+    return;
+  }
+  const { rings } = await loadCoastline(entry);
+  if (ticket !== request) return;
+  if (coastlineKey !== `${entry.age}|${projection}`) drawCoastline(entry, rings);
+  coastlineLayer.visible = true;
+  stage.dataset.coastlines = String(rings.length);
+  stage.dataset.coastlineAge = String(entry.age);
+  $('coastline-age').textContent = Math.abs(entry.age - place.age) < 1e-6
+    ? `${entry.age} Ma 해안선`
+    : `가장 가까운 ${entry.age} Ma 해안선을 그렸습니다 (지금 ${ageLabel(place)}).`;
+}
 function createGrid() {
   // Built from longitude and latitude rather than from the mesh, so the same parallels
   // and meridians follow whichever projection is showing, curved or straight.
@@ -723,6 +816,7 @@ function init() {
   });
   stage.dataset.projection = projection;
   stage.dataset.plateModel = plateChoice;
+  stage.dataset.coastlines = '0';
   $('projection').value = projection;
   frames.forEach((frame, index) => $('era').add(new Option(`${frame.label} · ${ageText(frame)}`, index)));
   $('timeline').max = stops.length - 1;
@@ -786,6 +880,7 @@ function init() {
       selectStop(stop, true);
     });
   }
+  if ($('coastline')) $('coastline').addEventListener('change', () => selectStop(stop, true));
   $('projection').addEventListener('change', () => setProjection($('projection').value));
   $('reset').addEventListener('click', resetView);
   stage.addEventListener('keydown', (event) => {

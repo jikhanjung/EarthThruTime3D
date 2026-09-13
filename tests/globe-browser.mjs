@@ -314,6 +314,27 @@ try {
   await expect(atlasGlobe).toHaveAttribute('aria-busy', 'false');
   expect(Number(await atlasGlobe.getAttribute('data-motions'))).toBeGreaterThan(0);
   await expect(atlas.locator('#between-note')).toContainText('PALEOMAP');
+  // Fossil-checked coastlines: drawn at the reader's age, and said to be missing where
+  // the dataset stops (535 Ma), rather than borrowed from the nearest distant age.
+  const frameIndex = (id) => String(atlasFrames.findIndex(frame => frame.id === id));
+  await atlas.locator('#era').selectOption(frameIndex('paleoatlas-255'));
+  await expect(atlasGlobe).toHaveAttribute('aria-busy', 'false');
+  await atlas.locator('#coastline').check();
+  await expect(atlasGlobe).toHaveAttribute('data-coastline-age', '255');
+  expect(Number(await atlasGlobe.getAttribute('data-coastlines'))).toBeGreaterThan(0);
+  await expect(atlas.locator('#coastline-note')).toBeVisible();
+  await atlas.locator('#era').selectOption(frameIndex('paleoatlas-750'));
+  await expect(atlasGlobe).toHaveAttribute('data-coastlines', '0');
+  await expect(atlas.locator('#coastline-age')).toContainText('535');
+  await atlas.locator('#era').selectOption(frameIndex('paleoatlas-255'));
+  await expect(atlasGlobe).toHaveAttribute('data-coastline-age', '255');
+  await atlas.locator('#projection').selectOption('mollweide');
+  await expect(atlasGlobe).toHaveAttribute('aria-busy', 'false');
+  await atlas.locator('#globe canvas').screenshot({path:'data/screenshots/globe-atlas-coastlines-255.png'});
+  await atlas.locator('#coastline').uncheck();
+  await expect(atlasGlobe).toHaveAttribute('data-coastlines', '0');
+  await expect(atlas.locator('#coastline-note')).toBeHidden();
+  console.log('Fossil coastline layer passed');
   await atlas.screenshot({path:'data/screenshots/globe-atlas-750.png', fullPage:true});
   await expect(atlas.locator('a[href="?masks=scotese2002"]')).toHaveCount(1);
   console.log('2016 atlas default passed');

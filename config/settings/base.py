@@ -126,6 +126,10 @@ SCOTESE_DERIVED_DIR = Path(os.environ.get(
 PALEOATLAS_DERIVED_DIR = Path(os.environ.get(
     'PALEOATLAS_DERIVED_DIR', BASE_DIR / 'data' / 'derived' / 'paleoatlas'))
 
+# PaleoCoastlines (Kocsis & Scotese 2021) packed by scripts/pack_coastlines.py.
+PALEOCOASTLINES_DERIVED_DIR = Path(os.environ.get(
+    'PALEOCOASTLINES_DERIVED_DIR', BASE_DIR / 'data' / 'derived' / 'paleocoastlines'))
+
 # Which land masks the globe shows by default: 'paleoatlas2016' (the 2016 atlas, same
 # edition as the PALEOMAP rotation model) or 'scotese2002' (the 2002 web maps). A page
 # can still ask for the other with ?masks=, for comparison.

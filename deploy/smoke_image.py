@@ -100,6 +100,11 @@ def main():
             fetch("/globe/fields/scotese-000.png")
             fetch("/globe/fields/paleoatlas-000.png")
             fetch("/globe/maps/paleoatlas-000.jpg", expect=404)
+            if "globe-coastlines" not in home:
+                raise SystemExit("The fossil coastline layer is not offered over the atlas.")
+            if not json.loads(fetch("/globe/coastlines/255.json")).get("rings"):
+                raise SystemExit("PaleoCoastlines at 255 Ma are empty.")
+            fetch("/globe/coastlines/3.json", expect=404)
             if "globe-frames" not in fetch("/?masks=scotese2002").decode():
                 raise SystemExit("The 2002 comparison masks are not reachable.")
             # The plate model is a second dataset with its own licence; it must be both

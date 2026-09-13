@@ -42,6 +42,14 @@
       <p class="cite" id="plate-note-model"></p>
       <p class="cite" id="plate-cite"></p>
     </div>
+{% endif %}{% if coastlines %}    <div class="model-note coastline-layer">
+      <label class="coastline-toggle"><input type="checkbox" id="coastline"> 화석으로 고친 해안선 겹쳐 보기</label>
+      <div id="coastline-note" hidden>
+        <p>주황 선은 PaleoCoastlines입니다. PALEOMAP 지형 모델의 해안선을 Paleobiology Database의 해양 화석이 가리키는 최대 해침선까지 옮긴 것이라, 선이 마스크 가장자리보다 안쪽에 있으면 화석은 그곳이 바다였다고 말합니다. 마스크와 같은 PALEOMAP 틀이라 회전하지 않고 그대로 겹칩니다.</p>
+        <p class="cite" id="coastline-age"></p>
+        <p class="cite">{{ coastlines.citation }} · <a href="{{ coastlines.license_url }}" target="_blank" rel="noopener">{{ coastlines.license }}</a></p>
+      </div>
+    </div>
 {% endif %}    <p class="model-note derived" id="mapless-note" hidden>가장 오래된 Scotese 지도보다 이전입니다. 이 시대의 지도는 없으므로 바다만 칠하고, 켜져 있다면 판 재구성만 그립니다. 지구본 면은 아무 것도 주장하지 않습니다.</p>
 {% if mask.id == 'paleoatlas2016' %}    <p class="model-note derived" id="between-note" hidden>원본 시점 사이를 보간한 화면입니다. 대륙마다 그 아래 PALEOMAP 판의 회전으로 중심이 옮겨 가는 길을 계산하고, 그 길을 따라 두 시점의 해안선 거리장을 섞었습니다. 판 운동은 반영하지만 대륙 안의 회전과 해수면 변화는 근사입니다.</p>
 {% else %}    <p class="model-note derived" id="between-note" hidden>원본 시점 사이를 보간한 화면입니다. 두 시점의 해안선 거리장을 섞어 만든 중간 형태이며, 실제 지각 운동이나 해수면 변화를 계산한 것이 아닙니다.</p>
@@ -58,6 +66,7 @@
 {{ frames|json_script:'globe-frames' }}
 {{ stops|json_script:'globe-stops' }}
 {% if plates %}{{ plates|json_script:'globe-plates' }}{% endif %}
+{% if coastlines %}{{ coastlines|json_script:'globe-coastlines' }}{% endif %}
 {{ motions|json_script:'globe-motions' }}
 {% else %}<section class="notice"><h2>고지리 지구본</h2><p>이 실행 환경에서는 연구용 지도 뷰어가 활성화되지 않았습니다.</p></section>{% endif %}
 {% endblock %}

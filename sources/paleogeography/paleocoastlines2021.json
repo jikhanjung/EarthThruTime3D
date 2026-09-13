@@ -18,5 +18,5 @@
  },
  "contents": "Data/CS: coastline polygons at 81 ages, 0-535 Ma, in reconstructed coordinates (shapefile and GPML). Data/CM: continental margins, the -1400 m isobath of the PaleoDEMs. Data/paleomap_model_v19o_r1c: the PALEOMAP rotation file and partitioning polygons they were made with. Equirectangular and Mollweide PNG and PDF plots.",
  "evidence": "Coastlines start from the PALEOMAP PaleoDEMs and are moved to the maximum transgressive surface indicated by stage-level marine fossil occurrences in the Paleobiology Database.",
- "status": "Collected for review; not used by the viewer."
+ "status": "Coastlines packed by scripts/pack_coastlines.py and drawn as an optional layer over the 2016 PaleoAtlas masks."
 }

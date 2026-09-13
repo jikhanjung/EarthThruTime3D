@@ -266,6 +266,28 @@ def atlas_motions(frames):
     return [gap["pairs"][:MAX_MOTIONS] for gap in gaps]
 
 
+def coastline_index():
+    path = Path(settings.PALEOCOASTLINES_DERIVED_DIR) / "index.json"
+    return json.loads(path.read_text()) if path.exists() else None
+
+
+def coastlines(source):
+    """The fossil-checked PaleoCoastlines layer for the page, where it applies.
+
+    Offered only over the 2016 masks: both are PALEOMAP, so the lines sit on the masks with
+    no rotation (devlog 026). Over the 2002 maps, whose longitudes drift from that frame,
+    the same lines would look like a disagreement they are not.
+    """
+    index = coastline_index()
+    if source != "paleoatlas2016" or not index:
+        return None
+    return {"title": index["title"], "citation": index["citation"],
+            "license": index["license"], "license_url": index["license_url"],
+            "ages": [{"age": entry["age_ma"],
+                      "url": reverse("globe-coastline", args=[int(entry["age_ma"])])}
+                     for entry in index["ages"]]}
+
+
 def _first_allowed(values, choices, convert):
     for value in values:
         try:
@@ -474,6 +496,7 @@ def globe(request):
                    "plates": models,
                    "motions": (atlas_motions(frames) if source == "paleoatlas2016"
                                else motions(frames, pieces_by_frame)),
+                   "coastlines": coastlines(source) if enabled() else None,
                    "fields_available": any(frame["field"] for frame in frames)})
 
 
@@ -506,6 +529,24 @@ def land_field(request, map_id):
         raise Http404("Land field not generated") from None
     response = FileResponse(file, content_type="image/png")
     response["Cache-Control"] = "private, max-age=3600"
+    return response
+
+
+@require_safe
+def coastline_file(request, age):
+    """One age of the packed PaleoCoastlines, by the whole-million-year age the index lists."""
+    index = coastline_index()
+    if not enabled() or not index:
+        raise Http404
+    entry = next((entry for entry in index["ages"] if int(entry["age_ma"]) == age), None)
+    if entry is None:
+        raise Http404
+    try:
+        file = (Path(settings.PALEOCOASTLINES_DERIVED_DIR) / entry["file"]).open("rb")
+    except FileNotFoundError:
+        raise Http404("Coastlines not packed") from None
+    response = FileResponse(file, content_type="application/json")
+    response["Cache-Control"] = "public, max-age=86400"
     return response
 
 
