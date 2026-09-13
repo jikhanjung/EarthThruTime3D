@@ -1,6 +1,7 @@
 import { chromium, expect } from '@playwright/test';
 import { mkdir } from 'node:fs/promises';
-const browser = await chromium.launch({headless: true, args: ['--enable-unsafe-swiftshader']});
+// BROWSER_CHANNEL=chrome runs on the installed Google Chrome when the bundled Chromium is absent.
+const browser = await chromium.launch({headless: true, channel: process.env.BROWSER_CHANNEL, args: ['--enable-unsafe-swiftshader']});
 const errors = [];
 try {
   const page = await browser.newPage({viewport: {width:1440, height:1100}});
@@ -84,6 +85,8 @@ try {
   // has nothing to carry.
   await page.locator('#timeline').fill('54');
   await page.locator('#timeline').dispatchEvent('input');
+  // The blend was already 0.50 at the previous stop, so wait on the frame, which changes.
+  await expect(globe).toHaveAttribute('data-frame', 'scotese-050');
   await expect(globe).toHaveAttribute('data-blend', '0.50');
   expect(Number(await globe.getAttribute('data-motions'))).toBeGreaterThan(0);
   await page.locator('#timeline').fill('52');
