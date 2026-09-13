@@ -1,6 +1,7 @@
 import { chromium, expect } from '@playwright/test';
 import { mkdir } from 'node:fs/promises';
-const browser = await chromium.launch({headless: true, args: ['--enable-unsafe-swiftshader']});
+// BROWSER_CHANNEL=chrome runs on the installed Google Chrome when the bundled Chromium is absent.
+const browser = await chromium.launch({headless: true, channel: process.env.BROWSER_CHANNEL, args: ['--enable-unsafe-swiftshader']});
 const errors = [];
 // The long-standing checks below are written against the 2002 web-map masks, whose
 // names and frame ids they know; the 2016 atlas, now the default, gets its own pass.
