@@ -108,3 +108,7 @@ header,main,footer{max-width:1440px}main{padding-top:26px;padding-bottom:6px}.vi
 .timeline-title{display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0}
 .sampling-select{width:auto;max-width:100%;padding:4px 6px;font-size:.72rem}
 @media(max-width:640px){.timeline-title{flex-direction:column;align-items:flex-start;gap:4px}.sampling-select{font-size:.68rem;padding:3px 4px}}
+
+/* Global mean temperature strip above the slider: one column per stop. */
+#temp-strip { display: block; width: 100%; height: 10px; border-radius: 3px; margin-bottom: 6px; image-rendering: pixelated; }
+.mean-temp { margin: 0.2rem 0 0.6rem; color: #9fb3bd; font-size: 0.9rem; }

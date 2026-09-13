@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from unittest.mock import patch
@@ -588,6 +589,35 @@ class PaleodemTests(TestCase):
         with self.settings(MASK_SOURCE='paleodem2018'):
             report = self.client.get('/healthz').json()['fields']
         self.assertEqual((report['source'], report['expected'], report['missing']), ('paleodem2018', 112, 0))
+
+    def test_temperature_is_optional_and_follows_the_curve_file(self):
+        for item in globe_module.series_items('paleodem2018'):
+            self.build(item)
+        response = self.client.get('/', {'masks': 'paleodem2018'})
+        self.assertFalse(response.context['temperature_available'])
+        self.assertEqual(response.context['temperature_curve'], [])
+        self.assertNotContains(response, 'id="temperature"')
+        self.assertNotContains(response, 'id="temp-strip"')
+        item = globe_module.catalogue('paleodem2018')['maps'][-1]
+        Path(self.dem.name, 'paleotemp-curve.json').write_text(json.dumps(
+            {"curve": [[540, 27.5], [0, 14.3]], "stops": {item['id']: {"map_ma": 0, "mean_c": 14.31}}}))
+        globe_module.temperature_path(item).write_bytes(b'png')
+        response = self.client.get('/', {'masks': 'paleodem2018'})
+        self.assertTrue(response.context['temperature_available'])
+        self.assertEqual(response.context['temperature_curve'], [[540, 27.5], [0, 14.3]])
+        frames = {frame['id']: frame for frame in response.context['frames']}
+        self.assertEqual(frames[item['id']]['temp'], f"/globe/temps/{item['id']}.png")
+        self.assertEqual(frames[item['id']]['mean_c'], 14.31)
+        self.assertIsNone(frames['paleoatlas-600']['temp'])
+        self.assertIsNone(frames['paleoatlas-600']['mean_c'])
+        for needle in ('id="temperature"', 'id="temp-strip"', 'id="mean-temp"', 'zenodo.org/records/8238875'):
+            self.assertContains(response, needle)
+        self.assertEqual(self.client.get(f"/globe/temps/{item['id']}.png").status_code, 200)
+        self.assertEqual(self.client.get('/globe/temps/paleoatlas-600.png').status_code, 404)
+        self.assertEqual(self.client.get('/globe/temps/nope.png').status_code, 404)
+        # The other sources never carry temperature.
+        response = self.client.get('/')
+        self.assertFalse(response.context['temperature_available'])
 
     def test_field_route_serves_a_paleodem_slice(self):
         item = globe_module.catalogue('paleodem2018')['maps'][-1]

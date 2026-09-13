@@ -44,6 +44,23 @@ def pack_elevation(dem, dem_source, staging, files):
         shutil.copy2(source, target)
         files.append({"path": f"paleodem/{source.name}", "bytes": target.stat().st_size,
                       "sha256": digest(target), "map_id": item["id"]})
+    # Climate over the grids: one temperature texture per grid and the global mean curve
+    # (Scotese 2021, CC BY 4.0), produced by scripts/build_paleotemp.py.
+    for item in dem["maps"]:
+        source = dem_source / f"{item['id']}-temp.png"
+        if not source.exists():
+            raise SystemExit(f"Missing derived file: {source}. Run scripts/build_paleotemp.py.")
+        target = staging / "paleodem" / source.name
+        shutil.copy2(source, target)
+        files.append({"path": f"paleodem/{source.name}", "bytes": target.stat().st_size,
+                      "sha256": digest(target), "map_id": item["id"]})
+    curve = dem_source / "paleotemp-curve.json"
+    if not curve.exists():
+        raise SystemExit(f"Missing {curve}. Run scripts/build_paleotemp.py.")
+    shutil.copy2(curve, staging / "paleodem" / curve.name)
+    files.append({"path": "paleodem/paleotemp-curve.json",
+                  "bytes": (staging / "paleodem" / curve.name).stat().st_size,
+                  "sha256": digest(staging / "paleodem" / curve.name), "dataset": "paleotemp2021"})
 
 
 def main():

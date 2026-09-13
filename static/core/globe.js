@@ -62,6 +62,10 @@ const coastlineData = new Map();
 let coastlineLayer;
 let coastlineKey = '';
 const surfaceToggle = $('surface');
+// Global mean surface temperature per published map, [age, C], oldest first: the
+// area-weighted mean of the Scotese 2021 maps. Empty until the climate build has run.
+const temperatureCurve = JSON.parse($('globe-temperature')?.textContent ?? '[]');
+const temperatureToggle = $('temperature');
 let plateLayer;
 let plateAge = null;
 // Empty means the Scotese surface alone, which is where the viewer starts.
@@ -170,6 +174,9 @@ function loadMap(frame) {
 function loadField(frame) {
   return loadData(`${frame.id}:field`, frame.field);
 }
+function loadTemperature(frame) {
+  return loadData(`${frame.id}:temp`, frame.temp);
+}
 function loadData(key, url) {
   // A field is data, not a picture: distance in red, height in green and blue.
   // Decoding it as an <img> lets the browser colour-manage the bytes on the way to
@@ -237,9 +244,12 @@ async function selectStop(value, manual = false) {
   const ticket = ++request;
   const between = place.blend > 0;
   const fielded = !place.mapless && Boolean(place.from.field) && Boolean(place.to.field);
+  // Temperature needs a map on both sides; a stop without one shows its relief instead.
+  const heated = surface === 'temp' && fielded && Boolean(place.from.temp) && Boolean(place.to.temp);
   // A stop needs heights on both sides to be drawn by height; the atlas prelude has none.
-  const relief = surface === 'relief' && fielded && Boolean(place.from.relief) && Boolean(place.to.relief);
-  const masked = !relief && fielded && (surface === 'mask' || !sourceMapsPublic);
+  const relief = !heated && (surface === 'relief' || surface === 'temp') && fielded
+    && Boolean(place.from.relief) && Boolean(place.to.relief);
+  const masked = !relief && !heated && fielded && (surface === 'mask' || !sourceMapsPublic);
   const anchor = place.mapless ? null : (place.blend > 0.5 ? place.to : place.from);
   $('era').value = selected;
   $('timeline').value = stop;
@@ -253,7 +263,7 @@ async function selectStop(value, manual = false) {
     ? L.olderThanMaps
     : (between ? `${place.from.title} → ${place.to.title}` : place.from.title);
   $('globe-age').textContent = [periodLabel(place), ageLabel(place),
-    place.mapless ? null : (masked ? L.mask : relief ? L.relief : null),
+    place.mapless ? null : (masked ? L.mask : relief ? L.relief : heated ? L.temperature : null),
     place.mapless ? L.noMap : (between ? L.interpolated : null)].filter(Boolean).join(' / ');
   // Older than any map there is no source to preview, and leaving the last one up
   // would read as if it applied.
@@ -274,12 +284,15 @@ async function selectStop(value, manual = false) {
     surfaceToggle.disabled = place.mapless || !place.from.field || !place.to.field;
     surfaceToggle.setAttribute('aria-pressed', String(masked));
   }
+  if (temperatureToggle) temperatureToggle.setAttribute('aria-pressed', String(heated));
+  if ($('temp-note')) $('temp-note').hidden = !heated;
+  showMeanTemperature(place);
   $('surface-note').hidden = !masked;
   $('between-note').hidden = !between;
   if ($('mapless-note')) $('mapless-note').hidden = !place.mapless;
   status.textContent = place.mapless
     ? fmt(L.loadingPlates, { age: ageLabel(place) })
-    : fmt(masked ? L.loadingMask : relief ? L.loadingRelief : L.loadingMap, { period: periodLabel(place) });
+    : fmt(masked ? L.loadingMask : relief ? L.loadingRelief : heated ? L.loadingTemperature : L.loadingMap, { period: periodLabel(place) });
   status.hidden = false;
   status.classList.remove('loaded');
   $('retry').hidden = true;
@@ -289,14 +302,18 @@ async function selectStop(value, manual = false) {
       uniforms.blank.value = 1;
       uniforms.blend.value = 0;
     } else {
-      const [first, second] = await Promise.all([loadSurface(place.from), loadSurface(place.to)]);
+      const [first, second, warmA, warmB] = await Promise.all([
+        loadSurface(place.from), loadSurface(place.to),
+        heated ? loadTemperature(place.from) : null, heated ? loadTemperature(place.to) : null]);
       if (ticket !== request) return;
       uniforms.surfaceA.value = first;
       uniforms.surfaceB.value = second;
+      uniforms.tempA.value = warmA;
+      uniforms.tempB.value = warmB;
       uniforms.blend.value = place.blend;
       uniforms.blank.value = 0;
     }
-    uniforms.mode.value = relief ? 2 : masked ? 1 : 0;
+    uniforms.mode.value = heated ? 3 : relief ? 2 : masked ? 1 : 0;
     if (!place.mapless) {
       uniforms.texel.value.set(1 / uniforms.surfaceA.value.image.width, 1 / uniforms.surfaceA.value.image.height);
       uniforms.vegetation.value = vegetationAt(place.age);
@@ -312,15 +329,15 @@ async function selectStop(value, manual = false) {
     stage.dataset.frame = place.mapless ? 'none' : place.from.id;
     stage.dataset.blend = place.blend.toFixed(2);
     stage.dataset.mapless = String(place.mapless);
-    stage.dataset.surface = place.mapless ? 'none' : relief ? 'relief' : masked ? 'mask' : 'map';
+    stage.dataset.surface = place.mapless ? 'none' : heated ? 'temp' : relief ? 'relief' : masked ? 'mask' : 'map';
     stage.setAttribute('aria-label', place.mapless
       ? fmt(L.maplessLabel, { age: ageLabel(place) })
       : fmt(L.globeLabel, { period: periodLabel(place), age: ageLabel(place),
-                            surface: masked ? L.maskGlobe : relief ? L.reliefGlobe : L.globe, between: between ? L.betweenSuffix : '' }));
+                            surface: masked ? L.maskGlobe : relief ? L.reliefGlobe : heated ? L.temperatureGlobe : L.globe, between: between ? L.betweenSuffix : '' }));
     stage.setAttribute('aria-busy', 'false');
     status.textContent = place.mapless
       ? fmt(L.shownPlates, { age: ageLabel(place) })
-      : fmt(L.shownSurface, { period: periodLabel(place), surface: masked ? L.mask : relief ? L.relief : L.globe,
+      : fmt(L.shownSurface, { period: periodLabel(place), surface: masked ? L.mask : relief ? L.relief : heated ? L.temperature : L.globe,
                               between: between ? L.shownBetween : '' });
     status.classList.add('loaded');
     scheduleNext();
@@ -335,6 +352,55 @@ async function selectStop(value, manual = false) {
     setPlaying(false);
     console.error(error);
   }
+}
+// Global mean at an age, linear between the published maps; null outside their span.
+function meanTemperatureAt(age) {
+  for (let index = 0; index + 1 < temperatureCurve.length; index++) {
+    const [older, warmOlder] = temperatureCurve[index];
+    const [newer, warmNewer] = temperatureCurve[index + 1];
+    if (older >= age && age >= newer) {
+      return older === newer ? warmOlder : warmOlder + (warmNewer - warmOlder) * (older - age) / (older - newer);
+    }
+  }
+  return null;
+}
+function showMeanTemperature(place) {
+  const out = $('mean-temp');
+  if (!out) return;
+  let value = null;
+  if (!place.mapless) {
+    const from = place.from.mean_c;
+    const to = place.to.mean_c;
+    if (from != null && to != null) value = from + (to - from) * place.blend;
+    else if (place.blend === 0 && from != null) value = from;
+  }
+  out.textContent = value == null
+    ? L.meanTemperatureNone
+    : fmt(L.meanTemperature, { value: value.toFixed(1), between: place.blend > 0 ? L.meanTemperatureBetween : '' });
+  stage.dataset.meanTemp = value == null ? '' : value.toFixed(1);
+}
+// The strip above the slider: one column per stop, coloured by the global mean at that
+// stop's age. Same hues as the temperature surface, but over the range global means
+// actually take, 5 to 35 C, so an icehouse reads blue and a hothouse red. Grey where no
+// map reaches.
+function thermalCss(celsius) {
+  const t = Math.max(0, Math.min(1, (celsius - 5) / 30));
+  const lerp = (a, b, k) => a.map((channel, i) => Math.round(channel + (b[i] - channel) * k));
+  const cold = [41, 69, 168], mild = [240, 237, 224], hot = [184, 33, 28];
+  const rgb = t < 0.43 ? lerp(cold, mild, t / 0.43) : lerp(mild, hot, (t - 0.43) / 0.57);
+  return `rgb(${rgb.join(',')})`;
+}
+function drawTemperatureStrip() {
+  const strip = $('temp-strip');
+  if (!strip || !temperatureCurve.length) return;
+  strip.width = stops.length;
+  strip.height = 1;
+  const context = strip.getContext('2d');
+  stops.forEach(([, , , age], index) => {
+    const mean = meanTemperatureAt(age);
+    context.fillStyle = mean == null ? 'rgba(128,128,128,0.35)' : thermalCss(mean);
+    context.fillRect(index, 0, 1, 1);
+  });
 }
 // Land plants appear in the Ordovician, about 470 Ma, and forests by the Middle
 // Devonian, about 385 Ma. Before that the land is drawn bare; between, the tints blend.
@@ -407,6 +473,7 @@ function globeMaterial() {
     rgb[0] / 255, rgb[1] / 255, rgb[2] / 255, THREE.SRGBColorSpace);
   uniforms = {
     surfaceA: { value: null }, surfaceB: { value: null },
+    tempA: { value: null }, tempB: { value: null },
     blend: { value: 0 }, mode: { value: 0 },
     // Shaded relief: texel spacing of the bound fields, and how much the slopes are
     // exaggerated before lighting. 0 switches the shading off.
@@ -435,6 +502,8 @@ function globeMaterial() {
     fragmentShader: `
       uniform sampler2D surfaceA;
       uniform sampler2D surfaceB;
+      uniform sampler2D tempA;
+      uniform sampler2D tempB;
       uniform float blend;
       uniform int mode;
       uniform float blank;
@@ -493,6 +562,15 @@ function globeMaterial() {
         vec3 high = decode(vec3(0.95, 0.95, 0.95));
         vec3 ground = rise < 0.35 ? mix(low, mid, rise / 0.35) : mix(mid, high, (rise - 0.35) / 0.65);
         return mix(sea, ground, landness);
+      }
+      // Surface air temperature as colour, blue at -30 C through pale at 0 to red at
+      // 40 C, the range the maps actually span. Grey holds it over -60..60 C.
+      vec3 thermal(float celsius) {
+        float t = clamp((celsius + 30.0) / 70.0, 0.0, 1.0);
+        vec3 cold = decode(vec3(0.16, 0.27, 0.66));
+        vec3 mild = decode(vec3(0.94, 0.93, 0.88));
+        vec3 hot = decode(vec3(0.72, 0.13, 0.11));
+        return t < 0.43 ? mix(cold, mild, t / 0.43) : mix(mild, hot, (t - 0.43) / 0.57);
       }
       // Height in metres at a pair of field coordinates, one per bound texture. Green
       // holds the high byte and blue four more bits of a 12-bit value over -9000..6000 m;
@@ -559,7 +637,12 @@ function globeMaterial() {
           float distance = mix(here, there, blend) - 0.5;
           float edge = fwidth(distance) + 0.0012;
           float landness = smoothstep(-edge, edge, distance);
-          if (mode == 2) {
+          if (mode == 3) {
+            float celsius = mix(texture2D(tempA, uvA).r, texture2D(tempB, uvB).r, blend) * 120.0 - 60.0;
+            // The coastline as a dark line, so the continents stay readable under colour.
+            float coast = 1.0 - smoothstep(0.0, 0.008, abs(distance));
+            colour = thermal(celsius) * (1.0 - 0.55 * coast);
+          } else if (mode == 2) {
             float latitude = (surfaceUv.y - 0.5) * 180.0;
             colour = hypsometric(metresAt(uvA, uvB), landness) * shade(uvA, uvB, latitude);
           } else {
@@ -1056,6 +1139,13 @@ function init() {
       selectStop(stop, true);
     });
   }
+  if (temperatureToggle) {
+    temperatureToggle.addEventListener('click', () => {
+      surface = surface === 'temp' ? 'relief' : 'temp';
+      selectStop(stop, true);
+    });
+  }
+  drawTemperatureStrip();
   if ($('plate-unlock')) {
     // Unlock in place: the reader keeps the age and the view they had set up.
     $('plate-unlock').addEventListener('submit', async (event) => {

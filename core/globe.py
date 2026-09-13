@@ -135,6 +135,23 @@ def field_path(item):
     return derived_path(item, "field.png")
 
 
+def temperature_path(item):
+    """Surface air temperature texture from the Scotese 2021 maps, built for the grids."""
+    return derived_path(item, "temp.png")
+
+
+def temperature_curve():
+    """Global mean temperature per map and per stop, as scripts/build_paleotemp.py wrote it.
+
+    Absent until that script has run. The curve is an area-weighted mean of published
+    1 degree maps, so it is a derived number, not a proxy measurement.
+    """
+    path = Path(settings.PALEODEM_DERIVED_DIR) / "paleotemp-curve.json"
+    if not path.exists():
+        return {"curve": [], "stops": {}}
+    return json.loads(path.read_text())
+
+
 @lru_cache(maxsize=4)
 def catalogue(source="scotese2002"):
     return json.loads((settings.BASE_DIR / MASK_SOURCES[source]["catalogue"]).read_text())
@@ -230,6 +247,12 @@ def viewer_strings():
         "relief": _("고도"),
         "reliefGlobe": _("고도 지구본"),
         "loadingRelief": _("{period} 고도 지구본을 불러오는 중…"),
+        "temperature": _("기온"),
+        "temperatureGlobe": _("기온 지구본"),
+        "loadingTemperature": _("{period} 기온 지도를 불러오는 중…"),
+        "meanTemperature": _("전 지구 평균 기온 약 {value} °C{between}"),
+        "meanTemperatureBetween": _(" (보간)"),
+        "meanTemperatureNone": _("전 지구 평균 기온: 자료 없음 (540 Ma 이전)"),
         "noMap": _("지도 없음"),
         "interpolated": _("보간"),
         "sourceAlt": _("{label} ({age}) Scotese 원본 지도"),
@@ -573,8 +596,11 @@ def globe(request):
     frames = []
     pieces_by_frame = {}
     source = mask_source(request)
+    climate = {"curve": [], "stops": {}}
     if enabled():
         document = catalogue(source)
+        if source == "paleodem2018":
+            climate = temperature_curve()
         if source == "scotese2002":
             entries = [(item, _(korean), item["image_label"],
                         BOUNDS[item["id"].removeprefix("scotese-")],
@@ -590,9 +616,13 @@ def globe(request):
                        for item in series_items(source)]
         for item, korean, title, bounds, url, link in entries:
             pieces_by_frame[item["id"]] = piece_report(item)
+            given = climate["stops"].get(item["id"])
             frames.append({"id": item["id"], "label": korean, "title": title,
                            "age": item["age_ma"], "bounds": bounds, "url": url,
                            "relief": source_of(item) == "paleodem2018",
+                           "temp": (reverse("globe-temperature", args=[item["id"]])
+                                    if given and temperature_path(item).exists() else None),
+                           "mean_c": given["mean_c"] if given else None,
                            "field": (reverse("globe-field", args=[item["id"]])
                                      if field_path(item).exists() else None),
                            "names": landmass_names(pieces_by_frame[item["id"]]),
@@ -619,6 +649,8 @@ def globe(request):
                    "motions": (atlas_motions(frames) if source == "paleoatlas2016"
                                else motions(frames, pieces_by_frame)),
                    "coastlines": coastlines(source) if enabled() else None,
+                   "temperature_curve": climate["curve"],
+                   "temperature_available": any(frame.get("temp") for frame in frames),
                    "fields_available": any(frame["field"] for frame in frames)})
 
 
@@ -649,6 +681,22 @@ def land_field(request, map_id):
         file = field_path(item).open("rb")
     except FileNotFoundError:
         raise Http404("Land field not generated") from None
+    response = FileResponse(file, content_type="image/png")
+    response["Cache-Control"] = "private, max-age=3600"
+    return response
+
+
+@require_safe
+def temperature_map(request, map_id):
+    if not enabled():
+        raise Http404
+    item = find_map(map_id)
+    if item is None:
+        raise Http404
+    try:
+        file = temperature_path(item).open("rb")
+    except FileNotFoundError:
+        raise Http404("Temperature texture not generated") from None
     response = FileResponse(file, content_type="image/png")
     response["Cache-Control"] = "private, max-age=3600"
     return response

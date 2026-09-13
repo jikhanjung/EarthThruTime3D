@@ -579,3 +579,30 @@ msgstr "The 109 PaleoDEM 1° grids were resampled to 2048×1024 equirectangular 
 
 msgid "고도 격자 시리즈는 이 109장의 1° 고도·수심 격자를 색으로 칠한 것입니다. 해안선은 격자의 0 m 등고선이고, 물에 떠 있는 빙붕은 격자가 해저 깊이를 담고 있어 바다로 나타나며, 땅 위에 얹힌 빙상은 그 표면 높이로 나타납니다. 540 Ma 이전은 PaleoAtlas(2016) 마스크로 이어집니다."
 msgstr "The elevation series colours these 109 one-degree elevation and bathymetry grids. The coastline is the grid's 0 m contour; floating ice shelves read as ocean because the grids hold the sea floor beneath them, while grounded ice shows its surface height. Before 540 Ma the timeline continues with the PaleoAtlas (2016) masks."
+
+msgid "기온"
+msgstr "Temperature"
+
+msgid "기온 지구본"
+msgstr "temperature globe"
+
+msgid "{period} 기온 지도를 불러오는 중…"
+msgstr "Loading the {period} temperature map…"
+
+msgid "전 지구 평균 기온 약 {value} °C{between}"
+msgstr "Global mean temperature about {value} °C{between}"
+
+msgid "전 지구 평균 기온: 자료 없음 (540 Ma 이전)"
+msgstr "Global mean temperature: no data (before 540 Ma)"
+
+msgid "지표 기온 표시 중입니다. −30 °C 파랑에서 0 °C 밝은색을 지나 40 °C 빨강까지입니다. <a href=\"https://doi.org/10.1016/j.earscirev.2021.103503\" target=\"_blank\" rel=\"noopener\">Scotese (2021)</a>의 1° 기온 지도로, 기후 모델(<a href=\"https://doi.org/10.5194/cp-17-1483-2021\" target=\"_blank\" rel=\"noopener\">Valdes et al. 2021</a>) 결과를 동위원소·암석 지표에 맞춰 보정한 것입니다. 관측이 아니라 모델과 지표의 절충이며, 시점 사이는 보간입니다. 전 지구 평균은 지도의 면적 가중 평균입니다."
+msgstr "Showing surface air temperature: blue at −30 °C through pale at 0 °C to red at 40 °C. These are the 1° temperature maps of <a href=\"https://doi.org/10.1016/j.earscirev.2021.103503\" target=\"_blank\" rel=\"noopener\">Scotese (2021)</a>, climate-model output (<a href=\"https://doi.org/10.5194/cp-17-1483-2021\" target=\"_blank\" rel=\"noopener\">Valdes et al. 2021</a>) nudged to isotope and rock indicators. A compromise between model and proxies, not an observation; between stops it is interpolated. The global mean is the area-weighted mean of each map."
+
+msgid "전 지구 평균 기온, 시대순"
+msgstr "Global mean temperature through time"
+
+msgid "전 지구 평균 기온 (Scotese 2021): 파랑 추움, 빨강 더움"
+msgstr "Global mean temperature (Scotese 2021): blue cold, red warm"
+
+msgid "고도 격자 시리즈의 기온 화면과 슬라이더 위의 색띠는 이 1° 지표 기온 지도 100장에서 옵니다. 기후 모델 결과를 산소 동위원소와 기후 지시 암석(증발암·석탄·빙성 퇴적물 등)에 맞춰 보정한 것으로, 관측이 아니라 모델과 지표의 절충입니다. 전 지구 평균은 각 지도의 면적 가중 평균으로 이 프로젝트가 계산했습니다. 540 Ma 이전은 자료가 없습니다. 색띠에서 파란 구간이 빙하기입니다: 후기 오르도비스기(약 445 Ma), 후기 고생대 빙하기(약 360~260 Ma), 신생대 후기(약 34 Ma 이후)."
+msgstr "The elevation series' temperature view and the strip above the slider come from these 100 one-degree surface air temperature maps: climate-model output nudged to oxygen isotopes and climate-indicating rocks (evaporites, coals, glacial deposits), a compromise between model and proxies rather than an observation. The global mean is the area-weighted mean of each map, computed by this project. There is no data before 540 Ma. Blue spans on the strip are icehouses: the Late Ordovician (~445 Ma), the Late Palaeozoic Ice Age (~360–260 Ma) and the late Cenozoic (from ~34 Ma)."

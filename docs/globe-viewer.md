@@ -111,6 +111,30 @@ piece identities, so nothing moves as a body. Sea level is inside each grid as i
 datum, so flooded interiors are the reconstruction's; floating ice shelves are sea floor
 in the grids and read as ocean, while grounded ice shows its surface height.
 
+## Temperature
+
+`sources/paleotemp.json` pins Scotese (2021), *Global Mean Surface Temperatures for 100
+Phanerozoic Time Intervals*, Zenodo 8238875, CC BY 4.0: 1° surface air temperature maps,
+climate-model output (Valdes et al. 2021) nudged to proxies. `scripts/build_paleotemp.py`
+turns them into one grayscale 1024 × 512 texture per grid of the elevation series,
+`<id>-temp.png` in `PALEODEM_DERIVED_DIR`, encoded over −60..60 °C, taking the nearest
+map within 5 Myr; the atlas prelude has none. It also writes `paleotemp-curve.json`: the
+area-weighted global mean of every map, and the mean each grid was given. The server
+passes the curve to the page and each frame its texture route and mean.
+
+A 기온 toggle switches the surface to a fourth mode: a diverging ramp, blue at −30 °C
+through pale at 0 to red at 40 °C, with the coastline from the distance field drawn as
+a dark line so the continents stay readable. Between stops the two maps are mixed like
+the fields. Above the slider a strip colours every stop by the global mean at its age,
+linear between maps and grey where none reaches, over 5 to 35 °C so an icehouse reads
+blue; the inspector reads out the mean at the current stop, interpolated between the
+neighbouring maps' means when the stop is between them.
+
+These are model fields nudged to proxies, not observations, and the note says so. The
+global mean is this project's own reduction of the published maps. PhanDA (Judd et al.
+2024), the current reference curve, is cited and not shipped: its repository carries no
+licence.
+
 ## Mapping pipeline
 
 1. Django exposes only manifest-listed map IDs through `/globe/maps/<id>.jpg`.
