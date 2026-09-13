@@ -1,3 +1,4 @@
 {% extends 'base.html' %}
-{% block title %}문의{% endblock %}
-{% block content %}<h1>문의 및 문제 보고</h1><p>현재는 개발 초기 단계로 공개 문의 채널이 지정되지 않았습니다. 프로젝트 관리자에게 문제를 전달할 때 아래 정보를 함께 알려 주세요.</p><ul><li>앱 버전: {{ version }}</li><li>사용한 브라우저와 운영체제</li><li>문제가 발생한 페이지와 재현 순서</li></ul>{% endblock %}
+{% load i18n %}
+{% block title %}{% trans "문의" %}{% endblock %}
+{% block content %}<h1>{% trans "문의 및 문제 보고" %}</h1><p>{% trans "현재는 개발 초기 단계로 공개 문의 채널이 지정되지 않았습니다. 프로젝트 관리자에게 문제를 전달할 때 아래 정보를 함께 알려 주세요." %}</p><ul><li>{% blocktrans %}앱 버전: {{ version }}{% endblocktrans %}</li><li>{% trans "사용한 브라우저와 운영체제" %}</li><li>{% trans "문제가 발생한 페이지와 재현 순서" %}</li></ul>{% endblock %}

@@ -1,68 +1,68 @@
 {% extends 'base.html' %}
-{% load static %}
-{% block title %}고지리 지구본{% endblock %}
+{% load static i18n %}
+{% block title %}{% trans "고지리 지구본" %}{% endblock %}
 {% block extra_head %}<link rel="stylesheet" href="{% static 'core/globe.css' %}?v={{ version }}">{% endblock %}
-{% block header_title %}<h1 class="page-title">시간을 돌려, 지구를 보다</h1>{% endblock %}
+{% block header_title %}<h1 class="page-title">{% trans "시간을 돌려, 지구를 보다" %}</h1>{% endblock %}
 {% block content %}
 {% if viewer_enabled %}
 <div class="explorer">
-  <section class="globe-panel" aria-label="회전 가능한 3D 지구본">
-    <div id="globe" tabindex="0" role="img" aria-label="고지리 지구본. 마우스 또는 방향키로 회전, 휠이나 더하기 빼기 키로 확대 축소."></div>
-    <div class="globe-caption"><span class="live-dot"></span><span id="globe-age">현재</span></div>
-    <div id="status" role="status" aria-live="polite">지구본을 준비하고 있습니다…</div>
-    <button id="retry" class="retry" hidden>다시 불러오기</button>
-    <div class="globe-toolbar"><label class="sr-only" for="projection">투영 방식</label><select id="projection" class="toolbar-select"><option value="globe">지구본</option><option value="mollweide">몰바이데 지도</option><option value="equirect">정거원통</option></select><button id="rotate" aria-pressed="false">자동 회전</button><button id="grid" aria-pressed="false">격자</button>{% if fields_available and source_maps_public %}<button id="surface" aria-pressed="false">대륙 마스크</button>{% endif %}{% if plates %}<label class="sr-only" for="plate-overlay">판 재구성 겹쳐 보기</label><select id="plate-overlay" class="toolbar-select" autocomplete="off"><option value="" selected>경계선 없음</option>{% for model in plates %}<option value="{{ model.id }}">{{ model.short }}</option>{% endfor %}</select>{% endif %}<button id="reset">시점 초기화</button></div>
-    <p class="gesture" id="gesture">드래그로 회전 · 스크롤 / 핀치로 확대</p>
+  <section class="globe-panel" aria-label="{% trans '회전 가능한 3D 지구본' %}">
+    <div id="globe" tabindex="0" role="img" aria-label="{% trans '고지리 지구본. 마우스 또는 방향키로 회전, 휠이나 더하기 빼기 키로 확대 축소.' %}"></div>
+    <div class="globe-caption"><span class="live-dot"></span><span id="globe-age">{% trans "현재" %}</span></div>
+    <div id="status" role="status" aria-live="polite">{% trans "지구본을 준비하고 있습니다…" %}</div>
+    <button id="retry" class="retry" hidden>{% trans "다시 불러오기" %}</button>
+    <div class="globe-toolbar"><label class="sr-only" for="projection">{% trans "투영 방식" %}</label><select id="projection" class="toolbar-select"><option value="globe">{% trans "지구본" %}</option><option value="mollweide">{% trans "몰바이데 지도" %}</option><option value="equirect">{% trans "정거원통" %}</option></select><button id="rotate" aria-pressed="false">{% trans "자동 회전" %}</button><button id="grid" aria-pressed="true">{% trans "격자" %}</button>{% if fields_available and source_maps_public %}<button id="surface" aria-pressed="false">{% trans "대륙 마스크" %}</button>{% endif %}{% if plates %}<label class="sr-only" for="plate-overlay">{% trans "판 재구성 겹쳐 보기" %}</label><select id="plate-overlay" class="toolbar-select" autocomplete="off"><option value="" selected>{% trans "경계선 없음" %}</option>{% for model in plates %}<option value="{{ model.id }}">{{ model.short }}</option>{% endfor %}</select>{% endif %}<button id="reset">{% trans "시점 초기화" %}</button></div>
+    <p class="gesture" id="gesture">{% trans "드래그로 회전 · 스크롤 / 핀치로 확대" %}</p>
   </section>
   <aside class="inspector">
-    <p class="eyebrow">SELECTED TIME</p><h2 id="period">현재</h2><p id="age" class="age">0 <span>Ma</span></p><p id="source-title">Modern World</p>
-    <label for="era">지질시대 선택</label><select id="era"></select>
-    <div class="step-buttons"><button id="older">← 더 과거</button><button id="newer">더 현재 →</button></div>
-{% if source_maps_public %}    <figure class="source-preview" id="source-figure"><img id="source-preview" alt="선택한 시대의 Scotese 원본 지도"><figcaption>원본 지도 · <a id="source-link" target="_blank" rel="noopener">출처 보기 ↗</a></figcaption></figure>
-{% elif mask.id == 'paleoatlas2016' %}    <p class="model-note" id="source-figure">이 화면은 PALEOMAP PaleoAtlas(2016) 지도에서 분할한 육지·바다 경계만 보여 줍니다. 원본 지도 이미지는 배포하지 않습니다. 원본 묶음은 <a id="source-link" target="_blank" rel="noopener">Zenodo 기록 ↗</a>에 있습니다.</p>
-{% else %}    <p class="model-note" id="source-figure">이 화면은 분할해서 만든 육지·바다 경계만 보여 줍니다. 원본 지도는 배포하지 않습니다. 해당 시대의 원본은 <a id="source-link" target="_blank" rel="noopener">PALEOMAP 원본 페이지 ↗</a>에서 보실 수 있습니다.</p>
+    <p class="eyebrow">SELECTED TIME</p><h2 id="period">{% trans "현재" %}</h2><p id="age" class="age">0 <span>Ma</span></p><p id="source-title">Modern World</p>
+    <label for="era">{% trans "지질시대 선택" %}</label><select id="era"></select>
+    <div class="step-buttons"><button id="older">{% trans "← 더 과거" %}</button><button id="newer">{% trans "더 현재 →" %}</button></div>
+{% if source_maps_public %}    <figure class="source-preview" id="source-figure"><img id="source-preview" alt="{% trans '선택한 시대의 Scotese 원본 지도' %}"><figcaption>{% trans "원본 지도" %} · <a id="source-link" target="_blank" rel="noopener">{% trans "출처 보기 ↗" %}</a></figcaption></figure>
+{% elif mask.id == 'paleoatlas2016' %}    <p class="model-note" id="source-figure">{% blocktrans %}이 화면은 PALEOMAP PaleoAtlas(2016) 지도에서 분할한 육지·바다 경계만 보여 줍니다. 원본 지도 이미지는 배포하지 않습니다. 원본 묶음은 <a id="source-link" target="_blank" rel="noopener">Zenodo 기록 ↗</a>에 있습니다.{% endblocktrans %}</p>
+{% else %}    <p class="model-note" id="source-figure">{% blocktrans %}이 화면은 분할해서 만든 육지·바다 경계만 보여 줍니다. 원본 지도는 배포하지 않습니다. 해당 시대의 원본은 <a id="source-link" target="_blank" rel="noopener">PALEOMAP 원본 페이지 ↗</a>에서 보실 수 있습니다.{% endblocktrans %}</p>
 {% endif %}
-{% if mask.id == 'paleoatlas2016' %}    <p class="model-note">분할한 육지·바다를 구면에 칠한 근사 시각화입니다. 원본의 지형 높이와 지명은 담지 않으며, 판 운동을 계산한 모델은 아닙니다.</p>
-{% else %}    <p class="model-note">지도를 구면으로 옮긴 근사 시각화입니다. 원본의 지명·경계선이 남아 있으며, 실제 지형 높이와 판 운동을 계산한 모델은 아닙니다.</p>
+{% if mask.id == 'paleoatlas2016' %}    <p class="model-note">{% trans "분할한 육지·바다를 구면에 칠한 근사 시각화입니다. 원본의 지형 높이와 지명은 담지 않으며, 판 운동을 계산한 모델은 아닙니다." %}</p>
+{% else %}    <p class="model-note">{% trans "지도를 구면으로 옮긴 근사 시각화입니다. 원본의 지명·경계선이 남아 있으며, 실제 지형 높이와 판 운동을 계산한 모델은 아닙니다." %}</p>
 {% endif %}
-    <p class="model-note derived" id="surface-note" hidden>대륙 마스크 표시 중입니다. 원본 지도의 색을 분할해 육지와 바다 둘로만 칠한 결과이며, 원본이 그린 해안선 자체가 아니라 해석입니다. 대륙붕은 바다로 둡니다.{% if mask.id == 'paleoatlas2016' %} 흰 얼음은 PALEOMAP 대륙 다각형 안에 있을 때만 육지로 칩니다.{% endif %}</p>
-{% if plates %}    <p class="model-note hint" id="plate-hint">지구본 아래 두 번째 드롭다운에서 판 회전 모델을 고르면, 같은 시각의 대륙을 재구성해 겹쳐 그립니다. 모델은 {{ plates|length }}가지이고 기본은 경계선 없음입니다. 모델을 고르면 대륙 마스크 위에 판 경계선을 함께 그립니다.</p>
+    <p class="model-note derived" id="surface-note" hidden>{% trans "대륙 마스크 표시 중입니다. 원본 지도의 색을 분할해 육지와 바다 둘로만 칠한 결과이며, 원본이 그린 해안선 자체가 아니라 해석입니다. 대륙붕은 바다로 둡니다." %}{% if mask.id == 'paleoatlas2016' %} {% trans "흰 얼음은 PALEOMAP 대륙 다각형 안에 있을 때만 육지로 칩니다." %}{% endif %}</p>
+{% if plates %}    <p class="model-note hint" id="plate-hint">{% blocktrans count counter=plates|length %}지구본 아래 두 번째 드롭다운에서 판 회전 모델을 고르면, 같은 시각의 대륙을 재구성해 겹쳐 그립니다. 모델은 {{ counter }}가지이고 기본은 경계선 없음입니다. 모델을 고르면 대륙 마스크 위에 판 경계선을 함께 그립니다.{% plural %}지구본 아래 두 번째 드롭다운에서 판 회전 모델을 고르면, 같은 시각의 대륙을 재구성해 겹쳐 그립니다. 모델은 {{ counter }}가지이고 기본은 경계선 없음입니다. 모델을 고르면 대륙 마스크 위에 판 경계선을 함께 그립니다.{% endblocktrans %}</p>
     <div class="model-note derived" id="plate-note" hidden>
-      <p>겹쳐 그린 분홍 선은 다른 자료입니다. 판 회전 모델로 같은 시각의 대륙을 재구성한 것이며, Scotese 지도를 분할한 결과와는 출처도 방법도 다릅니다. 두 선이 어긋나는 것은 두 모델이 다르기 때문입니다.</p>
+      <p>{% trans "겹쳐 그린 분홍 선은 다른 자료입니다. 판 회전 모델로 같은 시각의 대륙을 재구성한 것이며, Scotese 지도를 분할한 결과와는 출처도 방법도 다릅니다. 두 선이 어긋나는 것은 두 모델이 다르기 때문입니다." %}</p>
       <p class="cite" id="plate-frame"></p>
       <form class="unlock" id="plate-unlock" method="post" action="{% url 'access-gate' %}" hidden>
         {% csrf_token %}
-        <p>이 모델은 이용 조건이 없어 공개하지 않습니다. 키를 넣으면 이 브라우저에서 볼 수 있습니다.</p>
-        <label for="plate-key">접근 키</label>
+        <p>{% trans "이 모델은 이용 조건이 없어 공개하지 않습니다. 키를 넣으면 이 브라우저에서 볼 수 있습니다." %}</p>
+        <label for="plate-key">{% trans "접근 키" %}</label>
         <input type="password" id="plate-key" name="key" autocomplete="off" spellcheck="false">
-        <button type="submit">잠금 해제</button>
-        <span class="wrong" id="unlock-wrong" hidden role="alert">키가 맞지 않습니다.</span>
+        <button type="submit">{% trans "잠금 해제" %}</button>
+        <span class="wrong" id="unlock-wrong" hidden role="alert">{% trans "키가 맞지 않습니다." %}</span>
       </form>
       <p class="reach" id="plate-reach" hidden></p>
       <p class="cite" id="plate-note-model"></p>
       <p class="cite" id="plate-cite"></p>
     </div>
 {% endif %}{% if coastlines %}    <div class="model-note coastline-layer">
-      <label class="coastline-toggle"><input type="checkbox" id="coastline" autocomplete="off"> 화석으로 고친 해안선 겹쳐 보기</label>
+      <label class="coastline-toggle"><input type="checkbox" id="coastline" autocomplete="off"> {% trans "화석으로 고친 해안선 겹쳐 보기" %}</label>
       <div id="coastline-note" hidden>
-        <p>주황 선은 PaleoCoastlines입니다. PALEOMAP 지형 모델의 해안선을 Paleobiology Database의 해양 화석이 가리키는 최대 해침선까지 옮긴 것이라, 선이 마스크 가장자리보다 안쪽에 있으면 화석은 그곳이 바다였다고 말합니다. 마스크와 같은 PALEOMAP 틀이라 회전하지 않고 그대로 겹칩니다.</p>
+        <p>{% trans "주황 선은 PaleoCoastlines입니다. PALEOMAP 지형 모델의 해안선을 Paleobiology Database의 해양 화석이 가리키는 최대 해침선까지 옮긴 것이라, 선이 마스크 가장자리보다 안쪽에 있으면 화석은 그곳이 바다였다고 말합니다. 마스크와 같은 PALEOMAP 틀이라 회전하지 않고 그대로 겹칩니다." %}</p>
         <p class="cite" id="coastline-age"></p>
         <p class="cite">{{ coastlines.citation }} · <a href="{{ coastlines.license_url }}" target="_blank" rel="noopener">{{ coastlines.license }}</a></p>
       </div>
     </div>
-{% endif %}    <p class="model-note derived" id="mapless-note" hidden>가장 오래된 Scotese 지도보다 이전입니다. 이 시대의 지도는 없으므로 바다만 칠하고, 켜져 있다면 판 재구성만 그립니다. 지구본 면은 아무 것도 주장하지 않습니다.</p>
-{% if mask.id == 'paleoatlas2016' %}    <p class="model-note derived" id="between-note" hidden>원본 시점 사이를 보간한 화면입니다. 대륙마다 그 아래 PALEOMAP 판의 회전으로 중심이 옮겨 가는 길을 계산하고, 그 길을 따라 두 시점의 해안선 거리장을 섞었습니다. 판 운동은 반영하지만 대륙 안의 회전과 해수면 변화는 근사입니다.</p>
-{% else %}    <p class="model-note derived" id="between-note" hidden>원본 시점 사이를 보간한 화면입니다. 두 시점의 해안선 거리장을 섞어 만든 중간 형태이며, 실제 지각 운동이나 해수면 변화를 계산한 것이 아닙니다.</p>
+{% endif %}    <p class="model-note derived" id="mapless-note" hidden>{% trans "가장 오래된 Scotese 지도보다 이전입니다. 이 시대의 지도는 없으므로 바다만 칠하고, 켜져 있다면 판 재구성만 그립니다. 지구본 면은 아무 것도 주장하지 않습니다." %}</p>
+{% if mask.id == 'paleoatlas2016' %}    <p class="model-note derived" id="between-note" hidden>{% trans "원본 시점 사이를 보간한 화면입니다. 대륙마다 그 아래 PALEOMAP 판의 회전으로 중심이 옮겨 가는 길을 계산하고, 그 길을 따라 두 시점의 해안선 거리장을 섞었습니다. 판 운동은 반영하지만 대륙 안의 회전과 해수면 변화는 근사입니다." %}</p>
+{% else %}    <p class="model-note derived" id="between-note" hidden>{% trans "원본 시점 사이를 보간한 화면입니다. 두 시점의 해안선 거리장을 섞어 만든 중간 형태이며, 실제 지각 운동이나 해수면 변화를 계산한 것이 아닙니다." %}</p>
 {% endif %}
-    <details><summary>변환 방식과 자료</summary>{% if mask.id == 'paleoatlas2016' %}<p>육지 마스크는 PALEOMAP PaleoAtlas(2016) 지도 {{ frames|length }}장에서 분할했습니다. 원본이 정거원통 도법이라 투영을 가정하지 않고 경위도에 바로 대응합니다. 시대 이름은 각 지도의 나이에 국제연대층서표(ICS 2023/09) 경계를 적용해 붙였고, 영문 제목은 원본 파일 이름 그대로입니다.</p><p>Scotese, C. R., 2016. PALEOMAP PaleoAtlas for GPlates and the PaleoData Plotter Program. PALEOMAP Project (<a href="http://www.scotese.com" target="_blank" rel="noopener">www.scotese.com</a>). <a href="https://doi.org/10.5281/zenodo.10251792" target="_blank" rel="noopener">doi:10.5281/zenodo.10251792</a> · Zenodo 기록 표기 CC BY 4.0</p>{% else %}<p>Mollweide 투영을 가정해 지도 영역을 구면으로 변환했습니다. 원본 투영법과 중앙경선은 미확정이며, 격자는 시각적 참고용입니다. 시대 전환은 원본 {{ frames|length }}장을 순서대로 보여줍니다.</p><p>Plate tectonic maps by C. R. Scotese, PALEOMAP Project (<a href="http://www.scotese.com" target="_blank" rel="noopener">www.scotese.com</a>)<br><a href="http://www.scotese.com/license.htm" target="_blank" rel="noopener">이용 안내</a></p>{% endif %}<p>비교: <a href="?masks={{ mask.other }}">{{ mask.other_title }} 마스크로 보기</a></p>{% for model in plates %}<p>판 재구성 · {{ model.title }} ({{ model.frame }})<br>{{ model.citation }}<br><a href="{{ model.license_url }}" target="_blank" rel="noopener">{{ model.license }}</a></p>{% endfor %}</details>
+    <details><summary>{% trans "변환 방식과 자료" %}</summary>{% if mask.id == 'paleoatlas2016' %}<p>{% blocktrans with count=frames|length %}육지 마스크는 PALEOMAP PaleoAtlas(2016) 지도 {{ count }}장에서 분할했습니다. 원본이 정거원통 도법이라 투영을 가정하지 않고 경위도에 바로 대응합니다. 시대 이름은 각 지도의 나이에 국제연대층서표(ICS 2023/09) 경계를 적용해 붙였고, 영문 제목은 원본 파일 이름 그대로입니다.{% endblocktrans %}</p><p>Scotese, C. R., 2016. PALEOMAP PaleoAtlas for GPlates and the PaleoData Plotter Program. PALEOMAP Project (<a href="http://www.scotese.com" target="_blank" rel="noopener">www.scotese.com</a>). <a href="https://doi.org/10.5281/zenodo.10251792" target="_blank" rel="noopener">doi:10.5281/zenodo.10251792</a> · {% trans "Zenodo 기록 표기 CC BY 4.0" %}</p>{% else %}<p>{% blocktrans with count=frames|length %}Mollweide 투영을 가정해 지도 영역을 구면으로 변환했습니다. 원본 투영법과 중앙경선은 미확정이며, 격자는 시각적 참고용입니다. 시대 전환은 원본 {{ count }}장을 순서대로 보여줍니다.{% endblocktrans %}</p><p>Plate tectonic maps by C. R. Scotese, PALEOMAP Project (<a href="http://www.scotese.com" target="_blank" rel="noopener">www.scotese.com</a>)<br><a href="http://www.scotese.com/license.htm" target="_blank" rel="noopener">{% trans "이용 안내" %}</a></p>{% endif %}<p>{% trans "비교" %}: <a href="?masks={{ mask.other }}">{% blocktrans with title=mask.other_title %}{{ title }} 마스크로 보기{% endblocktrans %}</a></p>{% for model in plates %}<p>{% trans "판 재구성" %} · {{ model.title }} ({{ model.frame }})<br>{{ model.citation }}<br><a href="{{ model.license_url }}" target="_blank" rel="noopener">{{ model.license }}</a></p>{% endfor %}</details>
   </aside>
 </div>
-<section class="timeline" aria-label="시대 탐색">
-  <div class="timeline-top"><span class="timeline-title">지구의 시간 <label class="sr-only" for="sampling">시간 간격</label><select id="sampling" class="sampling-select" autocomplete="off" title="시간 간격">{% for value, label in sampling_options %}<option value="{{ value }}"{% if value == sampling_choice %} selected{% endif %}>{{ label }}</option>{% endfor %}</select></span><button id="play" aria-pressed="false">▶ 시대 순서 재생</button><span id="frame-number">{{ frames|length }} / {{ frames|length }}</span></div>
-  <input type="range" id="timeline" min="0" max="{{ stops|length|add:'-1' }}" value="{{ stops|length|add:'-1' }}" step="1" aria-label="시대별 지도 선택">
-  <div class="timeline-labels"><span id="timeline-oldest">{{ frames.0.age|floatformat:"-1" }} Ma · 과거</span><span>{{ mask.title }} {{ frames|length }}개 시점 · 사이는 보간 · {{ frames.0.age|floatformat:"-1" }} Ma 이전은 지도 없이 판 재구성만</span><span>현재 · 0 Ma</span></div>
+<section class="timeline" aria-label="{% trans '시대 탐색' %}">
+  <div class="timeline-top"><span class="timeline-title">{% trans "지구의 시간" %} <label class="sr-only" for="sampling">{% trans "시간 간격" %}</label><select id="sampling" class="sampling-select" autocomplete="off" title="{% trans '시간 간격' %}">{% for value, label in sampling_options %}<option value="{{ value }}"{% if value == sampling_choice %} selected{% endif %}>{{ label }}</option>{% endfor %}</select></span><button id="play" aria-pressed="false">{% trans "▶ 시대 순서 재생" %}</button><span id="frame-number">{{ frames|length }} / {{ frames|length }}</span></div>
+  <input type="range" id="timeline" min="0" max="{{ stops|length|add:'-1' }}" value="{{ stops|length|add:'-1' }}" step="1" aria-label="{% trans '시대별 지도 선택' %}">
+  <div class="timeline-labels"><span id="timeline-oldest">{{ frames.0.age|floatformat:"-1" }} Ma · {% trans "과거" %}</span><span>{% blocktrans with title=mask.title count=frames|length oldest=frames.0.age|floatformat:"-1" %}{{ title }} {{ count }}개 시점 · 사이는 보간 · {{ oldest }} Ma 이전은 지도 없이 판 재구성만{% endblocktrans %}</span><span>{% trans "현재" %} · 0 Ma</span></div>
 </section>
-<noscript><p>지구본을 표시하려면 JavaScript를 활성화해 주세요.</p></noscript>
+<noscript><p>{% trans "지구본을 표시하려면 JavaScript를 활성화해 주세요." %}</p></noscript>
 {{ frames|json_script:'globe-frames' }}
 {{ stops|json_script:'globe-stops' }}
 {{ sampling|json_script:'globe-sampling' }}
@@ -70,7 +70,8 @@
 {% if plates %}{{ plates|json_script:'globe-plates' }}{% endif %}
 {% if coastlines %}{{ coastlines|json_script:'globe-coastlines' }}{% endif %}
 {{ motions|json_script:'globe-motions' }}
-{% else %}<section class="notice"><h2>고지리 지구본</h2><p>이 실행 환경에서는 연구용 지도 뷰어가 활성화되지 않았습니다.</p></section>{% endif %}
+{{ strings|json_script:'globe-strings' }}
+{% else %}<section class="notice"><h2>{% trans "고지리 지구본" %}</h2><p>{% trans "이 실행 환경에서는 연구용 지도 뷰어가 활성화되지 않았습니다." %}</p></section>{% endif %}
 {% endblock %}
 {% block scripts %}{% if viewer_enabled %}
 <script type="importmap">{"imports":{"three":"{% static 'vendor/three/three.module.js' %}","{% static 'core/projection.js' %}":"{% static 'core/projection.js' %}?v={{ version }}"}}</script>

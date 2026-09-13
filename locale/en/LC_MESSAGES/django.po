@@ -1,0 +1,533 @@
+# English translation of EarthThruTime3D. Source strings are Korean.
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: en\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgid "지구의 시간을 탐색하다"
+msgstr "Explore Earth through time"
+
+msgid "본문으로 이동"
+msgstr "Skip to content"
+
+msgid "지질시대별 고지리를 3차원 지구로 재구성하는 연구 프로젝트"
+msgstr "A research project reconstructing palaeogeography through geological time on a 3D globe"
+
+msgid "언어"
+msgstr "Language"
+
+msgid "프로젝트 소개"
+msgstr "About the project"
+
+msgid "제작"
+msgstr "Made by"
+
+msgid "지구과학 연구 도구"
+msgstr "an Earth-science research tool"
+
+msgid "버전"
+msgstr "Version"
+
+msgid "문의"
+msgstr "Contact"
+
+msgid "문제 보고 안내"
+msgstr "How to report a problem"
+
+msgid "자료 출처"
+msgstr "Data sources"
+
+msgid "기본으로 보여 주는 육지 마스크는 이 PaleoAtlas 지도 90장에서 육지와 바다의 경계를 갈라낸 결과입니다. Zenodo 기록은 CC BY 4.0으로 표기하지만 그 표기를 누가 붙였는지 확인하지 못해, 원본 지도 이미지는 배포하지 않습니다."
+msgstr "The land masks shown by default were segmented from the 90 maps of this PaleoAtlas. The Zenodo record lists CC BY 4.0, but who attached that licence has not been confirmed, so the original map images are not distributed."
+
+msgid "시점 사이 화면은 두 시점을 보간한 중간 형태입니다. 관측도 재구성도 아니며 판 운동을 계산하지 않습니다."
+msgstr "Views between two maps are interpolated: neither an observation nor a reconstruction, and no plate motion is computed."
+
+msgid "판 재구성 자료"
+msgstr "Plate reconstruction data"
+
+msgid "기준틀"
+msgstr "Reference frame"
+
+msgid "두 모델은 상대 운동이 사실상 같고 절대 기준틀이 다릅니다. 저자들은 기후와 관련된 해석에는 고지자기 기준틀을 쓰라고 하며, 두 모델 모두 태평양 열점 운동이나 500만 년 이하의 분석에는 적합하지 않다고 밝히고 있습니다."
+msgstr "The models share nearly the same relative motions and differ in their absolute reference frames. The authors recommend the palaeomagnetic frame for climate-related work, and state that none of the models suits Pacific hotspot kinematics or analyses shorter than 5 million years."
+
+msgid "라이선스"
+msgstr "Licence"
+
+msgid "프로젝트 라이선스는 아직 지정하지 않았습니다. 3D 렌더링에는 MIT 라이선스의 Three.js를 사용합니다."
+msgstr "No licence has been chosen for the project yet. The 3D rendering uses Three.js under the MIT licence."
+
+msgid "개인정보"
+msgstr "Privacy"
+
+msgid "현재 공개 회원가입이나 자료 업로드 기능은 없습니다. 관리자 계정과 로그인 세션은 실행 환경의 데이터베이스에 저장됩니다."
+msgstr "There is no public sign-up or upload. Administrator accounts and login sessions are stored in the deployment's database."
+
+msgid "자세한 안내"
+msgstr "Details"
+
+msgid "%(app_name)s는 시대별 고지리 자료를 바탕으로 과거 지구의 모습을 3차원으로 탐색하려는 연구 프로젝트입니다. 초기 목표는 표면 재구성이며, 지각 변형과 맨틀 대류는 이후 단계입니다."
+msgstr "%(app_name)s is a research project for exploring the past Earth in three dimensions from palaeogeographic data through geological time. The first goal is the surface; crustal deformation and mantle convection come later."
+
+msgid "업데이트 %(release_date)s"
+msgstr "updated %(release_date)s"
+
+msgid "비교용으로 남겨 둔 이전 마스크는 2002년판 웹 지도 17장에서 갈라낸 것이며, 원본 지도 파일은 배포하지 않습니다. 원본은 PALEOMAP 사이트에서 보실 수 있습니다. 지도 이용 조건은 <a href=\"http://www.scotese.com/license.htm\" target=\"_blank\" rel=\"noopener\">PALEOMAP 안내</a>를 따릅니다."
+msgstr "The earlier masks, kept for comparison, were segmented from the 17 web maps of 2002; the original map files are not distributed. The originals can be seen on the PALEOMAP site, and their use follows the <a href=\"http://www.scotese.com/license.htm\" target=\"_blank\" rel=\"noopener\">PALEOMAP terms</a>."
+
+msgid "지구본에서 <strong>판 재구성</strong>을 켜면 회전 모델로 같은 시각의 대륙을 재구성해 겹쳐 그립니다. 위 지도 분할 결과와는 출처도 방법도 다르므로, 두 선이 어긋나는 것은 두 모델이 다르기 때문입니다."
+msgstr "Turning on <strong>plate reconstruction</strong> on the globe reconstructs the continents at the same time from a rotation model and draws them over the map. Its source and method differ from the map segmentation above, so where the two lines disagree, the two models disagree."
+
+msgid "접근 키"
+msgstr "Access key"
+
+msgid "접근 키를 입력해 주세요"
+msgstr "Enter the access key"
+
+msgid "이 실행 환경은 공개돼 있지 않습니다. 키를 한 번 입력하면 이 브라우저에서는 다시 묻지 않습니다."
+msgstr "This deployment is not public. Enter the key once and this browser will not be asked again."
+
+msgid "들어가기"
+msgstr "Enter"
+
+msgid "키가 맞지 않습니다."
+msgstr "That key is not right."
+
+msgid "문의 및 문제 보고"
+msgstr "Contact and problem reports"
+
+msgid "현재는 개발 초기 단계로 공개 문의 채널이 지정되지 않았습니다. 프로젝트 관리자에게 문제를 전달할 때 아래 정보를 함께 알려 주세요."
+msgstr "The project is at an early stage and has no public contact channel yet. When reporting a problem to the maintainer, please include the following."
+
+msgid "사용한 브라우저와 운영체제"
+msgstr "Browser and operating system used"
+
+msgid "문제가 발생한 페이지와 재현 순서"
+msgstr "The page where the problem occurred and the steps to reproduce it"
+
+msgid "앱 버전: %(version)s"
+msgstr "App version: %(version)s"
+
+msgid "고지리 지구본"
+msgstr "Palaeogeographic globe"
+
+msgid "시간을 돌려, 지구를 보다"
+msgstr "Turn back time, see the Earth"
+
+msgid "현재"
+msgstr "Present"
+
+msgid "지구본을 준비하고 있습니다…"
+msgstr "Preparing the globe…"
+
+msgid "다시 불러오기"
+msgstr "Reload"
+
+msgid "투영 방식"
+msgstr "Projection"
+
+msgid "지구본"
+msgstr "Globe"
+
+msgid "몰바이데 지도"
+msgstr "Mollweide map"
+
+msgid "정거원통"
+msgstr "Equirectangular"
+
+msgid "자동 회전"
+msgstr "Auto-rotate"
+
+msgid "격자"
+msgstr "Grid"
+
+msgid "대륙 마스크"
+msgstr "Land mask"
+
+msgid "판 재구성 겹쳐 보기"
+msgstr "Plate reconstruction overlay"
+
+msgid "경계선 없음"
+msgstr "No boundaries"
+
+msgid "시점 초기화"
+msgstr "Reset view"
+
+msgid "드래그로 회전 · 스크롤 / 핀치로 확대"
+msgstr "Drag to rotate · scroll or pinch to zoom"
+
+msgid "지질시대 선택"
+msgstr "Choose a period"
+
+msgid "← 더 과거"
+msgstr "← Older"
+
+msgid "더 현재 →"
+msgstr "Younger →"
+
+msgid "원본 지도"
+msgstr "Source map"
+
+msgid "출처 보기 ↗"
+msgstr "View source ↗"
+
+msgid "분할한 육지·바다를 구면에 칠한 근사 시각화입니다. 원본의 지형 높이와 지명은 담지 않으며, 판 운동을 계산한 모델은 아닙니다."
+msgstr "An approximate view: segmented land and sea painted on a sphere. It carries neither the original relief nor its place names, and it is not a model that computes plate motion."
+
+msgid "지도를 구면으로 옮긴 근사 시각화입니다. 원본의 지명·경계선이 남아 있으며, 실제 지형 높이와 판 운동을 계산한 모델은 아닙니다."
+msgstr "An approximate view of the map wrapped onto a sphere. The original's labels and lines remain, and it is not a model of real relief or plate motion."
+
+msgid "대륙 마스크 표시 중입니다. 원본 지도의 색을 분할해 육지와 바다 둘로만 칠한 결과이며, 원본이 그린 해안선 자체가 아니라 해석입니다. 대륙붕은 바다로 둡니다."
+msgstr "Showing the land mask: the source map's colours segmented into land and sea only. It is an interpretation, not the coastline the source drew. Continental shelves count as sea."
+
+msgid "흰 얼음은 PALEOMAP 대륙 다각형 안에 있을 때만 육지로 칩니다."
+msgstr "White ice counts as land only inside the PALEOMAP continental polygons."
+
+msgid "겹쳐 그린 분홍 선은 다른 자료입니다. 판 회전 모델로 같은 시각의 대륙을 재구성한 것이며, Scotese 지도를 분할한 결과와는 출처도 방법도 다릅니다. 두 선이 어긋나는 것은 두 모델이 다르기 때문입니다."
+msgstr "The pink lines are a different dataset: the continents at the same time reconstructed from a plate rotation model, with a different source and method from the segmented Scotese maps. Where the two disagree, the two models disagree."
+
+msgid "이 모델은 이용 조건이 없어 공개하지 않습니다. 키를 넣으면 이 브라우저에서 볼 수 있습니다."
+msgstr "This model carries no licence, so it is not published. Enter the key to view it in this browser."
+
+msgid "잠금 해제"
+msgstr "Unlock"
+
+msgid "화석으로 고친 해안선 겹쳐 보기"
+msgstr "Overlay fossil-checked coastlines"
+
+msgid "주황 선은 PaleoCoastlines입니다. PALEOMAP 지형 모델의 해안선을 Paleobiology Database의 해양 화석이 가리키는 최대 해침선까지 옮긴 것이라, 선이 마스크 가장자리보다 안쪽에 있으면 화석은 그곳이 바다였다고 말합니다. 마스크와 같은 PALEOMAP 틀이라 회전하지 않고 그대로 겹칩니다."
+msgstr "The orange lines are PaleoCoastlines: the PALEOMAP elevation model's coastlines moved to the maximum transgression that marine fossils in the Paleobiology Database indicate. Where a line runs inside the mask's edge, the fossils say that ground was sea. They share the PALEOMAP frame with the mask, so they are drawn without rotation."
+
+msgid "가장 오래된 Scotese 지도보다 이전입니다. 이 시대의 지도는 없으므로 바다만 칠하고, 켜져 있다면 판 재구성만 그립니다. 지구본 면은 아무 것도 주장하지 않습니다."
+msgstr "Older than the oldest Scotese map. There is no map for this time, so only sea is painted and, if enabled, only the plate reconstruction is drawn. The globe's surface claims nothing."
+
+msgid "원본 시점 사이를 보간한 화면입니다. 대륙마다 그 아래 PALEOMAP 판의 회전으로 중심이 옮겨 가는 길을 계산하고, 그 길을 따라 두 시점의 해안선 거리장을 섞었습니다. 판 운동은 반영하지만 대륙 안의 회전과 해수면 변화는 근사입니다."
+msgstr "An interpolated view between two source maps. Each continent's path is computed from the rotation of the PALEOMAP plate beneath it, and the two maps' coastline distance fields are blended along that path. Plate motion is followed; rotation within a continent and sea-level change are approximated."
+
+msgid "원본 시점 사이를 보간한 화면입니다. 두 시점의 해안선 거리장을 섞어 만든 중간 형태이며, 실제 지각 운동이나 해수면 변화를 계산한 것이 아닙니다."
+msgstr "An interpolated view between two source maps: a blend of their coastline distance fields, not a computation of crustal motion or sea-level change."
+
+msgid "변환 방식과 자료"
+msgstr "Method and data"
+
+msgid "Zenodo 기록 표기 CC BY 4.0"
+msgstr "Zenodo record lists CC BY 4.0"
+
+msgid "이용 안내"
+msgstr "Terms of use"
+
+msgid "비교"
+msgstr "Compare"
+
+msgid "판 재구성"
+msgstr "Plate reconstruction"
+
+msgid "지구의 시간"
+msgstr "Earth's time"
+
+msgid "시간 간격"
+msgstr "Time spacing"
+
+msgid "▶ 시대 순서 재생"
+msgstr "▶ Play through time"
+
+msgid "과거"
+msgstr "past"
+
+msgid "지구본을 표시하려면 JavaScript를 활성화해 주세요."
+msgstr "Enable JavaScript to show the globe."
+
+msgid "이 실행 환경에서는 연구용 지도 뷰어가 활성화되지 않았습니다."
+msgstr "The research map viewer is not enabled in this deployment."
+
+msgid "회전 가능한 3D 지구본"
+msgstr "Rotatable 3D globe"
+
+msgid "고지리 지구본. 마우스 또는 방향키로 회전, 휠이나 더하기 빼기 키로 확대 축소."
+msgstr "Palaeogeographic globe. Rotate with the mouse or arrow keys; zoom with the wheel or the plus and minus keys."
+
+msgid "선택한 시대의 Scotese 원본 지도"
+msgstr "Scotese source map for the chosen time"
+
+msgid "시대 탐색"
+msgstr "Explore time"
+
+msgid "시대별 지도 선택"
+msgstr "Choose a map by age"
+
+msgid "이 화면은 PALEOMAP PaleoAtlas(2016) 지도에서 분할한 육지·바다 경계만 보여 줍니다. 원본 지도 이미지는 배포하지 않습니다. 원본 묶음은 <a id=\"source-link\" target=\"_blank\" rel=\"noopener\">Zenodo 기록 ↗</a>에 있습니다."
+msgstr "This view shows only the land–sea boundary segmented from the PALEOMAP PaleoAtlas (2016) maps. The original map images are not distributed; the archive is on the <a id=\"source-link\" target=\"_blank\" rel=\"noopener\">Zenodo record ↗</a>."
+
+msgid "이 화면은 분할해서 만든 육지·바다 경계만 보여 줍니다. 원본 지도는 배포하지 않습니다. 해당 시대의 원본은 <a id=\"source-link\" target=\"_blank\" rel=\"noopener\">PALEOMAP 원본 페이지 ↗</a>에서 보실 수 있습니다."
+msgstr "This view shows only the segmented land–sea boundary. The original maps are not distributed; the original for this time is on the <a id=\"source-link\" target=\"_blank\" rel=\"noopener\">PALEOMAP page ↗</a>."
+
+msgid "지구본 아래 두 번째 드롭다운에서 판 회전 모델을 고르면, 같은 시각의 대륙을 재구성해 겹쳐 그립니다. 모델은 %(counter)s가지이고 기본은 경계선 없음입니다. 모델을 고르면 대륙 마스크 위에 판 경계선을 함께 그립니다."
+msgid_plural "지구본 아래 두 번째 드롭다운에서 판 회전 모델을 고르면, 같은 시각의 대륙을 재구성해 겹쳐 그립니다. 모델은 %(counter)s가지이고 기본은 경계선 없음입니다. 모델을 고르면 대륙 마스크 위에 판 경계선을 함께 그립니다."
+msgstr[0] "Choose a plate rotation model from the second dropdown under the globe to reconstruct the continents at the same time and draw them over the map. There is %(counter)s model; the default is no boundaries. With a model chosen, its plate boundaries are drawn over the land mask."
+msgstr[1] "Choose a plate rotation model from the second dropdown under the globe to reconstruct the continents at the same time and draw them over the map. There are %(counter)s models; the default is no boundaries. With a model chosen, its plate boundaries are drawn over the land mask."
+
+msgid "육지 마스크는 PALEOMAP PaleoAtlas(2016) 지도 %(count)s장에서 분할했습니다. 원본이 정거원통 도법이라 투영을 가정하지 않고 경위도에 바로 대응합니다. 시대 이름은 각 지도의 나이에 국제연대층서표(ICS 2023/09) 경계를 적용해 붙였고, 영문 제목은 원본 파일 이름 그대로입니다."
+msgstr "The land masks were segmented from the %(count)s maps of the PALEOMAP PaleoAtlas (2016). The originals are equirectangular, so no projection is assumed and pixels map straight to longitude and latitude. Period names come from each map's age with the ICS 2023/09 boundaries; the English titles are the original file names."
+
+msgid "Mollweide 투영을 가정해 지도 영역을 구면으로 변환했습니다. 원본 투영법과 중앙경선은 미확정이며, 격자는 시각적 참고용입니다. 시대 전환은 원본 %(count)s장을 순서대로 보여줍니다."
+msgstr "The map area was wrapped onto the sphere assuming a Mollweide projection. The original projection and central meridian are unverified, and the grid is a visual guide. Time steps through the %(count)s originals in order."
+
+msgid "%(title)s 마스크로 보기"
+msgstr "view with the %(title)s masks"
+
+msgid "%(title)s %(count)s개 시점 · 사이는 보간 · %(oldest)s Ma 이전은 지도 없이 판 재구성만"
+msgstr "%(title)s, %(count)s maps · interpolated between · before %(oldest)s Ma, plate reconstruction only"
+
+msgid "현재 로컬 개발 단계이며 운영 호스팅은 정해지지 않았습니다. 별도 분석 도구나 외부 추적 리소스를 사용하지 않습니다."
+msgstr "The project is in local development and production hosting is not settled. No analytics or external tracking resources are used."
+
+msgid "관리자 로그인에는 세션 및 CSRF 쿠키를 사용합니다. 생성한 관리자 계정과 세션은 실행 환경의 SQLite 데이터베이스에 저장되며, 해당 환경 관리자에게 접근 권한이 있습니다. 서버 실행 시 요청 경로와 오류가 콘솔 로그에 남을 수 있습니다. 공개 운영 전에 호스팅, 보관 기간, 담당 연락처를 확정합니다."
+msgstr "Administrator login uses session and CSRF cookies. Administrator accounts and sessions are stored in the deployment's SQLite database, which the deployment's administrator can access. Request paths and errors may appear in the server's console log. Hosting, retention and a contact will be settled before public operation."
+
+msgid "소개"
+msgstr "About"
+
+msgid "하단 메뉴"
+msgstr "Footer menu"
+
+msgid "PALEOMAP PaleoAtlas (2016)"
+msgstr "PALEOMAP PaleoAtlas (2016)"
+
+msgid "Scotese PALEOMAP 웹 지도 (2002)"
+msgstr "Scotese PALEOMAP web maps (2002)"
+
+msgid "최후빙기 최성기"
+msgstr "Last Glacial Maximum"
+
+msgid "원생대"
+msgstr "Proterozoic"
+
+msgid "{years}년 전"
+msgstr "{years} years ago"
+
+msgid "❚❚ 재생 멈춤"
+msgstr "❚❚ Pause"
+
+msgid "지도 없는 시대"
+msgstr "No map for this time"
+
+msgid "{age}, 지도 없음, 판 재구성만"
+msgstr "{age}, no map, plate reconstruction only"
+
+msgid "{period} 사이, {age}, 보간"
+msgstr "within {period}, {age}, interpolated"
+
+msgid "가장 오래된 지도보다 이전"
+msgstr "Older than the oldest map"
+
+msgid "지도 없음"
+msgstr "no map"
+
+msgid "보간"
+msgstr "interpolated"
+
+msgid "{label} ({age}) Scotese 원본 지도"
+msgstr "Scotese source map, {label} ({age})"
+
+msgid "{age} Ma · 지도 없음"
+msgstr "{age} Ma · no map"
+
+msgid "{age} · 보간"
+msgstr "{age} · interpolated"
+
+msgid "{age} 판 재구성을 불러오는 중…"
+msgstr "Loading the plate reconstruction at {age}…"
+
+msgid "{period} 대륙 마스크를 불러오는 중…"
+msgstr "Loading the {period} land mask…"
+
+msgid "{period} 지도를 불러오는 중…"
+msgstr "Loading the {period} map…"
+
+msgid "{age}. 이 시대의 지도는 없고 판 재구성만 표시합니다."
+msgstr "{age}. No map for this time; only the plate reconstruction is shown."
+
+msgid "{period}, {age} {surface}{between}. 드래그 또는 방향키로 회전, 더하기 빼기로 확대 축소."
+msgstr "{period}, {age} {surface}{between}. Rotate by dragging or with the arrow keys; zoom with plus and minus."
+
+msgid "대륙 마스크 지구본"
+msgstr "land-mask globe"
+
+msgid ", 보간된 중간 형태"
+msgstr ", interpolated"
+
+msgid "{age} 판 재구성 표시 완료"
+msgstr "Plate reconstruction at {age} shown"
+
+msgid "{period} {surface} 표시 완료{between}"
+msgstr "{period} {surface} shown{between}"
+
+msgid " (보간)"
+msgstr " (interpolated)"
+
+msgid "대륙 거리장을 불러오지 못했습니다. 분할 결과 파일을 확인해 주세요."
+msgstr "Could not load the land distance field. Check the segmentation output files."
+
+msgid "지도를 불러오지 못했습니다. 로컬 원본 파일과 연결을 확인해 주세요."
+msgstr "Could not load the map. Check the local source files and the connection."
+
+msgid "드래그로 회전 · 오른쪽 드래그로 이동 · 스크롤 / 핀치로 확대"
+msgstr "Drag to rotate · right-drag to pan · scroll or pinch to zoom"
+
+msgid "{title} 모델은 {reach} Ma까지입니다. "
+msgstr "The {title} model reaches {reach} Ma. "
+
+msgid "{models}를 고르면 이 시대가 나옵니다."
+msgstr "Choose {models} to see this time."
+
+msgid "이 시대에 닿는 모델이 아직 없습니다."
+msgstr "No model reaches this time yet."
+
+msgid "{title} · 기준틀 {frame} · {reach} Ma까지"
+msgstr "{title} · frame {frame} · to {reach} Ma"
+
+msgid "{age}에서 {reach} Myr 안에 해안선 자료가 없습니다. 자료는 0~{oldest} Ma입니다."
+msgstr "No coastline data within {reach} Myr of {age}. The data cover 0–{oldest} Ma."
+
+msgid "{age} Ma 해안선"
+msgstr "Coastlines at {age} Ma"
+
+msgid "가장 가까운 {age} Ma 해안선을 그렸습니다 (지금 {now})."
+msgstr "Showing the nearest coastlines, at {age} Ma (now {now})."
+
+msgid "그래픽 연결이 끊겼습니다. 페이지를 새로고침해 주세요."
+msgstr "The graphics context was lost. Please reload the page."
+
+msgid "{age} Ma · 과거"
+msgstr "{age} Ma · past"
+
+msgid "3D 화면을 시작하지 못했습니다. WebGL을 지원하는 브라우저에서 하드웨어 가속을 확인해 주세요."
+msgstr "Could not start the 3D view. Check hardware acceleration in a browser that supports WebGL."
+
+msgid "지도마다 4단계"
+msgstr "4 steps per map"
+
+msgid "지도마다 {steps}단계"
+msgstr "{steps} steps per map"
+
+msgid "홀로세"
+msgstr "Holocene"
+
+msgid "플라이스토세"
+msgstr "Pleistocene"
+
+msgid "플라이오세"
+msgstr "Pliocene"
+
+msgid "마이오세"
+msgstr "Miocene"
+
+msgid "올리고세"
+msgstr "Oligocene"
+
+msgid "에오세"
+msgstr "Eocene"
+
+msgid "팔레오세"
+msgstr "Paleocene"
+
+msgid "후기 백악기"
+msgstr "Late Cretaceous"
+
+msgid "전기 백악기"
+msgstr "Early Cretaceous"
+
+msgid "후기 쥐라기"
+msgstr "Late Jurassic"
+
+msgid "중기 쥐라기"
+msgstr "Middle Jurassic"
+
+msgid "전기 쥐라기"
+msgstr "Early Jurassic"
+
+msgid "후기 트라이아스기"
+msgstr "Late Triassic"
+
+msgid "중기 트라이아스기"
+msgstr "Middle Triassic"
+
+msgid "전기 트라이아스기"
+msgstr "Early Triassic"
+
+msgid "후기 페름기"
+msgstr "Late Permian"
+
+msgid "중기 페름기"
+msgstr "Middle Permian"
+
+msgid "전기 페름기"
+msgstr "Early Permian"
+
+msgid "후기 석탄기"
+msgstr "Late Carboniferous"
+
+msgid "전기 석탄기"
+msgstr "Early Carboniferous"
+
+msgid "후기 데본기"
+msgstr "Late Devonian"
+
+msgid "중기 데본기"
+msgstr "Middle Devonian"
+
+msgid "전기 데본기"
+msgstr "Early Devonian"
+
+msgid "후기 실루리아기"
+msgstr "Late Silurian"
+
+msgid "중기 실루리아기"
+msgstr "Middle Silurian"
+
+msgid "전기 실루리아기"
+msgstr "Early Silurian"
+
+msgid "후기 오르도비스기"
+msgstr "Late Ordovician"
+
+msgid "중기 오르도비스기"
+msgstr "Middle Ordovician"
+
+msgid "전기 오르도비스기"
+msgstr "Early Ordovician"
+
+msgid "후기 캄브리아기"
+msgstr "Late Cambrian"
+
+msgid "중기 캄브리아기"
+msgstr "Middle Cambrian"
+
+msgid "전기 캄브리아기"
+msgstr "Early Cambrian"
+
+msgid "에디아카라기"
+msgstr "Ediacaran"
+
+msgid "크라이오제니아기"
+msgstr "Cryogenian"
+
+msgid "토니아기"
+msgstr "Tonian"
+
+msgid "후기 원생대"
+msgstr "Late Proterozoic"
+
+msgid "백악기 말 경계"
+msgstr "Cretaceous–Paleogene boundary"
+
+msgid "중기 에오세"
+msgstr "Middle Eocene"
+
+msgid "중기 마이오세"
+msgstr "Middle Miocene"
+
+msgid "최후빙기극대기"
+msgstr "Last Glacial Maximum"

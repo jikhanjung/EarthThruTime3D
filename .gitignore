@@ -25,3 +25,5 @@ dist/
 # Reference PDFs stay local; only the bibliography is tracked.
 docs/pdf/*.pdf
 docs/pdf/*.zip
+# Compiled translations are a build product of scripts/compile_messages.py.
+*.mo

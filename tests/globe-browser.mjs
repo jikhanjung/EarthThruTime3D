@@ -32,8 +32,11 @@ try {
   await page.mouse.move(canvas.x + canvas.width/2 + 130, canvas.y + canvas.height/2 + 25, {steps:8});
   await page.mouse.up();
   await page.mouse.wheel(0,-150);
-  await page.locator('#grid').click();
+  // The grid starts on; the button turns it off and on again.
   await expect(page.locator('#grid')).toHaveAttribute('aria-pressed','true');
+  await page.locator('#grid').click();
+  await expect(page.locator('#grid')).toHaveAttribute('aria-pressed','false');
+  await page.locator('#grid').click();
   await page.locator('#rotate').click();
   await expect(page.locator('#rotate')).toHaveAttribute('aria-pressed','true');
   await page.locator('#rotate').click();
@@ -290,6 +293,7 @@ try {
   await expect(atlasGlobe).toHaveAttribute('data-frame', 'paleoatlas-000');
   await expect(atlasGlobe).toHaveAttribute('aria-busy', 'false');
   const atlasFrames = await atlas.locator('#globe-frames').textContent().then(JSON.parse);
+  const frameIndex = (id) => String(atlasFrames.findIndex(frame => frame.id === id));
   expect(atlasFrames.length).toBe(90);
   expect(atlasFrames.every(frame => frame.url === null && frame.field)).toBe(true);
   await expect(atlas.locator('#surface')).toHaveCount(0);
@@ -315,9 +319,29 @@ try {
   await expect(atlas.locator('#age')).toHaveText('0 Ma');
   await expect(atlas.locator('#period')).toHaveText('현재');
   // The header is one line: brand and a small title, no menu link or tag.
-  await expect(atlas.locator('header nav')).toHaveCount(0);
+  await expect(atlas.locator('header nav:not(.lang)')).toHaveCount(0);
   await expect(atlas.locator('.tag')).toHaveCount(0);
   expect((await atlas.locator('header').boundingBox()).height).toBeLessThan(80);
+  // KO|EN in the header: English swaps every label, the continent names included, and
+  // comes back to the same address.
+  await expect(atlas.locator('.lang a[aria-current="true"]')).toHaveText('KO');
+  await atlas.locator('.lang a[hreflang="en"]').click();
+  await expect(atlasGlobe).toHaveAttribute('data-frame', 'paleoatlas-000');
+  await expect(atlasGlobe).toHaveAttribute('aria-busy', 'false');
+  await expect(atlas.locator('html')).toHaveAttribute('lang', 'en');
+  await expect(atlas.locator('.lang a[aria-current="true"]')).toHaveText('EN');
+  await expect(atlas.locator('#period')).toHaveText('Present');
+  await expect(atlas.locator('#play')).toContainText('Play');
+  const englishFrames = await atlas.locator('#globe-frames').textContent().then(JSON.parse);
+  expect(englishFrames[englishFrames.length - 1].names.map(n => n.name)).toContain('Africa');
+  expect(await atlas.locator('body').textContent()).not.toMatch(/[가-힣]/);
+  await atlas.locator('#era').selectOption(frameIndex('paleoatlas-750'));
+  await expect(atlas.locator('#period')).toHaveText('Tonian');
+  await atlas.screenshot({path:'data/screenshots/globe-english.png', fullPage:true});
+  await atlas.locator('.lang a[hreflang="ko"]').click();
+  await expect(atlas.locator('html')).toHaveAttribute('lang', 'ko');
+  await expect(atlasGlobe).toHaveAttribute('aria-busy', 'false');
+  console.log('Language switch passed');
   // Names come from the plate groups under each piece, and an in-between stop carries
   // control points computed from the PALEOMAP rotations.
   await atlas.locator('#era').selectOption(String(atlasFrames.findIndex(frame => frame.id === 'paleoatlas-255')));
@@ -332,7 +356,6 @@ try {
   await expect(atlas.locator('#between-note')).toContainText('PALEOMAP');
   // Fossil-checked coastlines: drawn at the reader's age, and said to be missing where
   // the dataset stops (535 Ma), rather than borrowed from the nearest distant age.
-  const frameIndex = (id) => String(atlasFrames.findIndex(frame => frame.id === id));
   await atlas.locator('#era').selectOption(frameIndex('paleoatlas-255'));
   await expect(atlasGlobe).toHaveAttribute('aria-busy', 'false');
   await atlas.locator('#coastline').check();

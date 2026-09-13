@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.urls import path
 from django.views.generic import TemplateView
-from core.views import healthz
+from core.views import healthz, language
 from core.access import gate
 from core.globe import coastline_file, globe, land_field, plate_file, source_map
 
@@ -16,5 +16,6 @@ urlpatterns = [
     path('privacy/', TemplateView.as_view(template_name='core/privacy.html'), name='privacy'),
     path('contact/', TemplateView.as_view(template_name='core/contact.html'), name='contact'),
     path('healthz', healthz, name='healthz'),
+    path('lang/<slug:code>/', language, name='language'),
     path('admin/', admin.site.urls),
 ]

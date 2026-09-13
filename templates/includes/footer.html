@@ -1,4 +1,4 @@
-<footer>
+{% load i18n %}<footer>
   <span>© {{ copyright_year }} {{ vendor }} · v{{ version }}</span>
-  <nav aria-label="하단 메뉴"><a href="{% url 'about' %}">소개</a><a href="{% url 'privacy' %}">개인정보</a><a href="{% url 'contact' %}">문의</a></nav>
+  <nav aria-label="{% trans '하단 메뉴' %}"><a href="{% url 'about' %}">{% trans "소개" %}</a><a href="{% url 'privacy' %}">{% trans "개인정보" %}</a><a href="{% url 'contact' %}">{% trans "문의" %}</a></nav>
 </footer>

@@ -8,6 +8,9 @@ from django.conf import settings
 from django.http import FileResponse, Http404, JsonResponse
 from django.shortcuts import render
 from django.urls import reverse
+from django.utils import translation
+from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy
 from django.views.decorators.http import require_safe
 
 from core.access import configured as access_key_configured
@@ -33,10 +36,10 @@ BOUNDS = {
 MASK_SOURCES = {
     "paleoatlas2016": {"catalogue": "sources/paleomap-atlas-2016.json",
                        "directory": "PALEOATLAS_DERIVED_DIR",
-                       "title": "PALEOMAP PaleoAtlas (2016)"},
+                       "title": gettext_lazy("PALEOMAP PaleoAtlas (2016)")},
     "scotese2002": {"catalogue": "sources/scotese-earth-history.json",
                     "directory": "SCOTESE_DERIVED_DIR",
-                    "title": "Scotese PALEOMAP 웹 지도 (2002)"},
+                    "title": gettext_lazy("Scotese PALEOMAP 웹 지도 (2002)")},
 }
 DEFAULT_MASK_SOURCE = "paleoatlas2016"
 
@@ -60,15 +63,15 @@ PERIODS = [
 
 
 def period_label(item):
-    """Korean label for a 2016 atlas map, from its age alone."""
+    """Label for a 2016 atlas map, from its age alone, in the active language."""
     if item["id"].endswith("-lgm"):
-        return "최후빙기 최성기"
+        return _("최후빙기 최성기")
     if item["age_ma"] == 0:
-        return "현재"
+        return _("현재")
     for upper, label in PERIODS:
         if item["age_ma"] < upper:
-            return label
-    return "원생대"
+            return _(label)
+    return _("원생대")
 
 
 KOREAN_LABELS = ["후기 원생대", "후기 캄브리아기", "중기 오르도비스기", "중기 실루리아기",
@@ -166,9 +169,60 @@ def piece_report(item):
 
 
 def landmass_names(pieces):
-    return [{"name": name["name"], "lon": name["lon"], "lat": name["lat"]}
+    """Named points for the globe, in the active language where an English name exists."""
+    english = translation.get_language() == "en"
+    return [{"name": (name.get("name_en") or name["name"]) if english else name["name"],
+             "lon": name["lon"], "lat": name["lat"]}
             for piece in pieces for name in piece.get("names", [])
             if name.get("display", True)]
+
+
+# Text the viewer script shows. Translated here, where the request's language is known,
+# and handed to the page as JSON. {placeholders} are filled in by the script.
+def viewer_strings():
+    return {
+        "present": _("현재"),
+        "yearsAgo": _("{years}년 전"),
+        "playStart": _("▶ 시대 순서 재생"),
+        "playStop": _("❚❚ 재생 멈춤"),
+        "mapless": _("지도 없는 시대"),
+        "maplessValue": _("{age}, 지도 없음, 판 재구성만"),
+        "betweenValue": _("{period} 사이, {age}, 보간"),
+        "olderThanMaps": _("가장 오래된 지도보다 이전"),
+        "mask": _("대륙 마스크"),
+        "noMap": _("지도 없음"),
+        "interpolated": _("보간"),
+        "sourceAlt": _("{label} ({age}) Scotese 원본 지도"),
+        "maplessCount": _("{age} Ma · 지도 없음"),
+        "betweenCount": _("{age} · 보간"),
+        "loadingPlates": _("{age} 판 재구성을 불러오는 중…"),
+        "loadingMask": _("{period} 대륙 마스크를 불러오는 중…"),
+        "loadingMap": _("{period} 지도를 불러오는 중…"),
+        "maplessLabel": _("{age}. 이 시대의 지도는 없고 판 재구성만 표시합니다."),
+        "globeLabel": _("{period}, {age} {surface}{between}. 드래그 또는 방향키로 회전, 더하기 빼기로 확대 축소."),
+        "maskGlobe": _("대륙 마스크 지구본"),
+        "globe": _("지구본"),
+        "betweenSuffix": _(", 보간된 중간 형태"),
+        "shownPlates": _("{age} 판 재구성 표시 완료"),
+        "shownSurface": _("{period} {surface} 표시 완료{between}"),
+        "shownBetween": _(" (보간)"),
+        "failedField": _("대륙 거리장을 불러오지 못했습니다. 분할 결과 파일을 확인해 주세요."),
+        "failedMap": _("지도를 불러오지 못했습니다. 로컬 원본 파일과 연결을 확인해 주세요."),
+        "gestureGlobe": _("드래그로 회전 · 스크롤 / 핀치로 확대"),
+        "gestureSheet": _("드래그로 회전 · 오른쪽 드래그로 이동 · 스크롤 / 핀치로 확대"),
+        "modelReach": _("{title} 모델은 {reach} Ma까지입니다. "),
+        "modelsDeeper": _("{models}를 고르면 이 시대가 나옵니다."),
+        "noModelDeeper": _("이 시대에 닿는 모델이 아직 없습니다."),
+        "modelFrame": _("{title} · 기준틀 {frame} · {reach} Ma까지"),
+        "noCoastline": _("{age}에서 {reach} Myr 안에 해안선 자료가 없습니다. 자료는 0~{oldest} Ma입니다."),
+        "coastlineAt": _("{age} Ma 해안선"),
+        "coastlineNearest": _("가장 가까운 {age} Ma 해안선을 그렸습니다 (지금 {now})."),
+        "contextLost": _("그래픽 연결이 끊겼습니다. 페이지를 새로고침해 주세요."),
+        "oldestNoMap": _("{age} Ma · 지도 없음"),
+        "oldestPast": _("{age} Ma · 과거"),
+        "webglFailed": _("3D 화면을 시작하지 못했습니다. WebGL을 지원하는 브라우저에서 하드웨어 가속을 확인해 주세요."),
+        "proterozoic": _("원생대"),
+    }
 
 
 def separation(first, second):
@@ -315,7 +369,7 @@ def sampling(request=None):
     return {"interval_ma": None, "steps": 4 if count is None else count}
 
 
-SAMPLING_OPTIONS = [("steps:4", "지도마다 4단계"), ("interval:1", "1 Myr"),
+SAMPLING_OPTIONS = [("steps:4", gettext_lazy("지도마다 4단계")), ("interval:1", "1 Myr"),
                     ("interval:5", "5 Myr"), ("interval:10", "10 Myr")]
 
 
@@ -324,7 +378,7 @@ def sampling_choice(plan):
     if plan["interval_ma"]:
         choice, label = f"interval:{plan['interval_ma']:g}", f"{plan['interval_ma']:g} Myr"
     else:
-        choice, label = f"steps:{plan['steps']}", f"지도마다 {plan['steps']}단계"
+        choice, label = f"steps:{plan['steps']}", _("지도마다 {steps}단계").format(steps=plan["steps"])
     options = list(SAMPLING_OPTIONS)
     if choice not in dict(options):
         options.append((choice, label))
@@ -480,7 +534,7 @@ def globe(request):
     if enabled():
         document = catalogue(source)
         if source == "scotese2002":
-            entries = [(item, korean, item["image_label"],
+            entries = [(item, _(korean), item["image_label"],
                         BOUNDS[item["id"].removeprefix("scotese-")],
                         reverse("globe-map", args=[item["id"]]) if source_maps_public() else None,
                         item["page"]["url"])
@@ -506,12 +560,13 @@ def globe(request):
                    "stops": timeline(frames, plan, deepest), "sampling": plan,
                    "sampling_choice": sampling_choice(plan)[0],
                    # The same boundaries name an in-between stop by its own age.
-                   "periods": PERIODS,
+                   "periods": [(upper, _(name)) for upper, name in PERIODS],
+                   "strings": viewer_strings(),
                    "sampling_options": sampling_choice(plan)[1],
                    "source_maps_public": source_maps_public() and source == "scotese2002",
-                   "mask": {"id": source, "title": MASK_SOURCES[source]["title"],
+                   "mask": {"id": source, "title": str(MASK_SOURCES[source]["title"]),
                             "other": next(other for other in MASK_SOURCES if other != source),
-                            "other_title": next(value["title"] for key, value
+                            "other_title": next(str(value["title"]) for key, value
                                                 in MASK_SOURCES.items() if key != source)},
                    "plates": models,
                    "motions": (atlas_motions(frames) if source == "paleoatlas2016"

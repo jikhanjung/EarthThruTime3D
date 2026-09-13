@@ -2,6 +2,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from unittest.mock import patch
 
+from django.conf import settings
 from django.contrib import admin
 from django.contrib.auth import get_user_model
 from django.db import OperationalError
@@ -159,6 +160,38 @@ class GlobeTests(TestCase):
         self.assertNotContains(response, 'aria-label="주 메뉴"')
         self.assertIn('periods', response.context)
         self.assertEqual(globe_module.period_label({'id': 'x', 'age_ma': 252.5}), '후기 페름기')
+
+    def test_english_pages_carry_no_korean_and_english_names(self):
+        # The language switch sets a cookie; every page must then render without any
+        # untranslated Korean, and the viewer's data must carry English continent names.
+        response = self.client.get('/lang/en/', {'next': '/about/'})
+        self.assertEqual(response['Location'], '/about/')
+        self.client.cookies[settings.LANGUAGE_COOKIE_NAME] = 'en'
+        with self.settings(SCOTESE_VIEWER_ENABLED=True):
+            for url in ('/', '/?masks=scotese2002', '/about/', '/privacy/', '/contact/'):
+                with self.subTest(url=url):
+                    page = self.client.get(url)
+                    self.assertEqual(page.status_code, 200)
+                    self.assertNotRegex(page.content.decode(), '[가-힣]')
+            home = self.client.get('/')
+        self.assertContains(home, '<html lang="en">')
+        self.assertContains(home, 'aria-current="true">EN</a>')
+        frames = home.context['frames']
+        self.assertEqual(frames[0]['label'], 'Tonian')
+        names = {name['name'] for name in frames[-1]['names']}
+        if names:
+            self.assertIn('Africa', names)
+        self.assertEqual(home.context['strings']['present'], 'Present')
+        self.assertEqual(home.context['mask']['title'], 'PALEOMAP PaleoAtlas (2016)')
+        self.assertEqual(self.client.get('/lang/xx/').status_code, 404)
+        self.assertEqual(self.client.get('/lang/ko/', {'next': 'https://evil.example/'})['Location'], '/')
+
+    def test_korean_stays_the_default(self):
+        with self.settings(SCOTESE_VIEWER_ENABLED=True):
+            home = self.client.get('/')
+        self.assertContains(home, '<html lang="ko">')
+        self.assertContains(home, 'aria-current="true">KO</a>')
+        self.assertEqual(home.context['frames'][0]['label'], '토니아기')
 
     def test_atlas_fields_are_served_by_id(self):
         with self.settings(SCOTESE_VIEWER_ENABLED=False):

@@ -31,3 +31,18 @@ def healthz(request):
                          "database": ready, "schema_ready": ready,
                          "fields": bundle},
                         status=200 if ready and served else 503)
+
+
+@require_safe
+def language(request, code):
+    """Remember a language choice in the cookie LocaleMiddleware reads, then go back."""
+    from django.http import Http404, HttpResponseRedirect
+    from django.utils import translation
+    from core.access import safe_next
+    if code not in dict(settings.LANGUAGES):
+        raise Http404
+    response = HttpResponseRedirect(safe_next(request.GET.get("next")))
+    response.set_cookie(settings.LANGUAGE_COOKIE_NAME, code, max_age=365 * 24 * 3600,
+                        samesite="Lax")
+    translation.activate(code)
+    return response

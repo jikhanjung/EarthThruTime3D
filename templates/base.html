@@ -1,13 +1,13 @@
-{% load static %}
+{% load static i18n %}
 <!doctype html>
-<html lang="ko">
+<html lang="{{ LANGUAGE_CODE }}">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{% block title %}지구의 시간을 탐색하다{% endblock %} · {{ app_name }}</title>
-  <meta name="description" content="지질시대별 고지리를 3차원 지구로 재구성하는 연구 프로젝트">
+  <title>{% block title %}{% trans "지구의 시간을 탐색하다" %}{% endblock %} · {{ app_name }}</title>
+  <meta name="description" content="{% trans '지질시대별 고지리를 3차원 지구로 재구성하는 연구 프로젝트' %}">
   <meta property="og:title" content="{{ app_name }} · {{ vendor }}">
-  <meta property="og:description" content="지질시대별 고지리를 3차원 지구로 재구성하는 연구 프로젝트">
+  <meta property="og:description" content="{% trans '지질시대별 고지리를 3차원 지구로 재구성하는 연구 프로젝트' %}">
   <meta name="theme-color" content="#112d35">
   <link rel="icon" href="{% static 'core/favicon.svg' %}" type="image/svg+xml">
   {# ?v= releases a cached stylesheet on a version bump, so a viewer does not keep an old one. #}
@@ -15,8 +15,8 @@
   {% block extra_head %}{% endblock %}
 </head>
 <body>
-  <a class="skip" href="#main">본문으로 이동</a>
-  <header><a class="brand" href="{% url 'home' %}">{{ app_name }}</a>{% block header_title %}{% endblock %}</header>
+  <a class="skip" href="#main">{% trans "본문으로 이동" %}</a>
+  <header><a class="brand" href="{% url 'home' %}">{{ app_name }}</a>{% block header_title %}{% endblock %}<nav class="lang" aria-label="{% trans '언어' %}">{% for code, name in LANGUAGES %}{% if not forloop.first %}<span aria-hidden="true">|</span>{% endif %}<a href="{% url 'language' code %}?next={{ request.get_full_path|urlencode }}" lang="{{ code }}" hreflang="{{ code }}"{% if code == LANGUAGE_CODE %} aria-current="true"{% endif %}>{{ code|upper }}</a>{% endfor %}</nav></header>
   <main id="main">{% block content %}{% endblock %}</main>
   {% include 'includes/footer.html' %}
   {% block scripts %}{% endblock %}

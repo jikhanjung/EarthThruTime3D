@@ -1,5 +1,16 @@
 # Reference globe viewer
 
+## Languages
+
+Korean is the source language and English lives in `locale/en/LC_MESSAGES/django.po`. The
+KO|EN switch in the header calls `/lang/<code>/`, which sets Django's language cookie and
+redirects to the page it came from. Templates use `{% trans %}`; the viewer script gets its
+sentences translated by the server as `globe-strings` JSON and fills `{placeholders}`;
+continent names take `name_en` from the piece reports. `scripts/compile_messages.py`
+compiles the `.po` to `.mo` (no msgfmt here or in the image); `make check` and the Docker
+build run it. A Django test renders every page in English and fails on any remaining
+Hangul, which is how a missing translation shows up.
+
 ## Mask sources
 
 The globe can draw its land masks from two sources, and `core.globe.MASK_SOURCES` lists

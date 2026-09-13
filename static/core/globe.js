@@ -24,6 +24,9 @@ const sampling = JSON.parse($('globe-sampling')?.textContent ?? '{}');
 const INTERVAL_STEP_MS = 300;
 // ICS period boundaries as [upper age, Korean name], to name a stop by its own age.
 const periods = JSON.parse($('globe-periods')?.textContent ?? '[]');
+// Every sentence the script shows, translated by the server for the page's language.
+const L = JSON.parse($('globe-strings').textContent);
+const fmt = (text, values) => text.replace(/\{(\w+)\}/g, (match, key) => (key in values ? values[key] : match));
 // Per gap, where each matched landmass sits on both of its maps. These are the control
 // points that carry a continent across the gap instead of dissolving it in place.
 const motions = JSON.parse($('globe-motions')?.textContent ?? '[]');
@@ -71,7 +74,7 @@ const sourceMapsPublic = frames.some((frame) => Boolean(frame.url));
 let surface = sourceMapsPublic ? 'map' : 'mask';
 let projection = 'globe';
 let surfaceMesh;
-let gridVisible = false;
+let gridVisible = true;
 // Centre longitude of a flat sheet. The globe turns by moving the camera; a sheet turns by
 // shifting which longitude sits in its middle, so the camera and its zoom stay put.
 let meridian = 0;
@@ -92,18 +95,18 @@ let scene, camera, renderer, controls, earth, grid;
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 function ageText(frame) {
-  return frame.age === 0 ? '0 Ma' : frame.age < 1 ? `${(frame.age * 1e6).toLocaleString()}년 전` : `${frame.age} Ma`;
+  return frame.age === 0 ? '0 Ma' : frame.age < 1 ? fmt(L.yearsAgo, { years: (frame.age * 1e6).toLocaleString() }) : `${frame.age} Ma`;
 }
 function periodAt(age) {
-  if (age === 0) return '현재';
+  if (age === 0) return L.present;
   for (const [upper, name] of periods) if (age < upper) return name;
-  return '원생대';
+  return L.proterozoic;
 }
 function setPlaying(value) {
   playing = value;
   clearTimeout(playTimer);
   $('play').setAttribute('aria-pressed', String(value));
-  $('play').textContent = value ? '❚❚ 재생 멈춤' : '▶ 시대 순서 재생';
+  $('play').textContent = value ? L.playStop : L.playStart;
 }
 function scheduleNext() {
   // Playback walks the sub-steps so the change reads as motion, at the same pace per
@@ -179,11 +182,11 @@ function ageLabel(place) {
   if (place.mapless) return `${place.age} Ma`;
   if (place.blend === 0) return ageText(place.from);
   return place.age < 1
-    ? `${Math.round(place.age * 1e6).toLocaleString()}년 전`
+    ? fmt(L.yearsAgo, { years: Math.round(place.age * 1e6).toLocaleString() })
     : `${place.age.toFixed(1)} Ma`;
 }
 function periodLabel(place) {
-  if (place.mapless) return '지도 없는 시대';
+  if (place.mapless) return L.mapless;
   // A published map keeps its own label; a stop between two maps is named for its age.
   return place.blend === 0 ? place.from.label : periodAt(place.age);
 }
@@ -201,17 +204,17 @@ async function selectStop(value, manual = false) {
   $('era').value = selected;
   $('timeline').value = stop;
   $('timeline').setAttribute('aria-valuetext', place.mapless
-    ? `${ageLabel(place)}, 지도 없음, 판 재구성만`
-    : (between ? `${periodLabel(place)} 사이, ${ageLabel(place)}, 보간`
+    ? fmt(L.maplessValue, { age: ageLabel(place) })
+    : (between ? fmt(L.betweenValue, { period: periodLabel(place), age: ageLabel(place) })
                : `${place.from.label}, ${ageText(place.from)}`));
   $('period').textContent = periodLabel(place);
   $('age').textContent = ageLabel(place);
   $('source-title').textContent = place.mapless
-    ? '가장 오래된 지도보다 이전'
+    ? L.olderThanMaps
     : (between ? `${place.from.title} → ${place.to.title}` : place.from.title);
   $('globe-age').textContent = [periodLabel(place), ageLabel(place),
-    place.mapless ? null : (masked ? '대륙 마스크' : null),
-    place.mapless ? '지도 없음' : (between ? '보간' : null)].filter(Boolean).join(' / ');
+    place.mapless ? null : (masked ? L.mask : null),
+    place.mapless ? L.noMap : (between ? L.interpolated : null)].filter(Boolean).join(' / ');
   // Older than any map there is no source to preview, and leaving the last one up
   // would read as if it applied.
   if ($('source-figure')) $('source-figure').hidden = place.mapless;
@@ -219,14 +222,14 @@ async function selectStop(value, manual = false) {
     $('source-link').href = anchor.source;
     if ($('source-preview')) {
       $('source-preview').src = anchor.url;
-      $('source-preview').alt = `${anchor.label} (${ageText(anchor)}) Scotese 원본 지도`;
+      $('source-preview').alt = fmt(L.sourceAlt, { label: anchor.label, age: ageText(anchor) });
     }
   }
   $('older').disabled = stop <= 0;
   $('newer').disabled = stop >= frameStops[frames.length - 1];
   $('frame-number').textContent = place.mapless
-    ? `${place.age} Ma · 지도 없음`
-    : (between ? `${ageLabel(place)} · 보간` : `${selected + 1} / ${frames.length}`);
+    ? fmt(L.maplessCount, { age: place.age })
+    : (between ? fmt(L.betweenCount, { age: ageLabel(place) }) : `${selected + 1} / ${frames.length}`);
   if (surfaceToggle) {
     surfaceToggle.disabled = place.mapless || !place.from.field || !place.to.field;
   }
@@ -234,8 +237,8 @@ async function selectStop(value, manual = false) {
   $('between-note').hidden = !between;
   if ($('mapless-note')) $('mapless-note').hidden = !place.mapless;
   status.textContent = place.mapless
-    ? `${ageLabel(place)} 판 재구성을 불러오는 중…`
-    : `${periodLabel(place)} ${masked ? '대륙 마스크를' : '지도를'} 불러오는 중…`;
+    ? fmt(L.loadingPlates, { age: ageLabel(place) })
+    : fmt(masked ? L.loadingMask : L.loadingMap, { period: periodLabel(place) });
   status.hidden = false;
   status.classList.remove('loaded');
   $('retry').hidden = true;
@@ -265,20 +268,22 @@ async function selectStop(value, manual = false) {
     stage.dataset.blend = place.blend.toFixed(2);
     stage.dataset.mapless = String(place.mapless);
     stage.setAttribute('aria-label', place.mapless
-      ? `${ageLabel(place)}. 이 시대의 지도는 없고 판 재구성만 표시합니다.`
-      : `${periodLabel(place)}, ${ageLabel(place)} ${masked ? '대륙 마스크 지구본' : '지구본'}${between ? ', 보간된 중간 형태' : ''}. 드래그 또는 방향키로 회전, 더하기 빼기로 확대 축소.`);
+      ? fmt(L.maplessLabel, { age: ageLabel(place) })
+      : fmt(L.globeLabel, { period: periodLabel(place), age: ageLabel(place),
+                            surface: masked ? L.maskGlobe : L.globe, between: between ? L.betweenSuffix : '' }));
     stage.setAttribute('aria-busy', 'false');
     status.textContent = place.mapless
-      ? `${ageLabel(place)} 판 재구성 표시 완료`
-      : `${periodLabel(place)} ${masked ? '대륙 마스크' : '지구본'} 표시 완료${between ? ' (보간)' : ''}`;
+      ? fmt(L.shownPlates, { age: ageLabel(place) })
+      : fmt(L.shownSurface, { period: periodLabel(place), surface: masked ? L.mask : L.globe,
+                              between: between ? L.shownBetween : '' });
     status.classList.add('loaded');
     scheduleNext();
   } catch (error) {
     if (ticket !== request) return;
     status.classList.remove('loaded');
     status.textContent = masked
-      ? '대륙 거리장을 불러오지 못했습니다. 분할 결과 파일을 확인해 주세요.'
-      : '지도를 불러오지 못했습니다. 로컬 원본 파일과 연결을 확인해 주세요.';
+      ? L.failedField
+      : L.failedMap;
     stage.setAttribute('aria-busy', 'false');
     $('retry').hidden = false;
     setPlaying(false);
@@ -337,8 +342,8 @@ function setProjection(name) {
   $('rotate').disabled = false;
   $('rotate').setAttribute('aria-pressed', String(spinning));
   $('gesture').textContent = globe
-    ? '드래그로 회전 · 스크롤 / 핀치로 확대'
-    : '드래그로 회전 · 오른쪽 드래그로 이동 · 스크롤 / 핀치로 확대';
+    ? L.gestureGlobe
+    : L.gestureSheet;
   stage.dataset.projection = projection;
   nameGroupKey = '';
   plateAge = null;
@@ -686,9 +691,8 @@ async function updatePlates(place, ticket) {
                          .map((model) => model.title);
     $('plate-reach').hidden = !short;
     $('plate-reach').textContent = short
-      ? (`${entry.title} 모델은 ${entry.covers[1]} Ma까지입니다. `
-         + (deeper.length ? `${deeper.join(', ')}를 고르면 이 시대가 나옵니다.`
-                          : '이 시대에 닿는 모델이 아직 없습니다.'))
+      ? (fmt(L.modelReach, { title: entry.title, reach: entry.covers[1] })
+         + (deeper.length ? fmt(L.modelsDeeper, { models: deeper.join(', ') }) : L.noModelDeeper))
       : '';
   }
   if ($('plate-cite')) {
@@ -696,7 +700,7 @@ async function updatePlates(place, ticket) {
   }
   if ($('plate-note-model')) $('plate-note-model').textContent = entry.note ?? '';
   if ($('plate-frame')) {
-    $('plate-frame').textContent = `${entry.title} · 기준틀 ${entry.frame} · ${entry.covers[1]} Ma까지`;
+    $('plate-frame').textContent = fmt(L.modelFrame, { title: entry.title, frame: entry.frame, reach: entry.covers[1] });
   }
 }
 function coastlineEntry(age) {
@@ -766,7 +770,7 @@ async function updateCoastlines(place, ticket) {
   if (!entry) {
     hideCoastline();
     const oldest = coastlines.ages[coastlines.ages.length - 1].age;
-    $('coastline-age').textContent = `${ageLabel(place)}에서 ${COASTLINE_REACH_MA} Myr 안에 해안선 자료가 없습니다. 자료는 0~${oldest} Ma입니다.`;
+    $('coastline-age').textContent = fmt(L.noCoastline, { age: ageLabel(place), reach: COASTLINE_REACH_MA, oldest });
     return;
   }
   const { rings } = await loadCoastline(entry);
@@ -776,8 +780,8 @@ async function updateCoastlines(place, ticket) {
   stage.dataset.coastlines = String(rings.length);
   stage.dataset.coastlineAge = String(entry.age);
   $('coastline-age').textContent = Math.abs(entry.age - place.age) < 1e-6
-    ? `${entry.age} Ma 해안선`
-    : `가장 가까운 ${entry.age} Ma 해안선을 그렸습니다 (지금 ${ageLabel(place)}).`;
+    ? fmt(L.coastlineAt, { age: entry.age })
+    : fmt(L.coastlineNearest, { age: entry.age, now: ageLabel(place) });
 }
 function createGrid() {
   // Built from longitude and latitude rather than from the mesh, so the same parallels
@@ -873,7 +877,7 @@ function init() {
     event.preventDefault();
     setPlaying(false);
     status.classList.remove('loaded');
-    status.textContent = '그래픽 연결이 끊겼습니다. 페이지를 새로고침해 주세요.';
+    status.textContent = L.contextLost;
   });
   stage.dataset.projection = projection;
   stage.dataset.plateModel = plateChoice;
@@ -889,8 +893,8 @@ function init() {
   const oldest = stops[0];
   if ($('timeline-oldest')) {
     $('timeline-oldest').textContent = oldest[0] < 0
-      ? `${oldest[3]} Ma · 지도 없음`
-      : `${oldest[3]} Ma · 과거`;
+      ? fmt(L.oldestNoMap, { age: oldest[3] })
+      : fmt(L.oldestPast, { age: oldest[3] });
   }
   $('era').addEventListener('change', () => selectFrame(Number($('era').value), true));
   $('timeline').addEventListener('input', () => selectStop(Number($('timeline').value), true));
@@ -1031,7 +1035,9 @@ function init() {
 }
 try { init(); }
 catch (error) {
-  status.textContent = '3D 화면을 시작하지 못했습니다. WebGL을 지원하는 브라우저에서 하드웨어 가속을 확인해 주세요.';
+  status.textContent = document.getElementById('globe-strings')
+    ? JSON.parse(document.getElementById('globe-strings').textContent).webglFailed
+    : 'WebGL unavailable.';
   for (const element of document.querySelectorAll('.explorer button, .explorer select, .timeline button, .timeline input')) element.disabled = true;
   console.error(error);
 }
