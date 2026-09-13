@@ -9,6 +9,8 @@ one it came from.
   present, measured into land masks. `scotese-earth-history.json`.
 - [Plate models](#plate-models): rotation models with plate polygons, one manifest each
   under `sources/plate-models/`.
+- [PALEOMAP PaleoAtlas 2016](#paleomap-paleoatlas-2016): 90 map rasters, 750 Ma to present,
+  the same edition as the PALEOMAP rotation model. `paleomap-atlas-2016.json`.
 
 # Plate models
 
@@ -160,3 +162,36 @@ and image route default off in production (`SCOTESE_VIEWER_ENABLED=false`).
 Attribution: C. R. Scotese, PALEOMAP Project, www.scotese.com.
 Reference: Scotese, C. R. (2001), *Atlas of Earth History*, Volume 1, Paleogeography,
 PALEOMAP Project, Arlington, Texas, 52 pp. See the license page for citation guidance.
+
+# PALEOMAP PaleoAtlas 2016
+
+The PALEOMAP PaleoAtlas for GPlates archive, pinned by `plate-models/paleomap2016.json`
+for its rotation file, also carries 90 paleogeographic maps as 3600 x 1800
+equirectangular JPEGs. `scripts/catalogue_paleoatlas.py` lists them into
+`paleomap-atlas-2016.json` with each member's size, hash, label and the age its file name
+gives; nothing is extracted to disk.
+
+These are a second source of land masks, kept beside the 2002 web maps rather than
+replacing them, so the two can be compared. `scripts/segment_paleoatlas.py` writes to
+`data/derived/paleoatlas/`.
+
+Why they matter: they are the same edition as the rotation model. Land segmented from
+them aligns with the PALEOMAP plate polygons within 3 degrees of spin-axis shift for 86 of
+the 90 maps, where the 2002 maps drift 23 to 56 degrees from that model in the Palaeozoic.
+
+What differs from the 2002 masks:
+
+- The maps are equirectangular, so no projection is inverted, and they carry no frame or
+  lettering. Thin black boundary lines and a red credit are the only overprint.
+- Pale white counts as ice, and ice counts as land only inside the PALEOMAP continental
+  polygons for that age. That keeps Arctic sea ice as sea, but it also makes floating ice
+  shelves sea, and it is the one place these masks depend on the plate model.
+- Pieces carry no names yet: there is no lettering to transcribe.
+
+Licence: the Zenodo record lists CC BY 4.0. The record says the atlas first appeared on
+earthbyte.org and the PALEOMAP website's own terms are narrower, so who attached the
+licence is unconfirmed. Until it is, only the derived land fields are served, never the
+rasters. The file names carry small quirks, recorded as notes in the catalogue: map 27 at
+120 Ma is labelled Early Albian between Late Aptian and Barremian, and maps 79 and 80 sit
+at 460 and 461 Ma.
+
