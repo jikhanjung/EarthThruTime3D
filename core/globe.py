@@ -154,20 +154,23 @@ def series_items(source):
     return prelude + items
 
 
+def complete(source):
+    """Whether every field a source shows exists."""
+    return all(field_path(item).exists() for item in series_items(source))
+
+
 def mask_source(request=None):
     """The mask source to show: a per-request comparison override, then the setting.
 
-    The elevation series is all or nothing: a frame without a field cannot render on
-    it, since there is no map to fall back to, so a partial build stays on the default.
+    A visitor's override to the elevation series is honoured only when the whole series
+    is built: a frame without a field has no map to fall back to there. The setting is
+    trusted as it is, like the other sources, and /healthz reports what it is missing.
     """
     asked = request.GET.get("masks") if request is not None else None
-    for value in (asked, getattr(settings, "MASK_SOURCE", DEFAULT_MASK_SOURCE)):
-        if value not in MASK_SOURCES:
-            continue
-        if value == "paleodem2018" and not all(field_path(item).exists() for item in series_items(value)):
-            continue
-        return value
-    return DEFAULT_MASK_SOURCE
+    if asked in MASK_SOURCES and (asked != "paleodem2018" or complete(asked)):
+        return asked
+    configured = getattr(settings, "MASK_SOURCE", DEFAULT_MASK_SOURCE)
+    return configured if configured in MASK_SOURCES else DEFAULT_MASK_SOURCE
 
 
 def find_map(map_id):
@@ -365,12 +368,12 @@ def coastline_index():
 def coastlines(source):
     """The fossil-checked PaleoCoastlines layer for the page, where it applies.
 
-    Offered only over the 2016 masks: both are PALEOMAP, so the lines sit on the masks with
-    no rotation (devlog 026). Over the 2002 maps, whose longitudes drift from that frame,
-    the same lines would look like a disagreement they are not.
+    Offered over the 2016 masks and the elevation grids: all three are PALEOMAP, so the
+    lines sit on them with no rotation (devlog 026). Over the 2002 maps, whose longitudes
+    drift from that frame, the same lines would look like a disagreement they are not.
     """
     index = coastline_index()
-    if source != "paleoatlas2016" or not index:
+    if source == "scotese2002" or not index:
         return None
     return {"title": index["title"], "citation": index["citation"],
             "license": index["license"], "license_url": index["license_url"],
@@ -608,8 +611,10 @@ def globe(request):
                    "source_maps_public": source_maps_public() and source == "scotese2002",
                    "mask": {"id": source, "title": str(MASK_SOURCES[source]["title"]),
                             "relief": source == "paleodem2018",
+                            # A comparison link only to a series that can be shown.
                             "others": [(key, str(value["title"])) for key, value
-                                       in MASK_SOURCES.items() if key != source]},
+                                       in MASK_SOURCES.items()
+                                       if key != source and (key != "paleodem2018" or complete(key))]},
                    "plates": models,
                    "motions": (atlas_motions(frames) if source == "paleoatlas2016"
                                else motions(frames, pieces_by_frame)),

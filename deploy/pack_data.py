@@ -33,6 +33,19 @@ def digest(path):
     return reader.hexdigest()
 
 
+def pack_elevation(dem, dem_source, staging, files):
+    """Stage the elevation series; scripts/build_paleodem.py writes it."""
+    (staging / "paleodem").mkdir()
+    for item in dem["maps"]:
+        source = dem_source / f"{item['id']}-field.png"
+        if not source.exists():
+            raise SystemExit(f"Missing derived file: {source}. Run scripts/build_paleodem.py.")
+        target = staging / "paleodem" / source.name
+        shutil.copy2(source, target)
+        files.append({"path": f"paleodem/{source.name}", "bytes": target.stat().st_size,
+                      "sha256": digest(target), "map_id": item["id"]})
+
+
 def main():
     version = sys.argv[1] if len(sys.argv) > 1 else (BASE_DIR / "deploy/DOCKER_VERSION").read_text().strip()
     catalogue = json.loads((BASE_DIR / "sources/scotese-earth-history.json").read_text())
@@ -75,18 +88,15 @@ def main():
                   "dataset": "paleoatlas2016"})
 
     # The PaleoDEM elevation textures (Scotese & Wright 2018, CC BY 4.0): one per grid,
-    # coastline distance in red and height in green and blue.
+    # coastline distance in red and height in green and blue. Optional: a checkout that
+    # has not built them ships a bundle without the series, and the page then offers no
+    # link to it. Once the directory exists, every texture has to be there.
     dem = json.loads((BASE_DIR / "sources/paleodem-slices.json").read_text())
     dem_source = BASE_DIR / "data/derived/paleodem"
-    (staging / "paleodem").mkdir()
-    for item in dem["maps"]:
-        source = dem_source / f"{item['id']}-field.png"
-        if not source.exists():
-            raise SystemExit(f"Missing derived file: {source}. Run scripts/build_paleodem.py.")
-        target = staging / "paleodem" / source.name
-        shutil.copy2(source, target)
-        files.append({"path": f"paleodem/{source.name}", "bytes": target.stat().st_size,
-                      "sha256": digest(target), "map_id": item["id"]})
+    if dem_source.exists():
+        pack_elevation(dem, dem_source, staging, files)
+    else:
+        print(f"No {dem_source.relative_to(BASE_DIR)}: packing without the elevation series.")
 
     # The fossil-checked coastlines drawn over the 2016 masks.
     coast_dir = BASE_DIR / "data/derived/paleocoastlines"

@@ -27,8 +27,11 @@ them:
 - `paleodem2018`: the 109 PALEOMAP PaleoDEMs (Scotese & Wright 2018, CC BY 4.0), 0 to
   540 Ma at 5 Myr, as elevation textures rather than masks, fronted by the three 2016
   atlas maps older than 540 Ma drawn as masks: 112 stops. See "Elevation series" below.
-  This series is all or nothing: a frame without a field has no map to fall back to, so
-  `mask_source` stays on the default until every field of the series exists.
+  A `?masks=paleodem2018` request is honoured only when every field of the series
+  exists, since a frame without a field has no map to fall back to; `MASK_SOURCE` is
+  trusted like the other sources, and `/healthz` fails on what is missing. The page links
+  to the series for comparison only when it can be shown, and `deploy/pack_data.py` packs
+  it only when `data/derived/paleodem/` exists (then all of it).
 
 `MASK_SOURCE` sets the default; `?masks=scotese2002`, `?masks=paleoatlas2016` or
 `?masks=paleodem2018` picks one per page, and anything else falls back to the default. `/globe/fields/<id>.png` finds a

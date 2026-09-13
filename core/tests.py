@@ -122,7 +122,7 @@ class GlobeTests(TestCase):
                                 ' {"from": "b", "to": "c", "pairs": []}]}')
                 self.assertEqual(globe_module.atlas_motions(frames), [[{"lon": 1}], []])
 
-    def test_fossil_coastlines_are_offered_over_the_atlas_only(self):
+    def test_fossil_coastlines_are_offered_over_the_atlas_but_not_the_2002_maps(self):
         with self.settings(SCOTESE_VIEWER_ENABLED=True):
             response = self.client.get('/')
             layer = response.context['coastlines']
@@ -517,9 +517,11 @@ class PaleodemTests(TestCase):
                          ['paleoatlas2016', 'paleodem2018'])
         self.assertEqual(len({item['id'] for item in items}), 112)
 
-    def test_the_series_is_all_or_nothing(self):
+    def test_a_visitor_gets_the_series_only_once_it_is_whole(self):
         request = RequestFactory().get('/', {'masks': 'paleodem2018'})
         self.assertEqual(globe_module.mask_source(request), 'paleoatlas2016')
+        self.assertNotContains(self.client.get('/'), '?masks=paleodem2018',
+                               msg_prefix='no comparison link to a series that cannot be shown')
         items = globe_module.series_items('paleodem2018')
         for item in items[1:]:
             self.build(item)
@@ -527,8 +529,28 @@ class PaleodemTests(TestCase):
                          'the atlas prelude counts: a partial build has frames that cannot render')
         self.build(items[0])
         self.assertEqual(globe_module.mask_source(request), 'paleodem2018')
+        self.assertContains(self.client.get('/'), '?masks=paleodem2018')
+
+    def test_the_setting_is_trusted_and_health_reports_what_is_missing(self):
+        # Like the other sources: a configured series is served as it is, and a partial
+        # build fails the health check instead of quietly showing something else.
+        items = globe_module.series_items('paleodem2018')
+        self.build(items[-1])
         with self.settings(MASK_SOURCE='paleodem2018'):
             self.assertEqual(globe_module.mask_source(), 'paleodem2018')
+            self.assertEqual(self.client.get('/').context['mask']['id'], 'paleodem2018')
+            response = self.client.get('/healthz')
+        self.assertEqual(response.status_code, 503)
+        report = response.json()['fields']
+        self.assertEqual((report['source'], report['expected'], report['missing']), ('paleodem2018', 112, 111))
+
+    def test_fossil_coastlines_are_offered_over_the_series(self):
+        for item in globe_module.series_items('paleodem2018'):
+            self.build(item)
+        response = self.client.get('/', {'masks': 'paleodem2018'})
+        if response.context['coastlines'] is None:
+            self.skipTest('PaleoCoastlines have not been packed in this checkout')
+        self.assertContains(response, 'id="coastline"')
 
     def test_frames_carry_relief_and_period_labels(self):
         for item in globe_module.series_items('paleodem2018'):

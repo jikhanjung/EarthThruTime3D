@@ -18,8 +18,12 @@ Scotese & Wright (2018) PALEOMAP PaleoDEMs, Zenodo 5460860, CC BY 4.0. 1° 격�
   `PALEODEM_DERIVED_DIR`(기본 `data/derived/paleodem/`).
 - `series_items()`: 540 Ma 이전은 2016 아틀라스 지도 3장(600·690·750 Ma)을 마스크로 앞에
   붙여 112개 시점. 같은 판본이라 2002년 지도를 쓰지 않는다.
-- 전부-아니면-무: 필드가 하나라도 없으면 `mask_source`가 기본 소스로 물러난다. 이 시리즈는
-  필드가 없는 시점에 보여 줄 지도가 없기 때문이다. `/healthz`는 보여 주는 소스를 센다.
+- `?masks=paleodem2018`은 필드가 모두 있을 때만 받는다. 필드가 없는 시점에 보여 줄 지도가
+  없기 때문이다. `MASK_SOURCE` 설정은 다른 소스처럼 그대로 믿고, 빠진 필드는 `/healthz`가
+  503으로 알린다. 비교 링크는 보여 줄 수 있을 때만 나오고, `deploy/pack_data.py`는
+  `data/derived/paleodem/`이 있을 때만(그때는 전부) 싼다.
+- 화석으로 고친 해안선(PaleoCoastlines)은 2016 마스크뿐 아니라 이 시리즈 위에도 올린다. 셋 다
+  PALEOMAP 틀이다.
 - `scripts/build_paleodem.py`: 격자를 2048×1024로 겹선형 보간, 0 m에서 잘라 거리장(R),
   높이 12비트(G 상위, B 하위 4비트). 거리 변환은 `segment_paleoatlas.py`의 것을 쓴다.
 - 뷰어: 셰이더 `mode` 0 지도 / 1 마스크 / 2 고도. 고도 모드는 거리장으로 해안을 자르고
