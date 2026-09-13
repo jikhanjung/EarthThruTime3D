@@ -1,3 +1,55 @@
+# Source catalogues
+
+Two datasets, kept apart on purpose. The Scotese maps are published pictures this
+project measures; the EarthByte plate model is a rotation model that reconstructs
+geometry. Different authors, different licences, different limits. Anything built from
+them has to say which one it came from.
+
+- [Scotese Earth History](#scotese-earth-history-source-catalogue): 17 maps, 650 Ma to
+  present, measured into land masks. `scotese-earth-history.json`.
+- [EarthByte Merdith et al. 2021](#earthbyte-plate-model): a 1 Ga rotation model with
+  plate polygons. `earthbyte-merdith2021.json`.
+
+# EarthByte plate model
+
+Merdith et al. (2021), a continuous full-plate motion model from 1 Ga to present,
+distributed by the EarthByte Group at the University of Sydney. The archive and the
+five files this project uses are pinned in `earthbyte-merdith2021.json` with byte counts
+and SHA-256 checksums, and extracted into `data/sources/earthbyte/` (gitignored).
+
+```bash
+.venv/bin/python scripts/fetch_earthbyte.py
+.venv/bin/python scripts/fetch_earthbyte.py --verify-only
+```
+
+What the files are: a rotation file of total reconstruction poles, coastlines and
+continent shapes carrying plate IDs, and static polygons saying which plate a present-day
+location belongs to. `scripts/rotation_model.py` reads the rotation file and composes a
+plate's rotation at any time, interpolating inside a sequence and walking the chain of
+fixed plates to the anchor.
+
+Licence: **Creative Commons Attribution 3.0 Unported**, with the citation recorded in the
+catalogue. Unlike the PALEOMAP maps, publishing derived work on a website needs no
+further consent. The authors state the model sits in a purely palaeomagnetic reference
+frame and is unsuitable for Pacific hotspot kinematics or for analyses shorter than 5 Ma.
+
+## Checking the composition
+
+`scripts/rotation_model.py` is this project's own implementation, so it is checked
+against the GPlates Web Service, which runs the reference implementation:
+
+```bash
+.venv/bin/python scripts/check_rotation_against_gws.py --samples 60   # needs network
+.venv/bin/python tests/rotation_check.py                              # offline, synthetic
+```
+
+Sixty random plate-and-time reconstructions agreed to within 0.00007 degrees of arc,
+about seven metres, which is the precision the service reports. Getting there needed one
+correction: 32 of the model's 1184 plates carry overlapping sequences, a narrow window
+inserted over a broad one to say that for those years the plate is measured against a
+different neighbour. The narrower sequence has to win, or India at 50 Ma lands 2.5
+degrees away from where the reference puts it.
+
 # Scotese Earth History source catalogue
 
 The initial dataset contains 17 original JPEG maps from the

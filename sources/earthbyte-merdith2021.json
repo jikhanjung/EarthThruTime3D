@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "dataset": "Merdith et al. (2021) continuous full-plate motion model, 1 Ga to present",
+  "author": "A. S. Merdith and co-authors; EarthByte Group, University of Sydney",
+  "retrieved_at": "2026-09-13",
+  "citation": "Merdith, A. S., Williams, S. E., Collins, A. S., Tetley, M. G., Mulder, J. A., Blades, M. L., Young, A., Armistead, S. E., Cannon, J., Zahirovic, S., and Müller, R. D., 2021. Extending full-plate tectonic models into deep time: Linking the Neoproterozoic and the Phanerozoic. Earth-Science Reviews, 214, 103477.",
+  "license": {
+    "name": "Creative Commons Attribution 3.0 Unported",
+    "url": "https://creativecommons.org/licenses/by/3.0/",
+    "statement": "Data by the EarthByte Group is licensed under a Creative Commons Attribution 3.0 Unported License.",
+    "source": "https://www.earthbyte.org/gplates-2-5-software-and-data-sets/",
+    "note": "Attribution and citation are required. Unlike the PALEOMAP maps this project also uses, publishing derived work on a website needs no further consent."
+  },
+  "archive": {
+    "url": "https://www.earthbyte.org/webdav/ftp/Data_Collections/Merdith_etal_2021_ESR/SM2-Merdith_et_al_1_Ga_reconstruction_v1.2.4.zip",
+    "path": "data/sources/earthbyte/SM2-Merdith_et_al_1_Ga_reconstruction_v1.2.4.zip",
+    "bytes": 8617917,
+    "sha256": "ea247ec5f8975fb7e6034c8ec48704b11805fc6f520ee7526c5757b830386982",
+    "version": "v1.2.4",
+    "member_prefix": "SM2-Merdith_et_al_1_Ga_reconstruction_v1.2.4/"
+  },
+  "usage": "Local research reference. Extracted members are verified against the hashes below; nothing is served until a publication decision is recorded like the one in deploy/deploy.toml.",
+  "members": [
+    {"name": "1000_0_rotfile_Merdith_et_al.rot", "bytes": 626670,
+     "sha256": "9ab561d7185c268bca654246240d21189be8d8b85ae1344cac6854305a6f2624",
+     "role": "rotation model: total reconstruction poles per moving/fixed plate pair"},
+    {"name": "shapes_coastlines_Merdith_et_al_v2.gpmlz", "bytes": 1897379,
+     "sha256": "e57285e77c96b2f40926c652b10d832f24933d214cdf1ce8ca40ff9f89d7e01a",
+     "role": "present-day coastlines with plate IDs, mainly meaningful for the past 400 Ma"},
+    {"name": "shapes_continents.gpml", "bytes": 9588210,
+     "sha256": "423400a8268b2409eb39b4f0cb07933411cd664d1594e8fd0468c73ecc55c835",
+     "role": "continental shapes with plate IDs, for the past 1 Ga"},
+    {"name": "shapes_static_polygons_Merdith_et_al.gpml", "bytes": 23457286,
+     "sha256": "6775fdfc1a8d3e62c3c1105f5e824b7c04c70662ce668cf7abe71c25a12e7b52",
+     "role": "static polygons: which plate ID a present-day location belongs to"},
+    {"name": "ReadMe_SM2.txt", "bytes": 4611,
+     "sha256": "72aa978d9afb0f82ed75638ca75c8a028b0eb45bbcdd64512bc4648fc2d4cc2e",
+     "role": "the authors' own description, including what the model is not suitable for"}
+  ],
+  "limitations": "The authors state the model is in a purely palaeomagnetic reference frame and is unsuitable for Pacific hotspot kinematics or for analyses shorter than 5 Ma. Longitude in the Precambrian is weakly constrained by palaeomagnetism alone."
+}
