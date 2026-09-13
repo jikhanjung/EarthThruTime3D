@@ -552,6 +552,13 @@ class PaleodemTests(TestCase):
             self.skipTest('PaleoCoastlines have not been packed in this checkout')
         self.assertContains(response, 'id="coastline"')
 
+    def test_the_english_page_has_no_korean_left(self):
+        for item in globe_module.series_items('paleodem2018'):
+            self.build(item)
+        response = self.client.get('/', {'masks': 'paleodem2018'}, HTTP_ACCEPT_LANGUAGE='en')
+        self.assertEqual(response['Content-Language'], 'en')
+        self.assertNotRegex(response.content.decode(), '[가-힣]')
+
     def test_frames_carry_relief_and_period_labels(self):
         for item in globe_module.series_items('paleodem2018'):
             self.build(item)

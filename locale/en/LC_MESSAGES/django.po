@@ -562,8 +562,5 @@ msgstr "This is an interpolated view between grids 5 Myr apart: a blend of the t
 msgid "PaleoDEM 1° 격자 109장을 2048×1024 정거원통 텍스처로 다시 표본화했습니다. 해안선은 0 m 등고선, 색은 높이와 깊이입니다. 540 Ma 이전은 PaleoAtlas(2016) 지도 3장의 마스크로 이어져 모두 %(count)s개 시점입니다. 시대 이름은 나이에 ICS 경계를 적용해 붙였습니다."
 msgstr "The 109 PaleoDEM 1° grids were resampled to 2048×1024 equirectangular textures. The coastline is the 0 m contour, the colours height and depth. Before 540 Ma three PaleoAtlas (2016) masks continue the timeline, %(count)s stops in all. Period names come from the age with ICS boundaries."
 
-msgid "%(title)s 마스크로 보기"
-msgstr "View with the %(title)s masks"
-
 msgid "고도 격자 시리즈는 이 109장의 1° 고도·수심 격자를 색으로 칠한 것입니다. 해안선은 격자의 0 m 등고선이고, 물에 떠 있는 빙붕은 격자가 해저 깊이를 담고 있어 바다로 나타나며, 땅 위에 얹힌 빙상은 그 표면 높이로 나타납니다. 540 Ma 이전은 PaleoAtlas(2016) 마스크로 이어집니다."
 msgstr "The elevation series colours these 109 one-degree elevation and bathymetry grids. The coastline is the grid's 0 m contour; floating ice shelves read as ocean because the grids hold the sea floor beneath them, while grounded ice shows its surface height. Before 540 Ma the timeline continues with the PaleoAtlas (2016) masks."
