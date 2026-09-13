@@ -7,7 +7,7 @@ const errors = [];
 const base = process.env.VIEWER_URL || 'http://127.0.0.1:8000/';
 const legacy = new URL('?masks=scotese2002', base).href;
 try {
-  const page = await browser.newPage({viewport: {width:1440, height:1100}});
+  const page = await browser.newPage({locale: 'ko-KR', viewport: {width:1440, height:1100}});
   page.on('pageerror', error => errors.push(error.message));
   await page.goto(legacy);
   const globe = page.locator('#globe');
@@ -89,6 +89,8 @@ try {
   // has nothing to carry.
   await page.locator('#timeline').fill('100');
   await page.locator('#timeline').dispatchEvent('input');
+  // The blend was already 0.50 at the previous stop, so wait on the frame, which changes.
+  await expect(globe).toHaveAttribute('data-frame', 'scotese-050');
   await expect(globe).toHaveAttribute('data-blend', '0.50');
   expect(Number(await globe.getAttribute('data-motions'))).toBeGreaterThan(0);
   await page.locator('#timeline').fill('98');
@@ -277,7 +279,7 @@ try {
   console.log('Phone layout passed');
   await page.setViewportSize({width:390,height:844});
   // Force a missing source in a fresh page and verify retry restores the globe.
-  const broken = await browser.newPage();
+  const broken = await browser.newPage({locale: 'ko-KR'});
   await broken.route('**/globe/maps/scotese-000.jpg', route => route.fulfill({status:404}));
   await broken.goto(legacy);
   await expect(broken.locator('#retry')).toBeVisible();
@@ -286,7 +288,7 @@ try {
   await expect(broken.locator('#globe')).toHaveAttribute('data-frame','scotese-000');
   // The default page shows the 2016 atlas: 90 maps, no originals, no names yet, and a
   // way back to the 2002 masks for comparison.
-  const atlas = await browser.newPage({viewport: {width:1440, height:1100}});
+  const atlas = await browser.newPage({locale: 'ko-KR', viewport: {width:1440, height:1100}});
   atlas.on('pageerror', error => errors.push(error.message));
   await atlas.goto(base);
   const atlasGlobe = atlas.locator('#globe');
