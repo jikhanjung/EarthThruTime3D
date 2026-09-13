@@ -330,6 +330,12 @@ class PaleodemTests(TestCase):
         self.assertEqual((report['fields']['series'], report['fields']['expected'],
                           report['fields']['missing']), ('paleodem', 110, 0))
 
+    def test_about_page_credits_both_sources(self):
+        response = self.client.get('/about/')
+        self.assertContains(response, 'zenodo.org/records/5460860')
+        self.assertContains(response, 'CC BY 4.0')
+        self.assertContains(response, 'scotese.com/license.htm')
+
     def test_field_route_serves_a_paleodem_slice(self):
         item = globe_module.paleodem_items()[-1]
         self.assertEqual(self.client.get(f"/globe/fields/{item['id']}.png").status_code, 404)

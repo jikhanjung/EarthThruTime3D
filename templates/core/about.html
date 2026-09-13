@@ -7,9 +7,14 @@
 <h2>버전</h2><p>v{{ version }} · 업데이트 {{ release_date }}</p>
 <h2>문의</h2><p><a href="{% url 'contact' %}">문제 보고 안내</a></p>
 <h2>자료 출처</h2>
+<h3>고도·수심 격자</h3>
+<p>Scotese, C. R. &amp; Wright, N. M. (2018). <em>PALEOMAP Paleodigital Elevation Models (PaleoDEMs) for the Phanerozoic.</em> <a href="https://zenodo.org/records/5460860" target="_blank" rel="noopener">Zenodo</a>, CC BY 4.0.</p>
+<p>기본 타임라인은 이 격자 109장입니다. 540 Ma부터 현재까지 5백만 년 간격이며, 0.1° 격자를 2048×1024 정거원통 텍스처로 다시 표본화했습니다. 해안선은 격자의 0 m 등고선이고 색은 높이와 깊이입니다. 물에 떠 있는 빙붕은 격자가 해저 깊이를 담고 있어 바다로 나타나고, 땅 위에 얹힌 빙상은 그 표면 높이로 나타납니다. 판 운동·기후·해수면을 계산한 모델이 아니라 발표된 복원 격자를 그대로 그린 것입니다.</p>
+<h3>Scotese 웹 지도</h3>
 <p>Plate tectonic maps by C. R. Scotese, PALEOMAP Project (<a href="http://www.scotese.com" target="_blank" rel="noopener">www.scotese.com</a>)</p>
-<p>이 사이트가 보여 주는 것은 그 지도 17장에서 육지와 바다의 경계를 갈라낸 결과이며, 원본 지도 파일은 배포하지 않습니다. 원본은 PALEOMAP 사이트에서 보실 수 있습니다. 지도 이용 조건은 <a href="http://www.scotese.com/license.htm" target="_blank" rel="noopener">PALEOMAP 안내</a>를 따릅니다.</p>
-<p>시점 사이 화면은 두 시점을 보간한 중간 형태입니다. 관측도 재구성도 아니며 판 운동을 계산하지 않습니다.</p>
+<p>이 지도 17장에서는 육지와 바다의 경계를 색으로 갈라낸 결과만 씁니다. 격자가 닿지 않는 650 Ma 한 시점이 이 분할 마스크로 타임라인 맨 앞에 놓이며, 높이가 없고 가장자리가 거칩니다. 나머지 16장은 별도 시리즈로만 볼 수 있습니다. 원본 지도 파일은 배포하지 않으며, 원본은 PALEOMAP 사이트에서 보실 수 있습니다. 지도 이용 조건은 <a href="http://www.scotese.com/license.htm" target="_blank" rel="noopener">PALEOMAP 안내</a>를 따릅니다.</p>
+<h3>시점 사이</h3>
+<p>시점 사이 화면은 두 시점의 해안선 거리장과 높이를 섞어 만든 중간 형태입니다. 관측도 재구성도 아니며 판 운동을 계산하지 않습니다.</p>
 <h2>라이선스</h2><p>프로젝트 라이선스는 아직 지정하지 않았습니다. 3D 렌더링에는 MIT 라이선스의 Three.js를 사용합니다.</p>
 <h2>개인정보</h2><p>현재 공개 회원가입이나 자료 업로드 기능은 없습니다. 관리자 계정과 로그인 세션은 실행 환경의 데이터베이스에 저장됩니다. <a href="{% url 'privacy' %}">자세한 안내</a></p>
 {% endblock %}
