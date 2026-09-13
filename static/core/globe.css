@@ -100,3 +100,6 @@ header,main,footer{max-width:1440px}main{padding-top:26px;padding-bottom:32px}.v
                           border:1px solid #3a5964;background:#142f3b;color:#dcebee}
 .model-note .unlock button{justify-self:start;padding:8px 14px}
 .model-note .unlock .wrong:not([hidden]){color:#ffb3b3;font-size:.74rem}
+.timeline-title{display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0}
+.sampling-select{width:auto;max-width:100%;padding:4px 6px;font-size:.72rem}
+@media(max-width:640px){.timeline-title{flex-direction:column;align-items:flex-start;gap:4px}.sampling-select{font-size:.68rem;padding:3px 4px}}

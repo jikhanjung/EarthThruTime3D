@@ -143,8 +143,8 @@ try {
     await page.locator('#projection').selectOption(name);
     await expect(globe).toHaveAttribute('data-projection', name);
     await expect(globe).toHaveAttribute('aria-busy', 'false');
-    if (name === 'globe') await expect(page.locator('#rotate')).toBeEnabled();
-    else await expect(page.locator('#rotate')).toBeDisabled();
+    // Every projection can turn: the globe orbits, a sheet shifts its centre meridian.
+    await expect(page.locator('#rotate')).toBeEnabled();
     drawn.set(name, await page.locator('#globe canvas').screenshot());
   }
   const pictures = [...drawn.values()];
@@ -357,6 +357,53 @@ try {
   }
   await atlas.locator('#plate-overlay').selectOption('');
   await expect(atlasGlobe).toHaveAttribute('data-plates', '0');
+  // A flat sheet turns about the pole: a drag or the arrow keys move the centre meridian,
+  // and the grid and the boundaries turn with the map.
+  await atlas.locator('#projection').selectOption('mollweide');
+  await expect(atlasGlobe).toHaveAttribute('aria-busy', 'false');
+  await expect(atlasGlobe).toHaveAttribute('data-meridian', '0.0');
+  await atlas.locator('#plate-overlay').selectOption('paleomap2016');
+  await expect(atlasGlobe).toHaveAttribute('aria-busy', 'false');
+  await atlas.locator('#grid').click();
+  await atlas.waitForTimeout(200);
+  const unturned = await atlas.locator('#globe canvas').screenshot();
+  const sheet = await atlas.locator('#globe canvas').boundingBox();
+  await atlas.mouse.move(sheet.x + sheet.width / 2, sheet.y + sheet.height / 2);
+  await atlas.mouse.down();
+  await atlas.mouse.move(sheet.x + sheet.width / 2 + 160, sheet.y + sheet.height / 2, {steps: 8});
+  await atlas.mouse.up();
+  const turned = Number(await atlasGlobe.getAttribute('data-meridian'));
+  expect(Math.abs(turned)).toBeGreaterThan(5);
+  await atlas.waitForTimeout(200);
+  expect(Buffer.compare(unturned, await atlas.locator('#globe canvas').screenshot())).not.toBe(0);
+  expect(Number(await atlasGlobe.getAttribute('data-plates'))).toBeGreaterThan(0);
+  await atlasGlobe.focus();
+  await atlas.keyboard.press('ArrowRight');
+  expect(Number(await atlasGlobe.getAttribute('data-meridian'))).toBeCloseTo((((turned + 10) % 360) + 540) % 360 - 180, 1);
+  await atlas.screenshot({path:'data/screenshots/globe-mollweide-turned.png', fullPage:true});
+  await atlas.locator('#reset').click();
+  await expect(atlasGlobe).toHaveAttribute('data-meridian', '0.0');
+  await atlas.locator('#grid').click();
+  await atlas.locator('#plate-overlay').selectOption('');
+  await atlas.locator('#projection').selectOption('globe');
+  console.log('Turning a flat sheet passed');
+  // A 1 Myr spacing is chosen beside the slider; the page comes back at the same age and
+  // each step moves one million years.
+  await atlas.locator('#era').selectOption(frameIndex('paleoatlas-255'));
+  await expect(atlasGlobe).toHaveAttribute('data-frame', 'paleoatlas-255');
+  await Promise.all([atlas.waitForURL(/interval=1/), atlas.locator('#sampling').selectOption('interval:1')]);
+  await expect(atlasGlobe).toHaveAttribute('data-frame', 'paleoatlas-255');
+  await expect(atlasGlobe).toHaveAttribute('aria-busy', 'false');
+  expect(await atlas.locator('#sampling').inputValue()).toBe('interval:1');
+  const perMyr = await atlas.locator('#globe-stops').textContent().then(JSON.parse);
+  const at = Number(await atlas.locator('#timeline').inputValue());
+  expect(perMyr[at][3]).toBe(255);
+  await atlas.locator('#timeline').fill(String(at + 1));
+  await atlas.locator('#timeline').dispatchEvent('input');
+  await expect(atlasGlobe).toHaveAttribute('aria-busy', 'false');
+  expect(perMyr[at + 1][3]).toBe(254);
+  await expect(atlas.locator('#age')).toContainText('254');
+  console.log('One million year spacing passed');
   console.log('2016 atlas default passed');
   expect(errors).toEqual([]);
   console.log('Rotation, zoom, playback, rapid switching, mobile layout and failed-load recovery passed');

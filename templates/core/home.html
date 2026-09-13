@@ -58,13 +58,14 @@
   </aside>
 </div>
 <section class="timeline" aria-label="시대 탐색">
-  <div class="timeline-top"><span>지구의 시간</span><button id="play" aria-pressed="false">▶ 시대 순서 재생</button><span id="frame-number">{{ frames|length }} / {{ frames|length }}</span></div>
+  <div class="timeline-top"><span class="timeline-title">지구의 시간 <label class="sr-only" for="sampling">시간 간격</label><select id="sampling" class="sampling-select" autocomplete="off" title="시간 간격">{% for value, label in sampling_options %}<option value="{{ value }}"{% if value == sampling_choice %} selected{% endif %}>{{ label }}</option>{% endfor %}</select></span><button id="play" aria-pressed="false">▶ 시대 순서 재생</button><span id="frame-number">{{ frames|length }} / {{ frames|length }}</span></div>
   <input type="range" id="timeline" min="0" max="{{ stops|length|add:'-1' }}" value="{{ stops|length|add:'-1' }}" step="1" aria-label="시대별 지도 선택">
   <div class="timeline-labels"><span id="timeline-oldest">{{ frames.0.age|floatformat:"-1" }} Ma · 과거</span><span>{{ mask.title }} {{ frames|length }}개 시점 · 사이는 보간 · {{ frames.0.age|floatformat:"-1" }} Ma 이전은 지도 없이 판 재구성만</span><span>현재 · 0 Ma</span></div>
 </section>
 <noscript><p>지구본을 표시하려면 JavaScript를 활성화해 주세요.</p></noscript>
 {{ frames|json_script:'globe-frames' }}
 {{ stops|json_script:'globe-stops' }}
+{{ sampling|json_script:'globe-sampling' }}
 {% if plates %}{{ plates|json_script:'globe-plates' }}{% endif %}
 {% if coastlines %}{{ coastlines|json_script:'globe-coastlines' }}{% endif %}
 {{ motions|json_script:'globe-motions' }}

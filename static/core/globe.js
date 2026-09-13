@@ -17,6 +17,11 @@ const OCEAN_COLOUR = [22, 86, 135];
 // observed. The viewer does not care how the stops were spaced, so an even count per
 // map and a fixed span in millions of years both arrive the same way.
 const stops = JSON.parse($('globe-stops').textContent);
+// How the server spaced the stops: so many per map, or one every so many Myr.
+const sampling = JSON.parse($('globe-sampling')?.textContent ?? '{}');
+// With a fixed span in Myr, playback moves at one stop per this many milliseconds, so time
+// runs evenly; per-map sampling keeps its pace per source map.
+const INTERVAL_STEP_MS = 300;
 // Per gap, where each matched landmass sits on both of its maps. These are the control
 // points that carry a continent across the gap instead of dissolving it in place.
 const motions = JSON.parse($('globe-motions')?.textContent ?? '[]');
@@ -65,6 +70,14 @@ let surface = sourceMapsPublic ? 'map' : 'mask';
 let projection = 'globe';
 let surfaceMesh;
 let gridVisible = false;
+// Centre longitude of a flat sheet. The globe turns by moving the camera; a sheet turns by
+// shifting which longitude sits in its middle, so the camera and its zoom stay put.
+let meridian = 0;
+let spinning = false;
+let lastPlace = null;
+let lastPlates = null;
+let lastCoastline = null;
+let flatRefresh = 0;
 let nameLayer;
 let nameGroupKey = '';
 let uniforms;
@@ -91,9 +104,9 @@ function scheduleNext() {
   // Playback walks the stops, holding the same pace per source map however densely
   // the timeline was sampled.
   const perFrame = (stops.length - 1) / Math.max(1, frames.length - 1);
+  const delay = sampling.interval_ma ? INTERVAL_STEP_MS : Math.max(60, 2400 / perFrame);
   if (playing) {
-    playTimer = setTimeout(() => selectStop(stop >= stops.length - 1 ? 0 : stop + 1),
-                           Math.max(60, 2400 / perFrame));
+    playTimer = setTimeout(() => selectStop(stop >= stops.length - 1 ? 0 : stop + 1), delay);
   }
 }
 
@@ -234,6 +247,7 @@ async function selectStop(value, manual = false) {
     uniforms.masked.value = masked ? 1 : 0;
     applyMotion(place);
     surfaceMesh.visible = true;
+    lastPlace = place;
     showNames(place, masked && !place.mapless);
     await updatePlates(place, ticket);
     if (ticket !== request) return;
@@ -277,6 +291,23 @@ function applyMotion(place) {
   uniforms.motionCount.value = count;
   stage.dataset.motions = String(count);
 }
+function setMeridian(value) {
+  meridian = (((value % 360) + 540) % 360) - 180;
+  if (uniforms) uniforms.meridian.value = meridian;
+  stage.dataset.meridian = meridian.toFixed(1);
+  // Rebuild the drawn layers at most once a frame, however fast a drag reports.
+  if (flatRefresh || !earth) return;
+  flatRefresh = requestAnimationFrame(() => {
+    flatRefresh = 0;
+    earth.remove(grid);
+    grid.traverse((node) => node.geometry?.dispose());
+    grid = createGrid();
+    earth.add(grid);
+    if (plateLayer?.visible && lastPlates) drawPlates(lastPlates.age, lastPlates.loaded);
+    if (coastlineLayer?.visible && lastCoastline) drawCoastline(lastCoastline.entry, lastCoastline.rings);
+    if (lastPlace && nameLayer.visible) showNames(lastPlace, true);
+  });
+}
 function setProjection(name) {
   if (!PROJECTIONS[name] || name === projection) return;
   projection = name;
@@ -292,12 +323,14 @@ function setProjection(name) {
   earth.add(grid);
   controls.enableRotate = globe;
   controls.enablePan = !globe;
-  controls.autoRotate = controls.autoRotate && globe;
-  $('rotate').disabled = !globe;
-  $('rotate').setAttribute('aria-pressed', String(controls.autoRotate));
+  // One switch for turning: the camera orbits the globe, while a sheet turns its centre
+  // meridian under a fixed camera.
+  controls.autoRotate = spinning && globe;
+  $('rotate').disabled = false;
+  $('rotate').setAttribute('aria-pressed', String(spinning));
   $('gesture').textContent = globe
     ? '드래그로 회전 · 스크롤 / 핀치로 확대'
-    : '드래그로 이동 · 스크롤 / 핀치로 확대';
+    : '드래그로 회전 · 오른쪽 드래그로 이동 · 스크롤 / 핀치로 확대';
   stage.dataset.projection = projection;
   nameGroupKey = '';
   plateAge = null;
@@ -313,6 +346,7 @@ function globeMaterial() {
     blend: { value: 0 }, masked: { value: 0 },
     land: { value: linear(LAND_COLOUR) }, ocean: { value: linear(OCEAN_COLOUR) },
     projection: { value: 0 },
+    meridian: { value: 0 },
     blank: { value: 0 },
     motionCount: { value: 0 },
     motionPoints: { value: Array.from({ length: MAX_MOTIONS }, () => new THREE.Vector4()) },
@@ -338,6 +372,7 @@ function globeMaterial() {
       uniform vec3 ocean;
       const float PI = 3.141592653589793;
       uniform int projection;
+      uniform float meridian;
       uniform int motionCount;
       uniform vec4 motionPoints[${MAX_MOTIONS}];
       uniform float motionRadius[${MAX_MOTIONS}];
@@ -374,7 +409,10 @@ function globeMaterial() {
       // geometry already carries that; on a sheet the projection has to be undone,
       // which is also what decides whether a fragment is on the map at all.
       bool locate(out vec2 found) {
-        if (projection <= 1) { found = vUv; return true; }
+        if (projection == 0) { found = vUv; return true; }
+        // A flat sheet turns about the pole: sample the fields at the longitude the sheet's
+        // centre meridian puts under this fragment. The textures wrap in longitude.
+        if (projection == 1) { found = vec2(fract(vUv.x + meridian / 360.0), vUv.y); return true; }
         float x = vUv.x * 2.0 - 1.0;
         float y = vUv.y * 2.0 - 1.0;
         if (x * x + y * y > 1.0) return false;
@@ -382,7 +420,7 @@ function globeMaterial() {
         float latitude = asin(clamp((2.0 * theta + sin(2.0 * theta)) / PI, -1.0, 1.0));
         float longitude = PI * x / max(cos(theta), 1e-6);
         if (abs(longitude) > PI) return false;
-        found = vec2(longitude / (2.0 * PI) + 0.5, latitude / PI + 0.5);
+        found = vec2(fract(longitude / (2.0 * PI) + 0.5 + meridian / 360.0), latitude / PI + 0.5);
         return true;
       }
       void main() {
@@ -420,8 +458,12 @@ function globeMaterial() {
 }
 const FLAT_DISTANCE = 2.6;
 const NAME_LIFT = 0.015;
+// Longitude as it sits on a flat sheet turned to `meridian`, in [-180, 180).
+function sheetLongitude(longitude) {
+  return (((longitude - meridian) % 360) + 540) % 360 - 180;
+}
 function onSheet(longitude, latitude, lift = 0) {
-  const [x, y] = PROJECTIONS[projection].place(longitude, latitude);
+  const [x, y] = PROJECTIONS[projection].place(sheetLongitude(longitude), latitude);
   return new THREE.Vector3(x, y, lift);
 }
 function pointAt(longitude, latitude, lift) {
@@ -518,7 +560,11 @@ function labelPoint(longitude, latitude) {
 function between(from, to, blend) {
   const start = labelPoint(from.lon, from.lat);
   const finish = labelPoint(to.lon, to.lat);
-  if (projection !== 'globe') return start.lerp(finish, blend);
+  if (projection !== 'globe') {
+    // Across the sheet's seam a straight slide would sweep over the whole map; jump instead.
+    if (Math.abs(finish.x - start.x) > 1) return blend < 0.5 ? start : finish;
+    return start.lerp(finish, blend);
+  }
   // On the sphere a straight line cuts through it, so come back out to the surface.
   return start.lerp(finish, blend).normalize().multiplyScalar(1 + NAME_LIFT);
 }
@@ -583,7 +629,7 @@ function drawPlates(age, loaded) {
         const here = pointAt(longitude, latitude, lift);
         // On a sheet a ring that crosses the antimeridian would draw a line straight
         // back across the map, so the run is broken there instead.
-        const jumped = flat && previous && Math.abs(longitude - previousLongitude) > 180;
+        const jumped = flat && previous && Math.abs(sheetLongitude(longitude) - sheetLongitude(previousLongitude)) > 180;
         if (previous && !jumped) points.push(previous, here);
         previous = here;
         previousLongitude = longitude;
@@ -602,6 +648,7 @@ function drawPlates(age, loaded) {
   }
   plateLayer.visible = true;
   plateAge = age;
+  lastPlates = { age, loaded };
   stage.dataset.plates = String(visible);
 }
 function clearPlates() {
@@ -673,7 +720,7 @@ function drawCoastline(entry, rings) {
     for (let index = 0; index < ring.length; index += 2) {
       const longitude = ring[index];
       const here = pointAt(longitude, ring[index + 1], lift);
-      const jumped = flat && previous && Math.abs(longitude - previousLongitude) > 180;
+      const jumped = flat && previous && Math.abs(sheetLongitude(longitude) - sheetLongitude(previousLongitude)) > 180;
       if (previous && !jumped) points.push(previous, here);
       previous = here;
       previousLongitude = longitude;
@@ -690,6 +737,7 @@ function drawCoastline(entry, rings) {
     earth.add(coastlineLayer);
   }
   coastlineKey = `${entry.age}|${projection}`;
+  lastCoastline = { entry, rings };
   stage.dataset.coastlines = String(rings.length);
   stage.dataset.coastlineAge = String(entry.age);
 }
@@ -734,7 +782,10 @@ function createGrid() {
   }
   for (let latitude = -60; latitude <= 60; latitude += 30) {
     const points = [];
-    for (let step = 0; step <= 180; step++) points.push(pointAt(-180 + step * 2, latitude, lift));
+    // Run each parallel from seam to seam of the turned sheet, so it never wraps back.
+    for (let step = 0; step <= 180; step++) {
+      points.push(pointAt(meridian - 179.999 + step * (359.998 / 180), latitude, lift));
+    }
     line(points);
   }
   for (let longitude = -180; longitude < 180; longitude += 30) {
@@ -770,6 +821,7 @@ function resetView() {
   earth.rotation.set(0, globe ? -Math.PI / 2 : 0, 0);
   camera.position.set(0, globe ? 0.18 : 0, globe ? 3.45 : FLAT_DISTANCE);
   controls.target.set(0, 0, 0);
+  setMeridian(0);
   controls.minDistance = globe ? 1.65 : FLAT_DISTANCE * 0.3;
   controls.maxDistance = globe ? 5 : FLAT_DISTANCE * 2.2;
   controls.update();
@@ -805,6 +857,7 @@ function init() {
     previous = time;
     if (document.hidden) return;
     controls.update(delta);
+    if (spinning && projection !== 'globe' && !reducedMotion) setMeridian(meridian + delta * 12);
     updateNameVisibility();
     renderer.render(scene, camera);
   });
@@ -841,9 +894,36 @@ function init() {
     if (playing) selectFrame(selected === frames.length - 1 ? 0 : selected + 1);
   });
   $('rotate').addEventListener('click', () => {
-    controls.autoRotate = !controls.autoRotate;
-    $('rotate').setAttribute('aria-pressed', String(controls.autoRotate));
+    spinning = !spinning;
+    controls.autoRotate = spinning && projection === 'globe';
+    $('rotate').setAttribute('aria-pressed', String(spinning));
   });
+  // On a sheet a left drag turns the centre meridian, as a drag spins the globe.
+  // OrbitControls keeps the right button for panning and the wheel or a pinch for zoom.
+  let dragging = null;
+  renderer.domElement.addEventListener('pointerdown', (event) => {
+    if (dragging && event.pointerId !== dragging.id) {
+      dragging = null;  // a second finger means a pinch, not a turn
+      return;
+    }
+    if (projection === 'globe' || event.button !== 0 || event.ctrlKey || event.metaKey
+        || event.shiftKey) return;
+    dragging = { id: event.pointerId, x: event.clientX };
+  });
+  window.addEventListener('pointermove', (event) => {
+    if (!dragging || event.pointerId !== dragging.id) return;
+    const height = renderer.domElement.clientHeight || 1;
+    const distance = camera.position.distanceTo(controls.target);
+    const worldPerPixel = 2 * distance * Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2) / height;
+    // The sheet is two units wide for 360 degrees, so the map follows the pointer.
+    setMeridian(meridian - (event.clientX - dragging.x) * worldPerPixel * 180);
+    dragging.x = event.clientX;
+  });
+  for (const type of ['pointerup', 'pointercancel']) {
+    window.addEventListener(type, (event) => {
+      if (dragging && event.pointerId === dragging.id) dragging = null;
+    });
+  }
   $('grid').addEventListener('click', () => {
     gridVisible = !gridVisible;
     grid.visible = gridVisible;
@@ -899,14 +979,17 @@ function init() {
       if (event.key === 'ArrowUp') earth.rotation.x -= step;
       if (event.key === 'ArrowDown') earth.rotation.x += step;
     } else {
-      // A sheet has nothing to turn, so the arrows slide the view instead.
-      const pan = camera.position.z * 0.08;
-      const shift = new THREE.Vector3(
-        (event.key === 'ArrowRight' ? 1 : 0) - (event.key === 'ArrowLeft' ? 1 : 0),
-        (event.key === 'ArrowUp' ? 1 : 0) - (event.key === 'ArrowDown' ? 1 : 0), 0).multiplyScalar(pan);
-      camera.position.add(shift);
-      controls.target.add(shift);
-      controls.update();
+      // Left and right turn the sheet about the pole, as they turn the globe; up and down
+      // slide the view.
+      if (event.key === 'ArrowLeft') setMeridian(meridian - 10);
+      if (event.key === 'ArrowRight') setMeridian(meridian + 10);
+      if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
+        const shift = new THREE.Vector3(0, event.key === 'ArrowUp' ? 1 : -1, 0)
+          .multiplyScalar(camera.position.z * 0.08);
+        camera.position.add(shift);
+        controls.target.add(shift);
+        controls.update();
+      }
     }
     if (['+', '=', '-'].includes(event.key)) {
       camera.position.multiplyScalar(event.key === '-' ? 1.1 : 0.9);
@@ -914,7 +997,29 @@ function init() {
     }
   });
   document.addEventListener('visibilitychange', () => { if (document.hidden) setPlaying(false); });
-  selectFrame(selected);
+  if ($('sampling')) {
+    // The server builds the stops, so a new spacing is a new page; carry the age across so
+    // the reader lands where they were.
+    $('sampling').addEventListener('change', () => {
+      const [kind, value] = $('sampling').value.split(':');
+      const url = new URL(location.href);
+      url.searchParams.delete('steps');
+      url.searchParams.delete('interval');
+      url.searchParams.set(kind === 'interval' ? 'interval' : 'steps', value);
+      url.searchParams.set('age', String(stops[stop][3]));
+      location.assign(url.href);
+    });
+  }
+  const askedAge = Number(new URL(location.href).searchParams.get('age'));
+  if (new URL(location.href).searchParams.has('age') && Number.isFinite(askedAge)) {
+    let nearest = 0;
+    stops.forEach(([, , , age], index) => {
+      if (Math.abs(age - askedAge) < Math.abs(stops[nearest][3] - askedAge)) nearest = index;
+    });
+    selectStop(nearest);
+  } else {
+    selectFrame(selected);
+  }
 }
 try { init(); }
 catch (error) {

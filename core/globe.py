@@ -315,6 +315,22 @@ def sampling(request=None):
     return {"interval_ma": None, "steps": 4 if count is None else count}
 
 
+SAMPLING_OPTIONS = [("steps:4", "지도마다 4단계"), ("interval:1", "1 Myr"),
+                    ("interval:5", "5 Myr"), ("interval:10", "10 Myr")]
+
+
+def sampling_choice(plan):
+    """The timeline control's value for a plan, and the options it offers."""
+    if plan["interval_ma"]:
+        choice, label = f"interval:{plan['interval_ma']:g}", f"{plan['interval_ma']:g} Myr"
+    else:
+        choice, label = f"steps:{plan['steps']}", f"지도마다 {plan['steps']}단계"
+    options = list(SAMPLING_OPTIONS)
+    if choice not in dict(options):
+        options.append((choice, label))
+    return choice, options
+
+
 def _gap_for(ages, age):
     """Index of the older map of the pair that brackets `age`. Ages run oldest first."""
     for index in range(len(ages) - 1):
@@ -488,6 +504,8 @@ def globe(request):
     return render(request, "core/home.html",
                   {"frames": frames, "viewer_enabled": enabled(),
                    "stops": timeline(frames, plan, deepest), "sampling": plan,
+                   "sampling_choice": sampling_choice(plan)[0],
+                   "sampling_options": sampling_choice(plan)[1],
                    "source_maps_public": source_maps_public() and source == "scotese2002",
                    "mask": {"id": source, "title": MASK_SOURCES[source]["title"],
                             "other": next(other for other in MASK_SOURCES if other != source),

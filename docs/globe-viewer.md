@@ -166,6 +166,17 @@ Only the stops that land on a source map show what the source drew.
 
 ## Projections
 
+The flat sheets turn about the pole. A left drag, the left and right arrow keys, or the
+auto-rotate button shift the sheet's centre meridian; the shader samples the fields that far
+round, and the grid, names, plate boundaries and coastlines are placed through the same shift
+and broken at the new seam. A right drag pans and the wheel zooms; reset returns the meridian
+to 0.
+
+Beside the timeline a spacing picker offers steps per map or one stop every 1, 5 or 10 Myr.
+The server builds the stops, so a change reloads the page with `interval` or `steps` and the
+current `age`, and the viewer opens at the stop nearest that age. With a spacing in Myr,
+playback advances one stop every 300 ms.
+
 A picker in the toolbar chooses what the map is drawn on: the globe, a Mollweide sheet,
 or equirectangular. Mollweide is the one to compare against the source, because it is
 the projection the Scotese maps are assumed to use, so the sheet reproduces their

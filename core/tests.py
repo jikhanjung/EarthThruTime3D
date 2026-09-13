@@ -138,6 +138,18 @@ class GlobeTests(TestCase):
         with self.settings(SCOTESE_VIEWER_ENABLED=False):
             self.assertEqual(self.client.get('/globe/coastlines/0.json').status_code, 404)
 
+    def test_the_timeline_offers_a_one_million_year_spacing(self):
+        with self.settings(SCOTESE_VIEWER_ENABLED=True):
+            response = self.client.get('/', {'interval': '1'})
+        self.assertEqual(response.context['sampling_choice'], 'interval:1')
+        self.assertContains(response, '<option value="interval:1" selected>1 Myr</option>', html=False)
+        mapped = [stop[3] for stop in response.context['stops'] if stop[0] >= 0]
+        gaps = [older - newer for older, newer in zip(mapped, mapped[1:])]
+        self.assertLessEqual(max(gaps), 1.0 + 1e-6)
+        with self.settings(SCOTESE_VIEWER_ENABLED=True):
+            default = self.client.get('/')
+        self.assertEqual(default.context['sampling_choice'], 'steps:4')
+
     def test_atlas_fields_are_served_by_id(self):
         with self.settings(SCOTESE_VIEWER_ENABLED=False):
             self.assertEqual(self.client.get('/globe/fields/paleoatlas-000.png').status_code, 404)
