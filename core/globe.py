@@ -244,34 +244,49 @@ def timeline(frames, plan):
     return stops
 
 
-# The plate model is served whole rather than per map: it is one model, and the viewer
-# reconstructs from it at whatever time the reader has chosen.
-PLATE_FILES = {"rotations": "rotations.json", "continents": "continents.json",
-               "coastlines": "coastlines.json"}
+# Plate models are served whole rather than per map: each is one model, and the viewer
+# reconstructs from it at whatever time the reader has chosen. Only these three names
+# are reachable, under a model id that must match a manifest.
+PLATE_LAYERS = ("rotations", "continents", "coastlines")
+PLATE_MANIFESTS = "sources/plate-models"
 
 
-def plate_path(name):
-    return Path(settings.PLATE_MODEL_DIR) / PLATE_FILES[name]
+def plate_manifests():
+    return sorted((settings.BASE_DIR / PLATE_MANIFESTS).glob("*.json"))
 
 
-def plate_model():
-    """URLs and attribution for the plate model, or None when it has not been packed.
+def plate_path(model, layer):
+    return Path(settings.PLATE_MODEL_DIR) / model / f"{layer}.json"
 
-    Attribution travels with the URLs because the licence requires it and because a
-    reader has to be able to tell which of the two datasets a line came from.
+
+def plate_models():
+    """Every packed plate model, newest publication first, with its attribution.
+
+    Attribution travels with the URLs because each model carries its own licence and
+    because a reader has to be able to tell which dataset a line came from.
     """
-    if not all(plate_path(name).exists() for name in ("rotations", "continents")):
-        return None
-    catalogue = json.loads((settings.BASE_DIR / "sources/earthbyte-merdith2021.json").read_text())
-    return {"rotations": reverse("plate-file", args=["rotations"]),
-            "continents": reverse("plate-file", args=["continents"]),
-            "coastlines": (reverse("plate-file", args=["coastlines"])
-                           if plate_path("coastlines").exists() else None),
-            "model": "Merdith et al. 2021",
-            "citation": catalogue["citation"],
-            "license": catalogue["license"]["name"],
-            "license_url": catalogue["license"]["url"],
-            "limitations": catalogue["limitations"]}
+    available = []
+    for path in plate_manifests():
+        document = json.loads(path.read_text())
+        model = document["id"]
+        if not all(plate_path(model, layer).exists() for layer in ("rotations", "continents")):
+            continue
+        available.append({
+            "id": model,
+            "preferred": bool(document.get("preferred")),
+            "title": document["short_title"],
+            "frame": document["reference_frame"],
+            "covers": document["covers_ma"],
+            "citation": document["citation"],
+            "license": document["license"]["name"],
+            "license_url": document["license"]["url"],
+            "limitations": document["limitations"],
+            "layers": {layer: reverse("plate-file", args=[model, layer])
+                       for layer in PLATE_LAYERS if plate_path(model, layer).exists()},
+        })
+    # The manifest says which model to open with; the rest follow by title.
+    available.sort(key=lambda entry: (not entry["preferred"], entry["title"]))
+    return available
 
 
 def bundle_report():
@@ -309,7 +324,7 @@ def globe(request):
                   {"frames": frames, "viewer_enabled": enabled(),
                    "stops": timeline(frames, plan), "sampling": plan,
                    "source_maps_public": source_maps_public(),
-                   "plates": plate_model(),
+                   "plates": plate_models(),
                    "motions": motions(frames, pieces_by_frame),
                    "fields_available": any(frame["field"] for frame in frames)})
 
@@ -347,12 +362,13 @@ def land_field(request, map_id):
 
 
 @require_safe
-def plate_file(request, name):
-    """Serve one packed plate-model file. Only the three names above are reachable."""
-    if not enabled() or name not in PLATE_FILES:
+def plate_file(request, model, layer):
+    """Serve one packed plate-model file, by model id and layer name."""
+    known = {path.stem for path in plate_manifests()}
+    if not enabled() or layer not in PLATE_LAYERS or model not in known:
         raise Http404
     try:
-        file = plate_path(name).open("rb")
+        file = plate_path(model, layer).open("rb")
     except FileNotFoundError:
         raise Http404("Plate model not packed") from None
     response = FileResponse(file, content_type="application/json")

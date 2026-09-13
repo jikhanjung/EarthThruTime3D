@@ -1,0 +1,56 @@
+{
+  "schema_version": 2,
+  "id": "muller2022",
+  "title": "Müller et al. (2022) tectonic-rules-based mantle reference frame since 1 Ga",
+  "short_title": "Müller et al. 2022",
+  "reference_frame": "optimised mantle",
+  "covers_ma": [
+    0,
+    1000
+  ],
+  "retrieved_at": "2026-09-13",
+  "citation": "Müller, R. D., Flament, N., Cannon, J., Tetley, M. G., Williams, S. E., Cao, X., Bodur, Ö. F., Zahirovic, S., and Merdith, A., 2022. A tectonic-rules-based mantle reference frame since 1 billion years ago – implications for supercontinent cycles and plate–mantle system evolution. Solid Earth, 13, 1127–1159.",
+  "license": {
+    "name": "Creative Commons Attribution 4.0 International",
+    "url": "https://creativecommons.org/licenses/by/4.0/",
+    "statement": "The Zenodo record for this dataset states cc-by-4.0.",
+    "source": "https://zenodo.org/records/13636799",
+    "note": "Attribution and citation are required; publishing derived work needs no further consent."
+  },
+  "archive": {
+    "url": "https://zenodo.org/records/13636799/files/Muller_etal_2022_SE_v1.2.4.zip?download=1",
+    "path": "data/sources/plates/muller2022/archive.zip",
+    "bytes": 11629841,
+    "sha256": "add1f4975360ecd259517b99860f4fb0d176170d909333387e8022c69255bbcd",
+    "member_prefix": ""
+  },
+  "members": [
+    {
+      "role": "rotation",
+      "name": "optimisation/1000_0_rotfile_MantleOpt.rot",
+      "bytes": 726823,
+      "sha256": "09ddb15a4bcfabc43e363d0582445d42cf06dd31ed39e5cbd528f304e1a3759f"
+    },
+    {
+      "role": "continents",
+      "name": "Continents/shapes_continents.gpml",
+      "bytes": 9588210,
+      "sha256": "423400a8268b2409eb39b4f0cb07933411cd664d1594e8fd0468c73ecc55c835"
+    },
+    {
+      "role": "coastlines",
+      "name": "Coastlines/shapes_coastlines_Merdith_etal.gpmlz",
+      "bytes": 1897379,
+      "sha256": "e57285e77c96b2f40926c652b10d832f24933d214cdf1ce8ca40ff9f89d7e01a"
+    },
+    {
+      "role": "readme",
+      "name": "README.txt",
+      "bytes": 13252,
+      "sha256": "7ffeca82443ae19f400d427e4bac7a2cb92e3020efad97df3a2b1dfc658be7c4"
+    }
+  ],
+  "relationship": "The shapes and the palaeomagnetic rotation file are byte-identical to merdith2021; what this model adds is the optimised mantle reference frame, which is the rotation file packed here. Comparing the two on screen shows what the choice of absolute frame does, with relative motions unchanged.",
+  "limitations": "The authors state that climate-sensitive analysis should use the palaeomagnetic frame, and repeat Merdith's warning against Pacific hotspot kinematics and analyses shorter than 5 Ma.",
+  "preferred": false
+}

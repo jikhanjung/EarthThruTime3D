@@ -7,15 +7,20 @@ from config.version import APP_NAME, COPYRIGHT_YEAR, RELEASE_DATE, VENDOR, VERSI
 
 
 @lru_cache(maxsize=1)
-def plate_citation():
-    """The citation the plate model's licence requires, for pages outside the viewer."""
-    path = settings.BASE_DIR / "sources/earthbyte-merdith2021.json"
-    if not path.exists():
-        return ""
-    return json.loads(path.read_text())["citation"]
+def plate_citations():
+    """The citations the plate models' licences require, for pages outside the viewer."""
+    directory = settings.BASE_DIR / "sources/plate-models"
+    entries = []
+    for path in sorted(directory.glob("*.json")):
+        document = json.loads(path.read_text())
+        entries.append({"citation": document["citation"],
+                        "license": document["license"]["name"],
+                        "license_url": document["license"]["url"],
+                        "frame": document["reference_frame"]})
+    return entries
 
 
 def branding(request):
     return {"app_name": APP_NAME, "vendor": VENDOR, "version": VERSION,
             "release_date": RELEASE_DATE, "copyright_year": COPYRIGHT_YEAR,
-            "plate_citation": plate_citation()}
+            "plate_citations": plate_citations()}

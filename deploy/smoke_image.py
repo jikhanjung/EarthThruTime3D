@@ -99,19 +99,27 @@ def main():
             fetch("/globe/fields/scotese-000.png")
             # The plate model is a second dataset with its own licence; it must be both
             # served and credited, and nothing outside its three files reachable.
-            rotations = json.loads(fetch("/plates/rotations.json"))
-            if not rotations.get("sequences"):
-                raise SystemExit("Plate rotations are empty.")
-            continents = json.loads(fetch("/plates/continents.json"))
-            if len(continents.get("features", [])) < 500:
-                raise SystemExit("Plate continents look truncated.")
-            fetch("/plates/secret.json", expect=404)
-            if "Merdith" not in home or "Creative Commons" not in fetch("/about/").decode():
-                raise SystemExit("The plate model is served without its attribution.")
+            about = fetch("/about/").decode()
+            shapes = 0
+            for model in ("merdith2021", "muller2022"):
+                rotations = json.loads(fetch(f"/plates/{model}/rotations.json"))
+                if not rotations.get("sequences"):
+                    raise SystemExit(f"{model}: rotations are empty.")
+                continents = json.loads(fetch(f"/plates/{model}/continents.json"))
+                if len(continents.get("features", [])) < 500:
+                    raise SystemExit(f"{model}: continents look truncated.")
+                shapes = len(continents["features"])
+                citation = continents["attribution"]["citation"].split(",")[0]
+                if citation not in about:
+                    raise SystemExit(f"{model} is served without its citation on /about/.")
+            fetch("/plates/merdith2021/secret.json", expect=404)
+            fetch("/plates/nope/rotations.json", expect=404)
+            if "Creative Commons" not in about:
+                raise SystemExit("The plate models are served without their licence.")
             fetch("/static/core/globe.js")
             fetch("/about/")
             print(f"Smoke passed: {version}, {report['fields']['expected']} land fields, "
-                  f"{len(continents['features'])} plate shapes, no published maps served.")
+                  f"two plate models at {shapes} shapes, no published maps served.")
         finally:
             subprocess.run(["docker", "stop", container], check=False, capture_output=True)
 

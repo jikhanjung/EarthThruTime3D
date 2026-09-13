@@ -1,46 +1,62 @@
 # Source catalogues
 
-Two datasets, kept apart on purpose. The Scotese maps are published pictures this
-project measures; the EarthByte plate model is a rotation model that reconstructs
-geometry. Different authors, different licences, different limits. Anything built from
-them has to say which one it came from.
+Two kinds of source, kept apart on purpose. The Scotese maps are published pictures this
+project measures; the plate models reconstruct geometry from rotation poles. Different
+authors, different licences, different limits. Anything built from them has to say which
+one it came from.
 
 - [Scotese Earth History](#scotese-earth-history-source-catalogue): 17 maps, 650 Ma to
   present, measured into land masks. `scotese-earth-history.json`.
-- [EarthByte Merdith et al. 2021](#earthbyte-plate-model): a 1 Ga rotation model with
-  plate polygons. `earthbyte-merdith2021.json`.
+- [Plate models](#plate-models): rotation models with plate polygons, one manifest each
+  under `sources/plate-models/`.
 
-# EarthByte plate model
+# Plate models
 
-Merdith et al. (2021), a continuous full-plate motion model from 1 Ga to present,
-distributed by the EarthByte Group at the University of Sydney. The archive and the
-five files this project uses are pinned in `earthbyte-merdith2021.json` with byte counts
-and SHA-256 checksums, and extracted into `data/sources/earthbyte/` (gitignored).
+Rotation models that reconstruct geometry, as opposed to the published pictures this
+project measures. One manifest per model under `sources/plate-models/`, each pinning its
+archive and saying which member plays which role, because publishers lay their archives
+out differently and the rest of the pipeline reads the role, never a file name.
+
+| Model | Frame | Covers | Licence |
+| --- | --- | --- | --- |
+| Merdith et al. 2021 | palaeomagnetic | 0–1000 Ma | CC BY 3.0 |
+| Müller et al. 2022 | optimised mantle | 0–1000 Ma | CC BY 4.0 |
+
+The second is not a rival dataset so much as the same one seen from another frame: its
+shapes and its palaeomagnetic rotation file are byte-identical to the first, and what it
+adds is the optimised mantle reference frame. Switching between them in the viewer shows
+what the choice of absolute frame does while relative motions stay put.
 
 ```bash
-.venv/bin/python scripts/fetch_earthbyte.py
-.venv/bin/python scripts/fetch_earthbyte.py --verify-only
+.venv/bin/python scripts/fetch_plate_model.py               # both, or name one
+.venv/bin/python scripts/fetch_plate_model.py --verify-only
+.venv/bin/python scripts/pack_plates.py                     # repack for the browser
 ```
 
-What the files are: a rotation file of total reconstruction poles, coastlines and
-continent shapes carrying plate IDs, and static polygons saying which plate a present-day
-location belongs to. `scripts/rotation_model.py` reads the rotation file and composes a
-plate's rotation at any time, interpolating inside a sequence and walking the chain of
-fixed plates to the anchor.
+Archives and members land in `data/sources/plates/<model>/` and the packed JSON in
+`data/derived/plates/<model>/`, both gitignored. Packing simplifies continent outlines
+with Douglas-Peucker at 0.12 degrees and rewrites the rotation file as sequences keyed by
+moving and fixed plate.
 
-Licence: **Creative Commons Attribution 3.0 Unported**, with the citation recorded in the
-catalogue. Unlike the PALEOMAP maps, publishing derived work on a website needs no
-further consent. The authors state the model sits in a purely palaeomagnetic reference
-frame and is unsuitable for Pacific hotspot kinematics or for analyses shorter than 5 Ma.
+`scripts/rotation_model.py` reads a rotation file and composes a plate's rotation at any
+time, interpolating inside a sequence and walking the chain of fixed plates to the
+anchor. `static/core/rotation.js` is the same algorithm for the browser.
+
+Both licences require attribution and citation. Unlike the PALEOMAP maps, publishing
+derived work on a website needs no further consent. Each model states its own limits in
+its manifest: both are unsuitable for Pacific hotspot kinematics and for analyses shorter
+than 5 Ma, and Müller's authors add that climate-sensitive reading should use the
+palaeomagnetic frame.
 
 ## Checking the composition
 
-`scripts/rotation_model.py` is this project's own implementation, so it is checked
-against the GPlates Web Service, which runs the reference implementation:
+Our composition is checked against the GPlates Web Service, which runs the reference
+implementation:
 
 ```bash
 .venv/bin/python scripts/check_rotation_against_gws.py --samples 60   # needs network
 .venv/bin/python tests/rotation_check.py                              # offline, synthetic
+node --test tests/rotation.test.mjs                                   # the browser copy
 ```
 
 Sixty random plate-and-time reconstructions agreed to within 0.00007 degrees of arc,

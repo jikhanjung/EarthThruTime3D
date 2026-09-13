@@ -157,6 +157,21 @@ try {
   await expect(globe).toHaveAttribute('aria-busy', 'false');
   // Fewer blocks exist at 650 Ma than today, so the count has to fall.
   expect(Number(await globe.getAttribute('data-plates'))).toBeLessThan(atPresent);
+  await page.locator('#era').selectOption('8');
+  await expect(globe).toHaveAttribute('aria-busy', 'false');
+  // Two models, same shapes, different absolute reference frame: switching has to
+  // redraw and to re-credit.
+  await expect(globe).toHaveAttribute('data-plate-model', 'merdith2021');
+  const firstFrame = await page.locator('#globe canvas').screenshot();
+  await page.locator('#plate-model').selectOption('muller2022');
+  await expect(globe).toHaveAttribute('data-plate-model', 'muller2022');
+  await expect(globe).toHaveAttribute('aria-busy', 'false');
+  const secondFrame = await page.locator('#globe canvas').screenshot();
+  expect(Buffer.compare(firstFrame, secondFrame)).not.toBe(0);
+  expect(await page.locator('#plate-cite').textContent()).toContain('Müller');
+  await page.locator('#plate-model').selectOption('merdith2021');
+  await expect(globe).toHaveAttribute('aria-busy', 'false');
+  expect(await page.locator('#plate-cite').textContent()).toContain('Merdith');
   await page.locator('#era').selectOption('16');
   await expect(globe).toHaveAttribute('aria-busy', 'false');
   await page.locator('#plates').click();

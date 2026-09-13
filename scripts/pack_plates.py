@@ -12,18 +12,17 @@ import gzip
 import json
 import math
 import re
+import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-SOURCE = ROOT / "data/sources/earthbyte/v1.2.4"
-ROTATIONS = SOURCE / "1000_0_rotfile_Merdith_et_al.rot"
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from fetch_plate_model import manifest, member_path, models  # noqa: E402
+
 # Continents cover the whole billion years and draw one outline per block; coastlines
 # are finer but the authors say they are mainly meaningful for the past 400 Ma. The
 # viewer shows continents, which is the layer that spans our range.
-LAYERS = {
-    "continents": SOURCE / "shapes_continents.gpml",
-    "coastlines": SOURCE / "shapes_coastlines_Merdith_et_al_v2.gpmlz",
-}
+SHAPE_ROLES = ("continents", "coastlines")
 OUT = ROOT / "data/derived/plates"
 
 DISTANT_PAST = 1e9
@@ -124,35 +123,53 @@ def rotations(text):
             for key, samples in sequences.items()}
 
 
+def pack(model, tolerance, minimum_points):
+    document = manifest(model)
+    roles = {member["role"]: member for member in document["members"]}
+    attribution = {"model": model, "title": document["short_title"],
+                   "citation": document["citation"],
+                   "license": document["license"]["name"],
+                   "license_url": document["license"]["url"],
+                   "reference_frame": document["reference_frame"],
+                   "covers_ma": document["covers_ma"],
+                   "limitations": document["limitations"]}
+    directory = OUT / model
+    directory.mkdir(parents=True, exist_ok=True)
+
+    written = []
+    for role in SHAPE_ROLES:
+        if role not in roles:
+            continue
+        shapes = list(features(read_text(member_path(model, roles[role])),
+                               tolerance, minimum_points))
+        points = sum(len(ring) // 2 for shape in shapes for ring in shape["rings"])
+        document_out = {"attribution": attribution, "layer": role,
+                        "tolerance_deg": tolerance, "features": shapes}
+        (directory / f"{role}.json").write_text(json.dumps(document_out, separators=(",", ":")))
+        written.append((f"{role}.json", f"{len(shapes)} features, {points} points"))
+
+    sequences = rotations(read_text(member_path(model, roles["rotation"])))
+    (directory / "rotations.json").write_text(json.dumps(
+        {"attribution": attribution, "anchor": 0, "sequences": sequences},
+        separators=(",", ":")))
+    written.append(("rotations.json", f"{len(sequences)} sequences"))
+
+    print(f"{model} ({document['reference_frame']} frame)")
+    for name, note in written:
+        size = (directory / name).stat().st_size
+        print(f"  {name:18} {size / 1024:7.0f} KiB  {note}")
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("models", nargs="*", default=None,
+                        help=f"model ids; default all of {', '.join(models())}")
     parser.add_argument("--tolerance", type=float, default=0.12,
                         help="simplification tolerance in degrees")
     parser.add_argument("--min-points", type=int, default=4)
     args = parser.parse_args()
-    OUT.mkdir(parents=True, exist_ok=True)
-
-    catalogue = json.loads((ROOT / "sources/earthbyte-merdith2021.json").read_text())
-    attribution = {"citation": catalogue["citation"], "license": catalogue["license"]["name"],
-                   "license_url": catalogue["license"]["url"],
-                   "model": "Merdith et al. 2021", "version": catalogue["archive"]["version"]}
-
-    for layer, path in LAYERS.items():
-        shapes = list(features(read_text(path), args.tolerance, args.min_points))
-        points = sum(len(ring) // 2 for shape in shapes for ring in shape["rings"])
-        document = {"attribution": attribution, "layer": layer,
-                    "tolerance_deg": args.tolerance, "features": shapes}
-        (OUT / f"{layer}.json").write_text(json.dumps(document, separators=(",", ":")))
-        print(f"{layer}: {len(shapes)} features, {points} points")
-
-    model = {"attribution": attribution, "anchor": 0, "sequences": rotations(read_text(ROTATIONS))}
-    (OUT / "rotations.json").write_text(json.dumps(model, separators=(",", ":")))
-
-    for name in [f"{layer}.json" for layer in LAYERS] + ["rotations.json"]:
-        size = (OUT / name).stat().st_size
-        print(f"{name}: {size / 1024:.0f} KiB")
-    print(f"simplified at {args.tolerance} deg; "
-          f"{len(model['sequences'])} rotation sequences")
+    for model in (args.models or models()):
+        pack(model, args.tolerance, args.min_points)
 
 
 if __name__ == "__main__":

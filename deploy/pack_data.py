@@ -19,7 +19,7 @@ BASE_DIR = Path(__file__).resolve().parents[1]
 SOURCE = BASE_DIR / "data/derived/segmentation"
 SUFFIXES = ("field.png", "pieces.json")
 PLATES = BASE_DIR / "data/derived/plates"
-PLATE_FILES = ("rotations.json", "continents.json", "coastlines.json")
+PLATE_LAYERS = ("rotations.json", "continents.json", "coastlines.json")
 
 
 def digest(path):
@@ -51,22 +51,27 @@ def main():
                           "sha256": digest(target), "map_id": item["id"]})
 
     (staging / "plates").mkdir()
-    for name in PLATE_FILES:
-        source = PLATES / name
-        if not source.exists():
-            raise SystemExit(f"Missing plate file: {source}. Run scripts/pack_plates.py.")
-        target = staging / "plates" / name
-        shutil.copy2(source, target)
-        files.append({"path": f"plates/{name}", "bytes": target.stat().st_size,
-                      "sha256": digest(target), "dataset": "earthbyte-merdith2021"})
+    packed = sorted(path.stem for path in (BASE_DIR / "sources/plate-models").glob("*.json"))
+    if not packed:
+        raise SystemExit("No plate model manifests under sources/plate-models/.")
+    for model in packed:
+        (staging / "plates" / model).mkdir()
+        for name in PLATE_LAYERS:
+            source = PLATES / model / name
+            if not source.exists():
+                raise SystemExit(f"Missing plate file: {source}. Run scripts/pack_plates.py.")
+            target = staging / "plates" / model / name
+            shutil.copy2(source, target)
+            files.append({"path": f"plates/{model}/{name}", "bytes": target.stat().st_size,
+                          "sha256": digest(target), "dataset": model})
 
     manifest = {"schema_version": 2, "version": version, "files": files,
                 "contains_source_maps": False,
                 "note": ("Derived land fields and piece reports produced by "
                          "scripts/segment_landmass.py from the PALEOMAP maps, whose "
                          "original images are not included, plus the EarthByte "
-                         "Merdith et al. 2021 plate model packed by "
-                         "scripts/pack_plates.py and distributed under CC BY 3.0.")}
+                         "plate models packed by scripts/pack_plates.py, each under "
+                         "its own Creative Commons Attribution licence.")}
     (staging / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
 
     dist = BASE_DIR / "dist"

@@ -18,7 +18,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from rotation_model import RotationModel  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
-ROTATION = ROOT / "data/sources/earthbyte/v1.2.4/1000_0_rotfile_Merdith_et_al.rot"
+ROTATION = ROOT / "data/sources/plates/merdith2021/1000_0_rotfile_Merdith_et_al.rot"
 SERVICE = "https://gws.gplates.org/reconstruct/reconstruct_points/"
 
 

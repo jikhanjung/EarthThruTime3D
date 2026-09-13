@@ -62,7 +62,7 @@ test('the anchor never moves', () => {
 });
 
 test('matches the packed model where the reference implementation was checked', (t) => {
-  const path = 'data/derived/plates/rotations.json';
+  const path = 'data/derived/plates/merdith2021/rotations.json';
   if (!existsSync(path)) return t.skip('run scripts/pack_plates.py first');
   const m = new RotationModel(JSON.parse(readFileSync(path, 'utf8')));
   // Values produced by scripts/rotation_model.py, itself within 0.00007 degrees of the

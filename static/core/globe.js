@@ -37,14 +37,15 @@ const PROJECTIONS = {
 // The plate model is a second, unrelated dataset: EarthByte's rotation model rather
 // than a measurement of the Scotese maps. It is drawn as an overlay so the two can be
 // compared at one time without either being mistaken for the other.
-const plates = JSON.parse($('globe-plates')?.textContent ?? 'null');
+const plates = JSON.parse($('globe-plates')?.textContent ?? '[]');
 const PLATE_COLOUR = 0xff62c0;
 const surfaceToggle = $('surface');
 let plateLayer;
-let plateModel;
-let plateShapes;
 let plateAge = null;
 let showPlates = false;
+let plateChoice = plates.length ? plates[0].id : null;
+// One entry per model, so switching back does not refetch.
+const plateData = new Map();
 // Without the published maps there is nothing to show but the derived surface, so the
 // viewer starts there and the toggle is not rendered at all.
 const sourceMapsPublic = frames.some((frame) => Boolean(frame.url));
@@ -482,17 +483,26 @@ function updateNameVisibility() {
     sprite.visible = sprite.material.opacity > 0.02;
   }
 }
-async function loadPlateModel() {
-  if (plateModel && plateShapes) return true;
-  const [rotations, shapes] = await Promise.all([
-    fetch(plates.rotations).then((response) => response.json()),
-    fetch(plates.continents).then((response) => response.json()),
-  ]);
-  plateModel = new RotationModel(rotations);
-  plateShapes = shapes.features;
-  return true;
+function plateEntry() {
+  return plates.find((model) => model.id === plateChoice) ?? null;
 }
-function drawPlates(age) {
+async function loadPlateModel() {
+  const entry = plateEntry();
+  if (!entry) return null;
+  if (!plateData.has(entry.id)) {
+    plateData.set(entry.id, (async () => {
+      const [rotations, shapes] = await Promise.all([
+        fetch(entry.layers.rotations).then((response) => response.json()),
+        fetch(entry.layers.continents).then((response) => response.json()),
+      ]);
+      return { model: new RotationModel(rotations), shapes: shapes.features };
+    })());
+    plateData.get(entry.id).catch(() => plateData.delete(entry.id));
+  }
+  return plateData.get(entry.id);
+}
+function drawPlates(age, loaded) {
+  const { model: plateModel, shapes: plateShapes } = loaded;
   // Rebuilt per stop rather than animated: the geometry is a few thousand segments and
   // the rotation is exact at whatever age the reader is on, not an eased approximation.
   const flat = projection !== 'globe';
@@ -543,9 +553,13 @@ async function updatePlates(place, ticket) {
     clearPlates();
     return;
   }
-  await loadPlateModel();
-  if (ticket !== request) return;
-  drawPlates(Number(place.age.toFixed(3)));
+  const loaded = await loadPlateModel();
+  if (ticket !== request || !loaded) return;
+  drawPlates(Number(place.age.toFixed(3)), loaded);
+  const entry = plateEntry();
+  if ($('plate-cite')) {
+    $('plate-cite').textContent = `${entry.citation} · ${entry.license}`;
+  }
 }
 function createGrid() {
   // Built from longitude and latitude rather than from the mesh, so the same parallels
@@ -639,6 +653,7 @@ function init() {
     status.textContent = '그래픽 연결이 끊겼습니다. 페이지를 새로고침해 주세요.';
   });
   stage.dataset.projection = projection;
+  stage.dataset.plateModel = plateChoice ?? '';
   $('projection').value = projection;
   frames.forEach((frame, index) => $('era').add(new Option(`${frame.label} · ${ageText(frame)}`, index)));
   $('timeline').max = stops.length - 1;
@@ -673,6 +688,14 @@ function init() {
       $('plates').setAttribute('aria-pressed', String(showPlates));
       $('plate-note').hidden = !showPlates;
       selectStop(stop);
+    });
+  }
+  if ($('plate-model')) {
+    $('plate-model').addEventListener('change', () => {
+      plateChoice = $('plate-model').value;
+      plateAge = null;
+      stage.dataset.plateModel = plateChoice;
+      selectStop(stop, true);
     });
   }
   $('projection').addEventListener('change', () => setProjection($('projection').value));
