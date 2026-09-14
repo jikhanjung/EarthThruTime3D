@@ -1708,7 +1708,23 @@ function init() {
   // and down for the angle, sideways for the heading. OrbitControls uses the middle
   // button for dolly, which the wheel already does, so it is taken from it here.
   let tilting = null;
+  // On a touch screen two fingers tilt the standing terrain: moved together up or down for
+  // the angle, twisted for the heading. The gesture is told from a pinch once the fingers
+  // have moved 12 px: if their spread changed less than half as much as their midpoint
+  // moved, it is a tilt, and the controls stand aside until a finger lifts.
+  const touches = new Map();
+  let touchStart = null;
+  let touchTilt = false;
+  const twoFingers = () => {
+    if (touches.size !== 2) return null;
+    const [a, b] = [...touches.values()];
+    return { y: (a.y + b.y) / 2, d: Math.hypot(b.x - a.x, b.y - a.y), a: Math.atan2(b.y - a.y, b.x - a.x) };
+  };
   renderer.domElement.addEventListener('pointerdown', (event) => {
+    if (event.pointerType === 'touch') {
+      touches.set(event.pointerId, { x: event.clientX, y: event.clientY });
+      touchStart = twoFingers();
+    }
     if (dragging && event.pointerId !== dragging.id) {
       dragging = null;  // a second finger means a pinch, not a turn
       return;
@@ -1724,6 +1740,22 @@ function init() {
     dragging = { id: event.pointerId, x: event.clientX };
   });
   window.addEventListener('pointermove', (event) => {
+    if (touches.has(event.pointerId)) {
+      const before = twoFingers();
+      touches.set(event.pointerId, { x: event.clientX, y: event.clientY });
+      const after = twoFingers();
+      if (before && after && touchStart && projection === 'globe' && uniforms.relief.value > 0) {
+        const moved = Math.abs(after.y - touchStart.y);
+        if (!touchTilt && moved > 12 && Math.abs(after.d - touchStart.d) < moved * 0.5) {
+          touchTilt = true;
+          controls.enabled = false;
+        }
+        if (touchTilt) {
+          const twist = Math.atan2(Math.sin(after.a - before.a), Math.cos(after.a - before.a));
+          setTilt(tiltAngle - (after.y - before.y) * 0.005, tiltHeading + twist);
+        }
+      }
+    }
     if (tilting && event.pointerId === tilting.id) {
       // Dragging up leans further toward the horizon, as in the usual map applications.
       setTilt(tiltAngle - (event.clientY - tilting.y) * 0.005, tiltHeading + (event.clientX - tilting.x) * 0.005);
@@ -1743,6 +1775,13 @@ function init() {
     window.addEventListener(type, (event) => {
       if (dragging && event.pointerId === dragging.id) dragging = null;
       if (tilting && event.pointerId === tilting.id) tilting = null;
+      if (touches.delete(event.pointerId) && touches.size < 2) {
+        touchStart = null;
+        if (touchTilt) {
+          touchTilt = false;
+          controls.enabled = true;
+        }
+      }
     });
   }
   $('grid').addEventListener('click', () => {
@@ -1931,7 +1970,8 @@ function setupSettingsMenu() {
   const toggle = $('settings-toggle');
   if (!menu || !toggle) return;
   // The sea-level curve floats in the same corner, so it stacks above the open menu.
-  const space = () => $('explorer')?.style.setProperty('--menu-space', menu.hidden ? '0px' : `${menu.offsetHeight + 8}px`);
+  // On a short screen the menu takes the toolbar's row inside the panel instead, and pushes nothing.
+  const space = () => $('explorer')?.style.setProperty('--menu-space', menu.hidden || menu.offsetTop >= 0 ? '0px' : `${menu.offsetHeight + 8}px`);
   new ResizeObserver(space).observe(menu);
   const show = (open, remember = true) => {
     menu.hidden = !open;

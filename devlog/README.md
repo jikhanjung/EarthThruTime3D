@@ -22,6 +22,7 @@ wwolf는 001부터 셉니다. 그 전의 001–045는 링크와 본문 속 번�
 
 ## 작업 기록
 
+- [jikhanjung 059 — 터치 기울이기, 짧은 화면의 메뉴](20260915_jikhanjung_059_touch_tilt_short_menu.md)
 - [jikhanjung 058 — v0.10.1: 휠 클릭으로 기울이기](20260914_jikhanjung_058_release_0101.md)
 - [jikhanjung 057 — v0.10.0 배포와 NAS 백업](20260914_jikhanjung_057_release_0100.md)
 - [jikhanjung 056 — 라이선스: 코드 MIT, 파생 자료 CC BY 4.0](20260914_jikhanjung_056_licence.md)

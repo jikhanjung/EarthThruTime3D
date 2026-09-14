@@ -312,6 +312,12 @@ try {
   await expect(globe).toHaveAttribute('aria-busy', 'false');
   const short = await phone('.timeline');
   expect(short.y + short.height).toBeLessThanOrEqual(390);
+  // There the open menu takes the toolbar's row inside the panel rather than covering the sphere.
+  await expect(page.locator('#settings-menu')).toBeVisible();
+  const shortMenu = await phone('#settings-menu');
+  const shortControls = await phone('.controls');
+  expect(shortMenu.y).toBeGreaterThanOrEqual(shortControls.y);
+  expect(shortMenu.y + shortMenu.height).toBeLessThanOrEqual(shortControls.y + shortControls.height);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await page.screenshot({path:'data/screenshots/globe-landscape.png',fullPage:true});
   console.log('Phone layout passed');
@@ -600,6 +606,20 @@ try {
     await dem.mouse.up({button: 'middle'});
     expect(Number(await demGlobe.getAttribute('data-tilt'))).toBeGreaterThan(55);
     expect(Number(await demGlobe.getAttribute('data-heading'))).toBeGreaterThan(5);
+    // Two fingers moved up together tilt it further on a touch screen.
+    const tiltBefore = Number(await demGlobe.getAttribute('data-tilt'));
+    const cdp = await dem.context().newCDPSession(dem);
+    await cdp.send('Emulation.setTouchEmulationEnabled', {enabled: true, maxTouchPoints: 2});
+    const cx = demCanvas.x + demCanvas.width / 2;
+    const cy = demCanvas.y + demCanvas.height / 2;
+    const fingers = (dy) => [{x: cx - 60, y: cy + dy, id: 0}, {x: cx + 60, y: cy + dy, id: 1}];
+    await cdp.send('Input.dispatchTouchEvent', {type: 'touchStart', touchPoints: fingers(0)});
+    for (let step = 1; step <= 8; step++) {
+      await cdp.send('Input.dispatchTouchEvent', {type: 'touchMove', touchPoints: fingers(-8 * step)});
+    }
+    await cdp.send('Input.dispatchTouchEvent', {type: 'touchEnd', touchPoints: []});
+    await cdp.send('Emulation.setTouchEmulationEnabled', {enabled: false});
+    expect(Number(await demGlobe.getAttribute('data-tilt'))).toBeGreaterThan(tiltBefore + 5);
     await dem.screenshot({path:'data/screenshots/globe-elevation-3d-tilted.png'});
     await dem.locator('#reset').click();
     await expect(demGlobe).toHaveAttribute('data-tilt', '50');
