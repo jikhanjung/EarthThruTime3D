@@ -9,8 +9,10 @@ filled as ice too, which affects a few nunataks and nothing else at this resolut
 
 Every older grid, `paleodem-<age>-ice.png`: red is the ice the 2016 PaleoAtlas paints on
 the map nearest the grid's age, within 5 Myr and the younger map on a tie, as the names
-and motions are borrowed; scripts/segment_paleoatlas.ice reads it. Green stays empty,
-because the atlas draws one white for sheet, shelf and sea ice alike. A grid whose map
+and motions are borrowed; scripts/segment_paleoatlas.ice reads it, and the edge is
+smoothed along longitude, wider toward the poles, so it does not break into spokes
+where the texture's columns converge. Green stays empty, because the atlas draws one
+white for sheet, shelf and sea ice alike. A grid whose map
 paints no ice gets no file, so the overlay fades out across that gap, which there means
 retreat. The atlas prelude older than 540 Ma gets none.
 
@@ -78,6 +80,27 @@ def present(folders, out):
 
 def nearest(maps, age):
     return min(maps, key=lambda item: (abs(item["age_ma"] - age), item["age_ma"]))
+
+
+def polar_smooth(mask, base_px=1.5, cap_px=80):
+    """Blur along longitude, wider toward the poles, so the mask's edge stays soft on the globe.
+
+    Every column of an equirectangular texture becomes a wedge at the pole, so the hard
+    edge of a mask read from the atlas's one-degree cells turns into spokes when seen
+    from above Antarctica. A Gaussian along each row whose width grows as 1/cos(latitude),
+    about 0.15 degrees at the equator and capped at 8 degrees of longitude, averages the
+    wedges into an edge the shader's smoothstep draws cleanly. The shape is unchanged
+    where the columns are not squeezed.
+    """
+    height, width = mask.shape
+    out = mask.astype(np.float32)
+    latitude = 90.0 - (np.arange(height) + 0.5) / height * 180.0
+    sigma = np.round(np.minimum(cap_px, base_px / np.maximum(np.cos(np.radians(latitude)), 1e-3)))
+    for width_px in np.unique(sigma):
+        rows = np.nonzero(sigma == width_px)[0]
+        if width_px > 0:
+            out[rows] = ndimage.gaussian_filter1d(out[rows], width_px, axis=1, mode="wrap")
+    return np.clip(out, 0.0, 1.0)
 
 
 def deposits(folder, model, width=3600, height=1800):
@@ -168,7 +191,8 @@ def main():
             if not kept.any():
                 target.unlink(missing_ok=True)
                 continue
-            red = np.asarray(Image.fromarray((kept * 255).astype(np.uint8)).resize((WIDTH, HEIGHT), Image.BILINEAR))
+            red = np.asarray(Image.fromarray((polar_smooth(kept) * 255).astype(np.uint8))
+                             .resize((WIDTH, HEIGHT), Image.BILINEAR))
             Image.fromarray(np.dstack([red, np.zeros_like(red), np.zeros_like(red)])).save(target)
             written += 1
             borrowed += source["age_ma"] != item["age_ma"]
