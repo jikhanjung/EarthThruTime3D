@@ -336,6 +336,7 @@ def viewer_strings():
         "failedField": _("대륙 거리장을 불러오지 못했습니다. 분할 결과 파일을 확인해 주세요."),
         "failedMap": _("지도를 불러오지 못했습니다. 로컬 원본 파일과 연결을 확인해 주세요."),
         "gestureGlobe": _("드래그로 회전 · 스크롤 / 핀치로 확대"),
+        "gestureTerrain": _("드래그로 회전 · 오른쪽 드래그로 기울이기 · 스크롤 / 핀치로 확대"),
         "gestureSheet": _("드래그로 회전 · 오른쪽 드래그로 이동 · 스크롤 / 핀치로 확대"),
         "modelReach": _("{title} 모델은 {reach} Ma까지입니다. "),
         "modelsDeeper": _("{models}를 고르면 이 시대가 나옵니다."),

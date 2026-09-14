@@ -1109,6 +1109,17 @@ const FLAT_DISTANCE = 2.6;
 // At 10 the Tibetan plateau and the Andes barely rose above the horizon; 25 reads as relief.
 const RELIEF_SCALE = 25;
 const RELIEF_TILT = Math.PI * 50 / 180;
+// The reader can tilt further, to 80 degrees, and turn the tilt to look along any
+// heading; a right drag or a shift drag does both. Reset returns to the default.
+const TILT_MAX = Math.PI * 80 / 180;
+let tiltAngle = RELIEF_TILT;
+let tiltHeading = 0;
+function setTilt(angle, heading) {
+  tiltAngle = THREE.MathUtils.clamp(angle, 0, TILT_MAX);
+  tiltHeading = heading;
+  stage.dataset.tilt = THREE.MathUtils.radToDeg(tiltAngle).toFixed(0);
+  stage.dataset.heading = ((THREE.MathUtils.radToDeg(tiltHeading) % 360) + 360).toFixed(0).replace(/^360$/, '0');
+}
 const RELIEF_DETAIL = [512, 256];
 let reliefWanted = true;
 let reliefDetailed = false;
@@ -1124,7 +1135,11 @@ function updateRelief(factor) {
     surfaceMesh.geometry.dispose();
     surfaceMesh.geometry = new THREE.SphereGeometry(1, ...(reliefDetailed ? RELIEF_DETAIL : [96, 64]));
   }
-  if ((was > 0) !== (strength > 0) && $('relief-note')) $('relief-note').hidden = strength === 0;
+  if ((was > 0) !== (strength > 0)) {
+    if ($('relief-note')) $('relief-note').hidden = strength === 0;
+    // Tilting is a gesture of its own while the terrain stands, so the hint says so.
+    $('gesture').textContent = strength > 0 ? L.gestureTerrain : L.gestureGlobe;
+  }
 }
 // The controls move `camera`; what is drawn is that view turned about the ground beneath
 // it by the relief's tilt, so the tilt never feeds back into the controls.
@@ -1132,12 +1147,13 @@ let viewCamera = null;
 const tiltAxis = new THREE.Vector3();
 const tiltTurn = new THREE.Quaternion();
 function tiltedView() {
-  const tilt = RELIEF_TILT * uniforms.relief.value;
+  const tilt = tiltAngle * uniforms.relief.value;
   if (tilt <= 0 || projection !== 'globe') return camera;
   viewCamera ??= new THREE.PerspectiveCamera();
   viewCamera.copy(camera);
   const ground = camera.position.clone().normalize();
-  tiltAxis.set(1, 0, 0).applyQuaternion(camera.quaternion);
+  // The tilt axis is the screen's horizontal, turned about the ground by the heading.
+  tiltAxis.set(1, 0, 0).applyQuaternion(camera.quaternion).applyAxisAngle(ground, -tiltHeading);
   tiltTurn.setFromAxisAngle(tiltAxis, tilt);
   viewCamera.position.sub(ground).applyQuaternion(tiltTurn).add(ground);
   viewCamera.quaternion.premultiply(tiltTurn);
@@ -1600,6 +1616,7 @@ function resetView() {
   camera.position.set(0, globe ? 0.18 : 0, globe ? 3.45 : FLAT_DISTANCE);
   controls.target.set(0, 0, 0);
   setMeridian(0);
+  setTilt(RELIEF_TILT, 0);
   // Close enough to read a coastline: 0.06 above the unit sphere, or a twelfth of a sheet.
   controls.minDistance = globe ? 1.06 : FLAT_DISTANCE * 0.08;
   controls.maxDistance = globe ? 5 : FLAT_DISTANCE * 2.2;
@@ -1685,16 +1702,32 @@ function init() {
   // On a sheet a left drag turns the centre meridian, as a drag spins the globe.
   // OrbitControls keeps the right button for panning and the wheel or a pinch for zoom.
   let dragging = null;
+  // While the terrain stands, a right drag or a shift drag tilts the view: up and down
+  // for the angle, sideways for the heading. OrbitControls leaves both alone on the
+  // globe, where panning is off.
+  let tilting = null;
   renderer.domElement.addEventListener('pointerdown', (event) => {
     if (dragging && event.pointerId !== dragging.id) {
       dragging = null;  // a second finger means a pinch, not a turn
       return;
     }
-    if (projection === 'globe' || event.button !== 0 || event.ctrlKey || event.metaKey
-        || event.shiftKey) return;
+    if (projection === 'globe') {
+      if (uniforms.relief.value > 0 && (event.button === 2 || (event.button === 0 && event.shiftKey))) {
+        tilting = { id: event.pointerId, x: event.clientX, y: event.clientY };
+      }
+      return;
+    }
+    if (event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey) return;
     dragging = { id: event.pointerId, x: event.clientX };
   });
   window.addEventListener('pointermove', (event) => {
+    if (tilting && event.pointerId === tilting.id) {
+      // Dragging up leans further toward the horizon, as in the usual map applications.
+      setTilt(tiltAngle - (event.clientY - tilting.y) * 0.005, tiltHeading + (event.clientX - tilting.x) * 0.005);
+      tilting.x = event.clientX;
+      tilting.y = event.clientY;
+      return;
+    }
     if (!dragging || event.pointerId !== dragging.id) return;
     const height = renderer.domElement.clientHeight || 1;
     const distance = camera.position.distanceTo(controls.target);
@@ -1706,6 +1739,7 @@ function init() {
   for (const type of ['pointerup', 'pointercancel']) {
     window.addEventListener(type, (event) => {
       if (dragging && event.pointerId === dragging.id) dragging = null;
+      if (tilting && event.pointerId === tilting.id) tilting = null;
     });
   }
   $('grid').addEventListener('click', () => {
