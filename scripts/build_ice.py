@@ -10,11 +10,15 @@ filled as ice too, which affects a few nunataks and nothing else at this resolut
 Every older grid, `paleodem-<age>-ice.png`: red is the ice the 2016 PaleoAtlas paints on
 the map nearest the grid's age, within 5 Myr and the younger map on a tie, as the names
 and motions are borrowed; scripts/segment_paleoatlas.ice reads it, and the edge is
-smoothed along longitude, wider toward the poles, so it does not break into spokes
-where the texture's columns converge. Green stays empty, because the atlas draws one
-white for sheet, shelf and sea ice alike. A grid whose map
-paints no ice gets no file, so the overlay fades out across that gap, which there means
-retreat. The atlas prelude older than 540 Ma gets none.
+smoothed by half a degree, wider along longitude toward the poles, so the atlas's
+one-degree staircase rounds off and the edge does not break into spokes where the
+texture's columns converge. Green stays empty, because the atlas draws one white for
+sheet, shelf and sea ice alike. A grid whose map paints no ice gets no file, so the
+overlay fades out across that gap, which there means retreat. The atlas prelude older
+than 540 Ma gets none. Every mask has its enclosed gaps below HOLE_KM2 filled: the
+atlas draws hachures, grey mountains and blue basins inside its white sheets and the
+opening in segment_paleoatlas.clean turns the hachured white into holes, up to 5% of a
+sheet; Natural Earth leaves nunataks and slivers between neighbouring polygons.
 
 Where the atlas paints nothing but the land-ice volume of van der Meer et al. (2022) is
 at least ICE_VOLUME_MKM3, the cut the sea-level strip already shades, the grid gets a
@@ -72,6 +76,8 @@ ICE_FIELD_SCALE = 8.0                        # levels per degree in the red chan
 SEA_PER_MKM3 = 2.5                           # metres of sea level per million km3 of ice, the paper's ratio
 AREA_EXPONENT = 0.8                          # a sheet's area goes as its volume to this power
 TABLE_STEP = 8                               # the area table samples the field every 8 levels
+HOLE_KM2 = 500_000.0                         # an enclosed gap smaller than this inside a sheet is filled
+EARTH_KM2 = 510.1e6
 LGM_M = -130.0                               # the last glacial maximum's sea level, the present's drawn lowstand
 ICE_LAT_COLUMN, ICE_VOLUME_COLUMN = 13, 22   # IceLat_degrees AVG, VolLandice_km3 AVG in Supplementary Table 1
 ATLAS = ROOT / "sources/paleomap-atlas-2016.json"
@@ -110,9 +116,32 @@ def present(folders):
     return grounded, shelves
 
 
+def fill_holes(inside, cap_km2=HOLE_KM2):
+    """Fill the enclosed gaps of a mask that are smaller than cap_km2.
+
+    The map wraps in longitude, and each polar row is one point: a gap touching a fully
+    iced polar row is enclosed, one touching an open polar row is not. No drawn sheet has
+    a real ice-free enclave anywhere near the cap (the largest gap in any map was 480,000
+    km2, in the atlas's last glacial maximum), while Hudson Bay, which a deglacial slice
+    may hold as an enclave, is 1,200,000 km2 and stays.
+    """
+    height, width = inside.shape
+    pole = lambda row: np.full((1, width), row.all())  # noqa: E731
+    padded = np.pad(np.vstack([pole(inside[0]), inside, pole(inside[-1])]),
+                    ((0, 0), (width // 2, width // 2)), mode="wrap")
+    gaps = ndimage.binary_fill_holes(padded)[1:-1, width // 2:width // 2 + width] & ~inside
+    labels, count = ndimage.label(gaps)
+    if not count:
+        return inside
+    weights = cell_weights(height, width)
+    sizes = ndimage.sum(weights, labels, range(1, count + 1)) / weights.sum() * EARTH_KM2
+    small = np.concatenate([[False], sizes < cap_km2])
+    return inside | small[labels]
+
+
 def distance_field(red):
-    """The soft mask as a signed distance to its edge, in degrees, encoded around 128."""
-    inside = red >= 128
+    """The soft mask, its gaps filled, as a signed distance to its edge, in degrees, encoded around 128."""
+    inside = fill_holes(red >= 128)
     height, width = inside.shape
     degrees = 360.0 / width      # the grid is square in degrees, so one figure serves both axes
     signed = (ndimage.distance_transform_edt(inside) - ndimage.distance_transform_edt(~inside)) * degrees
@@ -174,18 +203,20 @@ def limit_cap(latitude_limit, width=WIDTH, height=HEIGHT):
     return np.repeat(edge[:, None], width, axis=1)
 
 
-def polar_smooth(mask, base_px=1.5, cap_px=80):
-    """Blur along longitude, wider toward the poles, so the mask's edge stays soft on the globe.
+def polar_smooth(mask, base_px=5.0, cap_px=80):
+    """Blur the mask by half a degree, wider along longitude toward the poles, so its edge
+    stays soft and round on the globe.
 
-    Every column of an equirectangular texture becomes a wedge at the pole, so the hard
-    edge of a mask read from the atlas's one-degree cells turns into spokes when seen
-    from above Antarctica. A Gaussian along each row whose width grows as 1/cos(latitude),
-    about 0.15 degrees at the equator and capped at 8 degrees of longitude, averages the
-    wedges into an edge the shader's smoothstep draws cleanly. The shape is unchanged
-    where the columns are not squeezed.
+    The atlas's white is read from one-degree cells, so the mask's edge is a staircase, and
+    every column of an equirectangular texture becomes a wedge at the pole, so that
+    staircase turned into spokes when the globe was viewed from above Antarctica. A
+    Gaussian of base_px along latitude and base_px / cos(latitude) along longitude,
+    capped at cap_px (8 degrees of longitude), rounds the steps and averages the wedges
+    into an edge the shader's smoothstep draws cleanly; the threshold afterwards keeps
+    the shape where the columns are not squeezed.
     """
     height, width = mask.shape
-    out = mask.astype(np.float32)
+    out = ndimage.gaussian_filter1d(mask.astype(np.float32), base_px, axis=0, mode="nearest")
     latitude = 90.0 - (np.arange(height) + 0.5) / height * 180.0
     sigma = np.round(np.minimum(cap_px, base_px / np.maximum(np.cos(np.radians(latitude)), 1e-3)))
     for width_px in np.unique(sigma):
