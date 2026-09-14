@@ -221,7 +221,11 @@ speck at the map's polar edge and is dropped. 46 of the 109 grids get a mask, 14
 them from a map up to 5 Myr away. A grid whose map paints no ice gets no file, so the
 overlay fades out across that gap, which there means retreat rather than missing data. The atlas
 prelude older than 540 Ma gets none, and no map draws a mountain glacier, so those
-appear only at the present. The relief ramp used to run to white above 4000 m as well;
+appear only at the present. Before the mask is written its edge is smoothed along
+longitude with a width that grows toward the poles, about 0.15° at the equator and up
+to 8° of longitude at the pole, because every column of the texture becomes a wedge
+there and a hard edge read from the atlas's one-degree cells turned into spokes when the
+globe was viewed from above Antarctica. The relief ramp used to run to white above 4000 m as well;
 its top is now a grey, so white on the globe means ice.
 
 The shader draws grounded ice near-opaque white and shelves paler over whatever
