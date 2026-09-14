@@ -586,8 +586,8 @@ msgstr "elevation globe"
 msgid "{period} 고도 지구본을 불러오는 중…"
 msgstr "Loading the {period} elevation globe…"
 
-msgid "PALEOMAP PaleoDEM 1° 고도·수심 격자(Scotese &amp; Wright 2018, CC BY 4.0)를 색으로 칠한 화면입니다. 자료 원본은 <a id=\"source-link\" target=\"_blank\" rel=\"noopener\">Zenodo ↗</a>에 있습니다."
-msgstr "This view colours the PALEOMAP PaleoDEM 1° elevation and bathymetry grids (Scotese &amp; Wright 2018, CC BY 4.0). The source data is on <a id=\"source-link\" target=\"_blank\" rel=\"noopener\">Zenodo ↗</a>."
+msgid "PALEOMAP PaleoDEM 6분(0.1°) 고도·수심 격자(Scotese &amp; Wright 2018, CC BY 4.0)를 색으로 칠한 화면입니다. 자료 원본은 <a id=\"source-link\" target=\"_blank\" rel=\"noopener\">Zenodo ↗</a>에 있습니다."
+msgstr "This view colours the PALEOMAP PaleoDEM 6-minute (0.1°) elevation and bathymetry grids (Scotese &amp; Wright 2018, CC BY 4.0). The source data is on <a id=\"source-link\" target=\"_blank\" rel=\"noopener\">Zenodo ↗</a>."
 
 msgid "지형 음영"
 msgstr "Relief shading"
@@ -613,11 +613,11 @@ msgstr "Showing the continent mask: land and ocean as two flat colours. The elev
 msgid "5백만 년 간격의 격자 사이를 보간한 화면입니다. 대륙은 가장 가까운 PaleoAtlas 지도의 조각과 그 아래 PALEOMAP 판의 회전을 빌려 옮기고, 그 길을 따라 두 시점의 해안선 거리장과 높이를 섞었습니다. 대륙 안의 변형과 해수면 변화는 근사입니다."
 msgstr "This is an interpolated view between grids 5 Myr apart. Continents move by borrowing the pieces of the nearest PaleoAtlas map and the rotation of the PALEOMAP plate beneath them, and the two stops' coastline distance fields and heights are blended along that path. Deformation within a continent and sea-level change are approximated."
 
-msgid "PaleoDEM 1° 격자 109장을 2048×1024 정거원통 텍스처로 다시 표본화했습니다. 해안선은 0 m 등고선, 색은 높이와 깊이입니다. 540 Ma 이전은 PaleoAtlas(2016) 지도 3장의 마스크로 이어져 모두 %(count)s개 시점입니다. 시대 이름은 나이에 ICS 경계를 적용해 붙였습니다."
-msgstr "The 109 PaleoDEM 1° grids were resampled to 2048×1024 equirectangular textures. The coastline is the 0 m contour, the colours height and depth. Before 540 Ma three PaleoAtlas (2016) masks continue the timeline, %(count)s stops in all. Period names come from the age with ICS boundaries."
+msgid "PaleoDEM 6분(0.1°) 격자 109장을 2048×1024 정거원통 텍스처로 다시 표본화했습니다. 해안선은 0 m 등고선, 색은 높이와 깊이입니다. 540 Ma 이전은 PaleoAtlas(2016) 지도 3장의 마스크로 이어져 모두 %(count)s개 시점입니다. 시대 이름은 나이에 ICS 경계를 적용해 붙였습니다."
+msgstr "The 109 PaleoDEM 6-minute (0.1°) grids were resampled to 2048×1024 equirectangular textures. The coastline is the 0 m contour, the colours height and depth. Before 540 Ma three PaleoAtlas (2016) masks continue the timeline, %(count)s stops in all. Period names come from the age with ICS boundaries."
 
-msgid "고도 격자 시리즈는 이 109장의 1° 고도·수심 격자를 색으로 칠한 것입니다. 해안선은 격자의 0 m 등고선이고, 물에 떠 있는 빙붕은 격자가 해저 깊이를 담고 있어 바다로 나타나며, 땅 위에 얹힌 빙상은 그 표면 높이로 나타납니다. 540 Ma 이전은 PaleoAtlas(2016) 마스크로 이어집니다."
-msgstr "The elevation series colours these 109 one-degree elevation and bathymetry grids. The coastline is the grid's 0 m contour; floating ice shelves read as ocean because the grids hold the sea floor beneath them, while grounded ice shows its surface height. Before 540 Ma the timeline continues with the PaleoAtlas (2016) masks."
+msgid "고도 격자 시리즈는 이 109장의 6분(0.1°) 고도·수심 격자를 색으로 칠한 것입니다. 해안선은 격자의 0 m 등고선이고, 물에 떠 있는 빙붕은 격자가 해저 깊이를 담고 있어 바다로 나타나며, 땅 위에 얹힌 빙상은 그 표면 높이로 나타납니다. 540 Ma 이전은 PaleoAtlas(2016) 마스크로 이어집니다."
+msgstr "The elevation series colours these 109 six-minute (0.1°) elevation and bathymetry grids. The coastline is the grid's 0 m contour; floating ice shelves read as ocean because the grids hold the sea floor beneath them, while grounded ice shows its surface height. Before 540 Ma the timeline continues with the PaleoAtlas (2016) masks."
 
 msgid "기온"
 msgstr "Temperature"

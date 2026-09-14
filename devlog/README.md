@@ -22,6 +22,7 @@ wwolf는 001부터 셉니다. 그 전의 001–045는 링크와 본문 속 번�
 
 ## 작업 기록
 
+- [jikhanjung 051 — v0.9.4 배포](20260914_jikhanjung_051_release_094.md)
 - [jikhanjung 050 — 확대하면 고도 격자를 3D로](20260914_jikhanjung_050_elevation_3d_relief.md)
 - [wwolf 004 — 빙하가 해수면을 따라간다](20260914_wwolf_004_ice_follows_sealevel.md)
 - [wwolf 003 — 해수면을 슬라이더로](20260914_wwolf_003_sealevel_slider.md)
