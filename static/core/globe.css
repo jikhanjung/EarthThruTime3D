@@ -56,11 +56,20 @@ summary{cursor:pointer;color:#c9dce2}
 .controls{position:absolute;left:50%;bottom:30px;transform:translateX(-50%);z-index:2;
           width:min(980px,calc(100% - 24px));padding:10px 16px 8px;background:#0b1f28eb;
           border:1px solid #29434a;border-radius:14px;box-shadow:0 8px 28px #0008;backdrop-filter:blur(6px)}
-/* One row always: wrapping would stack the panel higher over the sphere. Anything that
-   does not fit scrolls sideways instead. */
+/* One row of essentials: the menu button, the dataset, the projection and reset, which
+   fits without scrolling down to a phone. Scrolling stays only as a last resort, since
+   wrapping would stack the panel higher over the sphere. */
 .globe-toolbar{display:flex;gap:8px;white-space:nowrap;max-width:100%;overflow-x:auto;padding:2px;margin:0 0 8px;
                justify-content:safe center;scrollbar-width:thin}
 .toolbar-select{width:auto;padding:9px 10px;max-width:10rem}
+/* Everything else opens from the menu button, floating above the panel's corner, so
+   opening it never moves the map or the inspector. */
+.menu-toggle{font-size:1rem;line-height:1.2;padding:7px 12px}
+.menu-toggle[aria-expanded=true]{background:#88dfcc;color:#0b2228;border-color:#88dfcc}
+.settings-menu:not([hidden]){display:flex;flex-wrap:wrap;gap:8px;position:absolute;left:0;bottom:calc(100% + 8px);
+                             max-width:min(560px,calc(100vw - 24px));padding:10px;background:#0b1f28f2;
+                             border:1px solid #29434a;border-radius:12px;box-shadow:0 8px 28px #0008;backdrop-filter:blur(6px)}
+.settings-menu .toolbar-select{max-width:12rem}
 /* The play button stays centred on the panel whatever width the age readout takes:
    equal side columns hold it still. */
 .timeline-top{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:12px;font-size:.82rem}
@@ -90,14 +99,12 @@ summary{cursor:pointer;color:#c9dce2}
   .inspector h2{font-size:1.2rem}
   .inspector .age{font-size:1.6rem}
   .controls{left:8px;right:8px;width:auto;transform:none;bottom:24px;padding:8px 10px 6px}
-  .globe-toolbar{justify-content:flex-start;scrollbar-width:none;
-                 /* Fade the trailing edge so a control cut off by the screen reads as
-                    something to scroll to rather than something broken. */
-                 -webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 28px),transparent);
-                 mask-image:linear-gradient(90deg,#000 calc(100% - 28px),transparent)}
+  .globe-toolbar{scrollbar-width:none}
   .globe-toolbar::-webkit-scrollbar{display:none}
   .globe-toolbar button,.globe-toolbar select{font-size:.74rem;padding:7px 9px;flex:0 0 auto}
   .toolbar-select{max-width:96px}
+  .settings-menu:not([hidden]){right:0;max-width:none}
+  .settings-menu button,.settings-menu select{font-size:.74rem;padding:7px 9px}
   .timeline-top{grid-template-columns:1fr auto;gap:6px 8px;font-size:.74rem}
   .time-steps{grid-column:1/-1;grid-row:2;justify-self:center}
   .time-steps button{font-size:.72rem;padding:5px 8px}
@@ -118,6 +125,7 @@ summary{cursor:pointer;color:#c9dce2}
   .controls{bottom:22px;padding:6px 12px 4px}
   .globe-toolbar{margin-bottom:4px}
   .globe-toolbar button,.globe-toolbar select{font-size:.72rem;padding:6px 8px}
+  .settings-menu button,.settings-menu select{font-size:.72rem;padding:6px 8px}
   .time-steps button{padding:4px 8px}
   #timeline{margin:6px 0 2px}
   .timeline-labels,.sea-overlay .chart-legend{display:none}

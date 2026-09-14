@@ -13,6 +13,17 @@ try {
   await page.goto(legacy);
   const globe = page.locator('#globe');
   await expect(globe).toHaveAttribute('data-frame', 'scotese-000');
+  // Only the essentials sit in the toolbar, which fits without scrolling; the rest opens
+  // from the menu, which Escape closes and this browser remembers.
+  expect(await page.locator('.globe-toolbar').evaluate((node) => node.scrollWidth <= node.clientWidth)).toBe(true);
+  await expect(page.locator('#settings-menu')).toBeHidden();
+  await expect(page.locator('#settings-menu #grid')).toHaveCount(1);
+  await page.locator('#settings-toggle').click();
+  await expect(page.locator('#settings-menu')).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(page.locator('#settings-menu')).toBeHidden();
+  await page.locator('#settings-toggle').click();
+  await expect(page.locator('#settings-toggle')).toHaveAttribute('aria-expanded', 'true');
   await mkdir('data/screenshots', {recursive:true});
   await page.screenshot({path:'data/screenshots/globe-desktop.png',fullPage:true});
   const frames = await page.locator('#globe-frames').textContent().then(JSON.parse);
@@ -295,6 +306,7 @@ try {
   await expect(page.locator('.inspector')).toBeHidden();
   // The controls stay on one row; a second row would cover the sphere.
   expect((await phone('.globe-toolbar')).height).toBeLessThan(52);
+  expect(await page.locator('.globe-toolbar').evaluate((node) => node.scrollWidth <= node.clientWidth)).toBe(true);
   // Sideways on the same phone the slider must still be reachable without scrolling.
   await page.setViewportSize({width:844,height:390});
   await expect(globe).toHaveAttribute('aria-busy', 'false');
@@ -317,6 +329,7 @@ try {
   const atlas = await browser.newPage({locale: 'ko-KR', viewport: {width:1440, height:1100}});
   atlas.on('pageerror', error => errors.push(error.message));
   await atlas.goto(base);
+  await atlas.locator('#settings-toggle').click();
   const atlasGlobe = atlas.locator('#globe');
   await expect(atlasGlobe).toHaveAttribute('data-frame', 'paleoatlas-000');
   await expect(atlasGlobe).toHaveAttribute('aria-busy', 'false');
@@ -493,6 +506,9 @@ try {
   const dem = await browser.newPage({locale: 'ko-KR', viewport: {width:1280, height:1000}});
   dem.on('pageerror', error => errors.push(error.message));
   await dem.goto(new URL('?masks=paleodem2018', base).href);
+  // The elevation series has the most controls, and its toolbar still fits.
+  expect(await dem.locator('.globe-toolbar').evaluate((node) => node.scrollWidth <= node.clientWidth)).toBe(true);
+  await dem.locator('#settings-toggle').click();
   const demGlobe = dem.locator('#globe');
   const demFrames = await dem.locator('#globe-frames').textContent().then(JSON.parse);
   if (!demFrames.some(frame => frame.relief)) {

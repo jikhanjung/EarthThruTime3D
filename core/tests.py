@@ -181,6 +181,9 @@ class GlobeTests(TestCase):
         # The map page: the inspector folds away and one panel holds every control.
         self.assertContains(response, 'id="info-toggle"')
         self.assertContains(response, '<section class="controls"')
+        # The toolbar keeps the essentials; the rest of the view settings sit behind the menu.
+        self.assertContains(response, 'id="settings-toggle"')
+        self.assertContains(response, 'id="settings-menu" role="group"')
         self.assertNotContains(response, '3D 고지리 탐색')
         self.assertNotContains(response, 'EARTH THROUGH TIME')
         self.assertNotContains(response, 'aria-label="주 메뉴"')

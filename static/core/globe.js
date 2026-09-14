@@ -1852,12 +1852,33 @@ function setupInspector() {
     try { localStorage.setItem('earththrutime.inspector', open ? 'open' : 'closed'); } catch { /* storage blocked */ }
   });
 }
+// Settings beyond the essentials sit behind the menu button. The menu stays open while the
+// reader works the map, closes from its button or with Escape, and is kept in this browser.
+function setupSettingsMenu() {
+  const menu = $('settings-menu');
+  const toggle = $('settings-toggle');
+  if (!menu || !toggle) return;
+  const show = (open, remember = true) => {
+    menu.hidden = !open;
+    toggle.setAttribute('aria-expanded', String(open));
+    if (!remember) return;
+    try { localStorage.setItem('earththrutime.settings', open ? 'open' : 'closed'); } catch { /* storage blocked */ }
+  };
+  let remembered = null;
+  try { remembered = localStorage.getItem('earththrutime.settings'); } catch { /* storage blocked */ }
+  show(remembered === 'open', false);
+  toggle.addEventListener('click', () => show(menu.hidden));
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && !menu.hidden) show(false);
+  });
+}
 setupInspector();
+setupSettingsMenu();
 try { init(); }
 catch (error) {
   status.textContent = document.getElementById('globe-strings')
     ? JSON.parse(document.getElementById('globe-strings').textContent).webglFailed
     : 'WebGL unavailable.';
-  for (const element of document.querySelectorAll('.explorer button:not(#info-toggle), .explorer select, .explorer input')) element.disabled = true;
+  for (const element of document.querySelectorAll('.explorer button:not(#info-toggle):not(#settings-toggle), .explorer select, .explorer input')) element.disabled = true;
   console.error(error);
 }
