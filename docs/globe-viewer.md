@@ -137,6 +137,27 @@ older age and on to its newer age with the region's plate, and writes
 `data/derived/paleodem/motions.json` in the form `atlas_motions` reads. The packer ships
 the file with the series. Without it the grids blend in place.
 
+### 3D terrain when zoomed in
+
+On the globe, closer than about a third of the default height, the series stands up in
+3D. The vertex shader reads the height from the same field textures as the fragment
+shader, through the same travel field and blend (the shared `TRAVEL_GLSL` and
+`METRES_GLSL`), and lifts each vertex by the height above the displayed sea level, so a
+moving continent carries its mountains and a lowered sea raises the shelf it uncovers.
+The sea stays flat at its level. Real proportions would leave Everest at 0.14% of the
+radius, invisible, so heights are exaggerated 25 times (`RELIEF_SCALE`; 10 left the
+Tibetan plateau and the Andes barely above the horizon), and the inspector's relief note
+says so. The camera the controls move always looks at the centre of the sphere, from
+where lifted ground cannot be seen, so the drawn view is that camera turned about the
+ground beneath it by up to 50° (`RELIEF_TILT`); the controls never see the tilt.
+
+Lift and tilt fade in together from a zoom factor of 0.3 to 0.12, and the sphere is
+512 × 256 segments only while they are on. Flat sheets, the mask surface, the atlas
+prelude without heights and mapless stops stay flat. The toolbar's 3D terrain button
+switches it off; `data-relief` on the stage reports the strength from 0 to 1. Plate
+boundaries and fossil coastlines are drawn at the surface radius and do not follow the
+lifted ground.
+
 ## Temperature
 
 `sources/paleotemp.json` pins Scotese (2021), *Global Mean Surface Temperatures for 100

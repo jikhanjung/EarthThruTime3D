@@ -38,8 +38,10 @@ try {
   for (let press = 0; press < 30; press++) await page.keyboard.press('+');
   await expect.poll(async () => Number(await globe.getAttribute('data-zoom'))).toBeLessThan(0.05);
   const close = await page.locator('#globe canvas').screenshot();
-  await page.keyboard.press('ArrowLeft');
-  await expect.poll(async () => Buffer.compare(close, await page.locator('#globe canvas').screenshot())).not.toBe(0);
+  // Close in a step turns the globe only a fraction of a degree, which over open ocean
+  // can leave the pixels unchanged; several steps always show.
+  for (let press = 0; press < 5; press++) await page.keyboard.press('ArrowLeft');
+  await expect.poll(async () => Buffer.compare(close, await page.locator('#globe canvas').screenshot()), {timeout: 10000}).not.toBe(0);
   await page.screenshot({path:'data/screenshots/globe-zoomed.png'});
   await page.locator('#reset').click();
   // The grid starts on; the button turns it off and on again.
@@ -555,6 +557,22 @@ try {
     await dem.locator('#sealevel-curve').check();
     await expect(demGlobe).toHaveAttribute('data-sealevel', '0');
     await dem.locator('#sealevel-curve').uncheck();
+    // Close in, the elevation series stands up in 3D and the view tilts; the toolbar
+    // button lays it flat again, and zooming back out does too.
+    await expect(demGlobe).toHaveAttribute('data-relief', '0.00');
+    await demGlobe.focus();
+    for (let press = 0; press < 12; press++) await dem.keyboard.press('+');
+    await expect.poll(async () => Number(await demGlobe.getAttribute('data-relief'))).toBeGreaterThan(0.9);
+    await expect(dem.locator('#relief-note')).toBeVisible();
+    await dem.screenshot({path:'data/screenshots/globe-elevation-3d.png'});
+    await dem.locator('#relief3d').click();
+    await expect(dem.locator('#relief3d')).toHaveAttribute('aria-pressed', 'false');
+    await expect(demGlobe).toHaveAttribute('data-relief', '0.00');
+    await expect(dem.locator('#relief-note')).toBeHidden();
+    await dem.locator('#relief3d').click();
+    await expect.poll(async () => Number(await demGlobe.getAttribute('data-relief'))).toBeGreaterThan(0.9);
+    await dem.locator('#reset').click();
+    await expect(demGlobe).toHaveAttribute('data-relief', '0.00');
     await dem.locator('#temperature').click();
     await expect(demGlobe).toHaveAttribute('data-surface', 'temp');
     // The colour key shows with the temperature surface, with the stop's distance from

@@ -75,6 +75,7 @@ class GlobeTests(TestCase):
         self.assertFalse(response.context['source_maps_public'])
         self.assertNotContains(response, 'id="surface"')
         self.assertContains(response, '?masks=scotese2002')
+        self.assertNotContains(response, 'id="relief3d"', msg_prefix='no 3D terrain without heights')
         self.assertEqual(self.client.get('/globe/maps/paleoatlas-000.jpg').status_code, 404)
 
     def test_the_mask_source_can_be_switched_for_comparison_and_falls_back(self):
@@ -603,6 +604,9 @@ class PaleodemTests(TestCase):
         self.assertEqual(frames[-1]['source'], 'https://zenodo.org/records/5460860')
         self.assertContains(response, 'id="surface"')
         self.assertContains(response, 'id="shading"')
+        # 3D terrain belongs to the series with heights, and says it is exaggerated.
+        self.assertContains(response, 'id="relief3d"')
+        self.assertContains(response, 'id="relief-note"')
         self.assertContains(response, 'zenodo.org/records/5460860')
         self.assertContains(response, '?masks=paleoatlas2016')
         self.assertContains(response, '?masks=scotese2002')

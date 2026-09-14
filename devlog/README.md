@@ -22,6 +22,7 @@ wwolf는 001부터 셉니다. 그 전의 001–045는 링크와 본문 속 번�
 
 ## 작업 기록
 
+- [jikhanjung 050 — 확대하면 고도 격자를 3D로](20260914_jikhanjung_050_elevation_3d_relief.md)
 - [wwolf 004 — 빙하가 해수면을 따라간다](20260914_wwolf_004_ice_follows_sealevel.md)
 - [wwolf 003 — 해수면을 슬라이더로](20260914_wwolf_003_sealevel_slider.md)
 - [wwolf 002 — 아틀라스가 얼음을 그리지 않은 곳에 논문의 한계선 덮개](20260914_wwolf_002_ice_limit_cap.md)
