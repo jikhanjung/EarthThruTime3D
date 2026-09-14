@@ -758,6 +758,7 @@ function setProjection(name) {
   const globe = projection === 'globe';
   uniforms.projection.value = PROJECTIONS[projection].code;
   surfaceMesh.geometry.dispose();
+  reliefDetailed = false;
   surfaceMesh.geometry = globe
     ? new THREE.SphereGeometry(1, 96, 64)
     : new THREE.PlaneGeometry(...PROJECTIONS[projection].sheet, 1, 1);
@@ -784,6 +785,43 @@ function setProjection(name) {
   resetView();
   selectStop(stop);
 }
+// Shared by both shaders: the vertex shader lifts the ground by the same height, carried
+// by the same travel field, that the fragment shader colours.
+//
+// Where the ground under this texel came from and is going to, in degrees. Each
+// control point pulls its own neighbourhood by the distance that landmass
+// travels, with a Gaussian falling off over the piece's own angular size, so
+// continents move as bodies and the open ocean between them stays put.
+const TRAVEL_GLSL = `
+      vec2 travel(vec2 lonlat) {
+        vec2 sum = vec2(0.0);
+        float weight = 0.0;
+        for (int index = 0; index < ${MAX_MOTIONS}; index++) {
+          if (index >= motionCount) break;
+          vec4 point = motionPoints[index];
+          float eastward = mod(lonlat.x - point.x + 540.0, 360.0) - 180.0;
+          float northward = lonlat.y - point.y;
+          float shrink = cos(radians(0.5 * (lonlat.y + point.y)));
+          float span = sqrt(eastward * eastward * shrink * shrink + northward * northward);
+          float radius = max(motionRadius[index], 1.0);
+          float pull = exp(-0.5 * span * span / (radius * radius));
+          sum += pull * vec2(mod(point.z - point.x + 540.0, 360.0) - 180.0, point.w - point.y);
+          weight += pull;
+        }
+        if (weight <= 0.0) return vec2(0.0);
+        return sum / weight * smoothstep(0.05, 0.45, weight);
+      }`;
+// Height in metres at a pair of field coordinates, one per bound texture. Green holds
+// the high byte and blue four more bits of a 12-bit value over -9000..6000 m; an 8-bit
+// texture has blue at zero and decodes 9 m low, below its own step.
+const METRES_GLSL = `
+      float metresAt(vec2 uvA, vec2 uvB) {
+        vec4 a = texture2D(surfaceA, uvA);
+        vec4 b = texture2D(surfaceB, uvB);
+        float here = (a.g * 16.0 + a.b) * 255.0 / 4095.0;
+        float there = (b.g * 16.0 + b.b) * 255.0 / 4095.0;
+        return mix(here, there, blend) * 15000.0 - 9000.0;
+      }`;
 function globeMaterial() {
   const linear = (rgb) => new THREE.Color().setRGB(
     rgb[0] / 255, rgb[1] / 255, rgb[2] / 255, THREE.SRGBColorSpace);
@@ -813,6 +851,9 @@ function globeMaterial() {
     projection: { value: 0 },
     meridian: { value: 0 },
     blank: { value: 0 },
+    // 3D terrain: 0 flat, 1 fully lifted; set from the zoom by updateRelief().
+    relief: { value: 0 },
+    reliefScale: { value: RELIEF_SCALE },
     motionCount: { value: 0 },
     motionPoints: { value: Array.from({ length: MAX_MOTIONS }, () => new THREE.Vector4()) },
     motionRadius: { value: new Float32Array(MAX_MOTIONS) },
@@ -820,12 +861,37 @@ function globeMaterial() {
   return new THREE.ShaderMaterial({
     uniforms,
     vertexShader: `
+      uniform sampler2D surfaceA;
+      uniform sampler2D surfaceB;
+      uniform float blend;
+      uniform int mode;
+      uniform float blank;
+      uniform int projection;
+      uniform float seaLevel;
+      uniform float relief;
+      uniform float reliefScale;
+      uniform int motionCount;
+      uniform vec4 motionPoints[${MAX_MOTIONS}];
+      uniform float motionRadius[${MAX_MOTIONS}];
+      const float EARTH_RADIUS = 6371000.0;
       varying vec2 vUv;
       varying vec3 vGlobeNormal;
+      ${TRAVEL_GLSL}
+      ${METRES_GLSL}
       void main() {
         vUv = uv;
+        vec3 lifted = position;
+        // Close in on the elevation series the ground rises by its own height, exaggerated
+        // and faded in with the zoom, carried by the same motion as its colour. The sea
+        // stays flat at its level, so a coastline is where the land leaves the water.
+        if (relief > 0.0 && projection == 0 && mode >= 2 && blank < 0.5) {
+          vec2 shift = travel(vec2((uv.x - 0.5) * 360.0, (uv.y - 0.5) * 180.0));
+          vec2 offset = vec2(shift.x / 360.0, shift.y / 180.0);
+          float metres = metresAt(uv - blend * offset, uv + (1.0 - blend) * offset) - seaLevel;
+          lifted = position * (1.0 + relief * reliefScale * max(metres, 0.0) / EARTH_RADIUS);
+        }
         vGlobeNormal = normalize(normalMatrix * normal);
-        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(lifted, 1.0);
       }`,
     fragmentShader: `
       uniform sampler2D surfaceA;
@@ -857,28 +923,7 @@ function globeMaterial() {
       varying vec2 vUv;
       varying vec3 vGlobeNormal;
 
-      // Where the ground under this texel came from and is going to, in degrees. Each
-      // control point pulls its own neighbourhood by the distance that landmass
-      // travels, with a Gaussian falling off over the piece's own angular size, so
-      // continents move as bodies and the open ocean between them stays put.
-      vec2 travel(vec2 lonlat) {
-        vec2 sum = vec2(0.0);
-        float weight = 0.0;
-        for (int index = 0; index < ${MAX_MOTIONS}; index++) {
-          if (index >= motionCount) break;
-          vec4 point = motionPoints[index];
-          float eastward = mod(lonlat.x - point.x + 540.0, 360.0) - 180.0;
-          float northward = lonlat.y - point.y;
-          float shrink = cos(radians(0.5 * (lonlat.y + point.y)));
-          float span = sqrt(eastward * eastward * shrink * shrink + northward * northward);
-          float radius = max(motionRadius[index], 1.0);
-          float pull = exp(-0.5 * span * span / (radius * radius));
-          sum += pull * vec2(mod(point.z - point.x + 540.0, 360.0) - 180.0, point.w - point.y);
-          weight += pull;
-        }
-        if (weight <= 0.0) return vec2(0.0);
-        return sum / weight * smoothstep(0.05, 0.45, weight);
-      }
+      ${TRAVEL_GLSL}
       vec3 decode(vec3 colour) {
         return mix(pow((colour + 0.055) / 1.055, vec3(2.4)), colour / 12.92,
                    step(colour, vec3(0.04045)));
@@ -908,16 +953,7 @@ function globeMaterial() {
         vec3 hot = decode(vec3(0.72, 0.13, 0.11));
         return t < 0.43 ? mix(cold, mild, t / 0.43) : mix(mild, hot, (t - 0.43) / 0.57);
       }
-      // Height in metres at a pair of field coordinates, one per bound texture. Green
-      // holds the high byte and blue four more bits of a 12-bit value over -9000..6000 m;
-      // an 8-bit texture has blue at zero and decodes 9 m low, below its own step.
-      float metresAt(vec2 uvA, vec2 uvB) {
-        vec4 a = texture2D(surfaceA, uvA);
-        vec4 b = texture2D(surfaceB, uvB);
-        float here = (a.g * 16.0 + a.b) * 255.0 / 4095.0;
-        float there = (b.g * 16.0 + b.b) * 255.0 / 4095.0;
-        return mix(here, there, blend) * 15000.0 - 9000.0;
-      }
+      ${METRES_GLSL}
       // Shaded relief from the height gradient, lit from the upper left. Texel spacing
       // is converted to metres so a slope is a true slope before exaggeration.
       float shade(vec2 uvA, vec2 uvB, float latitude) {
@@ -1028,6 +1064,49 @@ function globeMaterial() {
   });
 }
 const FLAT_DISTANCE = 2.6;
+// Closer than about a third of the default height, the elevation series stands up in 3D:
+// the ground rises by its height 25 times over (the relief note in the inspector says
+// so), and the drawn view tilts toward the horizon so the relief can be seen at all from
+// a camera that otherwise looks straight down. Both fade in together and are fully on by
+// an eighth of the default height. The sphere gets finer only while lifted.
+// At 10 the Tibetan plateau and the Andes barely rose above the horizon; 25 reads as relief.
+const RELIEF_SCALE = 25;
+const RELIEF_TILT = Math.PI * 50 / 180;
+const RELIEF_DETAIL = [512, 256];
+let reliefWanted = true;
+let reliefDetailed = false;
+function updateRelief(factor) {
+  const able = reliefWanted && projection === 'globe' && uniforms.mode.value >= 2 && uniforms.blank.value < 0.5;
+  const strength = able ? 1 - THREE.MathUtils.smoothstep(factor, 0.12, 0.3) : 0;
+  const was = uniforms.relief.value;
+  if (strength === was) return;
+  uniforms.relief.value = strength;
+  stage.dataset.relief = strength.toFixed(2);
+  if ((strength > 0) !== reliefDetailed) {
+    reliefDetailed = strength > 0;
+    surfaceMesh.geometry.dispose();
+    surfaceMesh.geometry = new THREE.SphereGeometry(1, ...(reliefDetailed ? RELIEF_DETAIL : [96, 64]));
+  }
+  if ((was > 0) !== (strength > 0) && $('relief-note')) $('relief-note').hidden = strength === 0;
+}
+// The controls move `camera`; what is drawn is that view turned about the ground beneath
+// it by the relief's tilt, so the tilt never feeds back into the controls.
+let viewCamera = null;
+const tiltAxis = new THREE.Vector3();
+const tiltTurn = new THREE.Quaternion();
+function tiltedView() {
+  const tilt = RELIEF_TILT * uniforms.relief.value;
+  if (tilt <= 0 || projection !== 'globe') return camera;
+  viewCamera ??= new THREE.PerspectiveCamera();
+  viewCamera.copy(camera);
+  const ground = camera.position.clone().normalize();
+  tiltAxis.set(1, 0, 0).applyQuaternion(camera.quaternion);
+  tiltTurn.setFromAxisAngle(tiltAxis, tilt);
+  viewCamera.position.sub(ground).applyQuaternion(tiltTurn).add(ground);
+  viewCamera.quaternion.premultiply(tiltTurn);
+  viewCamera.updateMatrixWorld();
+  return viewCamera;
+}
 // How close the view is, 1 at the default distance and smaller in: the height above the
 // sphere against the default 2.45, or the distance to a sheet against its default.
 function zoomFactor() {
@@ -1043,6 +1122,7 @@ function followZoom() {
   const factor = zoomFactor();
   controls.rotateSpeed = Math.max(0.05, factor);
   controls.zoomSpeed = projection === 'globe' ? Math.max(0.1, Math.sqrt(factor)) : 1;
+  updateRelief(factor);
   if (Math.abs(factor - nameFactor) < 0.005) return;
   nameFactor = factor;
   stage.dataset.zoom = factor.toFixed(2);
@@ -1527,7 +1607,7 @@ function init() {
     controls.update(delta);
     if (spinning && projection !== 'globe' && !reducedMotion) setMeridian(meridian + delta * 12);
     updateNameVisibility();
-    renderer.render(scene, camera);
+    renderer.render(scene, tiltedView());
   });
   renderer.domElement.addEventListener('webglcontextlost', (event) => {
     event.preventDefault();
@@ -1538,6 +1618,7 @@ function init() {
   stage.dataset.projection = projection;
   stage.dataset.plateModel = plateChoice;
   stage.dataset.coastlines = '0';
+  stage.dataset.relief = '0.00';
   // Browsers restore a form control's last value on reload, which left the dropdown
   // naming a model while nothing was drawn. The page state is the authority: start both
   // overlays off and make the controls say so.
@@ -1715,6 +1796,12 @@ function init() {
       url.searchParams.set(kind === 'interval' ? 'interval' : 'steps', value);
       url.searchParams.set('age', String(stops[stop][3]));
       location.assign(url.href);
+    });
+  }
+  if ($('relief3d')) {
+    $('relief3d').addEventListener('click', () => {
+      reliefWanted = !reliefWanted;
+      $('relief3d').setAttribute('aria-pressed', String(reliefWanted));
     });
   }
   if ($('sea-chart')) {

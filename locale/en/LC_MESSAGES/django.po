@@ -176,6 +176,15 @@ msgstr "Controls"
 msgid "해수면 곡선"
 msgstr "Sea-level curve"
 
+msgid "3D 지형"
+msgstr "3D terrain"
+
+msgid "확대하면 높이를 입체로 보여 줍니다"
+msgstr "Shows heights in 3D when zoomed in"
+
+msgid "입체 지형 표시 중입니다. 가까이 확대하면 격자의 높이만큼 땅을 올리고 시점을 지평선 쪽으로 기울여 보여 줍니다. 높이는 실제의 25배로 과장했고, 바다는 해수면에 평평하게 두었습니다. 가까이서는 격자 칸이 보일 수 있습니다."
+msgstr "Showing 3D terrain. Zoomed in close, the ground is raised by the grid's heights and the view tilts toward the horizon. Heights are exaggerated 25 times, and the sea is kept flat at sea level. Close up, the grid cells can show."
+
 msgid "장기 해수면"
 msgstr "Long-term sea level"
 
