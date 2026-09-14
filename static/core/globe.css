@@ -126,6 +126,16 @@ summary{cursor:pointer;color:#c9dce2}
   .globe-toolbar{margin-bottom:4px}
   .globe-toolbar button,.globe-toolbar select{font-size:.72rem;padding:6px 8px}
   .settings-menu button,.settings-menu select{font-size:.72rem;padding:6px 8px}
+  /* There is no room above the panel without covering the sphere, so the open menu takes
+     the toolbar's own row: the menu button stays at the left and the essentials step aside
+     until it closes. The row scrolls sideways if the menu is longer than the screen. */
+  .globe-toolbar{justify-content:flex-start}
+  .settings-menu:not([hidden]){top:6px;bottom:auto;left:64px;right:12px;max-width:none;flex-wrap:nowrap;
+                               overflow-x:auto;padding:2px;background:transparent;border:0;box-shadow:none;
+                               backdrop-filter:none;scrollbar-width:none;z-index:1}
+  .settings-menu:not([hidden])::-webkit-scrollbar{display:none}
+  .settings-menu:not([hidden]) > *{flex:0 0 auto}
+  .settings-menu:not([hidden]) ~ .globe-toolbar > :not(.menu-toggle){visibility:hidden}
   .time-steps button{padding:4px 8px}
   #timeline{margin:6px 0 2px}
   .timeline-labels,.sea-overlay .chart-legend{display:none}
