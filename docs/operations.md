@@ -13,6 +13,8 @@ The shared guides are referenced privately through `.guides`; they are not copie
 - Admin access requires an active staff superuser. No automatic password bootstrap.
 - Data, uploads, environment files and private guides excluded from Git.
 - Shared PaleoBytes footer, version metadata, About/privacy/contact pages.
+- Licence: MIT for the code (`LICENSE`), CC BY 4.0 for the data derived from CC BY
+  sources, the unsettled masks under their sources' terms (`LICENSE-DATA.md`).
 - `/healthz`: `ok`/200 for a reachable database with migration history,
   `unhealthy`/503 if unavailable/uninitialized, `degraded`/200 if an
   `INTEGRITY_FAIL` sentinel exists beside the database. No expensive integrity scan.
@@ -59,6 +61,5 @@ The shared guides are referenced privately through `.guides`; they are not copie
 - **Disk monitoring and backup-failure alerting.** The host was at 89% when the service
   was installed. A failed hourly snapshot is visible in the journal but nothing raises it.
 - **Social preview metadata and a touch icon.** The shell has a favicon only.
-- **A project licence.** Not chosen yet.
 - HSTS stays at one day with subdomain inclusion and preload off, which `check --deploy`
   reports as two warnings. That is deliberate until the domain set is settled.

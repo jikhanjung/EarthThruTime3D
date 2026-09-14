@@ -1,6 +1,7 @@
 {
   "name": "earththrutime3d-viewer",
   "private": true,
+  "license": "MIT",
   "type": "module",
   "scripts": {
     "vendor": "node scripts/vendor-three.mjs",
