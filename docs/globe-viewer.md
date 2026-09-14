@@ -83,11 +83,13 @@ value all say so.
 and the 6-minute grids; `scripts/fetch_paleodem.py` fetches or verifies them (and any
 other manifest with `--manifest`), and `sources/paleodem-slices.json` catalogues the
 109 grids in the shape the other catalogues use. `scripts/build_paleodem.py` writes one
-texture per grid into `PALEODEM_DERIVED_DIR`, `paleodem-<age×10>-field.png`. The
-deployed set is 2048 × 1024 from the 1° grids, 8-bit: `--width 2048` (the default is
-1024). The 6-minute set cannot replace it as is, because it has no 540 Ma grid, so
-pointing `--source` there needs the ids to leave that slice out (`--width`, `--source`,
-`--bits`).
+texture per grid into `PALEODEM_DERIVED_DIR`, `paleodem-<age×10>-field.png`, from the
+6-minute grids when `scripts/fetch_paleodem.py` has unpacked them and from the 1° grids
+otherwise; the builder prints which. The pinned 6-minute archive holds all 109 slices,
+385.2 and 390.5 Ma rounded to whole numbers, which the lookup matches by age. A 2048-wide
+texture from the 1° grids shows every cell as a six-pixel block, the Caspian as Lego, so
+a deployment wants the 6-minute set fetched before building (`--width 2048`, the default
+1024 wide; `--bits`; `--source` to override).
 
 Each texture is an RGB PNG on the equirectangular grid. Red is the signed coastline
 distance the segmentations write, taken at the 0 m contour of the bilinearly resampled
