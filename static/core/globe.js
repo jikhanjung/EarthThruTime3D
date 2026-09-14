@@ -322,6 +322,7 @@ async function selectStop(value, manual = false) {
       uniforms.blank.value = 1;
       uniforms.blend.value = 0;
       applyIce(null, null);
+      showIceKind(place);
     } else {
       const [first, second, warmA, warmB, iceA, iceB] = await Promise.all([
         loadSurface(place.from), loadSurface(place.to),
@@ -333,6 +334,7 @@ async function selectStop(value, manual = false) {
       uniforms.tempA.value = warmA;
       uniforms.tempB.value = warmB;
       applyIce(iceA, iceB);
+      showIceKind(place);
       uniforms.blend.value = place.blend;
       uniforms.blank.value = 0;
     }
@@ -380,6 +382,16 @@ async function selectStop(value, manual = false) {
     setPlaying(false);
     console.error(error);
   }
+}
+// Which kind of ice the bound masks are: a drawing (Natural Earth, the atlas) or a cap at
+// the paper's modelled limit where the atlas paints nothing; the limit note shows for the
+// latter only, and only while the layer is on.
+function showIceKind(place) {
+  const pair = place && !place.mapless ? [place.from, place.to] : [];
+  const limit = pair.some(frame => frame.ice && frame.ice_kind === 'limit');
+  const shown = stage.dataset.ice === 'true';
+  stage.dataset.iceKind = shown ? (limit ? 'limit' : 'drawn') : '';
+  if ($('ice-limit-note')) $('ice-limit-note').hidden = !(shown && limit);
 }
 function applyIce(iceA, iceB) {
   const shown = iceVisible && Boolean(iceA || iceB);
@@ -1426,6 +1438,7 @@ function init() {
     iceToggle.addEventListener('click', () => {
       iceVisible = !iceVisible;
       applyIce(uniforms.iceA.value, uniforms.iceB.value);
+      showIceKind(lastPlace);
     });
   }
   if (temperatureToggle) {

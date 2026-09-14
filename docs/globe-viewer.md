@@ -235,6 +235,18 @@ toggle hides it. One third of the present grounded ice lies where the PaleoDEM r
 ocean, because the West Antarctic ice sheet rests on bedrock below sea level and the
 grid holds the bed; so the overlay ignores what is beneath, and the note says why.
 
+Where the atlas paints nothing but the land-ice volume of van der Meer et al. (2022) is
+at least 5 million km³, the cut the sea-level strip already shades, the grid gets a cap
+instead: everything poleward of the same paper's ice latitude for that age, in both
+hemispheres, the edge eased over 2°. So the strip and the globe agree at every stop:
+no shading means no ice, shading means the atlas's sheet or the paper's cap. The cap is
+a modelled limit, not an outline, and the page says so: `ice-sources.json` beside the
+masks records for every grid whether its mask is `natural-earth`, `atlas` or `limit`,
+the frame carries that as `ice_kind`, `data-ice-kind` on the stage reads `drawn` or
+`limit`, and a second note appears for a limit. The Early Cretaceous is the clearest
+case, 145 to 135 Ma: the paper has 5 to 10 million km³ of ice and the deposit
+compilation has high-latitude dropstone localities, while the atlas draws nothing.
+
 The masks are per map, 5 to 10 Myr apart, so they cannot show glacial cycles; the
 sea-level strip shades the spans where the land-ice estimate says such cycles existed.
 As a check, the glacial deposits Cao et al. (2018) compiled, 394 tillite and diamictite

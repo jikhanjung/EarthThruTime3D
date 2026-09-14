@@ -16,6 +16,13 @@ white for sheet, shelf and sea ice alike. A grid whose map
 paints no ice gets no file, so the overlay fades out across that gap, which there means
 retreat. The atlas prelude older than 540 Ma gets none.
 
+Where the atlas paints nothing but the land-ice volume of van der Meer et al. (2022) is
+at least ICE_VOLUME_MKM3, the cut the sea-level strip already shades, the grid gets a
+cap instead: everything poleward of the same paper's ice latitude for that age, both
+hemispheres, the edge eased over two degrees. It is a modelled limit, not an outline,
+and `ice-sources.json` beside the masks says for every grid whether its mask is
+natural-earth, atlas or limit, so the page can say so too.
+
 Check: the glacial deposits Cao et al. (2018) compiled, tillites and diamictites since
 the Devonian, are rotated to each map's age with the PALEOMAP model and counted inside
 the mask, within NEAR_DEGREES of it, inside a pale piece the latitude rule dropped, or
@@ -32,6 +39,7 @@ import zipfile
 from pathlib import Path
 
 import numpy as np
+import openpyxl
 import shapefile
 from PIL import Image, ImageDraw
 from scipy import ndimage
@@ -42,6 +50,9 @@ from atlas_motions import MODEL, PackedModel, carry  # noqa: E402
 from segment_paleoatlas import cell_weights, ice, plate_raster  # noqa: E402
 
 MANIFEST = ROOT / "sources/ice.json"
+SEALEVEL = ROOT / "sources/sealevel.json"
+ICE_VOLUME_MKM3 = 5.0                        # the strip's cut: a fifth of today's land ice
+ICE_LAT_COLUMN, ICE_VOLUME_COLUMN = 13, 22   # IceLat_degrees AVG, VolLandice_km3 AVG in Supplementary Table 1
 ATLAS = ROOT / "sources/paleomap-atlas-2016.json"
 GRIDS = ROOT / "sources/paleodem-slices.json"
 WIDTH, HEIGHT = 2048, 1024
@@ -80,6 +91,25 @@ def present(folders, out):
 
 def nearest(maps, age):
     return min(maps, key=lambda item: (abs(item["age_ma"] - age), item["age_ma"]))
+
+
+def paper():
+    """van der Meer et al. (2022) per Myr: age -> (ice latitude limit in degrees, land ice in Mkm3)."""
+    manifest = json.loads(SEALEVEL.read_text())
+    path = next(ROOT / asset["path"] for asset in manifest["assets"] if asset["path"].endswith("mmc1.xlsx"))
+    sheet = openpyxl.load_workbook(path, read_only=True, data_only=True).worksheets[0]
+    rows = list(sheet.iter_rows(values_only=True))
+    if rows[2][ICE_LAT_COLUMN] != "IceLat_degrees" or rows[2][ICE_VOLUME_COLUMN] != "VolLandice_km3":
+        raise SystemExit(f"Unexpected column layout in {path.name}")
+    return {int(row[0]): (float(row[ICE_LAT_COLUMN]), float(row[ICE_VOLUME_COLUMN]) / 1e6)
+            for row in rows[4:] if isinstance(row[0], (int, float))}
+
+
+def limit_cap(latitude_limit, width=WIDTH, height=HEIGHT):
+    """A cap poleward of the paper's ice latitude in both hemispheres, eased over two degrees."""
+    latitude = 90.0 - (np.arange(height) + 0.5) / height * 180.0
+    edge = np.clip((np.abs(latitude) - (latitude_limit - 1.0)) / 2.0, 0.0, 1.0)
+    return np.repeat(edge[:, None], width, axis=1)
 
 
 def polar_smooth(mask, base_px=1.5, cap_px=80):
@@ -168,8 +198,10 @@ def main():
     maps = atlas["maps"]
     model = PackedModel(MODEL)
     points = deposits(folders["glacial"], model)
+    reference = paper()
     masks, report = {}, {}
-    written = borrowed = 0
+    sources = {"paleodem-0000": "natural-earth"}
+    written = borrowed = capped = 0
     with zipfile.ZipFile(ROOT / atlas["archive"]["path"]) as bundle:
         for item in json.loads(GRIDS.read_text())["maps"]:
             if item["age_ma"] == 0:
@@ -188,14 +220,21 @@ def main():
                                             "dropped_share": round(share(dropped), 2), **counts, "listed": listed}
             target = args.out / f"{item['id']}-ice.png"
             kept = masks[source["id"]]
-            if not kept.any():
-                target.unlink(missing_ok=True)
-                continue
-            red = np.asarray(Image.fromarray((polar_smooth(kept) * 255).astype(np.uint8))
-                             .resize((WIDTH, HEIGHT), Image.BILINEAR))
+            if kept.any():
+                red = np.asarray(Image.fromarray((polar_smooth(kept) * 255).astype(np.uint8))
+                                 .resize((WIDTH, HEIGHT), Image.BILINEAR))
+                sources[item["id"]] = "atlas"
+                written += 1
+                borrowed += source["age_ma"] != item["age_ma"]
+            else:
+                limit, volume = reference.get(int(round(item["age_ma"])), (None, 0.0))
+                if limit is None or volume < ICE_VOLUME_MKM3:
+                    target.unlink(missing_ok=True)
+                    continue
+                red = (limit_cap(limit) * 255).astype(np.uint8)
+                sources[item["id"]] = "limit"
+                capped += 1
             Image.fromarray(np.dstack([red, np.zeros_like(red), np.zeros_like(red)])).save(target)
-            written += 1
-            borrowed += source["age_ma"] != item["age_ma"]
     (args.out / "ice-check.json").write_text(json.dumps({
         "deposits": manifest["assets"][2]["cite"], "near_degrees": NEAR_DEGREES,
         "method": ("Glacial deposits at present-day coordinates ride the PALEOMAP plate under them "
@@ -203,8 +242,16 @@ def main():
                    "the mask, within near_degrees of its edge, inside a pale piece the latitude rule "
                    "dropped, or farther."),
         "maps": report}, indent=1))
+    (args.out / "ice-sources.json").write_text(json.dumps({
+        "method": ("Where each grid's ice mask came from: natural-earth for the present; atlas for the "
+                   "2016 PaleoAtlas's white read by segment_paleoatlas.ice; limit for a cap poleward of "
+                   "the ice latitude of van der Meer et al. (2022), drawn where the atlas paints nothing "
+                   f"but the paper's land-ice volume is at least {ICE_VOLUME_MKM3:g} million km3, the "
+                   "sea-level strip's own cut."),
+        "grids": sources}, indent=1))
     print(f"{written} grids given the atlas's ice ({borrowed} borrowing a map at another age), "
-          f"{len(report)} maps read; {len(points)} deposits in the check -> ice-check.json")
+          f"{capped} a cap at the paper's limit, {len(report)} maps read; "
+          f"{len(points)} deposits in the check -> ice-check.json, ice-sources.json")
     for map_id, row in report.items():
         print(f"  {map_id} {row['age_ma']:6g} Ma  ice {row['ice_share']:5.2f}%  deposits {row['deposits']:3d}: "
               f"inside {row['inside']} near {row['near']} dropped {row['dropped']} "
