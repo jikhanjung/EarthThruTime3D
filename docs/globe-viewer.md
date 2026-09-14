@@ -171,6 +171,20 @@ time, flooded interiors included: land covers 28% of the globe at present, 23% a
 Ma and 15% at 430 Ma in the grids. What the grids lack is variation inside a 5 Myr gap
 and the glacial cycles inside a slice.
 
+That datum is the authors' own, by construction. The documentation in the archive
+(`Scotese_Wright2018_PALEOMAP_PaleoDEMs.pdf`) describes editing the rotated modern
+heights cell by cell until the model matches the paleoenvironmental evidence, and calls
+the map coloured from the finished grid "the best guess or average paleogeography for
+the time interval"; highstand and lowstand variants are made from the same grid "by
+digitally flooding the topography" or lowering sea level, and the authors found the
+Haq and Schutter (2009) sea levels reduced by 30 to 40% the best match to the extent of
+ancient shallow seas. So no offset in the viewer recovers a published curve's value:
+the grid already contains whatever level its authors judged right, and where they drew
+land high a fixed offset moves little. The Sunda Shelf at 20 Ma is the example: the
+long-term curve reads +109 m there, but the grid holds the block at a median 360 m, so
+even +120 m leaves it dry. The grids' vertical resolution is 40 m, a 256-level
+greyscale over ±10,000 m, which is why the lowest land cells sit at exactly 40 m.
+
 `scripts/build_sealevel.py` writes `sealevel-curve.json` into `PALEODEM_DERIVED_DIR`
 from two pinned curves (`sources/sealevel.json`), both CC BY: the long-term Phanerozoic
 curve of van der Meer et al. (2022) at 1 Myr with min, max and the same paper's land-ice
