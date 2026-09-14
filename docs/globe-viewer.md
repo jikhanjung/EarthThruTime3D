@@ -186,13 +186,14 @@ says so. The present-day column carries a whisker for the range of the last 800,
 years, −130 to +8 m, which that single column hides. The inspector reads out the value
 at the current stop and shows the last 800,000 years as a chart with its own axes.
 
-A control in the inspector moves sea level. It is a what-if and the note says so. A fixed
-choice, −120 to +120 m, shifts the height channel by that much and cuts the coast from
-the height instead of the distance field, antialiased over the height's own
-screen-space change; the hypsometric colours follow the new level. The curve choice
-applies only the published curve's departure from the datum the bracketing grids
-already carry, `curve(age) − mix(sea_m_from, sea_m_to, blend)`, because adding the
-curve itself would count the slice's own sea level twice. The atlas prelude has no
+A slider in the inspector moves sea level, −150 to +150 m in 10 m steps, with its value
+in the label. It is a what-if and the note says so. The offset shifts the height channel
+by that much and cuts the coast from the height instead of the distance field,
+antialiased over the height's own screen-space change; the hypsometric colours follow
+the new level, live as the slider moves, since the cut happens in the shader. A box
+beside it adds the published curve's departure from the datum the bracketing grids
+already carry, `curve(age) − mix(sea_m_from, sea_m_to, blend)`, zero at a grid stop,
+because adding the curve itself would count the slice's own sea level twice. The atlas prelude has no
 heights and takes no offset. With the default 8-bit textures the height is in 59 m steps, so a
 fixed offset moves the coast in those steps; build with `--bits 12` for 3.7 m.
 

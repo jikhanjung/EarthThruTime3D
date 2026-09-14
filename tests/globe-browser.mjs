@@ -494,11 +494,18 @@ try {
     await expect(dem.locator('.inspector #sealevel')).toHaveCount(1);
     await dem.locator('#shading').selectOption('5');
     await expect(demGlobe).toHaveAttribute('data-shading', '5');
-    await dem.locator('#sealevel').selectOption('-120');
+    await dem.locator('#sealevel').fill('-120');
+    await dem.locator('#sealevel').dispatchEvent('input');
     await expect(demGlobe).toHaveAttribute('data-sealevel', '-120');
+    await expect(dem.locator('#sealevel-value')).toHaveText('−120 m');
     await expect(dem.locator('#sea-note')).toBeVisible();
-    await dem.locator('#sealevel').selectOption('0');
+    await dem.locator('#sealevel').fill('0');
+    await dem.locator('#sealevel').dispatchEvent('input');
     await expect(demGlobe).toHaveAttribute('data-sealevel', '0');
+    // The curve departure is a box on top of the slider; at a grid stop it adds nothing.
+    await dem.locator('#sealevel-curve').check();
+    await expect(demGlobe).toHaveAttribute('data-sealevel', '0');
+    await dem.locator('#sealevel-curve').uncheck();
     await dem.locator('#temperature').click();
     await expect(demGlobe).toHaveAttribute('data-surface', 'temp');
     // The colour key shows with the temperature surface, with the stop's distance from
