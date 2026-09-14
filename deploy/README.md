@@ -11,7 +11,7 @@
 - 지구본: https://earththrutime.nopeoplestime.info/
 - 프로젝트 소개: https://earththrutime.nopeoplestime.info/about/
 - 상태 확인: https://earththrutime.nopeoplestime.info/healthz
-- 이미지 ID: `sha256:0b3ef434dff28ec660683e21710cb6a1673651d02e2ba598fa0d242a072abcad` (v0.9.4, 2026-09-14 배포)
+- 이미지 ID: `sha256:78ce91cce30e1d7f410694911d4765b8729c68a8e454e4804b82182464ae3309` (v0.9.5, 2026-09-14 배포)
 
 호스트 Nginx의 전용 사이트가 컨테이너의 8014 포트로 연결된다. HTTP는 HTTPS로 보낸다.
 Let's Encrypt 인증서와 webroot 자동 갱신을 설정했고 갱신 후 `nginx -t && systemctl reload nginx`를
