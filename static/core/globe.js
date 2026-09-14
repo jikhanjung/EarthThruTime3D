@@ -822,6 +822,61 @@ const METRES_GLSL = `
         float there = (b.g * 16.0 + b.b) * 255.0 / 4095.0;
         return mix(here, there, blend) * 15000.0 - 9000.0;
       }`;
+// The lift the 3D terrain gives a point of the unit sphere: its height above the
+// displayed sea level, through the travel field, exaggerated and faded with the zoom.
+// Lines drawn on the surface use it too, so they ride the mountains instead of being
+// buried under them. Longitude and latitude come back from the point itself, the
+// inverse of onSphere(), so a line needs no uv of its own.
+const LIFT_GLSL = `
+      float terrainLift(vec3 point) {
+        if (relief <= 0.0 || projection != 0 || mode < 2 || blank > 0.5) return 1.0;
+        vec3 unit = normalize(point);
+        float theta = acos(clamp(unit.y, -1.0, 1.0));
+        float phi = atan(unit.z, -unit.x);
+        vec2 uv = vec2(fract(phi / (2.0 * PI)), 1.0 - theta / PI);
+        vec2 shift = travel(vec2((uv.x - 0.5) * 360.0, (uv.y - 0.5) * 180.0));
+        vec2 offset = vec2(shift.x / 360.0, shift.y / 180.0);
+        float metres = metresAt(uv - blend * offset, uv + (1.0 - blend) * offset) - seaLevel;
+        return 1.0 + relief * reliefScale * max(metres, 0.0) / EARTH_RADIUS;
+      }`;
+const LIFT_UNIFORMS_GLSL = `
+      uniform sampler2D surfaceA;
+      uniform sampler2D surfaceB;
+      uniform float blend;
+      uniform int mode;
+      uniform float blank;
+      uniform int projection;
+      uniform float seaLevel;
+      uniform float relief;
+      uniform float reliefScale;
+      uniform int motionCount;
+      uniform vec4 motionPoints[${MAX_MOTIONS}];
+      uniform float motionRadius[${MAX_MOTIONS}];
+      const float EARTH_RADIUS = 6371000.0;
+      const float PI = 3.141592653589793;`;
+// A line on the surface: the same lift as the ground beneath it, in one flat colour.
+// Shares the surface's uniform objects, so it follows every change without bookkeeping.
+function terrainLineMaterial(colour, opacity) {
+  return new THREE.ShaderMaterial({
+    uniforms: { ...uniforms, colour: { value: new THREE.Color(colour) }, opacity: { value: opacity } },
+    transparent: true,
+    vertexShader: `
+      ${LIFT_UNIFORMS_GLSL}
+      ${TRAVEL_GLSL}
+      ${METRES_GLSL}
+      ${LIFT_GLSL}
+      void main() {
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position * terrainLift(position), 1.0);
+      }`,
+    fragmentShader: `
+      uniform vec3 colour;
+      uniform float opacity;
+      void main() {
+        gl_FragColor = vec4(colour, opacity);
+        #include <colorspace_fragment>
+      }`,
+  });
+}
 function globeMaterial() {
   const linear = (rgb) => new THREE.Color().setRGB(
     rgb[0] / 255, rgb[1] / 255, rgb[2] / 255, THREE.SRGBColorSpace);
@@ -861,37 +916,19 @@ function globeMaterial() {
   return new THREE.ShaderMaterial({
     uniforms,
     vertexShader: `
-      uniform sampler2D surfaceA;
-      uniform sampler2D surfaceB;
-      uniform float blend;
-      uniform int mode;
-      uniform float blank;
-      uniform int projection;
-      uniform float seaLevel;
-      uniform float relief;
-      uniform float reliefScale;
-      uniform int motionCount;
-      uniform vec4 motionPoints[${MAX_MOTIONS}];
-      uniform float motionRadius[${MAX_MOTIONS}];
-      const float EARTH_RADIUS = 6371000.0;
+      ${LIFT_UNIFORMS_GLSL}
       varying vec2 vUv;
       varying vec3 vGlobeNormal;
       ${TRAVEL_GLSL}
       ${METRES_GLSL}
+      ${LIFT_GLSL}
       void main() {
         vUv = uv;
-        vec3 lifted = position;
         // Close in on the elevation series the ground rises by its own height, exaggerated
         // and faded in with the zoom, carried by the same motion as its colour. The sea
         // stays flat at its level, so a coastline is where the land leaves the water.
-        if (relief > 0.0 && projection == 0 && mode >= 2 && blank < 0.5) {
-          vec2 shift = travel(vec2((uv.x - 0.5) * 360.0, (uv.y - 0.5) * 180.0));
-          vec2 offset = vec2(shift.x / 360.0, shift.y / 180.0);
-          float metres = metresAt(uv - blend * offset, uv + (1.0 - blend) * offset) - seaLevel;
-          lifted = position * (1.0 + relief * reliefScale * max(metres, 0.0) / EARTH_RADIUS);
-        }
         vGlobeNormal = normalize(normalMatrix * normal);
-        gl_Position = projectionMatrix * modelViewMatrix * vec4(lifted, 1.0);
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position * terrainLift(position), 1.0);
       }`,
     fragmentShader: `
       uniform sampler2D surfaceA;
@@ -1317,8 +1354,7 @@ function drawPlates(age, loaded) {
     plateLayer.geometry.dispose();
     plateLayer.geometry = geometry;
   } else {
-    plateLayer = new THREE.LineSegments(geometry, new THREE.LineBasicMaterial(
-      { color: PLATE_COLOUR, transparent: true, opacity: 0.85 }));
+    plateLayer = new THREE.LineSegments(geometry, terrainLineMaterial(PLATE_COLOUR, 0.85));
     plateLayer.renderOrder = 1;
     earth.add(plateLayer);
   }
@@ -1406,8 +1442,7 @@ function drawCoastline(entry, rings, key = `${entry.age}|${projection}`) {
     coastlineLayer.geometry.dispose();
     coastlineLayer.geometry = geometry;
   } else {
-    coastlineLayer = new THREE.LineSegments(geometry, new THREE.LineBasicMaterial(
-      { color: COASTLINE_COLOUR, transparent: true, opacity: 1 }));
+    coastlineLayer = new THREE.LineSegments(geometry, terrainLineMaterial(COASTLINE_COLOUR, 1));
     coastlineLayer.renderOrder = 1;
     earth.add(coastlineLayer);
   }
@@ -1502,7 +1537,7 @@ function createGrid() {
   // Built from longitude and latitude rather than from the mesh, so the same parallels
   // and meridians follow whichever projection is showing, curved or straight.
   const result = new THREE.Group();
-  const material = new THREE.LineBasicMaterial({ color: 0xc4f7ef, transparent: true, opacity: 0.23 });
+  const material = terrainLineMaterial(0xc4f7ef, 0.23);
   const lift = projection === 'globe' ? 0.004 : 0.003;
   function line(points) {
     result.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(points), material));

@@ -154,9 +154,13 @@ ground beneath it by up to 50° (`RELIEF_TILT`); the controls never see the tilt
 Lift and tilt fade in together from a zoom factor of 0.3 to 0.12, and the sphere is
 512 × 256 segments only while they are on. Flat sheets, the mask surface, the atlas
 prelude without heights and mapless stops stay flat. The toolbar's 3D terrain button
-switches it off; `data-relief` on the stage reports the strength from 0 to 1. Plate
-boundaries and fossil coastlines are drawn at the surface radius and do not follow the
-lifted ground.
+switches it off; `data-relief` on the stage reports the strength from 0 to 1. The plate
+boundaries, the fossil coastlines and the graticule are drawn with a line material that
+applies the same lift (`terrainLineMaterial`, sharing the surface's uniform objects), so
+they ride the mountains rather than being buried under them; a line recovers its
+longitude and latitude from the point itself, the inverse of `onSphere()`. Only the
+vertices are lifted, so a long straight segment can still cut through a ridge between
+them.
 
 ## Temperature
 

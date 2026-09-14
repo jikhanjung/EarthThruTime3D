@@ -581,6 +581,12 @@ try {
     await expect.poll(async () => Number(await demGlobe.getAttribute('data-relief'))).toBeGreaterThan(0.9);
     await expect(dem.locator('#relief-note')).toBeVisible();
     await dem.screenshot({path:'data/screenshots/globe-elevation-3d.png'});
+    // Lines drawn on the surface ride the lifted ground: the boundaries still draw there.
+    await dem.locator('#plate-overlay').selectOption('paleomap2016');
+    await expect(demGlobe).toHaveAttribute('aria-busy', 'false');
+    expect(Number(await demGlobe.getAttribute('data-plates'))).toBeGreaterThan(0);
+    await dem.screenshot({path:'data/screenshots/globe-elevation-3d-plates.png'});
+    await dem.locator('#plate-overlay').selectOption('');
     await dem.locator('#relief3d').click();
     await expect(dem.locator('#relief3d')).toHaveAttribute('aria-pressed', 'false');
     await expect(demGlobe).toHaveAttribute('data-relief', '0.00');
