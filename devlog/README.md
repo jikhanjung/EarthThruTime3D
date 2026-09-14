@@ -22,6 +22,7 @@ wwolf는 001부터 셉니다. 그 전의 001–045는 링크와 본문 속 번�
 
 ## 작업 기록
 
+- [jikhanjung 057 — v0.10.0 배포와 NAS 백업](20260914_jikhanjung_057_release_0100.md)
 - [jikhanjung 056 — 라이선스: 코드 MIT, 파생 자료 CC BY 4.0](20260914_jikhanjung_056_licence.md)
 - [jikhanjung 055 — 오버레이 겹침 정리, 번역 파일 검사](20260914_jikhanjung_055_overlay_stacking.md)
 - [jikhanjung 054 — 3D 지형의 기울기와 방향 조작](20260914_jikhanjung_054_terrain_tilt.md)

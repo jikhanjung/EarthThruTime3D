@@ -1,6 +1,6 @@
 # EarthThruTime3D Docker 배포
 
-이미지: **`honestjung/earththrutime3d:v0.9.5`**, 플랫폼 `linux/amd64`.
+이미지: **`honestjung/earththrutime3d:v0.10.0`**, 플랫폼 `linux/amd64`.
 `../hanyang3d/deploy`의 Gunicorn·버전 이미지·Compose·상태 확인 구성을 참고했고,
 데이터베이스가 있는 서비스이므로 백업과 복구 단계를 더했다.
 
@@ -43,8 +43,8 @@ Let's Encrypt 인증서와 webroot 자동 갱신을 설정했고 갱신 후 `ngi
 
 | 동작 | 명령 |
 |---|---|
-| preflight·build | `bash deploy/build.sh v0.9.5` (개발 호스트) |
-| deploy | `bash /srv/earththrutime3d/deploy.sh v0.9.5` |
+| preflight·build | `bash deploy/build.sh v0.10.0` (개발 호스트) |
+| deploy | `bash /srv/earththrutime3d/deploy.sh v0.10.0` |
 | backup | `bash /srv/earththrutime3d/backup.sh` |
 | smoke | `bash /srv/earththrutime3d/smoke.sh` |
 | rollback | `bash /srv/earththrutime3d/deploy.sh <이전 버전>` |
@@ -60,10 +60,10 @@ Let's Encrypt 인증서와 webroot 자동 갱신을 설정했고 갱신 후 `ngi
 생성 파일(Git 제외):
 
 ```text
-dist/earththrutime3d-image-v0.9.5.tar.gz
-dist/earththrutime3d-data-v0.9.5.tar.gz
-dist/earththrutime3d-host-v0.9.5.tar.gz
-dist/SHA256SUMS-v0.9.5
+dist/earththrutime3d-image-v0.10.0.tar.gz
+dist/earththrutime3d-data-v0.10.0.tar.gz
+dist/earththrutime3d-host-v0.10.0.tar.gz
+dist/SHA256SUMS-v0.10.0
 ```
 
 ## dolfinid 최초 설치
@@ -76,25 +76,25 @@ Compose 5.5.1. 기존 서비스와 분리해 `/srv/earththrutime3d`, **`127.0.0.
 
 ```bash
 ssh dolfinid 'mkdir -p ~/earththrutime3d-release'
-scp dist/earththrutime3d-*-v0.9.5.tar.gz dist/SHA256SUMS-v0.9.5 dolfinid:~/earththrutime3d-release/
+scp dist/earththrutime3d-*-v0.10.0.tar.gz dist/SHA256SUMS-v0.10.0 dolfinid:~/earththrutime3d-release/
 ```
 
 서버에서:
 
 ```bash
 cd ~/earththrutime3d-release
-sha256sum -c SHA256SUMS-v0.9.5
-docker load -i earththrutime3d-image-v0.9.5.tar.gz
+sha256sum -c SHA256SUMS-v0.10.0
+docker load -i earththrutime3d-image-v0.10.0.tar.gz
 sudo install -d -o "$(id -un)" -g "$(id -gn)" /srv/earththrutime3d
-tar -xzf earththrutime3d-host-v0.9.5.tar.gz -C /srv/earththrutime3d
-mkdir -p /srv/earththrutime3d/data/v0.9.5 /srv/earththrutime3d/db \
+tar -xzf earththrutime3d-host-v0.10.0.tar.gz -C /srv/earththrutime3d
+mkdir -p /srv/earththrutime3d/data/v0.10.0 /srv/earththrutime3d/db \
          /srv/earththrutime3d/backups /srv/earththrutime3d/acme
-tar -xzf earththrutime3d-data-v0.9.5.tar.gz -C /srv/earththrutime3d/data/v0.9.5
+tar -xzf earththrutime3d-data-v0.10.0.tar.gz -C /srv/earththrutime3d/data/v0.10.0
 cd /srv/earththrutime3d
 cp .env.django.example .env.django && chmod 600 .env.django
 # SECRET_KEY를 충분히 긴 무작위 값으로 바꾼다. 값은 출력하지 않는다.
 sudo chown -R 10001:10001 db backups   # 컨테이너가 쓰는 유일한 경로
-bash deploy.sh v0.9.5
+bash deploy.sh v0.10.0
 ```
 
 Nginx는 ACME 검증을 위해 HTTP 전용 설정을 먼저 올리고, 인증서를 받은 뒤 전체 설정으로 바꾼다.
@@ -135,8 +135,10 @@ sudo certbot certonly --webroot --webroot-path /srv/earththrutime3d/acme \
 `earththrutime3d-backup.timer`가 매시간 같은 명령을 돌린다. 배포 직전 스냅샷은 `deploy.sh`가
 직접 실행한다.
 
-원격지 사본은 아직 없다. 보낼 대상이 정해지지 않았다. `docs/operations.md`가 요구하는
-세 가지 중 배포 직전과 매시간은 갖췄고 원격지가 남았다.
+원격지 사본은 개발 호스트 m710q가 매일 04:20에 만든다(`system-operation/m710q/backup-earththrutime.sh`).
+여기 `backups/`의 검증된 최신 스냅샷과 `.env.django`를 당겨 날짜별로 보관하고(로컬 30일·NAS 90일),
+개발 호스트의 `data/sources`·`data/derived`와 최신 릴리스 묶음을 NAS에 미러한다. 자료가 DB가
+아니라 파일이고 개발 호스트에서 만들어지므로 미러의 출발점은 서버가 아니라 개발 호스트다.
 
 ## 환경 변수
 
