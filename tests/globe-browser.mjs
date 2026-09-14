@@ -100,13 +100,24 @@ try {
   await page.locator('#timeline').fill('104');
   await page.locator('#timeline').dispatchEvent('input');
   await expect(globe).toHaveAttribute('data-blend', '0.50');
-  // The notes about the derived surface and the interpolated stop must not resize the
-  // globe: the inspector scrolls instead of growing the row.
+  // The map is the page, and the notes about the derived surface and the interpolated
+  // stop must not resize it: the inspector floats over it, scrolls inside, and stops
+  // above the control panel.
+  expect(panelBefore.height).toBeGreaterThan(900);
   const panelWithNotes = await page.locator('.globe-panel').boundingBox();
   expect(panelWithNotes.height).toBe(panelBefore.height);
   expect(panelWithNotes.width).toBe(panelBefore.width);
-  expect(await page.locator('.inspector').evaluate((node) =>
-    node.scrollHeight > node.clientHeight)).toBe(true);
+  const inspectorBox = await page.locator('.inspector').boundingBox();
+  const controlsBox = await page.locator('.controls').boundingBox();
+  expect(inspectorBox.y + inspectorBox.height).toBeLessThanOrEqual(controlsBox.y);
+  expect(controlsBox.y + controlsBox.height).toBeLessThanOrEqual(panelBefore.y + panelBefore.height);
+  // The inspector folds away and comes back without touching the map.
+  await page.locator('#info-toggle').click();
+  await expect(page.locator('.inspector')).toBeHidden();
+  await expect(page.locator('#info-toggle')).toHaveAttribute('aria-expanded', 'false');
+  expect((await page.locator('.globe-panel').boundingBox()).width).toBe(panelBefore.width);
+  await page.locator('#info-toggle').click();
+  await expect(page.locator('.inspector')).toBeVisible();
   expect(await page.locator('#globe-age').textContent()).toContain('보간');
   await page.locator('#timeline').fill('106');
   await page.locator('#timeline').dispatchEvent('input');
@@ -258,16 +269,19 @@ try {
   await page.locator('#reset').click();
   await page.screenshot({path:'data/screenshots/globe-mobile.png',fullPage:true});
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
-  // A phone leads with the instrument: the globe and the slider share the first screen
-  // and the inspector follows them rather than sitting between them.
+  // A phone is all map: the panel fills the screen under the header, the control panel
+  // floats at its foot inside the screen, and the inspector folds out of the way.
   const phone = async (selector) => page.locator(selector).boundingBox();
   const panel = await phone('.globe-panel');
-  const timeline = await phone('.timeline');
-  const inspector = await phone('.inspector');
-  expect(timeline.y).toBeGreaterThan(panel.y);
-  expect(inspector.y).toBeGreaterThan(timeline.y);
-  expect(timeline.y + timeline.height).toBeLessThanOrEqual(844);
-  expect(panel.height).toBeGreaterThan(300);
+  const controlsPanel = await phone('.controls');
+  expect(panel.height).toBeGreaterThan(700);
+  expect(controlsPanel.y).toBeGreaterThan(panel.y + panel.height / 2);
+  expect(controlsPanel.y + controlsPanel.height).toBeLessThanOrEqual(844);
+  expect(controlsPanel.x + controlsPanel.width).toBeLessThanOrEqual(390);
+  if (await page.locator('#info-toggle').getAttribute('aria-expanded') === 'true') {
+    await page.locator('#info-toggle').click();
+  }
+  await expect(page.locator('.inspector')).toBeHidden();
   // The controls stay on one row; a second row would cover the sphere.
   expect((await phone('.globe-toolbar')).height).toBeLessThan(52);
   // Sideways on the same phone the slider must still be reachable without scrolling.
@@ -462,6 +476,9 @@ try {
   // coastlines over the grids, the atlas prelude as a mask, a deep stop, and the English
   // page with nothing left in Korean. A checkout without the textures is sent back to
   // the atlas, and the pass is skipped rather than failed.
+  // Earlier pages keep their render loops running; close them so the software renderer
+  // gives the elevation pass its whole budget.
+  await Promise.all([page.close(), broken.close(), atlas.close()]);
   const dem = await browser.newPage({locale: 'ko-KR', viewport: {width:1280, height:1000}});
   dem.on('pageerror', error => errors.push(error.message));
   await dem.goto(new URL('?masks=paleodem2018', base).href);
@@ -470,7 +487,9 @@ try {
   if (!demFrames.some(frame => frame.relief)) {
     console.log('Elevation series not built here; skipped');
   } else {
-    await expect(demGlobe).toHaveAttribute('data-frame', 'paleodem-0000');
+    // The map now fills the window, so the software renderer draws a larger canvas and
+    // the first texture of a fresh page can outlast the default wait.
+    await expect(demGlobe).toHaveAttribute('data-frame', 'paleodem-0000', {timeout: 15000});
     await expect(demGlobe).toHaveAttribute('data-surface', 'relief');
     await expect(demGlobe).toHaveAttribute('aria-busy', 'false');
     await expect(demGlobe).toHaveAttribute('data-ice', 'true');
@@ -509,6 +528,17 @@ try {
     await expect(dem.locator('#sea-note')).toBeVisible();
     await dem.locator('#sealevel').selectOption('0');
     await expect(demGlobe).toHaveAttribute('data-sealevel', '0');
+    // The long-term curve is an overlay opened from the toolbar, above the control panel.
+    await expect(dem.locator('#sea-overlay')).toBeHidden();
+    await dem.locator('#sea-chart').click();
+    await expect(dem.locator('#sea-chart')).toHaveAttribute('aria-pressed', 'true');
+    await expect(dem.locator('#sea-overlay')).toBeVisible();
+    const seaBox = await dem.locator('#sea-overlay').boundingBox();
+    const demControls = await dem.locator('.controls').boundingBox();
+    expect(seaBox.y + seaBox.height).toBeLessThanOrEqual(demControls.y);
+    await dem.screenshot({path:'data/screenshots/globe-elevation-sea-curve.png'});
+    await dem.locator('#sea-chart').click();
+    await expect(dem.locator('#sea-overlay')).toBeHidden();
     await dem.locator('#temperature').click();
     await expect(demGlobe).toHaveAttribute('data-surface', 'temp');
     // The colour key shows with the temperature surface, with the stop's distance from

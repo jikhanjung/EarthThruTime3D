@@ -3,7 +3,7 @@ from functools import lru_cache
 
 from django.conf import settings
 
-from config.version import APP_NAME, COPYRIGHT_YEAR, RELEASE_DATE, VENDOR, VERSION
+from config.version import APP_NAME, APP_TITLE, COPYRIGHT_YEAR, RELEASE_DATE, VENDOR, VERSION
 
 
 @lru_cache(maxsize=1)
@@ -21,6 +21,6 @@ def plate_citations():
 
 
 def branding(request):
-    return {"app_name": APP_NAME, "vendor": VENDOR, "version": VERSION,
+    return {"app_name": APP_NAME, "app_title": APP_TITLE, "vendor": VENDOR, "version": VERSION,
             "release_date": RELEASE_DATE, "copyright_year": COPYRIGHT_YEAR,
             "plate_citations": plate_citations()}

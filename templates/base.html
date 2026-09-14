@@ -14,9 +14,9 @@
   <link rel="stylesheet" href="{% static 'core/site.css' %}?v={{ version }}">
   {% block extra_head %}{% endblock %}
 </head>
-<body>
+<body{% block body_attrs %}{% endblock %}>
   <a class="skip" href="#main">{% trans "본문으로 이동" %}</a>
-  <header><a class="brand" href="{% url 'home' %}">{{ app_name }}</a>{% block header_title %}{% endblock %}<nav class="lang" aria-label="{% trans '언어' %}">{% for code, name in LANGUAGES %}{% if not forloop.first %}<span aria-hidden="true">|</span>{% endif %}<a href="{% url 'language' code %}?next={{ request.get_full_path|urlencode }}" lang="{{ code }}" hreflang="{{ code }}"{% if code == LANGUAGE_CODE %} aria-current="true"{% endif %}>{{ code|upper }}</a>{% endfor %}</nav></header>
+  <header><a class="brand" href="{% url 'home' %}">{{ app_title }} <span class="brand-version">v{{ version }}</span></a>{% block header_title %}{% endblock %}<nav class="lang" aria-label="{% trans '언어' %}">{% for code, name in LANGUAGES %}{% if not forloop.first %}<span aria-hidden="true">|</span>{% endif %}<a href="{% url 'language' code %}?next={{ request.get_full_path|urlencode }}" lang="{{ code }}" hreflang="{{ code }}"{% if code == LANGUAGE_CODE %} aria-current="true"{% endif %}>{{ code|upper }}</a>{% endfor %}</nav></header>
   <main id="main">{% block content %}{% endblock %}</main>
   {% include 'includes/footer.html' %}
   {% block scripts %}{% endblock %}

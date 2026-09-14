@@ -428,6 +428,11 @@ function showSeaLevel(place, offset) {
     ? L.seaLevelNone
     : fmt(L.seaLevel, { value: signed(level), offset: offset !== 0 ? fmt(L.seaLevelOffset, { value: signed(offset) }) : '' });
   stage.dataset.seaCurve = level == null ? '' : level.toFixed(0);
+  const mark = $('sea-now');
+  if (mark) {
+    mark.setAttribute('x1', String(stop + 0.5));
+    mark.setAttribute('x2', String(stop + 0.5));
+  }
 }
 // Tick labels are HTML placed over the chart, because the charts stretch to the
 // slider's width and SVG text would stretch with them.
@@ -495,6 +500,8 @@ function drawSeaLevelStrip() {
     const x = n - 0.5;
     children.push(make('line', { x1: x, x2: x, y1: y(Math.max(...recent)).toFixed(1), y2: y(Math.min(...recent)).toFixed(1), class: 'sea-whisker' }));
   }
+  // The chosen stop, moved by showSeaLevel; the curve no longer sits under the slider.
+  children.push(make('line', { id: 'sea-now', x1: n - 0.5, x2: n - 0.5, y1: 0, y2: height, class: 'sea-now' }));
   svg.replaceChildren(...children);
   const axis = $('sea-axis');
   if (axis) {
@@ -1284,22 +1291,38 @@ function createGrid() {
   result.visible = gridVisible;
   return result;
 }
+// The control panel floats over the foot of the map. Report how much of the map it
+// covers, for the inspector to stop above it, and return the part the framing avoids.
+function coveredByControls(height) {
+  const panel = document.querySelector('.controls');
+  if (!panel) return 0;
+  const covered = Math.max(0, stage.getBoundingClientRect().bottom - panel.getBoundingClientRect().top);
+  $('explorer')?.style.setProperty('--controls-space', `${Math.round(covered)}px`);
+  return Math.min(covered, height * 0.45);
+}
 function fitCamera() {
   const { width, height } = stage.getBoundingClientRect();
   if (!width || !height) return;
   renderer.setSize(width, height);
   camera.aspect = width / height;
+  // Fit the sphere or sheet to the height left above the control panel, then shift the
+  // view up by half the covered strip so it sits in the middle of what can be seen.
+  const covered = coveredByControls(height);
+  const open = height - covered;
+  const stretch = height / open;
   if (projection === 'globe') {
     camera.fov = THREE.MathUtils.radToDeg(
-      2 * Math.atan(Math.tan(THREE.MathUtils.degToRad(21)) / Math.min(1, camera.aspect)));
+      2 * Math.atan(stretch * Math.tan(THREE.MathUtils.degToRad(21)) / Math.min(1, width / open)));
   } else {
     // Hold the sheet at one distance and open the lens until it fits both ways, so a
     // resize reframes the map without undoing the reader's zoom.
     const [halfWidth, halfHeight] = PROJECTIONS[projection].half;
-    const tangent = Math.max(halfHeight * 1.08 / FLAT_DISTANCE,
-                             halfWidth * 1.08 / (FLAT_DISTANCE * camera.aspect));
+    const tangent = stretch * Math.max(halfHeight * 1.08 / FLAT_DISTANCE,
+                                       halfWidth * 1.08 / (FLAT_DISTANCE * width / open));
     camera.fov = THREE.MathUtils.radToDeg(2 * Math.atan(tangent));
   }
+  if (covered > 0) camera.setViewOffset(width, height, 0, covered / 2, width, height);
+  else camera.clearViewOffset();
   camera.updateProjectionMatrix();
 }
 function resetView() {
@@ -1337,6 +1360,8 @@ function init() {
   resetView();
   const observer = new ResizeObserver(fitCamera);
   observer.observe(stage);
+  // The control panel changes height with the layers on show, which moves the framing.
+  if (document.querySelector('.controls')) observer.observe(document.querySelector('.controls'));
   let previous = performance.now();
   renderer.setAnimationLoop((time) => {
     const delta = Math.min((time - previous) / 1000, 0.1);
@@ -1524,6 +1549,14 @@ function init() {
       location.assign(url.href);
     });
   }
+  if ($('sea-chart')) {
+    // The long-term curve floats over the map, opened and closed from the toolbar.
+    $('sea-chart').addEventListener('click', () => {
+      const open = $('sea-overlay').hidden;
+      $('sea-overlay').hidden = !open;
+      $('sea-chart').setAttribute('aria-pressed', String(open));
+    });
+  }
   if ($('dataset')) {
     // Each dataset has its own stops, built by the server, so it is a new page too; the
     // age carries across and lands on the nearest stop there.
@@ -1545,11 +1578,31 @@ function init() {
     selectFrame(selected);
   }
 }
+// The inspector floats over the map and folds away. It starts open where there is room
+// beside the sphere, closed on a phone, and a reader's own choice is kept in this browser.
+function setupInspector() {
+  const inspector = $('inspector');
+  const toggle = $('info-toggle');
+  if (!inspector || !toggle) return;
+  const show = (open) => {
+    inspector.classList.toggle('closed', !open);
+    toggle.setAttribute('aria-expanded', String(open));
+  };
+  let remembered = null;
+  try { remembered = localStorage.getItem('earththrutime.inspector'); } catch { /* storage blocked */ }
+  show(remembered ? remembered === 'open' : matchMedia('(min-width: 900px)').matches);
+  toggle.addEventListener('click', () => {
+    const open = inspector.classList.contains('closed');
+    show(open);
+    try { localStorage.setItem('earththrutime.inspector', open ? 'open' : 'closed'); } catch { /* storage blocked */ }
+  });
+}
+setupInspector();
 try { init(); }
 catch (error) {
   status.textContent = document.getElementById('globe-strings')
     ? JSON.parse(document.getElementById('globe-strings').textContent).webglFailed
     : 'WebGL unavailable.';
-  for (const element of document.querySelectorAll('.explorer button, .explorer select, .timeline button, .timeline input')) element.disabled = true;
+  for (const element of document.querySelectorAll('.explorer button:not(#info-toggle), .explorer select, .explorer input')) element.disabled = true;
   console.error(error);
 }

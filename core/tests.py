@@ -19,8 +19,10 @@ class SiteTests(TestCase):
             with self.subTest(url=url):
                 response = self.client.get(url)
                 self.assertContains(response, "EarthThruTime3D")
-                self.assertContains(response, f"v{VERSION}")
+                # The version sits beside the name in the header, not in the footer.
+                self.assertContains(response, f'Earth Thru Time <span class="brand-version">v{VERSION}</span>')
                 self.assertContains(response, "PaleoBytes")
+                self.assertNotContains(response, f"PaleoBytes · v{VERSION}")
 
     def test_health_status_and_sentinel(self):
         with TemporaryDirectory() as directory:
@@ -173,7 +175,11 @@ class GlobeTests(TestCase):
     def test_the_header_is_one_line_without_a_menu_or_tag(self):
         with self.settings(SCOTESE_VIEWER_ENABLED=True):
             response = self.client.get('/')
-        self.assertContains(response, 'class="page-title"')
+        self.assertNotContains(response, '시간을 돌려, 지구를 보다')
+        self.assertContains(response, 'class="brand-version"')
+        # The map page: the inspector folds away and one panel holds every control.
+        self.assertContains(response, 'id="info-toggle"')
+        self.assertContains(response, '<section class="controls"')
         self.assertNotContains(response, '3D 고지리 탐색')
         self.assertNotContains(response, 'EARTH THROUGH TIME')
         self.assertNotContains(response, 'aria-label="주 메뉴"')

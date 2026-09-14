@@ -1,82 +1,140 @@
-header,main,footer{max-width:1440px}main{padding-top:26px;padding-bottom:6px}.viewer-heading{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:22px}.viewer-heading h1{font-size:clamp(1.6rem,3vw,2.35rem);letter-spacing:-.04em;margin:4px 0}.viewer-heading .eyebrow{margin:0;font-size:.68rem}.tag{border:1px solid #31505a;border-radius:20px;padding:6px 14px;font-size:.78rem;color:#a9c9d2}.explorer{display:grid;grid-template-columns:minmax(0,1fr) 300px;border:1px solid #29434a;border-radius:16px;overflow:hidden;background:#0b2029}.globe-panel{min-height:580px;position:relative;background:radial-gradient(ellipse at 50% 48%,#16384a 0%,#0a1c2b 46%,#06121c 76%);isolation:isolate}.globe-panel:before{content:"";position:absolute;inset:0;pointer-events:none;opacity:.4;background-image:radial-gradient(1px 1px at 10% 20%,#cee9fc 60%,transparent 100%),radial-gradient(1px 1px at 75% 30%,#cee9fc 60%,transparent 100%),radial-gradient(1px 1px at 32% 85%,#cee9fc 60%,transparent 100%),radial-gradient(1px 1px at 86% 72%,#cee9fc 60%,transparent 100%);background-size:190px 210px}#globe{position:absolute;inset:0;outline-offset:-4px}#globe canvas{display:block;width:100%;height:100%;touch-action:none}.globe-caption{position:absolute;top:22px;left:24px;display:flex;gap:10px;align-items:center;font-size:.76rem;color:#bddbe6;pointer-events:none}.live-dot{height:6px;width:6px;border-radius:50%;background:#88dfcc;box-shadow:0 0 8px #88dfcc}.globe-toolbar{position:absolute;bottom:46px;left:50%;transform:translateX(-50%);display:flex;gap:8px;white-space:nowrap}.gesture{position:absolute;bottom:10px;left:0;right:0;text-align:center;font-size:.72rem;color:#8da5b5;pointer-events:none}.inspector{padding:26px 23px;background:#102630;border-left:1px solid #29434a}.inspector .eyebrow{font-size:.65rem;margin:0 0 8px}.inspector h2{font-size:1.6rem;margin:0}.age{font-size:2.1rem;font-weight:300;color:#88dfcc;margin:6px 0 0;line-height:1.3}#source-title{font-size:.8rem;color:#93afbb;margin:8px 0 22px}label{display:block;font-size:.78rem;color:#b6cbd4;margin-bottom:6px}button,select{font:inherit;font-size:.8rem;border:1px solid #3a5964;color:#dcebee;background:#142f3b;border-radius:7px;padding:9px 12px;cursor:pointer}select{width:100%;padding:11px 8px}button:hover{background:#244654;border-color:#88dfcc}button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid #88dfcc;outline-offset:3px}button:disabled{opacity:.35;cursor:default}button[aria-pressed=true]{background:#88dfcc;color:#0b2228;border-color:#88dfcc}.step-buttons{display:flex;gap:8px;margin-top:10px}.step-buttons button{flex:1}.source-preview{margin:22px 0 16px}.source-preview img{display:block;width:100%;border:1px solid #36525b;border-radius:5px;aspect-ratio:720/456;object-fit:contain;background:#07131b}.source-preview figcaption{font-size:.7rem;color:#91aeb9;margin-top:7px}.model-note.derived{border-left:2px solid #cdc194;padding-left:10px;color:#d5cba6}.model-note,details{font-size:.76rem;color:#9eb8c3;line-height:1.7}details{border-top:1px solid #2c4650;padding-top:12px}summary{cursor:pointer;color:#c9dce2}.timeline{margin-top:18px;border:1px solid #29434a;border-radius:12px;padding:16px 24px;background:#0e2630}.timeline-top{display:flex;align-items:center;justify-content:space-between;font-size:.85rem;gap:15px}.timeline-top>span:last-child{font-variant-numeric:tabular-nums;color:#88dfcc;font-size:.75rem}#timeline{width:100%;margin:22px 0 8px;accent-color:#88dfcc;cursor:pointer}.timeline-labels{display:flex;justify-content:space-between;gap:14px;font-size:.7rem;color:#95afbb}#status{position:absolute;top:44%;left:50%;transform:translate(-50%,-50%);background:#112d35ee;border:1px solid #42616b;padding:12px 18px;border-radius:8px;max-width:85%;width:max-content;font-size:.82rem;pointer-events:none}#status.loaded{top:auto;bottom:16px;left:20px;transform:none;max-width:1px;max-height:1px;overflow:hidden;clip-path:inset(50%);padding:0;border:0}.retry{position:absolute;top:55%;left:50%;transform:translateX(-50%)}@media(min-width:1400px){.globe-panel{min-height:650px}}@media(max-width:850px){.explorer{grid-template-columns:minmax(0,1fr) 250px}.inspector{padding:20px 16px}.globe-panel{min-height:570px}.globe-toolbar{gap:5px}.globe-toolbar button{padding:8px}.tag{display:none}}@media(max-width:640px){header{flex-direction:row;align-items:center;padding:18px}.brand{font-size:.95rem}header nav{font-size:.8rem}main{padding:18px 12px}.viewer-heading{padding:0 6px}.explorer{grid-template-columns:1fr}.globe-panel{min-height:440px}.inspector{border-left:0;border-top:1px solid #29434a;display:grid;grid-template-columns:1fr 1fr;gap:6px 18px}.inspector>.eyebrow,.inspector>h2,.inspector>.age,.inspector>#source-title{grid-column:1}.inspector>.source-preview{grid-column:2;grid-row:1/5;margin:0;align-self:center}.inspector>label,.inspector>select,.inspector>.step-buttons,.inspector>.model-note,.inspector>details{grid-column:1/-1}.inspector h2{font-size:1.25rem}.inspector .age{font-size:1.7rem}#source-title{margin:0 0 8px}.timeline{padding:14px}.timeline-labels>span:nth-child(2){display:none}.globe-caption{top:18px;left:18px}.timeline-top{font-size:.75rem}.timeline-top button{font-size:.73rem}.globe-toolbar{bottom:48px}}
+/* The map is the page, as in a map application: it fills the window under the one-line
+   header and everything else floats over it. The inspector folds away at the top right;
+   the toolbar and the timeline share one control panel at the foot. The footer stays on
+   this page too, as a small attribution line in the corner. */
+body.map-page{height:100vh;height:100dvh;display:flex;flex-direction:column;overflow:hidden}
+.map-page header{max-width:none;width:100%;margin:0;flex:none;padding:10px 18px}
+.map-page main{max-width:none;width:100%;margin:0;padding:0;flex:1;min-height:0;position:relative}
+.map-page footer{position:fixed;right:0;bottom:0;z-index:4;max-width:none;margin:0;padding:3px 12px;
+                 flex-direction:row;align-items:center;gap:12px;border:0;border-top-left-radius:8px;
+                 background:#0a1b21d9;font-size:.68rem;line-height:1.5}
+.map-page footer nav{gap:12px}
+.map-page .notice{margin:24px}
 
-/* The globe panel keeps one height whatever the inspector holds. Notes about the
-   derived surface and interpolated stops appear and disappear as the viewer is used,
-   and without a definite row the grid grew with them and resized the globe. The
-   inspector scrolls instead, with a reserved gutter so a scrollbar appearing does not
-   shift its text. */
-.explorer{grid-template-rows:var(--panel-height,680px)}
-.globe-panel{min-height:0}
-.inspector{min-height:0;overflow-y:auto;scrollbar-gutter:stable}
-@media(min-width:1400px){.explorer{--panel-height:720px}}
-@media(max-width:850px){.explorer{--panel-height:650px}}
-@media(max-width:640px){.explorer{grid-template-rows:none}.globe-panel{min-height:440px}.inspector{overflow:visible}}
+.explorer{position:absolute;inset:0;overflow:hidden;background:#06121c}
+.globe-panel{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 42%,#16384a 0%,#0a1c2b 46%,#06121c 76%);isolation:isolate}
+.globe-panel:before{content:"";position:absolute;inset:0;pointer-events:none;opacity:.4;background-image:radial-gradient(1px 1px at 10% 20%,#cee9fc 60%,transparent 100%),radial-gradient(1px 1px at 75% 30%,#cee9fc 60%,transparent 100%),radial-gradient(1px 1px at 32% 85%,#cee9fc 60%,transparent 100%),radial-gradient(1px 1px at 86% 72%,#cee9fc 60%,transparent 100%);background-size:190px 210px}
+#globe{position:absolute;inset:0;outline-offset:-4px}
+#globe canvas{display:block;width:100%;height:100%;touch-action:none}
+.globe-caption{position:absolute;top:16px;left:18px;z-index:1;display:flex;gap:10px;align-items:center;font-size:.76rem;color:#bddbe6;pointer-events:none}
+.live-dot{height:6px;width:6px;border-radius:50%;background:#88dfcc;box-shadow:0 0 8px #88dfcc}
+.gesture{position:absolute;top:14px;left:50%;transform:translateX(-50%);margin:0;font-size:.72rem;color:#8da5b5;pointer-events:none;white-space:nowrap}
 
-/* The timeline header centres the play button on the panel, not between its
-   neighbours: the age readout changes width as the slider moves, and a flex row let
-   that shift the button. Equal side columns hold it still. */
-.timeline-top{display:grid;grid-template-columns:1fr auto 1fr;align-items:center}
-.timeline-top>span:first-child{justify-self:start}
-.timeline-top>span:last-child{justify-self:end;text-align:right}
-.timeline-top>span{min-width:0}
-
-/* The projection picker sits in the globe's own toolbar, so it has to be as compact as
-   the buttons beside it rather than the full-width select in the inspector. */
-.toolbar-select{width:auto;padding:9px 10px;max-width:10rem}
+/* Shared widgets. */
+label{display:block;font-size:.78rem;color:#b6cbd4;margin-bottom:6px}
+button,select{font:inherit;font-size:.8rem;border:1px solid #3a5964;color:#dcebee;background:#142f3b;border-radius:7px;padding:9px 12px;cursor:pointer}
+select{width:100%;padding:11px 8px}
+button:hover{background:#244654;border-color:#88dfcc}
+button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid #88dfcc;outline-offset:3px}
+button:disabled{opacity:.35;cursor:default}
+button[aria-pressed=true]{background:#88dfcc;color:#0b2228;border-color:#88dfcc}
 .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
-@media(max-width:850px){.toolbar-select{padding:8px 6px;max-width:104px}}
-/* Phone layout: the globe and the slider are the instrument, so they come first and
-   share the first screen. The explorer's two columns collapse with display:contents so
-   the inspector can move below the timeline, which its own grid row could not do. */
+
+/* The inspector: an overlay that stops above the control panel and scrolls inside, so
+   notes appearing and disappearing never move the map. */
+.info-toggle{position:absolute;top:10px;right:12px;z-index:3;background:#102630e6;padding:7px 14px}
+.info-toggle[aria-expanded=true]{background:#88dfcc;color:#0b2228;border-color:#88dfcc}
+.inspector{position:absolute;top:52px;right:12px;z-index:2;width:330px;
+           max-height:calc(100% - 64px - var(--controls-space,220px));overflow-y:auto;scrollbar-gutter:stable;
+           padding:18px 18px 14px;background:#102630eb;border:1px solid #29434a;border-radius:14px;
+           box-shadow:0 8px 28px #0008;backdrop-filter:blur(6px)}
+.explorer .inspector.closed{display:none}
+.inspector .eyebrow{font-size:.65rem;margin:0 0 8px}
+.inspector h2{font-size:1.45rem;margin:0}
+.age{font-size:1.9rem;font-weight:300;color:#88dfcc;margin:6px 0 0;line-height:1.3}
+#source-title{font-size:.8rem;color:#93afbb;margin:8px 0 16px}
+.inspector select{margin-bottom:10px}
+.source-preview{margin:16px 0}
+.source-preview img{display:block;width:100%;border:1px solid #36525b;border-radius:5px;aspect-ratio:720/456;object-fit:contain;background:#07131b}
+.source-preview figcaption{font-size:.7rem;color:#91aeb9;margin-top:7px}
+.model-note.derived{border-left:2px solid #cdc194;padding-left:10px;color:#d5cba6}
+.model-note,details{font-size:.76rem;color:#9eb8c3;line-height:1.7}
+details{border-top:1px solid #2c4650;padding-top:12px}
+summary{cursor:pointer;color:#c9dce2}
+
+/* The control panel: the view toolbar over the timeline, floating at the foot. */
+.controls{position:absolute;left:50%;bottom:30px;transform:translateX(-50%);z-index:2;
+          width:min(980px,calc(100% - 24px));padding:10px 16px 8px;background:#0b1f28eb;
+          border:1px solid #29434a;border-radius:14px;box-shadow:0 8px 28px #0008;backdrop-filter:blur(6px)}
+/* One row always: wrapping would stack the panel higher over the sphere. Anything that
+   does not fit scrolls sideways instead. */
+.globe-toolbar{display:flex;gap:8px;white-space:nowrap;max-width:100%;overflow-x:auto;padding:2px;margin:0 0 8px;
+               justify-content:safe center;scrollbar-width:thin}
+.toolbar-select{width:auto;padding:9px 10px;max-width:10rem}
+/* The play button stays centred on the panel whatever width the age readout takes:
+   equal side columns hold it still. */
+.timeline-top{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:12px;font-size:.82rem}
+.timeline-title{display:flex;align-items:center;gap:8px;min-width:0;justify-self:start}
+.time-steps{display:flex;gap:6px}
+.time-steps button{padding:6px 10px;white-space:nowrap}
+/* The period list shrinks inside its column rather than spilling over the buttons. */
+.time-where{display:flex;align-items:center;gap:10px;justify-self:end;min-width:0;max-width:100%}
+.era-select{width:auto;flex:0 1 auto;min-width:0;max-width:15rem;padding:6px 8px;font-size:.76rem}
+#frame-number{font-variant-numeric:tabular-nums;color:#88dfcc;font-size:.75rem;white-space:nowrap}
+.sampling-select{width:auto;max-width:100%;padding:4px 6px;font-size:.72rem}
+#timeline{display:block;width:100%;margin:10px 0 4px;accent-color:#88dfcc;cursor:pointer}
+.timeline-labels{display:flex;justify-content:space-between;gap:14px;font-size:.68rem;color:#95afbb}
+#status{position:absolute;top:40%;left:50%;transform:translate(-50%,-50%);z-index:1;background:#112d35ee;border:1px solid #42616b;padding:12px 18px;border-radius:8px;max-width:85%;width:max-content;font-size:.82rem;pointer-events:none}
+#status.loaded{top:auto;bottom:16px;left:20px;transform:none;max-width:1px;max-height:1px;overflow:hidden;clip-path:inset(50%);padding:0;border:0}
+.retry{position:absolute;top:50%;left:50%;transform:translateX(-50%);z-index:1}
+
+/* Phone: the map fills the screen, the control panel spans its foot, and the inspector,
+   closed at first, opens over the map edge to edge. */
 @media(max-width:640px){
-  main{display:flex;flex-direction:column;gap:12px}
-  .viewer-heading{order:0;margin-bottom:0;padding:0 6px}
-  .viewer-heading .eyebrow{display:none}
-  .viewer-heading h1{font-size:1.35rem;margin:0}
-  .explorer{display:contents}
-  .globe-panel{order:1;min-height:56vh;min-height:56dvh;border:1px solid #29434a;border-radius:14px}
-  .timeline{order:2;margin-top:0;padding:12px 14px}
-  .timeline #timeline{margin:14px 0 6px}
-  .inspector{order:3;display:block;border:1px solid #29434a;border-top:1px solid #29434a;border-radius:14px;padding:18px 16px}
+  .map-page header{padding:8px 12px}
+  .map-page .page-title{display:none}
+  .globe-caption{top:12px;left:12px;font-size:.7rem}
+  .gesture{display:none}
+  .info-toggle{top:6px;right:8px;padding:6px 10px}
+  .inspector{top:44px;left:8px;right:8px;width:auto;max-height:calc(100% - 52px - var(--controls-space,220px));padding:14px}
   .inspector h2{font-size:1.2rem}
   .inspector .age{font-size:1.6rem}
-  .globe-toolbar{bottom:36px;scrollbar-width:none;
+  .controls{left:8px;right:8px;width:auto;transform:none;bottom:24px;padding:8px 10px 6px}
+  .globe-toolbar{justify-content:flex-start;scrollbar-width:none;
                  /* Fade the trailing edge so a control cut off by the screen reads as
-                    something to scroll to rather than something broken. On a phone the
-                    row always overflows; wider up, a thin scrollbar says the same. */
+                    something to scroll to rather than something broken. */
                  -webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 28px),transparent);
                  mask-image:linear-gradient(90deg,#000 calc(100% - 28px),transparent)}
   .globe-toolbar::-webkit-scrollbar{display:none}
-  .globe-toolbar button,.globe-toolbar select{font-size:.74rem;padding:8px 9px;flex:0 0 auto}
+  .globe-toolbar button,.globe-toolbar select{font-size:.74rem;padding:7px 9px;flex:0 0 auto}
   .toolbar-select{max-width:96px}
-  .gesture{bottom:8px;font-size:.68rem}
+  .timeline-top{grid-template-columns:1fr auto;gap:6px 8px;font-size:.74rem}
+  .time-steps{grid-column:1/-1;grid-row:2;justify-self:center}
+  .time-steps button{font-size:.72rem;padding:5px 8px}
+  .era-select{max-width:9.5rem;font-size:.7rem}
+  #frame-number{display:none}
+  .timeline-labels>span:nth-child(2){display:none}
+  .sea-overlay{left:8px;right:8px;width:auto;bottom:calc(var(--controls-space,200px) + 8px);padding:10px 12px 8px}
+  .sea-overlay .chart-legend{display:none}
+  .map-page footer{padding:2px 8px;font-size:.62rem;gap:8px}
+  .map-page footer nav{gap:8px}
 }
 
-/* One row always: wrapping put a second row over the sphere. Anything that does not
-   fit scrolls sideways instead. This held only on phones until the elevation series
-   added its own controls, which made the row wider than the panel below about 1350px
-   and left the ends clipped; now it holds at every width. */
-.globe-toolbar{max-width:calc(100% - 20px);overflow-x:auto;padding:2px;
-               justify-content:flex-start;scrollbar-width:thin}
-
-/* Short viewports, which is mostly a phone held sideways: the page chrome costs more
-   than it is worth, and the slider has to stay on screen with the globe. */
+/* Short viewports, mostly a phone held sideways: the panel gives up its charts and
+   labels so the slider and the sphere both stay on screen. */
 @media(max-height:560px){
-  .viewer-heading{display:none}
-  main{padding-top:10px;padding-bottom:12px}
-  .explorer{--panel-height:calc(100dvh - 210px)}
-  .timeline{margin-top:12px;padding:10px 16px}
-  .timeline #timeline{margin:12px 0 6px}
-  .timeline-labels{display:none}
-  /* A panel this short has no room under the sphere, so the controls move to the top
-     corner and the caption takes the bottom one. */
-  .globe-toolbar{top:10px;right:12px;bottom:auto;left:auto;transform:none;
-                 justify-content:flex-end;max-width:calc(100% - 24px)}
-  .globe-toolbar button,.globe-toolbar select{font-size:.74rem;padding:7px 9px}
-  .toolbar-select{max-width:96px}
-  .globe-caption{top:auto;bottom:10px;left:14px}
+  .map-page header{padding-top:4px;padding-bottom:4px}
   .gesture{display:none}
+  .controls{bottom:22px;padding:6px 12px 4px}
+  .globe-toolbar{margin-bottom:4px}
+  .globe-toolbar button,.globe-toolbar select{font-size:.72rem;padding:6px 8px}
+  .time-steps button{padding:4px 8px}
+  #timeline{margin:6px 0 2px}
+  .timeline-labels,.sea-overlay .chart-legend{display:none}
+  .sea-overlay #sea-strip{height:40px}
 }
+
+/* The long-term sea-level curve floats over the map above the control panel, opened
+   from the toolbar, so the panel stays low and the sphere large. It no longer sits
+   under the slider, so it carries its own ends and a mark at the chosen stop. */
+.sea-overlay{position:absolute;left:12px;bottom:calc(var(--controls-space,220px) + 10px);z-index:2;margin:0;
+             width:min(620px,calc(100% - 24px));padding:12px 16px 8px;background:#0b1f28eb;
+             border:1px solid #29434a;border-radius:14px;box-shadow:0 8px 28px #0008;backdrop-filter:blur(6px)}
+.sea-overlay-title{font-size:.78rem;color:#c9dce2;margin:0 0 6px}
+.sea-overlay .sea-chart{margin-bottom:22px}
+.sea-ages{position:absolute;left:0;right:0;top:100%;display:flex;justify-content:space-between;font-size:.66rem;color:#95afbb;padding-top:2px}
+.sea-now{stroke:#88dfcc;stroke-width:2;vector-effect:non-scaling-stroke}
+.sea-overlay .chart-legend{margin:0;font-size:.68rem;line-height:1.5}
 
 /* Citation lines are reference material rather than reading matter, so they sit a step
    back from the note they belong to. */
@@ -89,8 +147,8 @@ header,main,footer{max-width:1440px}main{padding-top:26px;padding-bottom:6px}.vi
 .model-note .reach:not([hidden]){display:block;margin-top:8px;padding:7px 9px;border-radius:6px;
                    background:#3a2a1e;color:#f0c99a;font-size:.74rem;line-height:1.6}
 
-/* The overlay is worth finding, and its button sits at the foot of the globe where a
-   laptop screen ends. This line says it exists, and steps aside once it is on. */
+/* The overlay is worth finding, and its dropdown sits in the control panel. This line
+   says it exists, and steps aside once it is on. */
 .model-note.hint:not([hidden]){display:block;border-left:2px solid #88dfcc;padding-left:10px;
                                color:#bcd6dd}
 
@@ -104,9 +162,6 @@ header,main,footer{max-width:1440px}main{padding-top:26px;padding-bottom:6px}.vi
                           border:1px solid #3a5964;background:#142f3b;color:#dcebee}
 .model-note .unlock button{justify-self:start;padding:8px 14px}
 .model-note .unlock .wrong:not([hidden]){color:#ffb3b3;font-size:.74rem}
-.timeline-title{display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0}
-.sampling-select{width:auto;max-width:100%;padding:4px 6px;font-size:.72rem}
-@media(max-width:640px){.timeline-title{flex-direction:column;align-items:flex-start;gap:4px}.sampling-select{font-size:.68rem;padding:3px 4px}}
 
 /* Global mean temperature strip above the slider: one column per stop. */
 #temp-strip { display: block; width: 100%; height: 10px; border-radius: 3px; margin-bottom: 6px; image-rendering: pixelated; }

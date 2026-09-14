@@ -13,6 +13,8 @@
 /* One-line header: the brand and, where a page gives one, a small page title. */
 header{flex-direction:row;align-items:baseline;justify-content:flex-start;gap:14px;padding-top:14px;padding-bottom:14px}
 .page-title{font-size:.95rem;font-weight:500;color:#9fbac4;margin:0}
+/* The deployed version sits beside the name, where a reader checking a deploy looks first. */
+.brand-version{font-weight:500;font-size:.8rem;color:#9fbac4;margin-left:2px}
 .lang{margin-left:auto;font-size:.8rem;display:flex;gap:8px;align-items:center;color:#5f7d88}
 .lang a{color:#9fbac4;text-decoration:none;padding:2px 4px}
 .lang a[aria-current=true]{color:#fff;font-weight:600}

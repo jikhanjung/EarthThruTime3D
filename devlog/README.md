@@ -22,6 +22,7 @@ wwolf는 001부터 셉니다. 그 전의 001–045는 링크와 본문 속 번�
 
 ## 작업 기록
 
+- [jikhanjung 048 — 지도 중심 화면](20260914_jikhanjung_048_map_first_layout.md)
 - [jikhanjung 047 — 도구 막대의 표시 자료 선택, devlog 작성자별 번호](20260914_jikhanjung_047_dataset_picker.md)
 - [jikhanjung 046 — v0.9.0 배포와 문서 현행화](20260914_jikhanjung_046_release_090.md)
 - [045 — PaleoDEM 스택 합치기, 고도 텍스처 8비트 기본](20260914_045_paleodem_8bit_and_merge.md)

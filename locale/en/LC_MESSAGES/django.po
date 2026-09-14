@@ -164,6 +164,21 @@ msgstr "Drag to rotate · scroll or pinch to zoom"
 msgid "표시 자료"
 msgstr "Dataset"
 
+msgid "정보"
+msgstr "Info"
+
+msgid "선택한 시대 정보"
+msgstr "About the chosen time"
+
+msgid "조작 패널"
+msgstr "Controls"
+
+msgid "해수면 곡선"
+msgstr "Sea-level curve"
+
+msgid "장기 해수면"
+msgstr "Long-term sea level"
+
 msgid "PaleoAtlas 2016"
 msgstr "PaleoAtlas 2016"
 
