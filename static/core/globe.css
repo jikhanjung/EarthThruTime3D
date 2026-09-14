@@ -209,3 +209,9 @@ summary{cursor:pointer;color:#c9dce2}
 .temp-legend figcaption span:nth-child(2){left:43%}
 .temp-legend figcaption span:nth-child(3){left:71%}
 .temp-legend figcaption span:last-child{left:100%;transform:translateX(-100%)}
+
+/* Sea level as a slider with its value in the label, and the curve departure as a box. */
+#sealevel{width:100%;margin:4px 0 8px;accent-color:#88dfcc;cursor:pointer}
+.sealevel-value{color:#88dfcc;font-variant-numeric:tabular-nums}
+.check-toggle{display:flex;align-items:center;gap:8px;font-size:.78rem;color:#b6cbd4;margin:0 0 14px;cursor:pointer}
+.check-toggle input{accent-color:#88dfcc;margin:0}

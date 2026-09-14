@@ -73,6 +73,7 @@ const temperatureToggle = $('temperature');
 // applied only as its departure from the slice's own datum.
 const seaLevel = JSON.parse($('globe-sealevel')?.textContent ?? '{"long":[],"pleistocene":[]}');
 const seaLevelControl = $('sealevel');
+const seaLevelCurveToggle = $('sealevel-curve');
 // The ice overlay can be hidden in any surface mode; the masks stay loaded.
 const iceToggle = $('ice');
 let iceVisible = true;
@@ -423,13 +424,15 @@ function seaLevelAt(age) {
 // datum the bracketing slices already carry, which is what changes between slices.
 function seaLevelOffset(place, fielded) {
   if (!seaLevelControl || !fielded || place.mapless || !place.from.relief || !place.to.relief) return 0;
-  const choice = seaLevelControl.value;
-  if (choice !== 'curve') return Number(choice) || 0;
+  // The slider is a what-if in metres; the curve box adds the published curve's departure
+  // from the bracketing grids' own datum, zero at a grid stop.
+  const fixed = Number(seaLevelControl.value) || 0;
+  if (!seaLevelCurveToggle?.checked) return fixed;
   const now = seaLevelAt(place.age);
   const from = place.from.sea_m;
   const to = place.to.sea_m;
-  if (now == null || from == null || to == null) return 0;
-  return now - (from + (to - from) * place.blend);
+  if (now == null || from == null || to == null) return fixed;
+  return fixed + now - (from + (to - from) * place.blend);
 }
 const signed = (value) => `${value >= 0 ? '+' : '−'}${Math.abs(value).toFixed(0)} m`;
 function showSeaLevel(place, offset) {
@@ -1507,7 +1510,13 @@ function init() {
   drawPleistocene();
   if (seaLevelControl) {
     seaLevelControl.value = '0';   // the page state is the authority, not a restored control
-    seaLevelControl.addEventListener('change', () => selectStop(stop, true));
+    const showSetting = () => { if ($('sealevel-value')) $('sealevel-value').textContent = signed(Number(seaLevelControl.value)); };
+    showSetting();
+    seaLevelControl.addEventListener('input', () => { showSetting(); selectStop(stop, true); });
+    if (seaLevelCurveToggle) {
+      seaLevelCurveToggle.checked = false;
+      seaLevelCurveToggle.addEventListener('change', () => selectStop(stop, true));
+    }
   }
   if ($('plate-unlock')) {
     // Unlock in place: the reader keeps the age and the view they had set up.
