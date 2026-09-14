@@ -1927,9 +1927,13 @@ function setupSettingsMenu() {
   const menu = $('settings-menu');
   const toggle = $('settings-toggle');
   if (!menu || !toggle) return;
+  // The sea-level curve floats in the same corner, so it stacks above the open menu.
+  const space = () => $('explorer')?.style.setProperty('--menu-space', menu.hidden ? '0px' : `${menu.offsetHeight + 8}px`);
+  new ResizeObserver(space).observe(menu);
   const show = (open, remember = true) => {
     menu.hidden = !open;
     toggle.setAttribute('aria-expanded', String(open));
+    space();
     if (!remember) return;
     try { localStorage.setItem('earththrutime.settings', open ? 'open' : 'closed'); } catch { /* storage blocked */ }
   };
