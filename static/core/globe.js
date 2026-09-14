@@ -1110,7 +1110,7 @@ const FLAT_DISTANCE = 2.6;
 const RELIEF_SCALE = 25;
 const RELIEF_TILT = Math.PI * 50 / 180;
 // The reader can tilt further, to 80 degrees, and turn the tilt to look along any
-// heading; a right drag or a shift drag does both. Reset returns to the default.
+// heading; a middle (wheel) drag or a shift drag does both. Reset returns to the default.
 const TILT_MAX = Math.PI * 80 / 180;
 let tiltAngle = RELIEF_TILT;
 let tiltHeading = 0;
@@ -1633,6 +1633,8 @@ function init() {
   controls = new OrbitControls(camera, renderer.domElement);
   controls.enableDamping = !reducedMotion;
   controls.enablePan = false;
+  // The middle button is the terrain tilt's; the wheel already dollies.
+  controls.mouseButtons.MIDDLE = null;
 
   controls.autoRotateSpeed = 0.55;
   earth = new THREE.Group();
@@ -1702,9 +1704,9 @@ function init() {
   // On a sheet a left drag turns the centre meridian, as a drag spins the globe.
   // OrbitControls keeps the right button for panning and the wheel or a pinch for zoom.
   let dragging = null;
-  // While the terrain stands, a right drag or a shift drag tilts the view: up and down
-  // for the angle, sideways for the heading. OrbitControls leaves both alone on the
-  // globe, where panning is off.
+  // While the terrain stands, a middle (wheel) drag or a shift drag tilts the view: up
+  // and down for the angle, sideways for the heading. OrbitControls uses the middle
+  // button for dolly, which the wheel already does, so it is taken from it here.
   let tilting = null;
   renderer.domElement.addEventListener('pointerdown', (event) => {
     if (dragging && event.pointerId !== dragging.id) {
@@ -1712,7 +1714,8 @@ function init() {
       return;
     }
     if (projection === 'globe') {
-      if (uniforms.relief.value > 0 && (event.button === 2 || (event.button === 0 && event.shiftKey))) {
+      if (uniforms.relief.value > 0 && (event.button === 1 || (event.button === 0 && event.shiftKey))) {
+        event.preventDefault();
         tilting = { id: event.pointerId, x: event.clientX, y: event.clientY };
       }
       return;

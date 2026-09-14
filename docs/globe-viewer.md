@@ -150,7 +150,7 @@ Tibetan plateau and the Andes barely above the horizon), and the inspector's rel
 says so. The camera the controls move always looks at the centre of the sphere, from
 where lifted ground cannot be seen, so the drawn view is that camera turned about the
 ground beneath it by 50° (`RELIEF_TILT`) by default; the controls never see the tilt. While
-the terrain stands, a right drag or a shift drag changes the tilt (up and down, to 80°)
+the terrain stands, a middle (wheel) drag or a shift drag changes the tilt (up and down, to 80°)
 and turns its heading (sideways); `setTilt` keeps both, the stage reports them as
 `data-tilt` and `data-heading` in degrees, the gesture hint says so, and reset returns
 to the default. A touch screen has no gesture for it yet.

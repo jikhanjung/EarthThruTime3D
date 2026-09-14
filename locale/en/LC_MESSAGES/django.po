@@ -421,8 +421,8 @@ msgstr "Could not load the map. Check the local source files and the connection.
 msgid "드래그로 회전 · 오른쪽 드래그로 이동 · 스크롤 / 핀치로 확대"
 msgstr "Drag to rotate · right-drag to pan · scroll or pinch to zoom"
 
-msgid "드래그로 회전 · 오른쪽 드래그로 기울이기 · 스크롤 / 핀치로 확대"
-msgstr "Drag to rotate · right-drag to tilt · scroll or pinch to zoom"
+msgid "드래그로 회전 · 휠 클릭 드래그로 기울이기 · 스크롤 / 핀치로 확대"
+msgstr "Drag to rotate · wheel-click drag to tilt · scroll or pinch to zoom"
 
 msgid "{title} 모델은 {reach} Ma까지입니다. "
 msgstr "The {title} model reaches {reach} Ma. "

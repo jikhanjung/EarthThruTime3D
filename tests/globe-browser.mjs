@@ -591,13 +591,13 @@ try {
     await expect.poll(async () => Number(await demGlobe.getAttribute('data-relief'))).toBeGreaterThan(0.9);
     await expect(dem.locator('#relief-note')).toBeVisible();
     await dem.screenshot({path:'data/screenshots/globe-elevation-3d.png'});
-    // While the terrain stands, a right drag tilts and turns the view; reset puts it back.
+    // While the terrain stands, a middle drag tilts and turns the view; reset puts it back.
     await expect(demGlobe).toHaveAttribute('data-tilt', '50');
     const demCanvas = await dem.locator('#globe canvas').boundingBox();
     await dem.mouse.move(demCanvas.x + demCanvas.width / 2, demCanvas.y + demCanvas.height / 2);
-    await dem.mouse.down({button: 'right'});
+    await dem.mouse.down({button: 'middle'});
     await dem.mouse.move(demCanvas.x + demCanvas.width / 2 + 60, demCanvas.y + demCanvas.height / 2 - 40, {steps: 6});
-    await dem.mouse.up({button: 'right'});
+    await dem.mouse.up({button: 'middle'});
     expect(Number(await demGlobe.getAttribute('data-tilt'))).toBeGreaterThan(55);
     expect(Number(await demGlobe.getAttribute('data-heading'))).toBeGreaterThan(5);
     await dem.screenshot({path:'data/screenshots/globe-elevation-3d-tilted.png'});
