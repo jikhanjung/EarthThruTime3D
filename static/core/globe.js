@@ -194,6 +194,42 @@ function loadTemperature(frame) {
 function loadIce(frame) {
   return frame.ice ? loadData(`${frame.id}:ice`, frame.ice) : Promise.resolve(null);
 }
+function loadIceLow(frame) {
+  return frame.ice_low ? loadData(`${frame.id}:ice-low`, frame.ice_low) : Promise.resolve(null);
+}
+// The sea-level offset as a volume of ice, the paper's ratio, and the level of a frame's
+// ice field that encloses the area that volume implies: area goes as volume to the 0.8,
+// and the builder tabulated the share of the globe inside each level. Above 1 cuts
+// everything, the ice-free end; 0 keeps everything the field reaches.
+const SEA_PER_MKM3 = 2.5;
+const AREA_EXPONENT = 0.8;
+function iceCutFor(sheet, offset) {
+  if (!sheet || !sheet.volume) return 0.5;
+  const volume = sheet.volume - offset / SEA_PER_MKM3;
+  if (volume <= 0) return 1.01;
+  const levels = sheet.areas.length - 1;
+  const target = sheet.areas[levels / 2] * Math.pow(volume / sheet.volume, AREA_EXPONENT);
+  if (target >= sheet.areas[0]) return 0;
+  for (let index = 0; index < levels; index++) {
+    if (sheet.areas[index + 1] <= target) {
+      const span = sheet.areas[index] - sheet.areas[index + 1];
+      return (index + (span > 0 ? (sheet.areas[index] - target) / span : 0)) / levels;
+    }
+  }
+  return 1.01;
+}
+// What the offset does to one frame's ice: the cut, and for a frame with a drawn
+// lowstand how far toward it to morph. The present morphs to the atlas's last glacial
+// maximum over the first 130 m of fall and follows the area law from there.
+function iceState(frame, offset) {
+  if (!frame.ice) return { cut: 0.5, low: 0 };
+  if (frame.ice_low_sheet && offset < 0) {
+    const level = frame.ice_low_sheet.level_m;
+    if (offset >= level) return { cut: 0.5, low: offset / level };
+    return { cut: iceCutFor(frame.ice_low_sheet, offset - level), low: 1 };
+  }
+  return { cut: iceCutFor(frame.ice_sheet, offset), low: 0 };
+}
 function loadData(key, url) {
   // A field is data, not a picture: distance in red, height in green and blue.
   // Decoding it as an <img> lets the browser colour-manage the bytes on the way to
@@ -324,13 +360,16 @@ async function selectStop(value, manual = false) {
       uniforms.blend.value = 0;
       applyIce(null, null);
       showIceKind(place);
-      uniforms.iceRate.value.set(0, 0);
-      stage.dataset.iceRate = '';
+      uniforms.iceCut.value.set(0.5, 0.5);
+      uniforms.iceLowMix.value.set(0, 0);
+      stage.dataset.iceCut = '';
+      stage.dataset.iceLow = '';
     } else {
-      const [first, second, warmA, warmB, iceA, iceB] = await Promise.all([
+      const [first, second, warmA, warmB, iceA, iceB, lowA, lowB] = await Promise.all([
         loadSurface(place.from), loadSurface(place.to),
         heated ? loadTemperature(place.from) : null, heated ? loadTemperature(place.to) : null,
-        fielded ? loadIce(place.from) : null, fielded ? loadIce(place.to) : null]);
+        fielded ? loadIce(place.from) : null, fielded ? loadIce(place.to) : null,
+        fielded ? loadIceLow(place.from) : null, fielded ? loadIceLow(place.to) : null]);
       if (ticket !== request) return;
       uniforms.surfaceA.value = first;
       uniforms.surfaceB.value = second;
@@ -338,8 +377,13 @@ async function selectStop(value, manual = false) {
       uniforms.tempB.value = warmB;
       applyIce(iceA, iceB);
       showIceKind(place);
-      uniforms.iceRate.value.set(place.from.ice_rate || 0, place.to.ice_rate || 0);
-      stage.dataset.iceRate = ((place.from.ice_rate || 0) + ((place.to.ice_rate || 0) - (place.from.ice_rate || 0)) * place.blend).toFixed(5);
+      const stateA = iceState(place.from, seaOffset);
+      const stateB = iceState(place.to, seaOffset);
+      uniforms.iceLow.value = lowA || lowB;
+      uniforms.iceCut.value.set(stateA.cut, stateB.cut);
+      uniforms.iceLowMix.value.set(lowA ? stateA.low : 0, lowB ? stateB.low : 0);
+      stage.dataset.iceCut = (stateA.cut + (stateB.cut - stateA.cut) * place.blend).toFixed(3);
+      stage.dataset.iceLow = Math.max(lowA ? stateA.low : 0, lowB ? stateB.low : 0).toFixed(2);
       uniforms.blend.value = place.blend;
       uniforms.blank.value = 0;
     }
@@ -444,15 +488,35 @@ function showSeaLevel(place, offset) {
   if (!out) return;
   const level = place.mapless ? null : seaLevelAt(place.age);
   // The ice that offset stands for, by the paper's ratio: a metre of sea level is 0.4
-  // million km3 of land ice, more ice when the sea is lower.
-  const ice = -offset / 2.5;
+  // million km3 of land ice, more ice when the sea is lower, and never less than none.
+  const from = place.mapless ? 0 : (place.from.ice_sheet?.volume || 0);
+  const to = place.mapless ? 0 : (place.to.ice_sheet?.volume || 0);
+  const volume = from + (to - from) * (place.blend || 0);
+  const ice = Math.max(-offset / SEA_PER_MKM3, -volume);
   const change = offset !== 0
-    ? fmt(L.seaLevelOffset, { value: signed(offset) }) + fmt(L.seaLevelIce, { value: `${ice >= 0 ? '+' : '−'}${Math.abs(ice).toFixed(0)}` })
+    ? fmt(L.seaLevelOffset, { value: signed(offset) })
+      + (volume > 0 ? fmt(L.seaLevelIce, { value: `${ice >= 0 ? '+' : '−'}${Math.abs(ice).toFixed(0)}` }) : '')
     : '';
+  showSeaMarks(place);
   out.textContent = level == null
     ? L.seaLevelNone
     : fmt(L.seaLevel, { value: signed(level), offset: change });
   stage.dataset.seaCurve = level == null ? '' : level.toFixed(0);
+}
+// The two ends of the ice at this stop, marked on the slider: no ice at all, which is
+// the stop's whole volume melted, and where a drawn glacial maximum exists, that.
+function showSeaMarks(place) {
+  const marks = $('sealevel-marks');
+  const notes = $('sealevel-notes');
+  if (!marks || !notes) return;
+  const sheet = place.mapless ? null : (place.from.ice_sheet || place.to.ice_sheet);
+  const low = place.mapless ? null : (place.from.ice_low_sheet || place.to.ice_low_sheet);
+  const entries = [];
+  if (sheet && sheet.volume > 0) entries.push([Math.round(sheet.volume * SEA_PER_MKM3 / 10) * 10, L.seaMarkNone]);
+  if (low) entries.push([low.level_m, L.seaMarkMax]);
+  marks.replaceChildren(...entries.map(([value]) => new Option('', value)));
+  notes.textContent = entries.map(([value, text]) => fmt(text, { value: signed(value) })).join(' · ');
+  notes.hidden = entries.length === 0;
 }
 // Tick labels are HTML placed over the chart, because the charts stretch to the
 // slider's width and SVG text would stretch with them.
@@ -701,9 +765,12 @@ function globeMaterial() {
     iceA: { value: null }, iceB: { value: null },
     // Which of the two bound ice masks exist; a missing one counts as no ice.
     iceWeight: { value: new THREE.Vector2(0, 0) },
-    // How far each bound mask's edge moves per metre of the sea-level offset, in the
-    // mask's own units: the red channel is a distance field, 0.5 at the drawn edge.
-    iceRate: { value: new THREE.Vector2(0, 0) },
+    // Where to cut each bound mask's distance field (0.5 is the drawn edge), decided on
+    // the page from the sea-level offset; and a drawn lowstand to morph toward, with how
+    // far to go, for a side that has one (the present's last glacial maximum).
+    iceCut: { value: new THREE.Vector2(0.5, 0.5) },
+    iceLow: { value: null },
+    iceLowMix: { value: new THREE.Vector2(0, 0) },
     blend: { value: 0 }, mode: { value: 0 },
     // Shaded relief: texel spacing of the bound fields, and how much the slopes are
     // exaggerated before lighting. 0 switches the shading off.
@@ -740,7 +807,9 @@ function globeMaterial() {
       uniform sampler2D iceA;
       uniform sampler2D iceB;
       uniform vec2 iceWeight;
-      uniform vec2 iceRate;
+      uniform vec2 iceCut;
+      uniform sampler2D iceLow;
+      uniform vec2 iceLowMix;
       uniform float blend;
       uniform int mode;
       uniform float blank;
@@ -904,13 +973,18 @@ function globeMaterial() {
         if (blank < 0.5 && mode >= 1 && (iceWeight.x + iceWeight.y) > 0.0) {
           vec2 shiftIce = travel(vec2((surfaceUv.x - 0.5) * 360.0, (surfaceUv.y - 0.5) * 180.0));
           vec2 offsetIce = vec2(shiftIce.x / 360.0, shiftIce.y / 180.0);
-          vec2 a = texture2D(iceA, surfaceUv - blend * offsetIce).rg * iceWeight.x;
-          vec2 b = texture2D(iceB, surfaceUv + (1.0 - blend) * offsetIce).rg * iceWeight.y;
-          vec2 ice = mix(a, b, blend);
-          // The edge sits where the distance field crosses 0.5; a lower sea moves the
-          // cut outward by the frame's rate, a higher one inward. A missing mask on one
-          // side mixes toward zero, so the sheet recedes from its edge across that gap.
-          float cut = 0.5 + mix(iceRate.x, iceRate.y, blend) * seaLevel;
+          vec2 uvIceA = surfaceUv - blend * offsetIce;
+          vec2 uvIceB = surfaceUv + (1.0 - blend) * offsetIce;
+          vec2 a = texture2D(iceA, uvIceA).rg;
+          vec2 b = texture2D(iceB, uvIceB).rg;
+          // A side with a drawn lowstand morphs its field toward it as the sea falls.
+          a.x = mix(a.x, texture2D(iceLow, uvIceA).r, iceLowMix.x);
+          b.x = mix(b.x, texture2D(iceLow, uvIceB).r, iceLowMix.y);
+          vec2 ice = mix(a * iceWeight.x, b * iceWeight.y, blend);
+          // The edge sits where the distance field crosses 0.5; the page moves the cut so
+          // the enclosed area follows the ice volume the offset stands for. A missing mask
+          // on one side mixes toward zero, so a sheet recedes from its edge across that gap.
+          float cut = mix(iceCut.x, iceCut.y, blend);
           float soft = fwidth(ice.x) + 0.01;
           float grounded = smoothstep(cut - soft, cut + soft, ice.x);
           float shelf = smoothstep(0.3, 0.7, ice.y) * (1.0 - grounded);

@@ -200,14 +200,23 @@ thing. Each ice mask's red channel is a signed distance to the drawn edge, 128 a
 edge and 8 levels per degree, and the shader cuts it at `0.5 + rate × offset` instead of
 at the edge; a lower sea moves the cut outward, a higher one inward, and a mask missing
 on one side of a gap mixes toward zero, so a sheet recedes from its edge across that gap
-rather than fading. The rate is one number per grid from `scripts/build_ice.py`,
-written in `ice-sources.json` and carried on the frame as `ice_rate`: a metre of sea
-level is 0.4 million km³ of land ice, the paper's ratio; a sheet's area goes as its
-volume to the 0.8; the edge moves by the area change over the perimeter, which is
-counted on the raster. The readout adds the ice the offset stands for. The
-approximation is uniform, real sheets grow from centres, and a stop with no ice grows
-none; at the present the sheets grown for the last glacial maximum's 130 m come to
-about 8% of the globe, against the 11% the atlas paints then with sea ice included. The atlas prelude has no
+rather than fading. Where to cut is decided on the page from two things the builder
+writes in `ice-sources.json` and the frame carries as `ice_sheet`: the paper's land-ice
+volume at that age, and the share of the globe inside each level of the field. A metre
+of sea level is 0.4 million km³ of land ice, the paper's ratio; a sheet's area goes as
+its volume to the 0.8; the page cuts at the level whose enclosed area matches, so the
+ice is gone once the offset has melted the stop's whole volume, +59 m today and +73 m
+at 300 Ma, and grows by the same law below. That growth is even, from the drawn edge,
+and real sheets grow from centres, so the present, the one stop with a drawn lowstand,
+also carries the atlas's last glacial maximum as a second field, `<id>-ice-low.png`,
+served at `/globe/ice-low/<id>.png` and on the frame as `ice_low`: the page morphs the
+present field toward it over the first 130 m of fall, so the Laurentide and
+Fennoscandian sheets rise as the sea drops and −130 m shows the atlas's LGM, and follows
+the area law from there. The slider marks both ends of the ice at a stop, no ice at
+the melted volume and the glacial maximum where one is drawn; the readout adds the ice
+the offset stands for, never more melt than the stop holds. The paper gives no glacial
+maximum for the past, only a scenario band, so past stops have the no-ice mark alone.
+`data-ice-cut` and `data-ice-low` on the stage carry the state for tests. The atlas prelude has no
 heights and takes no offset. With the default 8-bit textures the height is in 59 m steps, so a
 fixed offset moves the coast in those steps; build with `--bits 12` for 3.7 m.
 

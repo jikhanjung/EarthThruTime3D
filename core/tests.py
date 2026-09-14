@@ -688,7 +688,9 @@ class PaleodemTests(TestCase):
         self.assertIsNone(frames['paleodem-3000']['ice_kind'])
         Path(self.dem.name, 'ice-sources.json').write_text(json.dumps(
             {'grids': {'paleodem-3000': 'atlas', 'paleodem-1400': 'limit'},
-             'rates': {'paleodem-3000': 0.0012, present['id']: 0.0009}}))
+             'sheets': {'paleodem-3000': {'volume': 29.4, 'areas': [0.2, 0.1, 0.0]}},
+             'lows': {present['id']: {'level_m': -130, 'volume': 75.5, 'areas': [0.3, 0.1, 0.0]}}}))
+        globe_module.ice_low_path(present).write_bytes(b'png')
         capped = next(item for item in globe_module.catalogue('paleodem2018')['maps'] if item['id'] == 'paleodem-1400')
         globe_module.ice_path(capped).write_bytes(b'png')
         response = self.client.get('/', {'masks': 'paleodem2018'})
@@ -697,11 +699,14 @@ class PaleodemTests(TestCase):
         self.assertEqual(frames['paleodem-1400']['ice_kind'], 'limit')
         self.assertIsNone(frames[present['id']]['ice_kind'])
         self.assertContains(response, 'id="ice-limit-note"')
-        # The edge rate rides along too, zero for a mask the sidecar does not rate.
-        self.assertEqual(frames['paleodem-3000']['ice_rate'], 0.0012)
-        self.assertEqual(frames[present['id']]['ice_rate'], 0.0009)
-        self.assertEqual(frames['paleodem-1400']['ice_rate'], 0)
-        self.assertIsNone(frames['paleodem-2000']['ice_rate'])
+        # The volume and area table ride along, and the drawn lowstand where one exists.
+        self.assertEqual(frames['paleodem-3000']['ice_sheet']['volume'], 29.4)
+        self.assertIsNone(frames['paleodem-1400']['ice_sheet'])
+        self.assertIsNone(frames['paleodem-3000']['ice_low'])
+        self.assertEqual(frames[present['id']]['ice_low'], f"/globe/ice-low/{present['id']}.png")
+        self.assertEqual(frames[present['id']]['ice_low_sheet']['level_m'], -130)
+        self.assertEqual(self.client.get(f"/globe/ice-low/{present['id']}.png").status_code, 200)
+        self.assertEqual(self.client.get('/globe/ice-low/paleodem-3000.png').status_code, 404)
         self.assertFalse(self.client.get('/').context['ice_available'])
 
     def test_grids_borrow_the_pieces_of_the_nearest_atlas_map(self):

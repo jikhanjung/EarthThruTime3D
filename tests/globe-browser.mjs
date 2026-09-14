@@ -530,13 +530,19 @@ try {
     await expect(demGlobe).toHaveAttribute('data-ice-kind', 'drawn');
     await expect(dem.locator('#ice-note')).toBeVisible();
     await expect(dem.locator('#ice-limit-note')).toBeHidden();
-    // Ice follows the sea-level offset: the frame carries a rate, and the readout says
-    // how much ice the offset stands for.
-    expect(Number(await demGlobe.getAttribute('data-ice-rate'))).toBeGreaterThan(0);
+    // Ice follows the sea-level offset: a lower sea cuts the field below its edge, a sea
+    // high enough to melt the stop's whole volume cuts it above everything, and the
+    // readout says how much ice the offset stands for.
+    await expect(demGlobe).toHaveAttribute('data-ice-cut', '0.500');
     await dem.locator('#sealevel').fill('-120');
     await dem.locator('#sealevel').dispatchEvent('input');
     await expect(demGlobe).toHaveAttribute('data-sealevel', '-120');
+    expect(Number(await demGlobe.getAttribute('data-ice-cut'))).toBeLessThan(0.5);
     await expect(dem.locator('#sea-level')).toContainText('km³');
+    await dem.locator('#sealevel').fill('150');
+    await dem.locator('#sealevel').dispatchEvent('input');
+    await expect(demGlobe).toHaveAttribute('data-sealevel', '150');
+    expect(Number(await demGlobe.getAttribute('data-ice-cut'))).toBeGreaterThan(1);
     await dem.locator('#sealevel').fill('0');
     await dem.locator('#sealevel').dispatchEvent('input');
     await expect(demGlobe).toHaveAttribute('data-sealevel', '0');
@@ -553,6 +559,16 @@ try {
     await expect(demGlobe).toHaveAttribute('data-ice', 'false');
     await dem.locator('#era').selectOption(String(demFrames.length - 1));
     await expect(demGlobe).toHaveAttribute('data-frame', 'paleodem-0000');
+    // The present has a drawn lowstand, the atlas's glacial maximum: at -130 m the field
+    // has morphed all the way to it, and the slider marks both ends of the ice.
+    await expect(dem.locator('#sealevel-notes')).toContainText('−130 m');
+    await dem.locator('#sealevel').fill('-130');
+    await dem.locator('#sealevel').dispatchEvent('input');
+    await expect(demGlobe).toHaveAttribute('data-sealevel', '-130');
+    await expect(demGlobe).toHaveAttribute('data-ice-low', '1.00');
+    await dem.locator('#sealevel').fill('0');
+    await dem.locator('#sealevel').dispatchEvent('input');
+    await expect(demGlobe).toHaveAttribute('data-ice-low', '0.00');
     // The fossil coastlines are offered over the grids as over the atlas.
     await dem.locator('#coastline').check();
     await expect.poll(async () => Number(await demGlobe.getAttribute('data-coastlines'))).toBeGreaterThan(0);

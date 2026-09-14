@@ -161,3 +161,4 @@ header,main,footer{max-width:1440px}main{padding-top:26px;padding-bottom:6px}.vi
 .sealevel-value{color:#88dfcc;font-variant-numeric:tabular-nums}
 .check-toggle{display:flex;align-items:center;gap:8px;font-size:.78rem;color:#b6cbd4;margin:0 0 14px;cursor:pointer}
 .check-toggle input{accent-color:#88dfcc;margin:0}
+.sealevel-notes{font-size:.7rem;color:#95afbb;margin:-6px 0 10px}

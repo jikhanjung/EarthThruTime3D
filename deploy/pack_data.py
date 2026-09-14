@@ -88,6 +88,11 @@ def pack_elevation(dem, dem_source, staging, files):
         shutil.copy2(ice, staging / "paleodem" / ice.name)
         files.append({"path": f"paleodem/{ice.name}", "bytes": (staging / "paleodem" / ice.name).stat().st_size,
                       "sha256": digest(staging / "paleodem" / ice.name), "map_id": item["id"]})
+        low = dem_source / f"{item['id']}-ice-low.png"     # a drawn lowstand, the present's glacial maximum
+        if low.exists():
+            shutil.copy2(low, staging / "paleodem" / low.name)
+            files.append({"path": f"paleodem/{low.name}", "bytes": (staging / "paleodem" / low.name).stat().st_size,
+                          "sha256": digest(staging / "paleodem" / low.name), "map_id": item["id"]})
     # Where each mask came from, written by the same script; optional like the masks.
     kinds = dem_source / "ice-sources.json"
     if kinds.exists():
