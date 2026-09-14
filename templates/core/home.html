@@ -61,7 +61,7 @@
     </div>
 {% endif %}{% if sealevel_available %}    <figure class="sea-inset"><div class="chart"><svg id="pleistocene" role="img" aria-label="{% trans '최근 80만 년 해수면' %}"></svg><div id="pleistocene-axis" class="axis"></div></div><figcaption>{% blocktrans %}최근 80만 년의 해수면, 현재 대비 m (<a href="https://doi.org/10.5194/cp-12-1079-2016" target="_blank" rel="noopener">Spratt &amp; Lisiecki 2016</a>). 왼쪽이 과거, 가로선이 현재 해수면, 빙하기 최저 약 −130 m. 5백만 년 간격의 격자로는 보이지 않는 변동입니다.{% endblocktrans %}</figcaption></figure>
 {% endif %}    <p class="model-note derived" id="mapless-note" hidden>{% trans "가장 오래된 Scotese 지도보다 이전입니다. 이 시대의 지도는 없으므로 바다만 칠하고, 켜져 있다면 판 재구성만 그립니다. 지구본 면은 아무 것도 주장하지 않습니다." %}</p>
-{% if mask.id == 'paleodem2018' %}    <p class="model-note derived" id="between-note" hidden>{% trans "5백만 년 간격의 격자 사이를 보간한 화면입니다. 두 시점의 해안선 거리장과 높이를 섞은 중간 형태이며, 판 운동을 계산한 것이 아닙니다." %}</p>
+{% if mask.id == 'paleodem2018' %}    <p class="model-note derived" id="between-note" hidden>{% trans "5백만 년 간격의 격자 사이를 보간한 화면입니다. 대륙은 가장 가까운 PaleoAtlas 지도의 조각과 그 아래 PALEOMAP 판의 회전을 빌려 옮기고, 그 길을 따라 두 시점의 해안선 거리장과 높이를 섞었습니다. 대륙 안의 변형과 해수면 변화는 근사입니다." %}</p>
 {% elif mask.id == 'paleoatlas2016' %}    <p class="model-note derived" id="between-note" hidden>{% trans "원본 시점 사이를 보간한 화면입니다. 대륙마다 그 아래 PALEOMAP 판의 회전으로 중심이 옮겨 가는 길을 계산하고, 그 길을 따라 두 시점의 해안선 거리장을 섞었습니다. 판 운동은 반영하지만 대륙 안의 회전과 해수면 변화는 근사입니다." %}</p>
 {% else %}    <p class="model-note derived" id="between-note" hidden>{% trans "원본 시점 사이를 보간한 화면입니다. 두 시점의 해안선 거리장을 섞어 만든 중간 형태이며, 실제 지각 운동이나 해수면 변화를 계산한 것이 아닙니다." %}</p>
 {% endif %}

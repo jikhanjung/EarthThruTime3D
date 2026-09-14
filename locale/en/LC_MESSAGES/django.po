@@ -41,8 +41,11 @@ msgstr "Data sources"
 msgid "기본으로 보여 주는 육지 마스크는 이 PaleoAtlas 지도 90장에서 육지와 바다의 경계를 갈라낸 결과입니다. Zenodo 기록은 CC BY 4.0으로 표기하지만 그 표기를 누가 붙였는지 확인하지 못해, 원본 지도 이미지는 배포하지 않습니다."
 msgstr "The land masks shown by default were segmented from the 90 maps of this PaleoAtlas. The Zenodo record lists CC BY 4.0, but who attached that licence has not been confirmed, so the original map images are not distributed."
 
-msgid "시점 사이 화면은 두 시점을 보간한 중간 형태입니다. 관측도 재구성도 아니며 판 운동을 계산하지 않습니다."
-msgstr "Views between two maps are interpolated: neither an observation nor a reconstruction, and no plate motion is computed."
+msgid "시점 사이 화면은 두 시점을 보간한 중간 형태입니다. 대륙은 그 아래 PALEOMAP 판의 회전을 따라 옮기고 모양은 두 시점을 섞은 것이라, 관측도 발표된 복원도 아닙니다."
+msgstr "Views between two stops are interpolated: continents move with the PALEOMAP rotation of the plate beneath them while their shapes blend between the two stops, so they are neither an observation nor a published reconstruction."
+
+msgid "'화석으로 고친 해안선' 겹쳐 보기는 이 PaleoCoastlines 자료입니다. PALEOMAP 해안선을 Paleobiology Database의 해양 화석이 가리키는 최대 해침선까지 옮긴 것으로, 0~535 Ma의 81개 시점이 있고 화면의 나이에서 가장 가까운 시점을 그립니다."
+msgstr "The 'fossil-checked coastlines' overlay is this PaleoCoastlines dataset: PALEOMAP coastlines moved to the maximum transgression that marine fossils in the Paleobiology Database indicate. It has 81 stops from 0 to 535 Ma, and the one nearest the age on screen is drawn."
 
 msgid "판 재구성 자료"
 msgstr "Plate reconstruction data"
@@ -98,8 +101,8 @@ msgstr "That key is not right."
 msgid "문의 및 문제 보고"
 msgstr "Contact and problem reports"
 
-msgid "현재는 개발 초기 단계로 공개 문의 채널이 지정되지 않았습니다. 프로젝트 관리자에게 문제를 전달할 때 아래 정보를 함께 알려 주세요."
-msgstr "The project is at an early stage and has no public contact channel yet. When reporting a problem to the maintainer, please include the following."
+msgid "문제 보고와 제안은 GitHub 저장소의 <a href=\"https://github.com/jikhanjung/EarthThruTime3D/issues\" target=\"_blank\" rel=\"noopener\">Issues</a>에 남겨 주세요. 이슈를 올릴 때 아래 정보를 함께 적어 주시면 확인이 빠릅니다."
+msgstr "Please report problems and suggestions in the <a href=\"https://github.com/jikhanjung/EarthThruTime3D/issues\" target=\"_blank\" rel=\"noopener\">Issues</a> of the GitHub repository. Including the following in the issue helps it get looked at sooner."
 
 msgid "사용한 브라우저와 운영체제"
 msgstr "Browser and operating system used"
@@ -280,11 +283,11 @@ msgstr "view with the %(title)s masks"
 msgid "%(title)s %(count)s개 시점 · 사이는 보간 · %(oldest)s Ma 이전은 지도 없이 판 재구성만"
 msgstr "%(title)s, %(count)s maps · interpolated between · before %(oldest)s Ma, plate reconstruction only"
 
-msgid "현재 로컬 개발 단계이며 운영 호스팅은 정해지지 않았습니다. 별도 분석 도구나 외부 추적 리소스를 사용하지 않습니다."
-msgstr "The project is in local development and production hosting is not settled. No analytics or external tracking resources are used."
+msgid "이 사이트는 연구 프로젝트 서버에서 운영합니다. 별도 분석 도구나 외부 추적 리소스를 사용하지 않습니다."
+msgstr "This site runs on the research project's server. No analytics or external tracking resources are used."
 
-msgid "관리자 로그인에는 세션 및 CSRF 쿠키를 사용합니다. 생성한 관리자 계정과 세션은 실행 환경의 SQLite 데이터베이스에 저장되며, 해당 환경 관리자에게 접근 권한이 있습니다. 서버 실행 시 요청 경로와 오류가 콘솔 로그에 남을 수 있습니다. 공개 운영 전에 호스팅, 보관 기간, 담당 연락처를 확정합니다."
-msgstr "Administrator login uses session and CSRF cookies. Administrator accounts and sessions are stored in the deployment's SQLite database, which the deployment's administrator can access. Request paths and errors may appear in the server's console log. Hosting, retention and a contact will be settled before public operation."
+msgid "언어 선택은 1년짜리 쿠키에, 비공개 판 모델의 접근 키 확인은 이 브라우저의 세션에 저장합니다. 관리자 로그인에는 세션 및 CSRF 쿠키를 사용합니다. 관리자 계정과 세션은 실행 환경의 SQLite 데이터베이스에 저장되며, 해당 환경 관리자에게 접근 권한이 있습니다. 서버 실행 시 요청 경로와 오류가 로그에 남을 수 있습니다. 로그 보관 기간은 아직 정하지 않았습니다."
+msgstr "The language choice is kept in a one-year cookie, and an accepted access key for the private plate model in this browser's session. Administrator login uses session and CSRF cookies. Administrator accounts and sessions are stored in the deployment's SQLite database, which the deployment's administrator can access. Request paths and errors may appear in the server's logs. A log retention period has not been set yet."
 
 msgid "소개"
 msgstr "About"
@@ -571,8 +574,8 @@ msgstr "The coastline is the grid's 0 m contour and the colours are height and d
 msgid "대륙 마스크 표시 중입니다. 육지와 바다 둘로만 칠한 결과입니다. 고도 격자는 0 m에서 잘랐고, 540 Ma 이전의 PaleoAtlas 지도는 색을 분할해 얻은 해석이라 높이가 없습니다."
 msgstr "Showing the continent mask: land and ocean as two flat colours. The elevation grids are cut at 0 m; the PaleoAtlas maps before 540 Ma are an interpretation segmented from colour and carry no heights."
 
-msgid "5백만 년 간격의 격자 사이를 보간한 화면입니다. 두 시점의 해안선 거리장과 높이를 섞은 중간 형태이며, 판 운동을 계산한 것이 아닙니다."
-msgstr "This is an interpolated view between grids 5 Myr apart: a blend of the two coastline distance fields and heights, not a computation of plate motion."
+msgid "5백만 년 간격의 격자 사이를 보간한 화면입니다. 대륙은 가장 가까운 PaleoAtlas 지도의 조각과 그 아래 PALEOMAP 판의 회전을 빌려 옮기고, 그 길을 따라 두 시점의 해안선 거리장과 높이를 섞었습니다. 대륙 안의 변형과 해수면 변화는 근사입니다."
+msgstr "This is an interpolated view between grids 5 Myr apart. Continents move by borrowing the pieces of the nearest PaleoAtlas map and the rotation of the PALEOMAP plate beneath them, and the two stops' coastline distance fields and heights are blended along that path. Deformation within a continent and sea-level change are approximated."
 
 msgid "PaleoDEM 1° 격자 109장을 2048×1024 정거원통 텍스처로 다시 표본화했습니다. 해안선은 0 m 등고선, 색은 높이와 깊이입니다. 540 Ma 이전은 PaleoAtlas(2016) 지도 3장의 마스크로 이어져 모두 %(count)s개 시점입니다. 시대 이름은 나이에 ICS 경계를 적용해 붙였습니다."
 msgstr "The 109 PaleoDEM 1° grids were resampled to 2048×1024 equirectangular textures. The coastline is the 0 m contour, the colours height and depth. Before 540 Ma three PaleoAtlas (2016) masks continue the timeline, %(count)s stops in all. Period names come from the age with ICS boundaries."
@@ -694,8 +697,8 @@ msgstr "Present-day ice"
 msgid "공공 영역"
 msgstr "public domain"
 
-msgid "현재 시점의 빙하·빙상과 남극 빙붕은 <a href=\"https://www.naturalearthdata.com/\" target=\"_blank\" rel=\"noopener\">Natural Earth</a> 10 m 자료(공공 영역)를 격자에 옮긴 것입니다. 과거 시점의 빙하 윤곽은 공개된 자료가 없어 그리지 않습니다. 5 Ma로 가면서 빙하가 옅어지는 것은 자료가 없어서이지 빙하가 없어서가 아닙니다. 서남극 빙상은 해수면 아래 기반암 위에 얹혀 있어, 격자가 바다로 그리는 곳 위에도 빙하가 놓입니다."
-msgstr "Today's glaciers, ice sheets and Antarctic ice shelves are <a href=\"https://www.naturalearthdata.com/\" target=\"_blank\" rel=\"noopener\">Natural Earth</a> 10 m data (public domain) placed on the grid. No open outline of past ice exists, so none is drawn. The fade toward 5 Ma means missing data, not ice loss. The West Antarctic ice sheet rests on bedrock below sea level, so ice is drawn over places the grid shows as ocean."
+msgid "현재 시점의 빙하·빙상과 남극 빙붕은 <a href=\"https://www.naturalearthdata.com/\" target=\"_blank\" rel=\"noopener\">Natural Earth</a> 10 m 자료(공공 영역)를 격자에 옮긴 것입니다. 과거 시점의 빙하는 PaleoAtlas(2016) 지도가 흰색으로 칠한 얼음을 이 프로젝트가 분할한 것으로, 각 격자는 5백만 년 안의 가장 가까운 지도를 빌립니다. 지도의 흰색은 가장 높은 땅의 색이기도 해서 위도 45° 안쪽의 고원은 빼고, 지도가 칠한 해빙은 함께 나타납니다. 540 Ma 이전은 자료가 없습니다. 서남극 빙상은 해수면 아래 기반암 위에 얹혀 있어, 격자가 바다로 그리는 곳 위에도 빙하가 놓입니다."
+msgstr "Today's glaciers, ice sheets and Antarctic ice shelves are <a href=\"https://www.naturalearthdata.com/\" target=\"_blank\" rel=\"noopener\">Natural Earth</a> 10 m data (public domain) placed on the grid. Past ice is this project's segmentation of the ice the PaleoAtlas (2016) maps paint white; each grid borrows the nearest map within 5 Myr. White on those maps is also the colour of the highest ground, so plateaus inside 45° of latitude are left out, and sea ice the maps paint appears too. There is no data before 540 Ma. The West Antarctic ice sheet rests on bedrock below sea level, so ice is drawn over places the grid shows as ocean."
 
 msgid "{age} Ma 해안선을 판 운동을 따라 {now}까지 옮겨 그렸습니다."
 msgstr "The {age} Ma coastline, carried by the plate motion to {now}."

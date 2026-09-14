@@ -14,7 +14,7 @@
   the next free number after fetching, not the next one you remember.
 - Keep scientific source observations, interpolated geometry and simulated results
   distinguishable. A 10,000-year display tick is not a claim of scientific accuracy.
-- Production is not configured yet. Before adding deployment, implement the data
-  safety contract and deploy verbs described in `docs/operations.md`.
+- Production runs on the dolfinid host (`deploy/README.md`). Changes to deployment must
+  keep the data safety contract and deploy verbs described in `docs/operations.md`.
 - Never write a running production SQLite database from the host, replace a live
   database, overwrite production secrets, or mix operational records into seeds.

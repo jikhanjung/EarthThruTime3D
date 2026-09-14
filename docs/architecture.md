@@ -10,10 +10,14 @@
    India–Eurasia collision and Himalayan uplift as a candidate case study.
 4. Mantle coupling: add a separately validated solver and boundary conditions.
 
-The Django shell and a Three.js reference globe are implemented. Seventeen Scotese
-Earth History images are collected locally with a versioned provenance catalogue in
-`sources/`. The viewer uses an approximate Mollweide mapping; no validated georeferenced
-dataset, geological model or solver has been implemented. See `globe-viewer.md`.
+Phase 1 is implemented and deployed, and phase 2 is approximated. The viewer shows land
+masks segmented from the 90 maps of the 2016 PALEOMAP PaleoAtlas (default, 750 Ma to
+present), the 17 Scotese web maps of 2002 for comparison, and the PaleoDEM elevation
+grids with temperature, sea-level and ice layers. Between maps, pieces travel with the
+PALEOMAP rotation of the plate beneath them while their shapes blend; plate polygons
+from several rotation models and PaleoCoastlines can be overlaid. Every source has a
+pinned provenance manifest in `sources/`. No deformation model or solver has been
+implemented. See `globe-viewer.md`.
 
 ## Proposed boundaries
 

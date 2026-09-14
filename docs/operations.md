@@ -24,8 +24,9 @@ The shared guides are referenced privately through `.guides`; they are not copie
 - Verbs under standard names: `preflight`/`build`, `deploy`, `smoke`, `rollback`,
   `backup`. `seed` is still **(none)**. Preflight runs Django's checks, the
   missing-migration check and the test suite before any image is built.
-- Smoke requires status `ok`, the expected version, and the domain invariant: all 17
-  derived land fields present and served.
+- Smoke requires status `ok`, the expected version, and the domain invariant: every
+  derived land field of the default mask source present and served (17 at the first
+  deployment, 90 since the 2016 PaleoAtlas became the default).
 - Rollback is the deploy command with the previous version, exercised in both
   directions on the day of the first deployment.
 - Build happens on the development host. The server loads an immutable versioned image

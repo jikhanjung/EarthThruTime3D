@@ -83,8 +83,11 @@ value all say so.
 and the 6-minute grids; `scripts/fetch_paleodem.py` fetches or verifies them (and any
 other manifest with `--manifest`), and `sources/paleodem-slices.json` catalogues the
 109 grids in the shape the other catalogues use. `scripts/build_paleodem.py` writes one
-texture per grid into `PALEODEM_DERIVED_DIR`, `paleodem-<age×10>-field.png`, 2048 × 1024
-by default from the 6-minute grids (`--width`, `--source`, `--bits`).
+texture per grid into `PALEODEM_DERIVED_DIR`, `paleodem-<age×10>-field.png`. The
+deployed set is 2048 × 1024 from the 1° grids, 8-bit: `--width 2048` (the default is
+1024). The 6-minute set cannot replace it as is, because it has no 540 Ma grid, so
+pointing `--source` there needs the ids to leave that slice out (`--width`, `--source`,
+`--bits`).
 
 Each texture is an RGB PNG on the equirectangular grid. Red is the signed coastline
 distance the segmentations write, taken at the 0 m contour of the bilinearly resampled
@@ -113,8 +116,8 @@ every slice, near a gigabyte at 2048 × 1024.
 
 What this series shows at a published slice is the reconstruction grid as its authors
 released it, not a measurement of ours. Between slices it is the same geometric blend as
-the other sources, of distance and of height, with no travel field: the grids carry no
-piece identities, so nothing moves as a body. Sea level is inside each grid as its 0 m
+the other sources, of distance and of height. The grids carry no piece identities of
+their own, so the travel field is borrowed from the atlas (next section). Sea level is inside each grid as its 0 m
 datum, so flooded interiors are the reconstruction's; floating ice shelves are sea floor
 in the grids and read as ocean, while grounded ice shows its surface height.
 
