@@ -324,6 +324,8 @@ async function selectStop(value, manual = false) {
       uniforms.blend.value = 0;
       applyIce(null, null);
       showIceKind(place);
+      uniforms.iceRate.value.set(0, 0);
+      stage.dataset.iceRate = '';
     } else {
       const [first, second, warmA, warmB, iceA, iceB] = await Promise.all([
         loadSurface(place.from), loadSurface(place.to),
@@ -336,6 +338,8 @@ async function selectStop(value, manual = false) {
       uniforms.tempB.value = warmB;
       applyIce(iceA, iceB);
       showIceKind(place);
+      uniforms.iceRate.value.set(place.from.ice_rate || 0, place.to.ice_rate || 0);
+      stage.dataset.iceRate = ((place.from.ice_rate || 0) + ((place.to.ice_rate || 0) - (place.from.ice_rate || 0)) * place.blend).toFixed(5);
       uniforms.blend.value = place.blend;
       uniforms.blank.value = 0;
     }
@@ -439,9 +443,15 @@ function showSeaLevel(place, offset) {
   const out = $('sea-level');
   if (!out) return;
   const level = place.mapless ? null : seaLevelAt(place.age);
+  // The ice that offset stands for, by the paper's ratio: a metre of sea level is 0.4
+  // million km3 of land ice, more ice when the sea is lower.
+  const ice = -offset / 2.5;
+  const change = offset !== 0
+    ? fmt(L.seaLevelOffset, { value: signed(offset) }) + fmt(L.seaLevelIce, { value: `${ice >= 0 ? '+' : '−'}${Math.abs(ice).toFixed(0)}` })
+    : '';
   out.textContent = level == null
     ? L.seaLevelNone
-    : fmt(L.seaLevel, { value: signed(level), offset: offset !== 0 ? fmt(L.seaLevelOffset, { value: signed(offset) }) : '' });
+    : fmt(L.seaLevel, { value: signed(level), offset: change });
   stage.dataset.seaCurve = level == null ? '' : level.toFixed(0);
 }
 // Tick labels are HTML placed over the chart, because the charts stretch to the
@@ -691,6 +701,9 @@ function globeMaterial() {
     iceA: { value: null }, iceB: { value: null },
     // Which of the two bound ice masks exist; a missing one counts as no ice.
     iceWeight: { value: new THREE.Vector2(0, 0) },
+    // How far each bound mask's edge moves per metre of the sea-level offset, in the
+    // mask's own units: the red channel is a distance field, 0.5 at the drawn edge.
+    iceRate: { value: new THREE.Vector2(0, 0) },
     blend: { value: 0 }, mode: { value: 0 },
     // Shaded relief: texel spacing of the bound fields, and how much the slopes are
     // exaggerated before lighting. 0 switches the shading off.
@@ -727,6 +740,7 @@ function globeMaterial() {
       uniform sampler2D iceA;
       uniform sampler2D iceB;
       uniform vec2 iceWeight;
+      uniform vec2 iceRate;
       uniform float blend;
       uniform int mode;
       uniform float blank;
@@ -893,7 +907,12 @@ function globeMaterial() {
           vec2 a = texture2D(iceA, surfaceUv - blend * offsetIce).rg * iceWeight.x;
           vec2 b = texture2D(iceB, surfaceUv + (1.0 - blend) * offsetIce).rg * iceWeight.y;
           vec2 ice = mix(a, b, blend);
-          float grounded = smoothstep(0.3, 0.7, ice.x);
+          // The edge sits where the distance field crosses 0.5; a lower sea moves the
+          // cut outward by the frame's rate, a higher one inward. A missing mask on one
+          // side mixes toward zero, so the sheet recedes from its edge across that gap.
+          float cut = 0.5 + mix(iceRate.x, iceRate.y, blend) * seaLevel;
+          float soft = fwidth(ice.x) + 0.01;
+          float grounded = smoothstep(cut - soft, cut + soft, ice.x);
           float shelf = smoothstep(0.3, 0.7, ice.y) * (1.0 - grounded);
           colour = mix(colour, decode(vec3(0.96, 0.97, 0.98)), 0.9 * grounded);
           colour = mix(colour, decode(vec3(0.85, 0.92, 0.97)), 0.65 * shelf);

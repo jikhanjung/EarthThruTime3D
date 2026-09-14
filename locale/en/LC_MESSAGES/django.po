@@ -622,6 +622,9 @@ msgstr "The elevation series' temperature view and the strip above the slider co
 msgid "장기 해수면 약 {value} (현재 대비){offset}"
 msgstr "Long-term sea level about {value} (relative to present){offset}"
 
+msgid " · 빙하 {value}백만 km³"
+msgstr " · ice {value} million km³"
+
 msgid " · 표시 보정 {value}"
 msgstr " · display offset {value}"
 
@@ -634,8 +637,8 @@ msgstr "Sea level"
 msgid "곡선 편차 적용"
 msgstr "Apply curve departure"
 
-msgid "해수면 보정 표시 중입니다. 격자의 높이를 그 시점의 기준 해수면에서 옮겨 해안선을 다시 자른 가정 화면이며, 복원이 아닙니다. '곡선 편차 적용'은 <a href=\"https://doi.org/10.1016/j.gr.2022.07.014\" target=\"_blank\" rel=\"noopener\">van der Meer et al. 2022</a>의 장기 곡선이 양쪽 격자의 기준에서 벗어난 만큼만 옮깁니다. 격자 자체가 이미 그 시점의 해수면을 담고 있어 곡선 값을 그대로 더하지 않습니다."
-msgstr "Showing a sea-level offset: a what-if view that shifts the grid's heights from that stop's own sea level and recuts the coast; not a reconstruction. 'Apply curve departure' moves it only by how far the long-term curve of <a href=\"https://doi.org/10.1016/j.gr.2022.07.014\" target=\"_blank\" rel=\"noopener\">van der Meer et al. 2022</a> departs from the datum of the two bracketing grids. The grids already carry the sea level of their time, so the curve's value is never added outright."
+msgid "해수면 보정 표시 중입니다. 격자의 높이를 그 시점의 기준 해수면에서 옮겨 해안선을 다시 자른 가정 화면이며, 복원이 아닙니다. '곡선 편차 적용'은 <a href=\"https://doi.org/10.1016/j.gr.2022.07.014\" target=\"_blank\" rel=\"noopener\">van der Meer et al. 2022</a>의 장기 곡선이 양쪽 격자의 기준에서 벗어난 만큼만 옮깁니다. 격자 자체가 이미 그 시점의 해수면을 담고 있어 곡선 값을 그대로 더하지 않습니다. 빙하 층이 켜져 있으면 빙상의 가장자리도 함께 움직입니다. 해수면 1 m당 육상 빙하 약 40만 km³(같은 논문의 비율), 면적은 부피의 0.8제곱, 가장자리는 면적 변화를 둘레로 나눈 만큼 각 빙상이 고르게 넓어지거나 줄어드는 근사이며, 얼음이 없는 시점에서는 생기지 않습니다."
+msgstr "Showing a sea-level offset: a what-if view that shifts the grid's heights from that stop's own sea level and recuts the coast; not a reconstruction. 'Apply curve departure' moves it only by how far the long-term curve of <a href=\"https://doi.org/10.1016/j.gr.2022.07.014\" target=\"_blank\" rel=\"noopener\">van der Meer et al. 2022</a> departs from the datum of the two bracketing grids. The grids already carry the sea level of their time, so the curve's value is never added outright. With the ice layer on, the sheets' edges move too: about 0.4 million km³ of land ice per metre of sea level (the same paper's ratio), area as the 0.8 power of volume, and each sheet's edge moved by its area change over its perimeter, a uniform approximation; where there is no ice none appears."
 
 msgid "최근 80만 년"
 msgstr "Last 800,000 years"

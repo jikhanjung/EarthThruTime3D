@@ -530,6 +530,16 @@ try {
     await expect(demGlobe).toHaveAttribute('data-ice-kind', 'drawn');
     await expect(dem.locator('#ice-note')).toBeVisible();
     await expect(dem.locator('#ice-limit-note')).toBeHidden();
+    // Ice follows the sea-level offset: the frame carries a rate, and the readout says
+    // how much ice the offset stands for.
+    expect(Number(await demGlobe.getAttribute('data-ice-rate'))).toBeGreaterThan(0);
+    await dem.locator('#sealevel').fill('-120');
+    await dem.locator('#sealevel').dispatchEvent('input');
+    await expect(demGlobe).toHaveAttribute('data-sealevel', '-120');
+    await expect(dem.locator('#sea-level')).toContainText('km³');
+    await dem.locator('#sealevel').fill('0');
+    await dem.locator('#sealevel').dispatchEvent('input');
+    await expect(demGlobe).toHaveAttribute('data-sealevel', '0');
     // Where the atlas paints nothing but the paper's ice volume is above the strip's cut,
     // a cap at the modelled limit, flagged as such.
     await dem.locator('#era').selectOption(String(demFrames.findIndex(frame => frame.id === 'paleodem-1400')));

@@ -23,6 +23,16 @@ hemispheres, the edge eased over two degrees. It is a modelled limit, not an out
 and `ice-sources.json` beside the masks says for every grid whether its mask is
 natural-earth, atlas or limit, so the page can say so too.
 
+Red is not a mask but a signed distance to the ice edge, 128 at the edge and
+ICE_FIELD_SCALE levels per degree, positive inside, so the shader can cut it at a level
+other than the edge: the sea-level control moves the cut, and the ice grows or shrinks
+with it. How far per metre is one number per grid, written beside the masks: a metre of
+sea level is 1/SEA_PER_MKM3 million km3 of ice (the paper's ratio), a sheet's area goes
+as its volume to the AREA_EXPONENT, and the edge moves by the area change divided by
+the perimeter. A uniform advance is a toy, real sheets grow from centres, but at the
+present it puts the sheets at about 8% of the globe for the 130 m of the last glacial
+maximum, against the 11% the atlas paints then with sea ice included.
+
 Check: the glacial deposits Cao et al. (2018) compiled, tillites and diamictites since
 the Devonian, are rotated to each map's age with the PALEOMAP model and counted inside
 the mask, within NEAR_DEGREES of it, inside a pale piece the latitude rule dropped, or
@@ -52,6 +62,11 @@ from segment_paleoatlas import cell_weights, ice, plate_raster  # noqa: E402
 MANIFEST = ROOT / "sources/ice.json"
 SEALEVEL = ROOT / "sources/sealevel.json"
 ICE_VOLUME_MKM3 = 5.0                        # the strip's cut: a fifth of today's land ice
+ICE_FIELD_SCALE = 8.0                        # levels per degree in the red channel, 128 at the edge
+SEA_PER_MKM3 = 2.5                           # metres of sea level per million km3 of ice, the paper's ratio
+AREA_EXPONENT = 0.8                          # a sheet's area goes as its volume to this power
+EARTH_KM2 = 510.1e6
+KM_PER_DEGREE = 111.2
 ICE_LAT_COLUMN, ICE_VOLUME_COLUMN = 13, 22   # IceLat_degrees AVG, VolLandice_km3 AVG in Supplementary Table 1
 ATLAS = ROOT / "sources/paleomap-atlas-2016.json"
 GRIDS = ROOT / "sources/paleodem-slices.json"
@@ -82,11 +97,45 @@ def share(mask):
     return float(weights[mask > 0].sum() / weights.sum()) * 100
 
 
-def present(folders, out):
+def present(folders):
     grounded = rasterise(next(folders["glaciated"].glob("*.shp")))
     shelves = rasterise(next(folders["shelves"].glob("*.shp")))
-    Image.fromarray(np.dstack([grounded, shelves, np.zeros_like(grounded)])).save(out / "paleodem-0000-ice.png")
     print(f"grounded ice {share(grounded):.2f}% of the globe, shelves {share(shelves):.2f}% -> paleodem-0000-ice.png")
+    return grounded, shelves
+
+
+def distance_field(red):
+    """The soft mask as a signed distance to its edge, in degrees, encoded around 128."""
+    inside = red >= 128
+    height, width = inside.shape
+    degrees = 360.0 / width      # the grid is square in degrees, so one figure serves both axes
+    signed = (ndimage.distance_transform_edt(inside) - ndimage.distance_transform_edt(~inside)) * degrees
+    return np.clip(128.0 + signed * ICE_FIELD_SCALE, 0, 255).astype(np.uint8)
+
+
+def edge_rate(red, volume_mkm3):
+    """How far the ice edge moves per metre of sea level, in the red channel's units.
+
+    A metre of sea level is 1/SEA_PER_MKM3 million km3 of ice; a sheet's area goes as
+    volume to the AREA_EXPONENT, so d(area) = AREA_EXPONENT * area / volume * d(volume);
+    the edge moves by the area change over the perimeter. The perimeter is counted on the
+    raster, one pixel's width per boundary pixel, which overstates a ragged edge; the
+    number is a rate for a what-if, not a measurement.
+    """
+    inside = red >= 128
+    if volume_mkm3 <= 0 or not inside.any():
+        return 0.0
+    height, width = inside.shape
+    weights = cell_weights(height, width)
+    area_km2 = float(weights[inside].sum() / weights.sum()) * EARTH_KM2
+    boundary = inside & ~ndimage.binary_erosion(inside)
+    latitude = 90.0 - (np.arange(height) + 0.5) / height * 180.0
+    across = KM_PER_DEGREE * 360.0 / width * np.cos(np.radians(latitude))
+    along = KM_PER_DEGREE * 180.0 / height
+    perimeter_km = float(((across + along) / 2.0)[:, None].repeat(width, axis=1)[boundary].sum())
+    area_per_metre = AREA_EXPONENT * area_km2 / volume_mkm3 / SEA_PER_MKM3
+    degrees_per_metre = area_per_metre / perimeter_km / KM_PER_DEGREE
+    return degrees_per_metre * ICE_FIELD_SCALE / 255.0
 
 
 def nearest(maps, age):
@@ -192,13 +241,22 @@ def main():
     manifest = json.loads(MANIFEST.read_text())
     folders = {asset["unzip"]: (ROOT / asset["path"]).parent / asset["unzip"] for asset in manifest["assets"]}
     args.out.mkdir(parents=True, exist_ok=True)
-    present(folders, args.out)
+    reference = paper()
+    grounded, shelves = present(folders)
+    Image.fromarray(np.dstack([distance_field(grounded), shelves, np.zeros_like(grounded)])).save(
+        args.out / "paleodem-0000-ice.png")
+    today = reference[0][1]
+    rates = {"paleodem-0000": edge_rate(grounded, today)}
+    # The anchor: the present sheets grown for the last glacial maximum's 130 m, by the
+    # same power law, against what the atlas paints at the LGM (sea ice included).
+    grown = share(grounded) * ((today + 130.0 / SEA_PER_MKM3) / today) ** AREA_EXPONENT
+    print(f"check: at -130 m the present sheets would cover {grown:.1f}% of the globe; "
+          "the atlas paints 11.1% at the last glacial maximum, sea ice included")
 
     atlas = json.loads(ATLAS.read_text())
     maps = atlas["maps"]
     model = PackedModel(MODEL)
     points = deposits(folders["glacial"], model)
-    reference = paper()
     masks, report = {}, {}
     sources = {"paleodem-0000": "natural-earth"}
     written = borrowed = capped = 0
@@ -234,7 +292,9 @@ def main():
                 red = (limit_cap(limit) * 255).astype(np.uint8)
                 sources[item["id"]] = "limit"
                 capped += 1
-            Image.fromarray(np.dstack([red, np.zeros_like(red), np.zeros_like(red)])).save(target)
+            rates[item["id"]] = edge_rate(red, reference.get(int(round(item["age_ma"])), (None, 0.0))[1])
+            field = distance_field(red)
+            Image.fromarray(np.dstack([field, np.zeros_like(field), np.zeros_like(field)])).save(target)
     (args.out / "ice-check.json").write_text(json.dumps({
         "deposits": manifest["assets"][2]["cite"], "near_degrees": NEAR_DEGREES,
         "method": ("Glacial deposits at present-day coordinates ride the PALEOMAP plate under them "
@@ -248,7 +308,12 @@ def main():
                    "the ice latitude of van der Meer et al. (2022), drawn where the atlas paints nothing "
                    f"but the paper's land-ice volume is at least {ICE_VOLUME_MKM3:g} million km3, the "
                    "sea-level strip's own cut."),
-        "grids": sources}, indent=1))
+        "rates_method": ("How far each grid's ice edge moves per metre of sea level, in the red channel's "
+                         f"units ({ICE_FIELD_SCALE:g} levels per degree over 255): a metre of sea level is "
+                         f"1/{SEA_PER_MKM3:g} million km3 of ice, area goes as volume to the {AREA_EXPONENT:g}, "
+                         "and the edge moves by the area change over the perimeter. The shader cuts the "
+                         "field at 0.5 + rate * offset."),
+        "grids": sources, "rates": {key: round(value, 7) for key, value in rates.items()}}, indent=1))
     print(f"{written} grids given the atlas's ice ({borrowed} borrowing a map at another age), "
           f"{capped} a cap at the paper's limit, {len(report)} maps read; "
           f"{len(points)} deposits in the check -> ice-check.json, ice-sources.json")

@@ -687,7 +687,8 @@ class PaleodemTests(TestCase):
         # limit is flagged so the page can say it is not an outline.
         self.assertIsNone(frames['paleodem-3000']['ice_kind'])
         Path(self.dem.name, 'ice-sources.json').write_text(json.dumps(
-            {'grids': {'paleodem-3000': 'atlas', 'paleodem-1400': 'limit'}}))
+            {'grids': {'paleodem-3000': 'atlas', 'paleodem-1400': 'limit'},
+             'rates': {'paleodem-3000': 0.0012, present['id']: 0.0009}}))
         capped = next(item for item in globe_module.catalogue('paleodem2018')['maps'] if item['id'] == 'paleodem-1400')
         globe_module.ice_path(capped).write_bytes(b'png')
         response = self.client.get('/', {'masks': 'paleodem2018'})
@@ -696,6 +697,11 @@ class PaleodemTests(TestCase):
         self.assertEqual(frames['paleodem-1400']['ice_kind'], 'limit')
         self.assertIsNone(frames[present['id']]['ice_kind'])
         self.assertContains(response, 'id="ice-limit-note"')
+        # The edge rate rides along too, zero for a mask the sidecar does not rate.
+        self.assertEqual(frames['paleodem-3000']['ice_rate'], 0.0012)
+        self.assertEqual(frames[present['id']]['ice_rate'], 0.0009)
+        self.assertEqual(frames['paleodem-1400']['ice_rate'], 0)
+        self.assertIsNone(frames['paleodem-2000']['ice_rate'])
         self.assertFalse(self.client.get('/').context['ice_available'])
 
     def test_grids_borrow_the_pieces_of_the_nearest_atlas_map(self):

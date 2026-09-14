@@ -145,8 +145,9 @@ def ice_sources():
     natural-earth, atlas, or limit for a cap at a modelled ice latitude. Empty until built."""
     path = Path(settings.PALEODEM_DERIVED_DIR) / "ice-sources.json"
     if not path.exists():
-        return {}
-    return json.loads(path.read_text()).get("grids", {})
+        return {"grids": {}, "rates": {}}
+    document = json.loads(path.read_text())
+    return {"grids": document.get("grids", {}), "rates": document.get("rates", {})}
 
 
 def temperature_path(item):
@@ -301,6 +302,7 @@ def viewer_strings():
         "meanTemperatureDelta": _(" · 현재보다 {delta} °C"),
         "seaLevel": _("장기 해수면 약 {value} (현재 대비){offset}"),
         "seaLevelOffset": _(" · 표시 보정 {value}"),
+        "seaLevelIce": _(" · 빙하 {value}백만 km³"),
         "seaLevelNone": _("장기 해수면: 자료 없음 (540 Ma 이전)"),
         "noMap": _("지도 없음"),
         "interpolated": _("보간"),
@@ -650,7 +652,7 @@ def globe(request):
     source = mask_source(request)
     climate = {"curve": [], "stops": {}}
     sea = {"long": [], "pleistocene": [], "stops": {}}
-    kinds = {}
+    kinds = {"grids": {}, "rates": {}}
     if enabled():
         document = catalogue(source)
         if source == "paleodem2018":
@@ -684,7 +686,10 @@ def globe(request):
                            "ice": reverse("globe-ice", args=[item["id"]]) if iced else None,
                            # natural-earth, atlas, or limit: a cap at a modelled ice latitude,
                            # which the page flags as a limit rather than an outline.
-                           "ice_kind": kinds.get(item["id"]) if iced else None,
+                           "ice_kind": kinds["grids"].get(item["id"]) if iced else None,
+                           # How far the ice edge moves per metre of the sea-level offset; the
+                           # shader cuts the mask's distance field at 0.5 + rate * offset.
+                           "ice_rate": kinds["rates"].get(item["id"], 0) if iced else None,
                            "field": (reverse("globe-field", args=[item["id"]])
                                      if field_path(item).exists() else None),
                            "names": landmass_names(pieces_by_frame[item["id"]]),

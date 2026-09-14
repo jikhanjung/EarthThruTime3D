@@ -193,7 +193,21 @@ antialiased over the height's own screen-space change; the hypsometric colours f
 the new level, live as the slider moves, since the cut happens in the shader. A box
 beside it adds the published curve's departure from the datum the bracketing grids
 already carry, `curve(age) − mix(sea_m_from, sea_m_to, blend)`, zero at a grid stop,
-because adding the curve itself would count the slice's own sea level twice. The atlas prelude has no
+because adding the curve itself would count the slice's own sea level twice.
+
+The ice layer follows the same offset, so ice growth and sea-level fall read as one
+thing. Each ice mask's red channel is a signed distance to the drawn edge, 128 at the
+edge and 8 levels per degree, and the shader cuts it at `0.5 + rate × offset` instead of
+at the edge; a lower sea moves the cut outward, a higher one inward, and a mask missing
+on one side of a gap mixes toward zero, so a sheet recedes from its edge across that gap
+rather than fading. The rate is one number per grid from `scripts/build_ice.py`,
+written in `ice-sources.json` and carried on the frame as `ice_rate`: a metre of sea
+level is 0.4 million km³ of land ice, the paper's ratio; a sheet's area goes as its
+volume to the 0.8; the edge moves by the area change over the perimeter, which is
+counted on the raster. The readout adds the ice the offset stands for. The
+approximation is uniform, real sheets grow from centres, and a stop with no ice grows
+none; at the present the sheets grown for the last glacial maximum's 130 m come to
+about 8% of the globe, against the 11% the atlas paints then with sea ice included. The atlas prelude has no
 heights and takes no offset. With the default 8-bit textures the height is in 59 m steps, so a
 fixed offset moves the coast in those steps; build with `--bits 12` for 3.7 m.
 
