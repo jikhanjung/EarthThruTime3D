@@ -567,6 +567,16 @@ try {
     const demControls = await dem.locator('.controls').boundingBox();
     expect(seaBox.y + seaBox.height).toBeLessThanOrEqual(demControls.y);
     await dem.screenshot({path:'data/screenshots/globe-elevation-sea-curve.png'});
+    // With the menu open too, the curve stacks above it rather than under it.
+    const menuBox = await dem.locator('#settings-menu').boundingBox();
+    expect(seaBox.y + seaBox.height).toBeLessThanOrEqual(menuBox.y + 1);
+    // On a laptop-width window the curve and the open inspector do not overlap.
+    await dem.setViewportSize({width: 1000, height: 800});
+    if (await dem.locator('#info-toggle').getAttribute('aria-expanded') !== 'true') await dem.locator('#info-toggle').click();
+    const seaNarrow = await dem.locator('#sea-overlay').boundingBox();
+    const inspectorNarrow = await dem.locator('.inspector').boundingBox();
+    expect(seaNarrow.x + seaNarrow.width).toBeLessThanOrEqual(inspectorNarrow.x);
+    await dem.setViewportSize({width: 1280, height: 1000});
     await dem.locator('#sea-chart').click();
     await expect(dem.locator('#sea-overlay')).toBeHidden();
     // The curve departure is a box on top of the slider; at a grid stop it adds nothing.

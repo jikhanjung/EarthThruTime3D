@@ -47,8 +47,26 @@ def parse(text):
     return entries
 
 
+def check(entries, source):
+    """Refuse what msgfmt refuses: a msgid given twice, or one left untranslated.
+
+    The sorted table keeps only one of two equal keys and would silently drop the other
+    translation, so a duplicate is an error rather than a warning; an empty msgstr would
+    make Django fall back to Korean on the English page."""
+    seen, problems = set(), []
+    for msgid, msgstr in entries:
+        if msgid in seen:
+            problems.append(f'duplicate msgid: {msgid[:60]!r}')
+        seen.add(msgid)
+        if msgid and not msgstr.replace('\0', ''):
+            problems.append(f'empty translation: {msgid[:60]!r}')
+    if problems:
+        sys.exit(f'{source}:\n  ' + '\n  '.join(problems))
+
+
 def compile_po(source, target):
     entries = sorted(parse(source.read_text(encoding='utf-8')))
+    check(entries, source)
     ids = b''.join(e[0].encode('utf-8') + b'\0' for e in entries)
     strs = b''.join(e[1].encode('utf-8') + b'\0' for e in entries)
     count = len(entries)

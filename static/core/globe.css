@@ -111,7 +111,7 @@ summary{cursor:pointer;color:#c9dce2}
   .era-select{max-width:9.5rem;font-size:.7rem}
   #frame-number{display:none}
   .timeline-labels>span:nth-child(2){display:none}
-  .sea-overlay{left:8px;right:8px;width:auto;bottom:calc(var(--controls-space,200px) + 8px);padding:10px 12px 8px}
+  .sea-overlay{left:8px;right:8px;width:auto;bottom:calc(var(--controls-space,200px) + 8px + var(--menu-space,0px));padding:10px 12px 8px}
   .sea-overlay .chart-legend{display:none}
   .map-page footer{padding:2px 8px;font-size:.62rem;gap:8px}
   .map-page footer nav{gap:8px}
@@ -135,8 +135,10 @@ summary{cursor:pointer;color:#c9dce2}
 /* The long-term sea-level curve floats over the map above the control panel, opened
    from the toolbar, so the panel stays low and the sphere large. It no longer sits
    under the slider, so it carries its own ends and a mark at the chosen stop. */
-.sea-overlay{position:absolute;left:12px;bottom:calc(var(--controls-space,220px) + 10px);z-index:2;margin:0;
-             width:min(620px,calc(100% - 24px));padding:12px 16px 8px;background:#0b1f28eb;
+.sea-overlay{position:absolute;left:12px;bottom:calc(var(--controls-space,220px) + 10px + var(--menu-space,0px));z-index:2;margin:0;
+             /* Narrower than the map minus the inspector's column, so the two never overlap
+                on a laptop of about 1000px; the menu, when open, pushes it up instead. */
+             width:min(620px,calc(100% - 24px),calc(100% - 380px));padding:12px 16px 8px;background:#0b1f28eb;
              border:1px solid #29434a;border-radius:14px;box-shadow:0 8px 28px #0008;backdrop-filter:blur(6px)}
 .sea-overlay-title{font-size:.78rem;color:#c9dce2;margin:0 0 6px}
 .sea-overlay .sea-chart{margin-bottom:22px}
