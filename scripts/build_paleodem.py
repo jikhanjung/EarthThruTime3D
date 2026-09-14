@@ -13,9 +13,13 @@ two renders differ by one grey level. Pass --bits 12 for the finer set.
 The DEM is bilinearly resampled to the texture grid before the sea-level cut, so the
 coastline is the 0 m contour of the grid rather than a staircase of cells.
 
-The 1° grids carry nothing beyond 1024 wide. For a sharper texture point --source at
-the 6-minute grids and ask for --width 2048; slices are matched by age, so the file
-names need not be the ones the catalogue lists.
+The 1° grids carry nothing beyond 1024 wide: at 2048 every cell is a block six pixels
+across, and the Caspian comes out as Lego. So the 6-minute grids are used whenever
+they have been fetched (`scripts/fetch_paleodem.py` unpacks them beside the 1° set),
+and the 1° set only when they have not; --source overrides either way. The pinned
+6-minute archive holds all 109 slices, 385.2 and 390.5 Ma rounded to whole numbers,
+which the lookup matches by age, so the file names need not be the ones the catalogue
+lists.
 """
 import argparse
 import json
@@ -62,6 +66,17 @@ def locate(directory, item):
     raise SystemExit(f"No grid for {item['id']} ({wanted} Ma) in {directory}")
 
 
+def default_source(catalogue):
+    """The 6-minute grids when they have been fetched, else the catalogue's 1° set."""
+    for asset in json.loads((ROOT / "sources/paleodem.json").read_text())["assets"]:
+        if "6min" in asset["path"] and "unzip" in asset:
+            unpacked = (ROOT / asset["path"]).parent / asset["unzip"]
+            for directory in sorted(unpacked.glob("*/")):
+                if any(directory.glob("*.nc")):
+                    return directory
+    return ROOT / catalogue["directory"]
+
+
 def resample(z, width=FIELD_WIDTH):
     height = width // 2
     rows, cols = np.mgrid[0:height, 0:width]
@@ -84,13 +99,15 @@ def texture(z, width=FIELD_WIDTH, bits=12):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--out", default=ROOT / "data/derived/paleodem", type=Path)
-    parser.add_argument("--source", type=Path, help="directory of grids; default the catalogue's 1° set")
+    parser.add_argument("--source", type=Path,
+                        help="directory of grids; default the 6-minute set when fetched, else the 1° set")
     parser.add_argument("--width", type=int, default=FIELD_WIDTH, choices=(1024, 2048, 4096))
     parser.add_argument("--bits", type=int, default=8, choices=(8, 12), help="height precision")
     parser.add_argument("ids", nargs="*", help="slice ids to build; default all")
     args = parser.parse_args()
     catalogue = json.loads(CATALOGUE.read_text())
-    directory = args.source or ROOT / catalogue["directory"]
+    directory = args.source or default_source(catalogue)
+    print(f"grids from {directory.relative_to(ROOT) if directory.is_relative_to(ROOT) else directory}")
     args.out.mkdir(parents=True, exist_ok=True)
     for item in catalogue["maps"]:
         if args.ids and item["id"] not in args.ids:
