@@ -145,6 +145,15 @@ def ice_path(item):
     return derived_path(item, "ice.png")
 
 
+def ice_sources():
+    """Where each grid's ice mask came from, as scripts/build_ice.py wrote it beside the masks:
+    natural-earth, atlas, or limit for a cap at a modelled ice latitude. Empty until built."""
+    path = Path(settings.PALEODEM_DERIVED_DIR) / "ice-sources.json"
+    if not path.exists():
+        return {}
+    return json.loads(path.read_text()).get("grids", {})
+
+
 def temperature_path(item):
     """Surface air temperature texture from the Scotese 2021 maps, built for the grids."""
     return derived_path(item, "temp.png")
@@ -646,11 +655,13 @@ def globe(request):
     source = mask_source(request)
     climate = {"curve": [], "stops": {}}
     sea = {"long": [], "pleistocene": [], "stops": {}}
+    kinds = {}
     if enabled():
         document = catalogue(source)
         if source == "paleodem2018":
             climate = temperature_curve()
             sea = sealevel_curve()
+            kinds = ice_sources()
         if source == "scotese2002":
             entries = [(item, _(korean), item["image_label"],
                         BOUNDS[item["id"].removeprefix("scotese-")],
@@ -667,6 +678,7 @@ def globe(request):
         for item, korean, title, bounds, url, link in entries:
             pieces_by_frame[item["id"]] = piece_report(item)
             given = climate["stops"].get(item["id"])
+            iced = source == "paleodem2018" and ice_path(item).exists()
             frames.append({"id": item["id"], "label": korean, "title": title,
                            "age": item["age_ma"], "bounds": bounds, "url": url,
                            "relief": source_of(item) == "paleodem2018",
@@ -674,8 +686,10 @@ def globe(request):
                                     if given and temperature_path(item).exists() else None),
                            "mean_c": given["mean_c"] if given else None,
                            "sea_m": sea["stops"].get(item["id"]),
-                           "ice": (reverse("globe-ice", args=[item["id"]])
-                                   if source == "paleodem2018" and ice_path(item).exists() else None),
+                           "ice": reverse("globe-ice", args=[item["id"]]) if iced else None,
+                           # natural-earth, atlas, or limit: a cap at a modelled ice latitude,
+                           # which the page flags as a limit rather than an outline.
+                           "ice_kind": kinds.get(item["id"]) if iced else None,
                            "field": (reverse("globe-field", args=[item["id"]])
                                      if field_path(item).exists() else None),
                            "names": landmass_names(pieces_by_frame[item["id"]]),

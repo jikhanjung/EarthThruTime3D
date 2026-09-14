@@ -696,6 +696,19 @@ class PaleodemTests(TestCase):
         frames = {frame['id']: frame for frame in self.client.get('/', {'masks': 'paleodem2018'}).context['frames']}
         self.assertEqual(frames['paleodem-3000']['ice'], '/globe/ice/paleodem-3000.png')
         self.assertIsNone(frames['paleodem-2000']['ice'])
+        # The kind of each mask rides along from the builder's sidecar: a cap at a modelled
+        # limit is flagged so the page can say it is not an outline.
+        self.assertIsNone(frames['paleodem-3000']['ice_kind'])
+        Path(self.dem.name, 'ice-sources.json').write_text(json.dumps(
+            {'grids': {'paleodem-3000': 'atlas', 'paleodem-1400': 'limit'}}))
+        capped = next(item for item in globe_module.catalogue('paleodem2018')['maps'] if item['id'] == 'paleodem-1400')
+        globe_module.ice_path(capped).write_bytes(b'png')
+        response = self.client.get('/', {'masks': 'paleodem2018'})
+        frames = {frame['id']: frame for frame in response.context['frames']}
+        self.assertEqual(frames['paleodem-3000']['ice_kind'], 'atlas')
+        self.assertEqual(frames['paleodem-1400']['ice_kind'], 'limit')
+        self.assertIsNone(frames[present['id']]['ice_kind'])
+        self.assertContains(response, 'id="ice-limit-note"')
         self.assertFalse(self.client.get('/').context['ice_available'])
 
     def test_grids_borrow_the_pieces_of_the_nearest_atlas_map(self):

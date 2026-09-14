@@ -631,6 +631,9 @@ msgstr " · {delta} °C vs today"
 msgid "기온 색 범례"
 msgstr "Temperature colour key"
 
+msgid "이 시점의 얼음은 지도가 그린 윤곽이 아니라 모델의 한계선입니다. PaleoAtlas(2016)는 여기에 얼음을 그리지 않았지만 <a href=\"https://doi.org/10.1016/j.gr.2022.07.014\" target=\"_blank\" rel=\"noopener\">van der Meer et al. (2022)</a>의 대륙 빙하 부피 추정이 5백만 km³를 넘으므로(슬라이더 위 색띠의 음영 구간), 같은 논문의 빙하 위도 한계보다 극쪽을 덮개로 칠했습니다."
+msgstr "The ice at this stop is a modelled limit, not a drawn outline. The PaleoAtlas (2016) paints none here, but the land-ice estimate of <a href=\"https://doi.org/10.1016/j.gr.2022.07.014\" target=\"_blank\" rel=\"noopener\">van der Meer et al. (2022)</a> exceeds 5 million km³ (the shaded span on the strip), so a cap is drawn poleward of the same paper's ice-latitude limit."
+
 msgid "지표 기온 표시 중입니다. −30 °C 파랑에서 0 °C 밝은색을 지나 40 °C 빨강까지입니다. <a href=\"https://doi.org/10.1016/j.earscirev.2021.103503\" target=\"_blank\" rel=\"noopener\">Scotese (2021)</a>의 1° 기온 지도로, 기후 모델(<a href=\"https://doi.org/10.5194/cp-17-1483-2021\" target=\"_blank\" rel=\"noopener\">Valdes et al. 2021</a>) 결과를 동위원소·암석 지표에 맞춰 보정한 것입니다. 관측이 아니라 모델과 지표의 절충이며, 시점 사이는 보간입니다. 전 지구 평균은 지도의 면적 가중 평균입니다."
 msgstr "Showing surface air temperature: blue at −30 °C through pale at 0 °C to red at 40 °C. These are the 1° temperature maps of <a href=\"https://doi.org/10.1016/j.earscirev.2021.103503\" target=\"_blank\" rel=\"noopener\">Scotese (2021)</a>, climate-model output (<a href=\"https://doi.org/10.5194/cp-17-1483-2021\" target=\"_blank\" rel=\"noopener\">Valdes et al. 2021</a>) nudged to isotope and rock indicators. A compromise between model and proxies, not an observation; between stops it is interpolated. The global mean is the area-weighted mean of each map."
 

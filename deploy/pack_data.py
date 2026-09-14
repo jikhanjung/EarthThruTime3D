@@ -88,6 +88,13 @@ def pack_elevation(dem, dem_source, staging, files):
         shutil.copy2(ice, staging / "paleodem" / ice.name)
         files.append({"path": f"paleodem/{ice.name}", "bytes": (staging / "paleodem" / ice.name).stat().st_size,
                       "sha256": digest(staging / "paleodem" / ice.name), "map_id": item["id"]})
+    # Where each mask came from, written by the same script; optional like the masks.
+    kinds = dem_source / "ice-sources.json"
+    if kinds.exists():
+        shutil.copy2(kinds, staging / "paleodem" / kinds.name)
+        files.append({"path": "paleodem/ice-sources.json",
+                      "bytes": (staging / "paleodem" / kinds.name).stat().st_size,
+                      "sha256": digest(staging / "paleodem" / kinds.name), "dataset": "paleodem2018"})
 
 
 def main():

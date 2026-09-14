@@ -570,7 +570,16 @@ try {
     await expect(demGlobe).toHaveAttribute('data-frame', 'paleodem-3000', {timeout: 15000});
     await expect(demGlobe).toHaveAttribute('aria-busy', 'false');
     await expect(demGlobe).toHaveAttribute('data-ice', 'true');
+    await expect(demGlobe).toHaveAttribute('data-ice-kind', 'drawn');
     await expect(dem.locator('#ice-note')).toBeVisible();
+    await expect(dem.locator('#ice-limit-note')).toBeHidden();
+    // Where the atlas paints nothing but the paper's ice volume is above the strip's cut,
+    // a cap at the modelled limit, flagged as such.
+    await dem.locator('#era').selectOption(String(demFrames.findIndex(frame => frame.id === 'paleodem-1400')));
+    await expect(demGlobe).toHaveAttribute('data-frame', 'paleodem-1400');
+    await expect(demGlobe).toHaveAttribute('aria-busy', 'false');
+    await expect(demGlobe).toHaveAttribute('data-ice-kind', 'limit');
+    await expect(dem.locator('#ice-limit-note')).toBeVisible();
     await dem.locator('#era').selectOption(String(demFrames.findIndex(frame => frame.id === 'paleodem-2000')));
     await expect(demGlobe).toHaveAttribute('data-frame', 'paleodem-2000');
     await expect(demGlobe).toHaveAttribute('aria-busy', 'false');
