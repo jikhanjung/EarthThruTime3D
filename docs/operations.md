@@ -13,6 +13,14 @@ The shared guides are referenced privately through `.guides`; they are not copie
 - Admin access requires an active staff superuser. No automatic password bootstrap.
 - Data, uploads, environment files and private guides excluded from Git.
 - Shared PaleoBytes footer, version metadata, About/privacy/contact pages.
+- Offsite backup, daily at 04:20 on the m710q development host
+  (`system-operation/m710q/backup-earththrutime.sh`): the newest verified hourly DB
+  snapshot and `.env.django` are pulled from dolfinid and kept by date (30 days locally,
+  90 on the NAS, month-starts and 1 December for ever), and the development host's
+  `data/sources` and `data/derived` plus the newest release bundle are mirrored to the
+  NAS. The data is files, not rows, and is made on the development host, so the mirror
+  runs from there rather than from the server. Sessions are not stripped from the
+  snapshot: the database has no user accounts, only the administrator's.
 - Licence: MIT for the code (`LICENSE`), CC BY 4.0 for the data derived from CC BY
   sources, the unsettled masks under their sources' terms (`LICENSE-DATA.md`).
 - `/healthz`: `ok`/200 for a reachable database with migration history,
@@ -53,11 +61,9 @@ The shared guides are referenced privately through `.guides`; they are not copie
 
 ## Still outstanding
 
-- **Offsite backups.** Pre-deploy and hourly snapshots exist on the same host. No
-  offsite destination has been chosen, so the session-clearing and VACUUM steps that
-  belong to an offsite copy are not implemented either.
 - **Restore drill.** Rollback of code is exercised; restoring a database from a snapshot
-  has not been rehearsed.
+  has not been rehearsed. The database holds only administrator accounts and sessions,
+  so this waits until it holds something a reader would miss.
 - **Disk monitoring and backup-failure alerting.** The host was at 89% when the service
   was installed. A failed hourly snapshot is visible in the journal but nothing raises it.
 - **Social preview metadata and a touch icon.** The shell has a favicon only.
