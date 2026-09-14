@@ -59,8 +59,8 @@ msgstr "The models share nearly the same relative motions and differ in their ab
 msgid "라이선스"
 msgstr "Licence"
 
-msgid "프로젝트 라이선스는 아직 지정하지 않았습니다. 3D 렌더링에는 MIT 라이선스의 Three.js를 사용합니다."
-msgstr "No licence has been chosen for the project yet. The 3D rendering uses Three.js under the MIT licence."
+msgid "코드는 <a href=\"https://github.com/jikhanjung/EarthThruTime3D/blob/main/LICENSE\" target=\"_blank\" rel=\"noopener\">MIT 라이선스</a>입니다. 이 프로젝트가 CC BY 자료에서 만든 파생 자료(고도·기온·빙하 텍스처, 해수면 곡선, 이동장, 해안선·판 자료)는 <a href=\"https://creativecommons.org/licenses/by/4.0/\" target=\"_blank\" rel=\"noopener\">CC BY 4.0</a>이며, 원본 자료의 조건이 확정되지 않은 PaleoAtlas(2016)와 2002년판 마스크는 그 원본의 조건을 따릅니다. 자세한 구분은 <a href=\"https://github.com/jikhanjung/EarthThruTime3D/blob/main/LICENSE-DATA.md\" target=\"_blank\" rel=\"noopener\">LICENSE-DATA.md</a>에 있습니다. 3D 렌더링에는 MIT 라이선스의 Three.js를 사용합니다."
+msgstr "The code is under the <a href=\"https://github.com/jikhanjung/EarthThruTime3D/blob/main/LICENSE\" target=\"_blank\" rel=\"noopener\">MIT licence</a>. The data this project derives from CC BY sources (the elevation, temperature and ice textures, the sea-level curves, the motion fields, the coastline and plate data) is <a href=\"https://creativecommons.org/licenses/by/4.0/\" target=\"_blank\" rel=\"noopener\">CC BY 4.0</a>; the PaleoAtlas (2016) and 2002 masks, whose source terms are not settled, follow their sources' terms. <a href=\"https://github.com/jikhanjung/EarthThruTime3D/blob/main/LICENSE-DATA.md\" target=\"_blank\" rel=\"noopener\">LICENSE-DATA.md</a> draws the line. The 3D rendering uses Three.js under the MIT licence."
 
 msgid "개인정보"
 msgstr "Privacy"

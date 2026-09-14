@@ -27,6 +27,6 @@
 <p>{% blocktrans %}지구본에서 <strong>판 재구성</strong>을 켜면 회전 모델로 같은 시각의 대륙을 재구성해 겹쳐 그립니다. 위 지도 분할 결과와는 출처도 방법도 다르므로, 두 선이 어긋나는 것은 두 모델이 다르기 때문입니다.{% endblocktrans %}</p>
 {% for model in plate_citations %}<p>{{ model.citation }}<br>{% trans "기준틀" %}: {{ model.frame }} · <a href="{{ model.license_url }}" target="_blank" rel="noopener">{{ model.license }}</a></p>
 {% endfor %}<p>{% trans "두 모델은 상대 운동이 사실상 같고 절대 기준틀이 다릅니다. 저자들은 기후와 관련된 해석에는 고지자기 기준틀을 쓰라고 하며, 두 모델 모두 태평양 열점 운동이나 500만 년 이하의 분석에는 적합하지 않다고 밝히고 있습니다." %}</p>
-<h2>{% trans "라이선스" %}</h2><p>{% trans "프로젝트 라이선스는 아직 지정하지 않았습니다. 3D 렌더링에는 MIT 라이선스의 Three.js를 사용합니다." %}</p>
+<h2>{% trans "라이선스" %}</h2><p>{% blocktrans %}코드는 <a href="https://github.com/jikhanjung/EarthThruTime3D/blob/main/LICENSE" target="_blank" rel="noopener">MIT 라이선스</a>입니다. 이 프로젝트가 CC BY 자료에서 만든 파생 자료(고도·기온·빙하 텍스처, 해수면 곡선, 이동장, 해안선·판 자료)는 <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a>이며, 원본 자료의 조건이 확정되지 않은 PaleoAtlas(2016)와 2002년판 마스크는 그 원본의 조건을 따릅니다. 자세한 구분은 <a href="https://github.com/jikhanjung/EarthThruTime3D/blob/main/LICENSE-DATA.md" target="_blank" rel="noopener">LICENSE-DATA.md</a>에 있습니다. 3D 렌더링에는 MIT 라이선스의 Three.js를 사용합니다.{% endblocktrans %}</p>
 <h2>{% trans "개인정보" %}</h2><p>{% trans "현재 공개 회원가입이나 자료 업로드 기능은 없습니다. 관리자 계정과 로그인 세션은 실행 환경의 데이터베이스에 저장됩니다." %} <a href="{% url 'privacy' %}">{% trans "자세한 안내" %}</a></p>
 {% endblock %}

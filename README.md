@@ -92,4 +92,8 @@ Three.js 0.186.0과 MIT 라이선스는 `static/vendor/three/`에 포함됩니�
 원본은 `data/sources/`에 로컬 저장하며 Git에서 제외합니다. `scripts/fetch_scotese.py`,
 `scripts/fetch_paleodem.py --manifest sources/<이름>.json` 등으로 고정된 SHA-256과 함께 받습니다.
 PALEOMAP 원본 지도 이미지는 이용 조건을 확인하기 전까지 배포하지 않으며, 운영 이미지와 자료
-묶음에도 넣지 않습니다. 이 프로젝트의 소프트웨어 라이선스는 아직 지정하지 않았습니다.
+묶음에도 넣지 않습니다.
+
+코드는 [MIT 라이선스](LICENSE)입니다. 이 프로젝트가 CC BY 자료에서 만든 파생 자료는 CC BY 4.0이고,
+원본 조건이 확정되지 않은 PaleoAtlas·2002년판 마스크는 원본 조건을 따릅니다. 구분은
+[LICENSE-DATA.md](LICENSE-DATA.md)에 있습니다.
