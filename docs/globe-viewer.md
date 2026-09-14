@@ -244,14 +244,25 @@ of sea level is 0.4 million km³ of land ice, the paper's ratio; a sheet's area 
 its volume to the 0.8; the page cuts at the level whose enclosed area matches, so the
 ice is gone once the offset has melted the stop's whole volume, +59 m today and +73 m
 at 300 Ma, and grows by the same law below. That growth is even, from the drawn edge,
-and real sheets grow from centres, so the present, the one stop with a drawn lowstand,
-also carries the atlas's last glacial maximum as a second field, `<id>-ice-low.png`,
-served at `/globe/ice-low/<id>.png` and on the frame as `ice_low`: the page morphs the
-present field toward it over the first 130 m of fall, so the Laurentide and
-Fennoscandian sheets rise as the sea drops and −130 m shows the atlas's LGM, and follows
-the area law from there. The slider marks both ends of the ice at a stop, no ice at
-the melted volume and the glacial maximum where one is drawn; the readout adds the ice
-the offset stands for, never more melt than the stop holds.
+and real sheets grow from centres, so the present, the one stop with a dated
+deglaciation, carries it as lowstand slices: one field per thousand years from 6 to 24
+ka, `<id>-ice-low-<ka>.png`, served at `/globe/ice-low/<id>/<ka>.png` and on the frame
+as `ice_lows`, youngest first, each with the sea level of its age. The margins are the
+optimal North American isochrones of NADI-1 (Dalton et al. 2023, CC BY 4.0) and the
+most-credible Eurasian time slices of DATED-1 (Hughes et al. 2016, CC BY 3.0), both
+pinned in `sources/ice.json`, laid over today's ice, so Antarctica, Greenland, Iceland
+and the mountain glaciers keep their present extent; DATED-1 ends at 10 ka, after which
+Eurasia is ice-free. A slice's level is the Spratt & Lisiecki stack at its age, taken as
+the running minimum back from the present so the levels fall with age, and a slice that
+lowers nothing further is dropped, 20 and 25 ka among them; 24 ka is the deepest at
+−130 m, the anchor's glacial maximum. The page finds the two slices bracketing the
+offset, the frame's own field standing at 0 m, and mixes their distance fields; the
+intervals are a thousand years, so the linear mix stays close, and the Laurentide
+retreats toward Hudson Bay and parts from the Cordilleran as the sea rises, as the
+isochrones say. Below the deepest slice the area law takes over. The slider marks both
+ends of the ice at a stop, no ice at the melted volume and the glacial maximum where one
+is anchored; the readout adds the ice the offset stands for, never more melt than the
+stop holds.
 
 The slider's range is the ice a stop has, not a fixed ±150 m. Its ice-free end is exact
 everywhere, the stop's whole volume melted, +60 m today and +100 m at 445 Ma. Its
@@ -265,7 +276,8 @@ call each grid the average paleogeography of its interval; a grid outside every
 interval has no maximum end beyond the drawn ice, and a stop with no ice has no range
 and the slider rests. The builder writes both ends beside the masks as `range_m`, the
 page sets them on the slider at every stop and holds the applied offset inside them.
-`data-ice-cut` and `data-ice-low` on the stage carry the state for tests. The atlas prelude has no
+`data-ice-cut` and `data-ice-low`, the age in thousands of years of the slice shown, on
+the stage carry the state for tests. The atlas prelude has no
 heights and takes no offset. With the default 8-bit textures the height is in 59 m steps, so a
 fixed offset moves the coast in those steps; build with `--bits 12` for 3.7 m.
 

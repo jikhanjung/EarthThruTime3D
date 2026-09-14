@@ -12,7 +12,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
 import numpy as np  # noqa: E402
 
-from build_ice import HOLE_KM2, fill_holes, polar_smooth  # noqa: E402
+from build_ice import HOLE_KM2, WGS84_A, WGS84_E2, fill_holes, polar_laea_inverse, polar_smooth  # noqa: E402
 
 
 class FillHolesTests(unittest.TestCase):
@@ -54,6 +54,26 @@ class SmoothTests(unittest.TestCase):
         # the same bar spreads farther along a row near the pole than at the equator
         self.assertGreater((out[5] > 0.01).sum(), (out[900] > 0.01).sum())
         self.assertAlmostEqual(out[900].sum(), 200.0, delta=1.0)
+
+
+class ProjectionTests(unittest.TestCase):
+    def test_polar_laea_round_trip(self):
+        """Forward polar Lambert azimuthal equal-area on the ellipsoid (Snyder 1987, 24-15 to
+        24-19), then the builder's inverse, lands back on the point."""
+        import math
+        e2 = WGS84_E2
+        e = math.sqrt(e2)
+
+        def q_of(phi):
+            s = math.sin(phi)
+            return (1 - e2) * (s / (1 - e2 * s * s) - math.log((1 - e * s) / (1 + e * s)) / (2 * e))
+        q_pole = q_of(math.pi / 2)
+        for lon, lat in [(5.3, 60.4), (25.0, 67.0), (-10.0, 52.0), (90.0, 78.0), (-179.0, 71.0)]:
+            rho = WGS84_A * math.sqrt(q_pole - q_of(math.radians(lat)))
+            x, y = rho * math.sin(math.radians(lon)), -rho * math.cos(math.radians(lon))
+            back = polar_laea_inverse(np.array([[x, y]]))
+            self.assertAlmostEqual(back[0, 0], lon, places=6)
+            self.assertAlmostEqual(back[0, 1], lat, places=6)
 
 
 if __name__ == "__main__":

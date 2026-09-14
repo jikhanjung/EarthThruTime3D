@@ -22,10 +22,11 @@ wwolf는 001부터 셉니다. 그 전의 001–045는 링크와 본문 속 번�
 
 ## 작업 기록
 
+- [wwolf 006 — 현재의 저수위를 마지막 빙하기 물러남의 복원으로](20260914_wwolf_006_deglacial_slices.md)
+- [wwolf 005 — 빙하 마스크의 구멍 메우기와 두 방향 흐림](20260914_wwolf_005_ice_holes_and_smoothing.md)
 - [jikhanjung 052 — 도구 줄은 필수만, 나머지는 메뉴로](20260914_jikhanjung_052_settings_menu.md)
 - [jikhanjung 051 — v0.9.4 배포](20260914_jikhanjung_051_release_094.md)
 - [jikhanjung 050 — 확대하면 고도 격자를 3D로](20260914_jikhanjung_050_elevation_3d_relief.md)
-- [wwolf 005 — 빙하 마스크의 구멍 메우기와 두 방향 흐림](20260914_wwolf_005_ice_holes_and_smoothing.md)
 - [wwolf 004 — 빙하가 해수면을 따라간다](20260914_wwolf_004_ice_follows_sealevel.md)
 - [wwolf 003 — 해수면을 슬라이더로](20260914_wwolf_003_sealevel_slider.md)
 - [wwolf 002 — 아틀라스가 얼음을 그리지 않은 곳에 논문의 한계선 덮개](20260914_wwolf_002_ice_limit_cap.md)

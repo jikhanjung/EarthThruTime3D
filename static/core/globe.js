@@ -194,8 +194,11 @@ function loadTemperature(frame) {
 function loadIce(frame) {
   return frame.ice ? loadData(`${frame.id}:ice`, frame.ice) : Promise.resolve(null);
 }
-function loadIceLow(frame) {
-  return frame.ice_low ? loadData(`${frame.id}:ice-low`, frame.ice_low) : Promise.resolve(null);
+// A frame with a dated deglaciation carries lowstand slices, youngest first, each with
+// the sea level of its age; index -1 is the frame's own field, the slice at 0 m.
+function loadIceLow(frame, index) {
+  const low = frame.ice_lows && index >= 0 ? frame.ice_lows[index] : null;
+  return low ? loadData(`${frame.id}:ice-low:${low.age_ka}`, low.url) : Promise.resolve(null);
 }
 // The sea-level offset as a volume of ice, the paper's ratio, and the level of a frame's
 // ice field that encloses the area that volume implies: area goes as volume to the 0.8,
@@ -218,17 +221,21 @@ function iceCutFor(sheet, offset) {
   }
   return 1.01;
 }
-// What the offset does to one frame's ice: the cut, and for a frame with a drawn
-// lowstand how far toward it to morph. The present morphs to the atlas's last glacial
-// maximum over the first 130 m of fall and follows the area law from there.
+// What the offset does to one frame's ice: the cut, and for a frame with dated lowstand
+// slices which two bracket the offset and how far between them (`low`), the frame's own
+// field standing at 0 m and the area law taking over below the deepest slice.
 function iceState(frame, offset) {
-  if (!frame.ice) return { cut: 0.5, low: 0 };
-  if (frame.ice_low_sheet && offset < 0) {
-    const level = frame.ice_low_sheet.level_m;
-    if (offset >= level) return { cut: 0.5, low: offset / level };
-    return { cut: iceCutFor(frame.ice_low_sheet, offset - level), low: 1 };
+  const lows = frame.ice_lows || [];
+  if (!frame.ice || offset >= 0 || !lows.length) return { cut: iceCutFor(frame.ice_sheet, offset), low: null };
+  const index = lows.findIndex(low => low.level_m <= offset);
+  if (index < 0) {
+    const deepest = lows[lows.length - 1];
+    return { cut: iceCutFor(deepest, offset - deepest.level_m),
+             low: { from: lows.length - 1, to: lows.length - 1, t: 0, age: deepest.age_ka } };
   }
-  return { cut: iceCutFor(frame.ice_sheet, offset), low: 0 };
+  const upper = index ? lows[index - 1] : { level_m: 0, age_ka: 0 };
+  const t = (offset - upper.level_m) / (lows[index].level_m - upper.level_m);
+  return { cut: 0.5, low: { from: index - 1, to: index, t, age: upper.age_ka + (lows[index].age_ka - upper.age_ka) * t } };
 }
 function loadData(key, url) {
   // A field is data, not a picture: distance in red, height in green and blue.
@@ -362,14 +369,21 @@ async function selectStop(value, manual = false) {
       showIceKind(place);
       uniforms.iceCut.value.set(0.5, 0.5);
       uniforms.iceLowMix.value.set(0, 0);
+      uniforms.iceLowT.value = 0;
       stage.dataset.iceCut = '';
       stage.dataset.iceLow = '';
     } else {
-      const [first, second, warmA, warmB, iceA, iceB, lowA, lowB] = await Promise.all([
+      const stateA = iceState(place.from, seaOffset);
+      const stateB = iceState(place.to, seaOffset);
+      // One stop carries slices today, the present; a side without them loads nothing.
+      const sliced = stateA.low ? 'from' : stateB.low ? 'to' : null;
+      const low = sliced ? (sliced === 'from' ? stateA : stateB).low : null;
+      const [first, second, warmA, warmB, iceA, iceB, low0, low1] = await Promise.all([
         loadSurface(place.from), loadSurface(place.to),
         heated ? loadTemperature(place.from) : null, heated ? loadTemperature(place.to) : null,
         fielded ? loadIce(place.from) : null, fielded ? loadIce(place.to) : null,
-        fielded ? loadIceLow(place.from) : null, fielded ? loadIceLow(place.to) : null]);
+        fielded && low ? loadIceLow(place[sliced], low.from) : null,
+        fielded && low ? loadIceLow(place[sliced], low.to) : null]);
       if (ticket !== request) return;
       uniforms.surfaceA.value = first;
       uniforms.surfaceB.value = second;
@@ -377,13 +391,14 @@ async function selectStop(value, manual = false) {
       uniforms.tempB.value = warmB;
       applyIce(iceA, iceB);
       showIceKind(place);
-      const stateA = iceState(place.from, seaOffset);
-      const stateB = iceState(place.to, seaOffset);
-      uniforms.iceLow.value = lowA || lowB;
+      const own = sliced === 'from' ? iceA : iceB;
+      uniforms.iceLow0.value = low0 || own;
+      uniforms.iceLow1.value = low1 || own;
+      uniforms.iceLowT.value = low ? low.t : 0;
       uniforms.iceCut.value.set(stateA.cut, stateB.cut);
-      uniforms.iceLowMix.value.set(lowA ? stateA.low : 0, lowB ? stateB.low : 0);
+      uniforms.iceLowMix.value.set(sliced === 'from' && own ? 1 : 0, sliced === 'to' && own ? 1 : 0);
       stage.dataset.iceCut = (stateA.cut + (stateB.cut - stateA.cut) * place.blend).toFixed(3);
-      stage.dataset.iceLow = Math.max(lowA ? stateA.low : 0, lowB ? stateB.low : 0).toFixed(2);
+      stage.dataset.iceLow = low && own ? low.age.toFixed(1) : '';
       uniforms.blend.value = place.blend;
       uniforms.blank.value = 0;
     }
@@ -835,7 +850,9 @@ function globeMaterial() {
     // the page from the sea-level offset; and a drawn lowstand to morph toward, with how
     // far to go, for a side that has one (the present's last glacial maximum).
     iceCut: { value: new THREE.Vector2(0.5, 0.5) },
-    iceLow: { value: null },
+    iceLow0: { value: null },
+    iceLow1: { value: null },
+    iceLowT: { value: 0 },
     iceLowMix: { value: new THREE.Vector2(0, 0) },
     blend: { value: 0 }, mode: { value: 0 },
     // Shaded relief: texel spacing of the bound fields, and how much the slopes are
@@ -902,7 +919,9 @@ function globeMaterial() {
       uniform sampler2D iceB;
       uniform vec2 iceWeight;
       uniform vec2 iceCut;
-      uniform sampler2D iceLow;
+      uniform sampler2D iceLow0;
+      uniform sampler2D iceLow1;
+      uniform float iceLowT;
       uniform vec2 iceLowMix;
       uniform float blend;
       uniform int mode;
@@ -1041,9 +1060,10 @@ function globeMaterial() {
           vec2 uvIceB = surfaceUv + (1.0 - blend) * offsetIce;
           vec2 a = texture2D(iceA, uvIceA).rg;
           vec2 b = texture2D(iceB, uvIceB).rg;
-          // A side with a drawn lowstand morphs its field toward it as the sea falls.
-          a.x = mix(a.x, texture2D(iceLow, uvIceA).r, iceLowMix.x);
-          b.x = mix(b.x, texture2D(iceLow, uvIceB).r, iceLowMix.y);
+          // A side with dated lowstand slices shows the two bracketing the sea level,
+          // mixed; the intervals are a thousand years, so the linear mix stays close.
+          a.x = mix(a.x, mix(texture2D(iceLow0, uvIceA).r, texture2D(iceLow1, uvIceA).r, iceLowT), iceLowMix.x);
+          b.x = mix(b.x, mix(texture2D(iceLow0, uvIceB).r, texture2D(iceLow1, uvIceB).r, iceLowT), iceLowMix.y);
           vec2 ice = mix(a * iceWeight.x, b * iceWeight.y, blend);
           // The edge sits where the distance field crosses 0.5; the page moves the cut so
           // the enclosed area follows the ice volume the offset stands for. A missing mask

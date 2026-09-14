@@ -36,10 +36,14 @@ age. A metre of sea level is 1/SEA_PER_MKM3 million km3 of ice (the paper's rati
 sheet's area goes as its volume to the AREA_EXPONENT, and the page cuts at the level
 whose enclosed area matches, so the ice is gone at +2.5 m per million km3 of the
 stop's ice and grows by the same law below. A uniform advance from the drawn edge is a
-toy, real sheets grow from centres, so the present, the one stop with a drawn lowstand,
-also gets `paleodem-0000-ice-low.png`, the atlas's last glacial maximum as a distance
-field, and the page morphs toward it over the first LGM_M metres of fall, which raises
-the Laurentide and Fennoscandian sheets where nothing stands today.
+toy, real sheets grow from centres, so the present, the one stop with a dated
+deglaciation, also gets one field per thousand years of it, `paleodem-0000-ice-low-<ka>.png`:
+the optimal North American margins of NADI-1 (Dalton et al. 2023) and the most-credible
+Eurasian margins of DATED-1 (Hughes et al. 2016) laid over today's ice, so Antarctica,
+Greenland, Iceland and the mountain glaciers keep their present extent. Each slice
+carries the sea level of its age from the Spratt & Lisiecki (2016) stack, taken as the
+running minimum back from the present so the levels fall with age and a slice that
+lowers nothing is dropped; the page mixes the two slices bracketing the offset.
 
 Check: the glacial deposits Cao et al. (2018) compiled, tillites and diamictites since
 the Devonian, are rotated to each map's age with the PALEOMAP model and counted inside
@@ -66,6 +70,7 @@ from scipy import ndimage
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from atlas_motions import MODEL, PackedModel, carry  # noqa: E402
+from build_sealevel import pleistocene  # noqa: E402
 from segment_paleoatlas import cell_weights, ice, plate_raster  # noqa: E402
 
 MANIFEST = ROOT / "sources/ice.json"
@@ -78,7 +83,10 @@ AREA_EXPONENT = 0.8                          # a sheet's area goes as its volume
 TABLE_STEP = 8                               # the area table samples the field every 8 levels
 HOLE_KM2 = 500_000.0                         # an enclosed gap smaller than this inside a sheet is filled
 EARTH_KM2 = 510.1e6
-LGM_M = -130.0                               # the last glacial maximum's sea level, the present's drawn lowstand
+SLICES_KA = range(1, 26)                     # the deglacial slices offered, one per thousand years
+NADI = "nadi1/NADI-1 shapefiles Dalton et al. QSR/{age}ka_cal_OPTIMAL_NADI-1_Dalton_etal_QSR.shp"
+DATED = "dated1/DATED1 TimeSlices shp/TS{age}_mc.shp"   # from 25 to 10 ka; Eurasia is ice-free after
+WGS84_A, WGS84_E2 = 6378137.0, 2 / 298.257223563 - 1 / 298.257223563 ** 2
 ICE_LAT_COLUMN, ICE_VOLUME_COLUMN = 13, 22   # IceLat_degrees AVG, VolLandice_km3 AVG in Supplementary Table 1
 ATLAS = ROOT / "sources/paleomap-atlas-2016.json"
 GRIDS = ROOT / "sources/paleodem-slices.json"
@@ -89,18 +97,38 @@ DEPOSITS = ("PresentDay_LithData_Scotese2008_410-0Ma/"
             "PresentDay_GlacialDeposits_Scotese2008_410-0Ma.shp")
 
 
-def rasterise(path, width=WIDTH, height=HEIGHT):
+def rasterise(path, width=WIDTH, height=HEIGHT, transform=None):
+    """Every polygon part of a shapefile filled, in longitude/latitude unless `transform`
+    turns the file's coordinates into them first."""
     image = Image.new("L", (width, height), 0)
     draw = ImageDraw.Draw(image)
     reader = shapefile.Reader(str(path))
     for shape in reader.iterShapes():
-        parts = list(shape.parts) + [len(shape.points)]
+        points = np.asarray(shape.points, dtype=float)
+        if transform is not None:
+            points = transform(points)
+        parts = list(shape.parts) + [len(points)]
         for start, end in zip(parts, parts[1:]):
             ring = [((lon + 180.0) / 360.0 * width, (90.0 - lat) / 180.0 * height)
-                    for lon, lat in shape.points[start:end]]
+                    for lon, lat in points[start:end]]
             if len(ring) >= 3:
                 draw.polygon(ring, fill=255)
     return np.asarray(image)
+
+
+def polar_laea_inverse(points):
+    """North-polar Lambert azimuthal equal-area metres on WGS84 back to longitude and
+    latitude, DATED-1's projection (Snyder 1987, eqs. 24-15 to 24-19 and 3-18)."""
+    a, e2 = WGS84_A, WGS84_E2
+    e = math.sqrt(e2)
+    q_pole = (1 - e2) * (1 / (1 - e2) - math.log((1 - e) / (1 + e)) / (2 * e))
+    x, y = points[:, 0], points[:, 1]
+    longitude = np.degrees(np.arctan2(x, -y))
+    beta = np.arcsin(np.clip((q_pole - (x * x + y * y) / (a * a)) / q_pole, -1.0, 1.0))
+    latitude = (beta + (e2 / 3 + 31 * e2 ** 2 / 180 + 517 * e2 ** 3 / 5040) * np.sin(2 * beta)
+                + (23 * e2 ** 2 / 360 + 251 * e2 ** 3 / 3780) * np.sin(4 * beta)
+                + (761 * e2 ** 3 / 45360) * np.sin(6 * beta))
+    return np.column_stack([longitude, np.degrees(latitude)])
 
 
 def share(mask):
@@ -171,13 +199,35 @@ def area_table(field):
     return [round(float(weights[field >= level].sum() / total), 5) for level in range(0, 257, TABLE_STEP)]
 
 
-def lowstand(bundle, maps):
-    """The atlas's last glacial maximum as a distance field on the grid, the present's drawn lowstand."""
-    item = next(entry for entry in maps if entry["id"] == "paleoatlas-lgm")
-    rgb = np.asarray(Image.open(io.BytesIO(bundle.read(item["member"]))).convert("RGB")).astype(np.float32)
-    kept, _ = ice(rgb)
-    red = np.asarray(Image.fromarray((polar_smooth(kept) * 255).astype(np.uint8)).resize((WIDTH, HEIGHT), Image.BILINEAR))
-    return distance_field(red)
+def stack():
+    """Spratt & Lisiecki (2016) per thousand years: age in ka -> metres above present."""
+    manifest = json.loads(SEALEVEL.read_text())
+    path = next(ROOT / asset["path"] for asset in manifest["assets"] if asset["path"].endswith("spratt2016-noaa.txt"))
+    return {int(round(age)): level for age, level in pleistocene(path)}
+
+
+def deglacial(folders, grounded, levels, today, out):
+    """The last deglaciation as dated lowstand fields over today's ice, one per thousand
+    years that lowers the sea further: NADI-1's optimal North American margins and
+    DATED-1's most-credible Eurasian margins, each at its age's level from the stack."""
+    for stale in out.glob("paleodem-0000-ice-low*.png"):
+        stale.unlink()
+    slices, lowest = [], 0.0
+    for age in SLICES_KA:
+        level = levels[age]
+        if level >= lowest:
+            continue                     # the sea already stood lower at a younger slice
+        lowest = level
+        mask = grounded > 0
+        mask |= rasterise(folders["nadi1"].parent / NADI.format(age=age)) > 0
+        dated = folders["dated1"].parent / DATED.format(age=age)
+        if dated.exists():
+            mask |= rasterise(dated, transform=polar_laea_inverse) > 0
+        field = distance_field(mask.astype(np.uint8) * 255)
+        Image.fromarray(np.dstack([field, np.zeros_like(field), np.zeros_like(field)])).save(out / f"paleodem-0000-ice-low-{age}.png")
+        slices.append({"age_ka": age, "level_m": level, "volume": today - level / SEA_PER_MKM3, "areas": area_table(field)})
+        print(f"  {age:2d} ka  sea {level:7.1f} m  ice {share(field >= 128):5.2f}% of the globe -> paleodem-0000-ice-low-{age}.png")
+    return slices
 
 
 def nearest(maps, age):
@@ -293,11 +343,8 @@ def main():
     intervals = json.loads(ANCHORS.read_text())["intervals"]
     sheets = {"paleodem-0000": {"volume": today, "areas": area_table(field),
                                 "range_m": sea_range(0.0, today, intervals)}}
-    # The anchor: the present sheets grown for the last glacial maximum's 130 m, by the
-    # same power law, against what the atlas paints at the LGM (sea ice included).
-    grown = share(grounded) * ((today + 130.0 / SEA_PER_MKM3) / today) ** AREA_EXPONENT
-    print(f"check: at -130 m the present sheets would cover {grown:.1f}% of the globe; "
-          "the atlas paints 11.1% at the last glacial maximum, sea ice included")
+    print("deglacial slices over today's ice, NADI-1 and DATED-1 at the stack's sea level:")
+    lows = {"paleodem-0000": deglacial(folders, grounded, stack(), today, args.out)}
 
     atlas = json.loads(ATLAS.read_text())
     maps = atlas["maps"]
@@ -343,10 +390,6 @@ def main():
             volume = reference.get(int(round(item["age_ma"])), (None, 0.0))[1]
             sheets[item["id"]] = {"volume": volume, "areas": area_table(field),
                                   "range_m": sea_range(float(item["age_ma"]), volume, intervals)}
-        low = lowstand(bundle, maps)
-        Image.fromarray(np.dstack([low, np.zeros_like(low), np.zeros_like(low)])).save(args.out / "paleodem-0000-ice-low.png")
-        lows = {"paleodem-0000": {"level_m": LGM_M, "volume": today - LGM_M / SEA_PER_MKM3, "areas": area_table(low)}}
-        print(f"lowstand: the atlas's last glacial maximum covers {share(low >= 128):.1f}% of the globe -> paleodem-0000-ice-low.png")
     (args.out / "ice-check.json").write_text(json.dumps({
         "deposits": manifest["assets"][2]["cite"], "near_degrees": NEAR_DEGREES,
         "method": ("Glacial deposits at present-day coordinates ride the PALEOMAP plate under them "
@@ -369,9 +412,12 @@ def main():
                           "maximum from sources/ice-anchors.json (a full swing at an interglacial, half a swing "
                           "elsewhere, nothing outside the anchored icehouses) and the stop's whole ice melted "
                           f"at {SEA_PER_MKM3:g} m per million km3."),
-        "lows_method": ("A drawn lowstand where one exists: the present's is the atlas's last glacial maximum "
-                        f"at {LGM_M:g} m, as `<id>-ice-low.png`; the page morphs the field toward it over that "
-                        "fall and applies the area law beyond."),
+        "lows_method": ("Dated lowstands where a deglaciation is reconstructed: the present's is one field per "
+                        "thousand years of the last deglaciation, `<id>-ice-low-<ka>.png`, NADI-1's optimal "
+                        "North American margins and DATED-1's most-credible Eurasian margins over today's ice, "
+                        "each at its age's sea level from the Spratt & Lisiecki stack taken as the running "
+                        "minimum back from the present; the page mixes the two slices bracketing the offset "
+                        "and applies the area law below the deepest."),
         "grids": sources, "sheets": sheets, "lows": lows}, indent=1))
     print(f"{written} grids given the atlas's ice ({borrowed} borrowing a map at another age), "
           f"{capped} a cap at the paper's limit, {len(report)} maps read; "
