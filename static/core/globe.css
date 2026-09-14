@@ -22,10 +22,9 @@ header,main,footer{max-width:1440px}main{padding-top:26px;padding-bottom:6px}.vi
 
 /* The projection picker sits in the globe's own toolbar, so it has to be as compact as
    the buttons beside it rather than the full-width select in the inspector. */
-.toolbar-select{width:auto;padding:9px 10px}
+.toolbar-select{width:auto;padding:9px 10px;max-width:10rem}
 .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
 @media(max-width:850px){.toolbar-select{padding:8px 6px;max-width:104px}}
-
 /* Phone layout: the globe and the slider are the instrument, so they come first and
    share the first screen. The explorer's two columns collapse with display:contents so
    the inspector can move below the timeline, which its own grid row could not do. */

@@ -541,6 +541,8 @@ class PaleodemTests(TestCase):
         self.assertEqual(globe_module.mask_source(request), 'paleoatlas2016')
         self.assertNotContains(self.client.get('/'), '?masks=paleodem2018',
                                msg_prefix='no comparison link to a series that cannot be shown')
+        self.assertNotContains(self.client.get('/'), 'value="paleodem2018"',
+                               msg_prefix='nor a dataset choice')
         items = globe_module.series_items('paleodem2018')
         for item in items[1:]:
             self.build(item)
@@ -599,6 +601,11 @@ class PaleodemTests(TestCase):
         self.assertContains(response, '?masks=paleoatlas2016')
         self.assertContains(response, '?masks=scotese2002')
         self.assertEqual(sorted(dict(response.context['mask']['others'])), ['paleoatlas2016', 'scotese2002'])
+        # The panel's dataset picker offers all three, the shown one selected.
+        self.assertEqual([choice[0] for choice in response.context['mask']['choices']],
+                         ['paleoatlas2016', 'paleodem2018', 'scotese2002'])
+        self.assertContains(response, 'title="PALEOMAP PaleoDEM 고도 격자 (2018)" selected>고도 격자</option>')
+        self.assertContains(self.client.get('/'), 'title="PALEOMAP PaleoDEM 고도 격자 (2018)">고도 격자</option>')
 
     def test_health_counts_the_series_when_it_is_the_default(self):
         for item in globe_module.series_items('paleodem2018'):

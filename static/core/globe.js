@@ -1524,6 +1524,16 @@ function init() {
       location.assign(url.href);
     });
   }
+  if ($('dataset')) {
+    // Each dataset has its own stops, built by the server, so it is a new page too; the
+    // age carries across and lands on the nearest stop there.
+    $('dataset').addEventListener('change', () => {
+      const url = new URL(location.href);
+      url.searchParams.set('masks', $('dataset').value);
+      url.searchParams.set('age', String(stops[stop][3]));
+      location.assign(url.href);
+    });
+  }
   const askedAge = Number(new URL(location.href).searchParams.get('age'));
   if (new URL(location.href).searchParams.has('age') && Number.isFinite(askedAge)) {
     let nearest = 0;

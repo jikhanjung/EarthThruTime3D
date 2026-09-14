@@ -446,6 +446,16 @@ try {
   expect(perMyr[at + 1][3]).toBe(254);
   await expect(atlas.locator('#age')).toContainText('254');
   console.log('One million year spacing passed');
+  // The panel's dataset picker opens the elevation series at the same age and spacing.
+  if (await atlas.locator('#dataset option[value="paleodem2018"]').count()) {
+    await atlas.locator('#dataset').selectOption('paleodem2018');
+    await atlas.waitForURL(/masks=paleodem2018/);
+    await expect(atlasGlobe).toHaveAttribute('aria-busy', 'false', {timeout: 15000});
+    await expect(atlas.locator('#dataset')).toHaveValue('paleodem2018');
+    await expect(atlas.locator('#age')).toContainText('254');
+    expect(new URL(atlas.url()).searchParams.get('interval')).toBe('1');
+    console.log('Dataset picker passed');
+  }
   console.log('2016 atlas default passed');
   // The elevation series, where this checkout has built it: relief at 0 Ma with the
   // present-day ice, the surface and layer controls where they now live, the fossil
@@ -517,7 +527,8 @@ try {
     await dem.locator('#ice').click();
     // Past ice: the 300 Ma grid carries the sheet the atlas paints there, the 200 Ma grid none.
     await dem.locator('#era').selectOption(String(demFrames.findIndex(frame => frame.id === 'paleodem-3000')));
-    await expect(demGlobe).toHaveAttribute('data-frame', 'paleodem-3000');
+    // A freshly built texture's first load can take longer than the default wait.
+    await expect(demGlobe).toHaveAttribute('data-frame', 'paleodem-3000', {timeout: 15000});
     await expect(demGlobe).toHaveAttribute('aria-busy', 'false');
     await expect(demGlobe).toHaveAttribute('data-ice', 'true');
     await expect(dem.locator('#ice-note')).toBeVisible();

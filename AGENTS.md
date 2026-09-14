@@ -10,8 +10,9 @@
 - Before branching, and again before opening or updating a PR: `git fetch origin`, read
   the commits on `main` since your base and the open PRs and issues, and rebase or merge
   onto `main` first. Several people push to `main` on the same day; a PR that cannot
-  merge wastes the reviewer's time, and devlog numbers are assigned on `main`, so take
-  the next free number after fetching, not the next one you remember.
+  merge wastes the reviewer's time.
+- Devlogs are named `YYYYMMDD_{author}_{nnn}_{title}.md` with a per-author number (see
+  `devlog/README.md`); take your own next number, and add the entry to the index.
 - Keep scientific source observations, interpolated geometry and simulated results
   distinguishable. A 10,000-year display tick is not a claim of scientific accuracy.
 - Production runs on the dolfinid host (`deploy/README.md`). Changes to deployment must

@@ -5,10 +5,16 @@
 
 ## 파일명 규칙
 
-- 작업 결과: `YYYYMMDD_{nnn}_{title}.md` — 001부터 저장소 내 단조 증가 번호
-- 계획 문서: `YYYYMMDD_P{nn}_{title}.md` — P01부터 별도 번호
+- 작업 결과: `YYYYMMDD_{author}_{nnn}_{title}.md` — 작성자마다 따로 올리는 번호
+- 계획 문서: `YYYYMMDD_{author}_P{nn}_{title}.md` — 작성자마다 P01부터 별도 번호
+- author는 GitHub 계정 이름의 소문자입니다(`jikhanjung`, `wwolf`).
 - title은 영문 snake_case로 작성합니다.
+- 다른 기록을 가리킬 때는 파일 링크나 "jikhanjung 046"처럼 작성자와 번호를 함께 씁니다.
 
+작업자가 둘이 되어 2026-09-14부터 이 규칙을 씁니다. 같은 날 두 사람이 같은 다음 번호를
+잡는 일이 없도록 번호를 작성자별로 나눴습니다. jikhanjung은 공용 번호의 다음인 046부터,
+wwolf는 001부터 셉니다. 그 전의 001–045는 링크와 본문 속 번호 참조가 깨지지 않도록 이름을
+바꾸지 않았고, 035–044는 WWolf가, 나머지는 jikhanjung이 작성했습니다.
 `hanyang3d/devlog/`의 규칙을 따르되 번호는 이 저장소에서 독립적으로 부여합니다.
 배포 절차는 [deploy/README.md](../deploy/README.md), 운영 현황은
 [docs/operations.md](../docs/operations.md), 뷰어 구조는
@@ -16,6 +22,8 @@
 
 ## 작업 기록
 
+- [jikhanjung 047 — 도구 막대의 표시 자료 선택, devlog 작성자별 번호](20260914_jikhanjung_047_dataset_picker.md)
+- [jikhanjung 046 — v0.9.0 배포와 문서 현행화](20260914_jikhanjung_046_release_090.md)
 - [045 — PaleoDEM 스택 합치기, 고도 텍스처 8비트 기본](20260914_045_paleodem_8bit_and_merge.md)
 - [044 — 극을 둘러싼 다각형의 극관 채우기](20260913_044_polar_cap.md)
 - [043 — 과거의 빙하](20260913_043_past_ice.md)

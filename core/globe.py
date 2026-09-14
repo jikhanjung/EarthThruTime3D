@@ -48,6 +48,11 @@ MASK_SOURCES = {
                      "title": gettext_lazy("PALEOMAP PaleoDEM 고도 격자 (2018)")},
 }
 DEFAULT_MASK_SOURCE = "paleoatlas2016"
+# The toolbar's dataset picker, in its order: the default, the elevation series, then the
+# 2002 maps kept for comparison.
+DATASET_LABELS = {"paleoatlas2016": gettext_lazy("PaleoAtlas 2016"),
+                  "paleodem2018": gettext_lazy("고도 격자"),
+                  "scotese2002": gettext_lazy("웹 지도 2002")}
 # Below the oldest grid the elevation timeline continues with these atlas maps.
 DEM_OLDEST_MA = 540.0
 
@@ -689,6 +694,13 @@ def globe(request):
                    "source_maps_public": source_maps_public() and source == "scotese2002",
                    "mask": {"id": source, "title": str(MASK_SOURCES[source]["title"]),
                             "relief": source == "paleodem2018",
+                            # The panel's dataset picker: the default, the elevation series
+                            # once it is whole, then the 2002 maps kept for comparison.
+                            # It sits in the toolbar, so each choice has a short label and
+                            # keeps the full title for the tooltip.
+                            "choices": [(key, str(DATASET_LABELS[key]), str(MASK_SOURCES[key]["title"]))
+                                        for key in DATASET_LABELS
+                                        if key == source or key != "paleodem2018" or complete(key)],
                             # A comparison link only to a series that can be shown.
                             "others": [(key, str(value["title"])) for key, value
                                        in MASK_SOURCES.items()

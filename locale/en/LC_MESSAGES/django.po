@@ -161,6 +161,18 @@ msgstr "Reset view"
 msgid "드래그로 회전 · 스크롤 / 핀치로 확대"
 msgstr "Drag to rotate · scroll or pinch to zoom"
 
+msgid "표시 자료"
+msgstr "Dataset"
+
+msgid "PaleoAtlas 2016"
+msgstr "PaleoAtlas 2016"
+
+msgid "고도 격자"
+msgstr "Elevation"
+
+msgid "웹 지도 2002"
+msgstr "Web maps 2002"
+
 msgid "지질시대 선택"
 msgstr "Choose a period"
 
