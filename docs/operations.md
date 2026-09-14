@@ -17,8 +17,10 @@ The shared guides are referenced privately through `.guides`; they are not copie
   (`system-operation/m710q/backup-earththrutime.sh`): the newest verified hourly DB
   snapshot and `.env.django` are pulled from dolfinid and kept by date (30 days locally,
   90 on the NAS, month-starts and 1 December for ever), and the development host's
-  `data/sources` and `data/derived` plus the newest release bundle are mirrored to the
-  NAS. The data is files, not rows, and is made on the development host, so the mirror
+  `data/sources` and the newest release bundle are mirrored to the NAS, while
+  `data/derived` is kept as `rsync --link-dest` snapshots (daily for 14 days, weekly for
+  12 weeks, monthly for 12 months and every December for ever) mirrored to the NAS with
+  hard links preserved. The data is files, not rows, and is made on the development host, so the mirror
   runs from there rather than from the server. Sessions are not stripped from the
   snapshot: the database has no user accounts, only the administrator's.
 - Licence: MIT for the code (`LICENSE`), CC BY 4.0 for the data derived from CC BY

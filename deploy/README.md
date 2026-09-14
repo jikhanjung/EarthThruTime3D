@@ -137,7 +137,7 @@ sudo certbot certonly --webroot --webroot-path /srv/earththrutime3d/acme \
 
 원격지 사본은 개발 호스트 m710q가 매일 04:20에 만든다(`system-operation/m710q/backup-earththrutime.sh`).
 여기 `backups/`의 검증된 최신 스냅샷과 `.env.django`를 당겨 날짜별로 보관하고(로컬 30일·NAS 90일),
-개발 호스트의 `data/sources`·`data/derived`와 최신 릴리스 묶음을 NAS에 미러한다. 자료가 DB가
+개발 호스트의 `data/sources`와 최신 릴리스 묶음을 NAS에 미러하고, `data/derived`는 일(14일)·주(12주)·월(12개월, 12월분 영구) 스냅샷으로 보관한다. 자료가 DB가
 아니라 파일이고 개발 호스트에서 만들어지므로 미러의 출발점은 서버가 아니라 개발 호스트다.
 
 ## 환경 변수
