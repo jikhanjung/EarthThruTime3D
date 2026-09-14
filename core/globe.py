@@ -150,8 +150,14 @@ def ice_sources():
     natural-earth, atlas, or limit for a cap at a modelled ice latitude. Empty until built."""
     path = Path(settings.PALEODEM_DERIVED_DIR) / "ice-sources.json"
     if not path.exists():
-        return {}
-    return json.loads(path.read_text()).get("grids", {})
+        return {"grids": {}, "sheets": {}, "lows": {}}
+    document = json.loads(path.read_text())
+    return {key: document.get(key, {}) for key in ("grids", "sheets", "lows")}
+
+
+def ice_low_path(item):
+    """A drawn lowstand for the ice, the present's last glacial maximum; only where built."""
+    return derived_path(item, "ice-low.png")
 
 
 def temperature_path(item):
@@ -306,6 +312,10 @@ def viewer_strings():
         "meanTemperatureDelta": _(" · 현재보다 {delta} °C"),
         "seaLevel": _("장기 해수면 약 {value} (현재 대비){offset}"),
         "seaLevelOffset": _(" · 표시 보정 {value}"),
+        "seaLevelIce": _(" · 빙하 {value}백만 km³"),
+        "seaMarkNone": _("빙하 없음 {value}"),
+        "seaMarkMax": _("빙하 최대 {value}"),
+        "seaNoIce": _("이 시점에는 얼음이 없어 해수면을 옮길 수 없습니다"),
         "seaLevelNone": _("장기 해수면: 자료 없음 (540 Ma 이전)"),
         "noMap": _("지도 없음"),
         "interpolated": _("보간"),
@@ -655,7 +665,7 @@ def globe(request):
     source = mask_source(request)
     climate = {"curve": [], "stops": {}}
     sea = {"long": [], "pleistocene": [], "stops": {}}
-    kinds = {}
+    kinds = {"grids": {}, "sheets": {}, "lows": {}}
     if enabled():
         document = catalogue(source)
         if source == "paleodem2018":
@@ -689,7 +699,15 @@ def globe(request):
                            "ice": reverse("globe-ice", args=[item["id"]]) if iced else None,
                            # natural-earth, atlas, or limit: a cap at a modelled ice latitude,
                            # which the page flags as a limit rather than an outline.
-                           "ice_kind": kinds.get(item["id"]) if iced else None,
+                           "ice_kind": kinds["grids"].get(item["id"]) if iced else None,
+                           # The paper's ice volume and the area inside each level of the
+                           # mask's distance field, so the page can cut it where the sea-level
+                           # offset's volume says; and a drawn lowstand where one exists.
+                           "ice_sheet": kinds["sheets"].get(item["id"]) if iced else None,
+                           "ice_low": (reverse("globe-ice-low", args=[item["id"]])
+                                       if iced and item["id"] in kinds["lows"] and ice_low_path(item).exists() else None),
+                           "ice_low_sheet": (kinds["lows"].get(item["id"])
+                                             if iced and item["id"] in kinds["lows"] and ice_low_path(item).exists() else None),
                            "field": (reverse("globe-field", args=[item["id"]])
                                      if field_path(item).exists() else None),
                            "names": landmass_names(pieces_by_frame[item["id"]]),
@@ -774,6 +792,22 @@ def ice_mask(request, map_id):
         file = ice_path(item).open("rb")
     except FileNotFoundError:
         raise Http404("Ice mask not generated") from None
+    response = FileResponse(file, content_type="image/png")
+    response["Cache-Control"] = "private, max-age=3600"
+    return response
+
+
+@require_safe
+def ice_low(request, map_id):
+    if not enabled():
+        raise Http404
+    item = find_map(map_id)
+    if item is None:
+        raise Http404
+    try:
+        file = ice_low_path(item).open("rb")
+    except FileNotFoundError:
+        raise Http404("Ice lowstand not generated") from None
     response = FileResponse(file, content_type="image/png")
     response["Cache-Control"] = "private, max-age=3600"
     return response

@@ -1,0 +1,20 @@
+{
+  "title": "Glacio-eustatic swings of the icehouses, the operator's anchors for the ice slider's glacial-maximum end",
+  "note": "Peak-to-trough sea-level swing in metres for each icehouse, from the literature. scripts/build_ice.py gives every grid inside an interval a glacial-maximum end: the full swing where the grid sits at an interglacial (the present, whose maximum the atlas draws) and half the swing elsewhere, since the PaleoDEM authors call each grid the average paleogeography of its interval. Grids outside every interval have no maximum end beyond the drawn ice. The ice-free end needs no anchor: it is the stop's whole ice volume melted at 2.5 m per million km3.",
+  "intervals": [
+    {"from_ma": 0, "to_ma": 0, "swing_m": 130, "full": true,
+     "cite": "Spratt, R. M. & Lisiecki, L. E. (2016) stack minimum about -130 m; Lambeck, K. et al. (2014) PNAS 111, 15296: 130-134 m at the Last Glacial Maximum. The atlas's LGM map is the drawn target."},
+    {"from_ma": 5, "to_ma": 1, "swing_m": 30,
+     "cite": "Miller, K. G. et al. (2020) Science Advances 6, eaaz1346: Pliocene to early Pleistocene glacio-eustatic swings of about 20-40 m before the mid-Pleistocene transition."},
+    {"from_ma": 34, "to_ma": 6, "swing_m": 50,
+     "cite": "Miller, K. G. et al. (2020): Oligocene-Miocene Mi events of 20-60 m, Mi3 at 13.8 Ma about 50 m; John, C. M. et al. (2011) EPSL 304, 455: 53-69 m across the middle Miocene transition; Katz, M. E. et al. (2008) Nature Geoscience 1, 329: more than 60 m at the Eocene-Oligocene transition."},
+    {"from_ma": 285, "to_ma": 260, "swing_m": 40,
+     "cite": "Rygel, M. C. et al. (2008) J. Sed. Res. 78, 500: tens of metres in the waning stages of the late Palaeozoic ice age."},
+    {"from_ma": 330, "to_ma": 290, "swing_m": 100,
+     "cite": "Rygel, M. C. et al. (2008): more than 100 m at the apex of the late Palaeozoic ice age, Pennsylvanian to early Permian."},
+    {"from_ma": 360, "to_ma": 335, "swing_m": 40,
+     "cite": "Rygel, M. C. et al. (2008): tens of metres in the early stages of the late Palaeozoic ice age."},
+    {"from_ma": 450, "to_ma": 440, "swing_m": 80,
+     "cite": "Finnegan, S. et al. (2011) Science 331, 903: Hirnantian glacio-eustatic fall of 70 m or more; Loi, A. et al. (2010) Palaeo3 296, 332: 40-125 m from high-latitude facies."}
+  ]
+}

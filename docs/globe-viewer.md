@@ -209,7 +209,42 @@ antialiased over the height's own screen-space change; the hypsometric colours f
 the new level, live as the slider moves, since the cut happens in the shader. A box
 beside it adds the published curve's departure from the datum the bracketing grids
 already carry, `curve(age) − mix(sea_m_from, sea_m_to, blend)`, zero at a grid stop,
-because adding the curve itself would count the slice's own sea level twice. The atlas prelude has no
+because adding the curve itself would count the slice's own sea level twice.
+
+The ice layer follows the same offset, so ice growth and sea-level fall read as one
+thing. Each ice mask's red channel is a signed distance to the drawn edge, 128 at the
+edge and 8 levels per degree, and the shader cuts it at `0.5 + rate × offset` instead of
+at the edge; a lower sea moves the cut outward, a higher one inward, and a mask missing
+on one side of a gap mixes toward zero, so a sheet recedes from its edge across that gap
+rather than fading. Where to cut is decided on the page from two things the builder
+writes in `ice-sources.json` and the frame carries as `ice_sheet`: the paper's land-ice
+volume at that age, and the share of the globe inside each level of the field. A metre
+of sea level is 0.4 million km³ of land ice, the paper's ratio; a sheet's area goes as
+its volume to the 0.8; the page cuts at the level whose enclosed area matches, so the
+ice is gone once the offset has melted the stop's whole volume, +59 m today and +73 m
+at 300 Ma, and grows by the same law below. That growth is even, from the drawn edge,
+and real sheets grow from centres, so the present, the one stop with a drawn lowstand,
+also carries the atlas's last glacial maximum as a second field, `<id>-ice-low.png`,
+served at `/globe/ice-low/<id>.png` and on the frame as `ice_low`: the page morphs the
+present field toward it over the first 130 m of fall, so the Laurentide and
+Fennoscandian sheets rise as the sea drops and −130 m shows the atlas's LGM, and follows
+the area law from there. The slider marks both ends of the ice at a stop, no ice at
+the melted volume and the glacial maximum where one is drawn; the readout adds the ice
+the offset stands for, never more melt than the stop holds.
+
+The slider's range is the ice a stop has, not a fixed ±150 m. Its ice-free end is exact
+everywhere, the stop's whole volume melted, +60 m today and +100 m at 445 Ma. Its
+glacial-maximum end comes from `sources/ice-anchors.json`, an operator-curated table of
+the icehouses' glacio-eustatic swings with their citations: 130 m at the Last Glacial
+Maximum, about 50 m across the Eocene–Oligocene and middle Miocene transitions, more
+than 100 m at the late Palaeozoic apex and tens of metres at its start and end, 70 m or
+more in the Hirnantian. A grid inside an interval gets the full swing where it sits at
+an interglacial, the present, and half the swing elsewhere, since the PaleoDEM authors
+call each grid the average paleogeography of its interval; a grid outside every
+interval has no maximum end beyond the drawn ice, and a stop with no ice has no range
+and the slider rests. The builder writes both ends beside the masks as `range_m`, the
+page sets them on the slider at every stop and holds the applied offset inside them.
+`data-ice-cut` and `data-ice-low` on the stage carry the state for tests. The atlas prelude has no
 heights and takes no offset. With the default 8-bit textures the height is in 59 m steps, so a
 fixed offset moves the coast in those steps; build with `--bits 12` for 3.7 m.
 
