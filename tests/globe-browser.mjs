@@ -530,18 +530,21 @@ try {
     await expect(demGlobe).toHaveAttribute('data-ice-kind', 'drawn');
     await expect(dem.locator('#ice-note')).toBeVisible();
     await expect(dem.locator('#ice-limit-note')).toBeHidden();
-    // Ice follows the sea-level offset: a lower sea cuts the field below its edge, a sea
-    // high enough to melt the stop's whole volume cuts it above everything, and the
-    // readout says how much ice the offset stands for.
+    // The slider's range is the ice this stop has: half the late Palaeozoic apex swing
+    // below, the whole volume melted above. A lower sea cuts the field below its edge; the
+    // top of the range cuts it above everything; the readout says how much ice that is.
     await expect(demGlobe).toHaveAttribute('data-ice-cut', '0.500');
-    await dem.locator('#sealevel').fill('-120');
+    await expect(dem.locator('#sealevel')).toHaveAttribute('min', '-50');
+    await expect(dem.locator('#sealevel')).toHaveAttribute('max', '80');
+    await expect(dem.locator('#sealevel-notes')).toContainText('−50 m');
+    await dem.locator('#sealevel').fill('-50');
     await dem.locator('#sealevel').dispatchEvent('input');
-    await expect(demGlobe).toHaveAttribute('data-sealevel', '-120');
+    await expect(demGlobe).toHaveAttribute('data-sealevel', '-50');
     expect(Number(await demGlobe.getAttribute('data-ice-cut'))).toBeLessThan(0.5);
     await expect(dem.locator('#sea-level')).toContainText('km³');
-    await dem.locator('#sealevel').fill('150');
+    await dem.locator('#sealevel').fill('80');
     await dem.locator('#sealevel').dispatchEvent('input');
-    await expect(demGlobe).toHaveAttribute('data-sealevel', '150');
+    await expect(demGlobe).toHaveAttribute('data-sealevel', '80');
     expect(Number(await demGlobe.getAttribute('data-ice-cut'))).toBeGreaterThan(1);
     await dem.locator('#sealevel').fill('0');
     await dem.locator('#sealevel').dispatchEvent('input');
@@ -557,11 +560,15 @@ try {
     await expect(demGlobe).toHaveAttribute('data-frame', 'paleodem-2000');
     await expect(demGlobe).toHaveAttribute('aria-busy', 'false');
     await expect(demGlobe).toHaveAttribute('data-ice', 'false');
+    // No ice here, so the slider has no range and rests.
+    await expect(dem.locator('#sealevel')).toBeDisabled();
     await dem.locator('#era').selectOption(String(demFrames.length - 1));
     await expect(demGlobe).toHaveAttribute('data-frame', 'paleodem-0000');
     // The present has a drawn lowstand, the atlas's glacial maximum: at -130 m the field
     // has morphed all the way to it, and the slider marks both ends of the ice.
     await expect(dem.locator('#sealevel-notes')).toContainText('−130 m');
+    await expect(dem.locator('#sealevel')).toHaveAttribute('min', '-130');
+    await expect(dem.locator('#sealevel')).toHaveAttribute('max', '60');
     await dem.locator('#sealevel').fill('-130');
     await dem.locator('#sealevel').dispatchEvent('input');
     await expect(demGlobe).toHaveAttribute('data-sealevel', '-130');

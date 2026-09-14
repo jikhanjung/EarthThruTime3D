@@ -310,6 +310,7 @@ def viewer_strings():
         "seaLevelIce": _(" · 빙하 {value}백만 km³"),
         "seaMarkNone": _("빙하 없음 {value}"),
         "seaMarkMax": _("빙하 최대 {value}"),
+        "seaNoIce": _("이 시점에는 얼음이 없어 해수면을 옮길 수 없습니다"),
         "seaLevelNone": _("장기 해수면: 자료 없음 (540 Ma 이전)"),
         "noMap": _("지도 없음"),
         "interpolated": _("보간"),

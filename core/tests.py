@@ -688,7 +688,7 @@ class PaleodemTests(TestCase):
         self.assertIsNone(frames['paleodem-3000']['ice_kind'])
         Path(self.dem.name, 'ice-sources.json').write_text(json.dumps(
             {'grids': {'paleodem-3000': 'atlas', 'paleodem-1400': 'limit'},
-             'sheets': {'paleodem-3000': {'volume': 29.4, 'areas': [0.2, 0.1, 0.0]}},
+             'sheets': {'paleodem-3000': {'volume': 29.4, 'areas': [0.2, 0.1, 0.0], 'range_m': [-50, 80]}},
              'lows': {present['id']: {'level_m': -130, 'volume': 75.5, 'areas': [0.3, 0.1, 0.0]}}}))
         globe_module.ice_low_path(present).write_bytes(b'png')
         capped = next(item for item in globe_module.catalogue('paleodem2018')['maps'] if item['id'] == 'paleodem-1400')
@@ -701,6 +701,7 @@ class PaleodemTests(TestCase):
         self.assertContains(response, 'id="ice-limit-note"')
         # The volume and area table ride along, and the drawn lowstand where one exists.
         self.assertEqual(frames['paleodem-3000']['ice_sheet']['volume'], 29.4)
+        self.assertEqual(frames['paleodem-3000']['ice_sheet']['range_m'], [-50, 80])
         self.assertIsNone(frames['paleodem-1400']['ice_sheet'])
         self.assertIsNone(frames['paleodem-3000']['ice_low'])
         self.assertEqual(frames[present['id']]['ice_low'], f"/globe/ice-low/{present['id']}.png")

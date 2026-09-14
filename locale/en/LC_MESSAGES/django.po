@@ -631,6 +631,9 @@ msgstr "no ice {value}"
 msgid "빙하 최대 {value}"
 msgstr "glacial maximum {value}"
 
+msgid "이 시점에는 얼음이 없어 해수면을 옮길 수 없습니다"
+msgstr "No ice at this stop, so sea level cannot be moved"
+
 msgid " · 표시 보정 {value}"
 msgstr " · display offset {value}"
 

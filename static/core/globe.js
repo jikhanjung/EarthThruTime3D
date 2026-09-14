@@ -472,9 +472,11 @@ function seaLevelAt(age) {
 // datum the bracketing slices already carry, which is what changes between slices.
 function seaLevelOffset(place, fielded) {
   if (!seaLevelControl || !fielded || place.mapless || !place.from.relief || !place.to.relief) return 0;
-  // The slider is a what-if in metres; the curve box adds the published curve's departure
-  // from the bracketing grids' own datum, zero at a grid stop.
-  const fixed = Number(seaLevelControl.value) || 0;
+  // The slider is a what-if in metres, held to the ice the stop has (see seaRange); the
+  // curve box adds the published curve's departure from the bracketing grids' own datum,
+  // zero at a grid stop.
+  const range = seaRange(place);
+  const fixed = Math.min(range[1], Math.max(range[0], Number(seaLevelControl.value) || 0));
   if (!seaLevelCurveToggle?.checked) return fixed;
   const now = seaLevelAt(place.age);
   const from = place.from.sea_m;
@@ -503,20 +505,37 @@ function showSeaLevel(place, offset) {
     : fmt(L.seaLevel, { value: signed(level), offset: change });
   stage.dataset.seaCurve = level == null ? '' : level.toFixed(0);
 }
-// The two ends of the ice at this stop, marked on the slider: no ice at all, which is
-// the stop's whole volume melted, and where a drawn glacial maximum exists, that.
+// The slider's range at a stop is the ice the stop has: from its glacial maximum, an
+// anchor from the literature, to its whole ice melted. Between two grids the ends slide
+// from one grid's to the other's. A stop with no ice has no range, and the slider rests.
+function seaRange(place) {
+  if (!place || place.mapless) return [0, 0];
+  const from = place.from.ice_sheet?.range_m || [0, 0];
+  const to = place.to.ice_sheet?.range_m || [0, 0];
+  const blend = place.blend || 0;
+  return [Math.round((from[0] + (to[0] - from[0]) * blend) / 10) * 10,
+          Math.round((from[1] + (to[1] - from[1]) * blend) / 10) * 10];
+}
+function showSeaSetting() {
+  if ($('sealevel-value')) $('sealevel-value').textContent = signed(Number(seaLevelControl.value) || 0);
+}
+// Give the slider the stop's range and mark its two ends: the glacial maximum, where
+// the anchors give one, and no ice at all, the stop's whole volume melted.
 function showSeaMarks(place) {
   const marks = $('sealevel-marks');
   const notes = $('sealevel-notes');
-  if (!marks || !notes) return;
-  const sheet = place.mapless ? null : (place.from.ice_sheet || place.to.ice_sheet);
-  const low = place.mapless ? null : (place.from.ice_low_sheet || place.to.ice_low_sheet);
+  if (!marks || !notes || !seaLevelControl) return;
+  const range = seaRange(place);
+  seaLevelControl.min = String(range[0]);
+  seaLevelControl.max = String(range[1]);
+  seaLevelControl.disabled = range[0] === range[1];
+  showSeaSetting();
   const entries = [];
-  if (sheet && sheet.volume > 0) entries.push([Math.round(sheet.volume * SEA_PER_MKM3 / 10) * 10, L.seaMarkNone]);
-  if (low) entries.push([low.level_m, L.seaMarkMax]);
+  if (range[0] < 0) entries.push([range[0], L.seaMarkMax]);
+  if (range[1] > 0) entries.push([range[1], L.seaMarkNone]);
   marks.replaceChildren(...entries.map(([value]) => new Option('', value)));
-  notes.textContent = entries.map(([value, text]) => fmt(text, { value: signed(value) })).join(' · ');
-  notes.hidden = entries.length === 0;
+  notes.textContent = entries.length ? entries.map(([value, text]) => fmt(text, { value: signed(value) })).join(' · ') : L.seaNoIce;
+  notes.hidden = false;
 }
 // Tick labels are HTML placed over the chart, because the charts stretch to the
 // slider's width and SVG text would stretch with them.
@@ -1548,9 +1567,8 @@ function init() {
   drawPleistocene();
   if (seaLevelControl) {
     seaLevelControl.value = '0';   // the page state is the authority, not a restored control
-    const showSetting = () => { if ($('sealevel-value')) $('sealevel-value').textContent = signed(Number(seaLevelControl.value)); };
-    showSetting();
-    seaLevelControl.addEventListener('input', () => { showSetting(); selectStop(stop, true); });
+    showSeaSetting();
+    seaLevelControl.addEventListener('input', () => { showSeaSetting(); selectStop(stop, true); });
     if (seaLevelCurveToggle) {
       seaLevelCurveToggle.checked = false;
       seaLevelCurveToggle.addEventListener('change', () => selectStop(stop, true));

@@ -48,6 +48,7 @@ Devonian, so the Ordovician goes unchecked.
 import argparse
 import io
 import json
+import math
 import sys
 import zipfile
 from pathlib import Path
@@ -65,6 +66,7 @@ from segment_paleoatlas import cell_weights, ice, plate_raster  # noqa: E402
 
 MANIFEST = ROOT / "sources/ice.json"
 SEALEVEL = ROOT / "sources/sealevel.json"
+ANCHORS = ROOT / "sources/ice-anchors.json"
 ICE_VOLUME_MKM3 = 5.0                        # the strip's cut: a fifth of today's land ice
 ICE_FIELD_SCALE = 8.0                        # levels per degree in the red channel, 128 at the edge
 SEA_PER_MKM3 = 2.5                           # metres of sea level per million km3 of ice, the paper's ratio
@@ -115,6 +117,21 @@ def distance_field(red):
     degrees = 360.0 / width      # the grid is square in degrees, so one figure serves both axes
     signed = (ndimage.distance_transform_edt(inside) - ndimage.distance_transform_edt(~inside)) * degrees
     return np.clip(128.0 + signed * ICE_FIELD_SCALE, 0, 255).astype(np.uint8)
+
+
+def sea_range(age, volume, intervals):
+    """The slider's two ends at a stop, in metres: the glacial maximum from the anchors, a
+    full swing where the grid sits at an interglacial and half elsewhere, and the stop's
+    whole ice melted at SEA_PER_MKM3 per million km3, rounded out to 10 m."""
+    if volume <= 0:
+        return [0, 0]
+    top = int(math.ceil(volume * SEA_PER_MKM3 / 10.0) * 10)
+    bottom = 0
+    for entry in intervals:
+        if entry["to_ma"] <= age <= entry["from_ma"]:
+            bottom = -int(round(entry["swing_m"] * (1.0 if entry.get("full") else 0.5) / 10.0) * 10)
+            break
+    return [bottom, top]
 
 
 def area_table(field):
@@ -242,7 +259,9 @@ def main():
     field = distance_field(grounded)
     Image.fromarray(np.dstack([field, shelves, np.zeros_like(field)])).save(args.out / "paleodem-0000-ice.png")
     today = reference[0][1]
-    sheets = {"paleodem-0000": {"volume": today, "areas": area_table(field)}}
+    intervals = json.loads(ANCHORS.read_text())["intervals"]
+    sheets = {"paleodem-0000": {"volume": today, "areas": area_table(field),
+                                "range_m": sea_range(0.0, today, intervals)}}
     # The anchor: the present sheets grown for the last glacial maximum's 130 m, by the
     # same power law, against what the atlas paints at the LGM (sea ice included).
     grown = share(grounded) * ((today + 130.0 / SEA_PER_MKM3) / today) ** AREA_EXPONENT
@@ -290,8 +309,9 @@ def main():
                 capped += 1
             field = distance_field(red)
             Image.fromarray(np.dstack([field, np.zeros_like(field), np.zeros_like(field)])).save(target)
-            sheets[item["id"]] = {"volume": reference.get(int(round(item["age_ma"])), (None, 0.0))[1],
-                                  "areas": area_table(field)}
+            volume = reference.get(int(round(item["age_ma"])), (None, 0.0))[1]
+            sheets[item["id"]] = {"volume": volume, "areas": area_table(field),
+                                  "range_m": sea_range(float(item["age_ma"]), volume, intervals)}
         low = lowstand(bundle, maps)
         Image.fromarray(np.dstack([low, np.zeros_like(low), np.zeros_like(low)])).save(args.out / "paleodem-0000-ice-low.png")
         lows = {"paleodem-0000": {"level_m": LGM_M, "volume": today - LGM_M / SEA_PER_MKM3, "areas": area_table(low)}}
@@ -314,6 +334,10 @@ def main():
                           f"{TABLE_STEP}. The page turns the sea-level offset into a volume at 1/{SEA_PER_MKM3:g} "
                           f"million km3 per metre, an area as volume to the {AREA_EXPONENT:g}, and cuts the field "
                           "at the level enclosing that area."),
+        "ranges_method": ("Each sheet's range_m is the sea-level slider's two ends at that stop: the glacial "
+                          "maximum from sources/ice-anchors.json (a full swing at an interglacial, half a swing "
+                          "elsewhere, nothing outside the anchored icehouses) and the stop's whole ice melted "
+                          f"at {SEA_PER_MKM3:g} m per million km3."),
         "lows_method": ("A drawn lowstand where one exists: the present's is the atlas's last glacial maximum "
                         f"at {LGM_M:g} m, as `<id>-ice-low.png`; the page morphs the field toward it over that "
                         "fall and applies the area law beyond."),
