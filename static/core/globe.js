@@ -659,6 +659,8 @@ function setProjection(name) {
   earth.add(grid);
   controls.enableRotate = globe;
   controls.enablePan = !globe;
+  // A flat sheet zooms toward the pointer, so a close look lands where the reader points.
+  controls.zoomToCursor = !globe;
   // One switch for turning: the camera orbits the globe, while a sheet turns its centre
   // meridian under a fixed camera.
   controls.autoRotate = spinning && globe;
@@ -899,6 +901,29 @@ function globeMaterial() {
   });
 }
 const FLAT_DISTANCE = 2.6;
+// How close the view is, 1 at the default distance and smaller in: the height above the
+// sphere against the default 2.45, or the distance to a sheet against its default.
+function zoomFactor() {
+  const distance = camera.position.distanceTo(controls.target);
+  return projection === 'globe'
+    ? THREE.MathUtils.clamp((distance - 1) / 2.45, 0.02, 1)
+    : Math.min(1, distance / FLAT_DISTANCE);
+}
+// Close in, a drag or a wheel step should move the surface about as far as it does from
+// the default distance, and names keep their size on screen instead of growing with it.
+let nameFactor = 1;
+function followZoom() {
+  const factor = zoomFactor();
+  controls.rotateSpeed = Math.max(0.05, factor);
+  controls.zoomSpeed = projection === 'globe' ? Math.max(0.1, Math.sqrt(factor)) : 1;
+  if (Math.abs(factor - nameFactor) < 0.005) return;
+  nameFactor = factor;
+  stage.dataset.zoom = factor.toFixed(2);
+  for (const sprite of nameLayer.children) {
+    const [width, height] = sprite.nameSize;
+    sprite.scale.set(width * factor, height * factor, 1);
+  }
+}
 const NAME_LIFT = 0.015;
 // Longitude as it sits on a flat sheet turned to `meridian`, in [-180, 180).
 function sheetLongitude(longitude) {
@@ -942,7 +967,9 @@ function nameSprite(text) {
   const sprite = new THREE.Sprite(new THREE.SpriteMaterial(
     { map: texture, transparent: true, depthTest: false, depthWrite: false }));
   const height = 0.075;
-  sprite.scale.set(height * canvas.width / canvas.height, height, 1);
+  // Kept off userData, which the name placement replaces wholesale.
+  sprite.nameSize = [height * canvas.width / canvas.height, height];
+  sprite.scale.set(sprite.nameSize[0] * nameFactor, height * nameFactor, 1);
   sprite.renderOrder = 2;
   return sprite;
 }
@@ -1331,13 +1358,15 @@ function resetView() {
   camera.position.set(0, globe ? 0.18 : 0, globe ? 3.45 : FLAT_DISTANCE);
   controls.target.set(0, 0, 0);
   setMeridian(0);
-  controls.minDistance = globe ? 1.65 : FLAT_DISTANCE * 0.3;
+  // Close enough to read a coastline: 0.06 above the unit sphere, or a twelfth of a sheet.
+  controls.minDistance = globe ? 1.06 : FLAT_DISTANCE * 0.08;
   controls.maxDistance = globe ? 5 : FLAT_DISTANCE * 2.2;
   controls.update();
 }
 function init() {
   scene = new THREE.Scene();
-  camera = new THREE.PerspectiveCamera(42, 1, 0.1, 100);
+  // The near plane has to sit well inside the closest zoom, or the surface is clipped.
+  camera = new THREE.PerspectiveCamera(42, 1, 0.005, 50);
   renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
   renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
   renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -1367,6 +1396,7 @@ function init() {
     const delta = Math.min((time - previous) / 1000, 0.1);
     previous = time;
     if (document.hidden) return;
+    followZoom();
     controls.update(delta);
     if (spinning && projection !== 'globe' && !reducedMotion) setMeridian(meridian + delta * 12);
     updateNameVisibility();
@@ -1511,7 +1541,7 @@ function init() {
     const keys = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', '+', '=', '-'];
     if (!keys.includes(event.key)) return;
     event.preventDefault();
-    const step = 0.12;
+    const step = 0.12 * zoomFactor();
     if (projection === 'globe') {
       if (event.key === 'ArrowLeft') earth.rotation.y -= step;
       if (event.key === 'ArrowRight') earth.rotation.y += step;
@@ -1520,8 +1550,8 @@ function init() {
     } else {
       // Left and right turn the sheet about the pole, as they turn the globe; up and down
       // slide the view.
-      if (event.key === 'ArrowLeft') setMeridian(meridian - 10);
-      if (event.key === 'ArrowRight') setMeridian(meridian + 10);
+      if (event.key === 'ArrowLeft') setMeridian(meridian - 10 * zoomFactor());
+      if (event.key === 'ArrowRight') setMeridian(meridian + 10 * zoomFactor());
       if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
         const shift = new THREE.Vector3(0, event.key === 'ArrowUp' ? 1 : -1, 0)
           .multiplyScalar(camera.position.z * 0.08);
@@ -1531,8 +1561,13 @@ function init() {
       }
     }
     if (['+', '=', '-'].includes(event.key)) {
-      camera.position.multiplyScalar(event.key === '-' ? 1.1 : 0.9);
-      camera.position.clampLength(controls.minDistance, controls.maxDistance);
+      // Step the height above the surface rather than the distance to the centre, so the
+      // steps stay even all the way down to the closest view.
+      const ground = projection === 'globe' ? 1 : 0;
+      const offset = camera.position.clone().sub(controls.target);
+      const next = ground + (offset.length() - ground) * (event.key === '-' ? 1.25 : 0.8);
+      offset.setLength(THREE.MathUtils.clamp(next, controls.minDistance, controls.maxDistance));
+      camera.position.copy(controls.target).add(offset);
     }
   });
   document.addEventListener('visibilitychange', () => { if (document.hidden) setPlaying(false); });

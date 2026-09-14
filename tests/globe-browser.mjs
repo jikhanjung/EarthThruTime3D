@@ -33,6 +33,15 @@ try {
   await page.mouse.move(canvas.x + canvas.width/2 + 130, canvas.y + canvas.height/2 + 25, {steps:8});
   await page.mouse.up();
   await page.mouse.wheel(0,-150);
+  // Zoom goes close enough to read a coastline, and the view still turns there.
+  await globe.focus();
+  for (let press = 0; press < 30; press++) await page.keyboard.press('+');
+  await expect.poll(async () => Number(await globe.getAttribute('data-zoom'))).toBeLessThan(0.05);
+  const close = await page.locator('#globe canvas').screenshot();
+  await page.keyboard.press('ArrowLeft');
+  await expect.poll(async () => Buffer.compare(close, await page.locator('#globe canvas').screenshot())).not.toBe(0);
+  await page.screenshot({path:'data/screenshots/globe-zoomed.png'});
+  await page.locator('#reset').click();
   // The grid starts on; the button turns it off and on again.
   await expect(page.locator('#grid')).toHaveAttribute('aria-pressed','true');
   await page.locator('#grid').click();
