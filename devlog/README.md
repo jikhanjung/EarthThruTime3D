@@ -22,6 +22,7 @@ wwolf는 001부터 셉니다. 그 전의 001–045는 링크와 본문 속 번�
 
 ## 작업 기록
 
+- [jikhanjung 054 — 3D 지형의 기울기와 방향 조작](20260914_jikhanjung_054_terrain_tilt.md)
 - [jikhanjung 053 — 선 레이어가 3D 지형을 따라간다](20260914_jikhanjung_053_lines_on_terrain.md)
 - [jikhanjung 052 — 도구 줄은 필수만, 나머지는 메뉴로](20260914_jikhanjung_052_settings_menu.md)
 - [jikhanjung 051 — v0.9.4 배포](20260914_jikhanjung_051_release_094.md)
