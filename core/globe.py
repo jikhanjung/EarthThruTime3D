@@ -155,9 +155,17 @@ def ice_sources():
     return {key: document.get(key, {}) for key in ("grids", "sheets", "lows")}
 
 
-def ice_low_path(item):
-    """A drawn lowstand for the ice, the present's last glacial maximum; only where built."""
-    return derived_path(item, "ice-low.png")
+def lows_of(kinds, item):
+    """The sidecar's lowstand slices for a grid; a sidecar from before the slices held one
+    drawn lowstand as a dict, which is stale and counts as none."""
+    lows = kinds["lows"].get(item["id"], [])
+    return lows if isinstance(lows, list) else []
+
+
+def ice_low_path(item, age):
+    """One dated lowstand field for the ice, a slice of the present's deglaciation at `age`
+    thousand years; only where built."""
+    return derived_path(item, f"ice-low-{age}.png")
 
 
 def temperature_path(item):
@@ -703,12 +711,12 @@ def globe(request):
                            "ice_kind": kinds["grids"].get(item["id"]) if iced else None,
                            # The paper's ice volume and the area inside each level of the
                            # mask's distance field, so the page can cut it where the sea-level
-                           # offset's volume says; and a drawn lowstand where one exists.
+                           # offset's volume says; and the dated lowstand slices where a
+                           # deglaciation is reconstructed, each with its sea level, youngest first.
                            "ice_sheet": kinds["sheets"].get(item["id"]) if iced else None,
-                           "ice_low": (reverse("globe-ice-low", args=[item["id"]])
-                                       if iced and item["id"] in kinds["lows"] and ice_low_path(item).exists() else None),
-                           "ice_low_sheet": (kinds["lows"].get(item["id"])
-                                             if iced and item["id"] in kinds["lows"] and ice_low_path(item).exists() else None),
+                           "ice_lows": ([dict(low, url=reverse("globe-ice-low", args=[item["id"], low["age_ka"]]))
+                                         for low in lows_of(kinds, item)
+                                         if ice_low_path(item, low["age_ka"]).exists()] if iced else None),
                            "field": (reverse("globe-field", args=[item["id"]])
                                      if field_path(item).exists() else None),
                            "names": landmass_names(pieces_by_frame[item["id"]]),
@@ -799,14 +807,14 @@ def ice_mask(request, map_id):
 
 
 @require_safe
-def ice_low(request, map_id):
+def ice_low(request, map_id, age):
     if not enabled():
         raise Http404
     item = find_map(map_id)
     if item is None:
         raise Http404
     try:
-        file = ice_low_path(item).open("rb")
+        file = ice_low_path(item, age).open("rb")
     except FileNotFoundError:
         raise Http404("Ice lowstand not generated") from None
     response = FileResponse(file, content_type="image/png")

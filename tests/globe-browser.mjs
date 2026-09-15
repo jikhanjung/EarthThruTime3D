@@ -700,18 +700,18 @@ try {
     await expect(dem.locator('#sealevel')).toBeDisabled();
     await dem.locator('#era').selectOption(String(demFrames.length - 1));
     await expect(demGlobe).toHaveAttribute('data-frame', 'paleodem-0000');
-    // The present has a drawn lowstand, the atlas's glacial maximum: at -130 m the field
-    // has morphed all the way to it, and the slider marks both ends of the ice.
+    // The present has dated lowstand slices, the last deglaciation: at -130 m the page
+    // shows the 24 ka slice, and the slider marks both ends of the ice.
     await expect(dem.locator('#sealevel-notes')).toContainText('−130 m');
     await expect(dem.locator('#sealevel')).toHaveAttribute('min', '-130');
     await expect(dem.locator('#sealevel')).toHaveAttribute('max', '60');
     await dem.locator('#sealevel').fill('-130');
     await dem.locator('#sealevel').dispatchEvent('input');
     await expect(demGlobe).toHaveAttribute('data-sealevel', '-130');
-    await expect(demGlobe).toHaveAttribute('data-ice-low', '1.00');
+    await expect(demGlobe).toHaveAttribute('data-ice-low', '24.0');
     await dem.locator('#sealevel').fill('0');
     await dem.locator('#sealevel').dispatchEvent('input');
-    await expect(demGlobe).toHaveAttribute('data-ice-low', '0.00');
+    await expect(demGlobe).toHaveAttribute('data-ice-low', '');
     // The fossil coastlines are offered over the grids as over the atlas.
     await dem.locator('#coastline').check();
     await expect.poll(async () => Number(await demGlobe.getAttribute('data-coastlines'))).toBeGreaterThan(0);

@@ -88,8 +88,8 @@ def pack_elevation(dem, dem_source, staging, files):
         shutil.copy2(ice, staging / "paleodem" / ice.name)
         files.append({"path": f"paleodem/{ice.name}", "bytes": (staging / "paleodem" / ice.name).stat().st_size,
                       "sha256": digest(staging / "paleodem" / ice.name), "map_id": item["id"]})
-        low = dem_source / f"{item['id']}-ice-low.png"     # a drawn lowstand, the present's glacial maximum
-        if low.exists():
+        # Dated lowstand slices, the present's deglaciation, one file per thousand years.
+        for low in sorted(dem_source.glob(f"{item['id']}-ice-low-*.png")):
             shutil.copy2(low, staging / "paleodem" / low.name)
             files.append({"path": f"paleodem/{low.name}", "bytes": (staging / "paleodem" / low.name).stat().st_size,
                           "sha256": digest(staging / "paleodem" / low.name), "map_id": item["id"]})

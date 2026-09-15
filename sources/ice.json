@@ -1,9 +1,9 @@
 {
-  "title": "Ice: Natural Earth 10 m glaciated areas and Antarctic ice shelves for the present, and the glacial deposits of Cao et al. 2018 as a check on the atlas-derived past",
+  "title": "Ice: Natural Earth 10 m glaciated areas and Antarctic ice shelves for the present, the dated margins of the last deglaciation (NADI-1, DATED-1) for the present's lowstand, and the glacial deposits of Cao et al. 2018 as a check on the atlas-derived past",
   "authors": "Natural Earth (naturalearthdata.com), version 4.1.0",
   "license": "Public domain (Natural Earth terms of use)",
   "retrieved": "2026-09-13",
-  "note": "The present day from Natural Earth: grounded ice (glaciers and ice sheets) and the floating Antarctic ice shelves as polygons in longitude/latitude; scripts/build_ice.py rasterises them onto the 0 Ma stop's texture grid. Every older grid takes the ice the 2016 PaleoAtlas paints on the nearest map, read by scripts/segment_paleoatlas.ice; no raster of the atlas is served. The third asset is not drawn: it is the compilation of glacial deposits (tillites, diamictites) of Cao et al. 2018, rotated to each map's age to count how many fall inside the drawn ice; see docs/globe-viewer.md \"Ice\".",
+  "note": "The present day from Natural Earth: grounded ice (glaciers and ice sheets) and the floating Antarctic ice shelves as polygons in longitude/latitude; scripts/build_ice.py rasterises them onto the 0 Ma stop's texture grid. Every older grid takes the ice the 2016 PaleoAtlas paints on the nearest map, read by scripts/segment_paleoatlas.ice; no raster of the atlas is served. NADI-1 and DATED-1 give the present stop its dated lowstand: one field per thousand years of the last deglaciation, the North American and Eurasian margins over today's ice, at the sea level of each age from the Spratt & Lisiecki stack in sources/sealevel.json. The deposits asset is not drawn: it is the compilation of glacial deposits (tillites, diamictites) of Cao et al. 2018, rotated to each map's age to count how many fall inside the drawn ice; see docs/globe-viewer.md \"Ice\".",
   "assets": [
     {
       "path": "data/sources/ice/ne_10m_glaciated_areas.zip",
@@ -18,6 +18,26 @@
       "bytes": 163651,
       "sha256": "1d421d2487e2721a6e0aee8187e008c9bd8f0adbf4a5297b8503f7bf3c30b04d",
       "unzip": "shelves"
+    },
+    {
+      "path": "data/sources/ice/NADI-1_shapefiles_Dalton_et_al_QSR.zip",
+      "url": "https://zenodo.org/api/records/8161764/files/NADI-1%20shapefiles%20Dalton%20et%20al.%20QSR.zip/content",
+      "bytes": 54725237,
+      "sha256": "cbfdc0c14a8bd08eb13036ca488ec611de7d2d9b61bed22f03aec2e272b4cb44",
+      "unzip": "nadi1",
+      "license": "Creative Commons Attribution 4.0 International (Zenodo record)",
+      "cite": "Dalton, A. S., Dulfer, H. E., Margold, M., Heyman, J., Clague, J. J., Froese, D. G., Gauthier, M. S., Hughes, A. L. C., Jennings, C. E., Norris, S. L., & Stoker, B. J. (2023). Deglaciation of the north American ice sheet complex in calendar years based on a comprehensive database of chronological data: NADI-1. Quaternary Science Reviews, 321, 108345. https://doi.org/10.1016/j.quascirev.2023.108345. Data: https://doi.org/10.5281/zenodo.8161764",
+      "note": "North American Deglacial Isochrones: the Laurentide, Cordilleran and Innuitian margins every 500 years from 25 to 1 ka as optimal, minimum and maximum polygons in WGS84 longitude/latitude. Only the OPTIMAL files at whole thousands of years are read."
+    },
+    {
+      "path": "data/sources/ice/DATED-1_TimeSlices_shp.zip",
+      "url": "https://store.pangaea.de/Publications/HughesA-etal_2015/DATED-1_TimeSlices_shp.zip",
+      "bytes": 11545303,
+      "sha256": "a916de31ff31b0bb63863b82d61a6be02659ecfe36a7cab0fdf00034b38be1f1",
+      "unzip": "dated1",
+      "license": "Creative Commons Attribution 3.0 Unported (PANGAEA record)",
+      "cite": "Hughes, A. L. C., Gyllencreutz, R., Lohne, Ø. S., Mangerud, J., & Svendsen, J. I. (2016). The last Eurasian ice sheets - a chronological database and time-slice reconstruction, DATED-1. Boreas, 45(1), 1-45. https://doi.org/10.1111/bor.12142. Data: https://doi.org/10.1594/PANGAEA.848117",
+      "note": "Time-slice margins of the British-Irish, Scandinavian and Svalbard-Barents-Kara ice sheets every thousand years from 25 to 10 ka (and 27, 30, 35, 40 ka) as most-credible, minimum and maximum polygons in a north-polar Lambert azimuthal equal-area projection on WGS84, which scripts/build_ice.py inverts. Only the mc files are read."
     },
     {
       "path": "data/sources/ice/Cao_etal_2018_GM.zip",
