@@ -5,6 +5,11 @@ host. Configuration and procedure live in `deploy/README.md` and `deploy/deploy.
 Builds happen on the development host; the server only loads the image and swaps.
 The shared guides are referenced privately through `.guides`; they are not copied.
 
+Current release: **v0.11.0**, deployed 2026-09-15. The runtime includes all 51 OPT1
+mantle frames and five India–Asia section/3D surface frames. Image and data hashes,
+the pre-deploy DB snapshot, health and public browser checks are recorded in
+[devlog 068](../devlog/20260915_jikhanjung_068_release_0110.md).
+
 ## Adopted now
 
 - Django 5.2 dependencies pinned; separate development and production settings.
