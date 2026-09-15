@@ -22,6 +22,7 @@ wwolf는 001부터 셉니다. 그 전의 001–045는 링크와 본문 속 번�
 
 ## 계획
 
+- [jikhanjung P05 — 맨틀 근사 중첩부터 단면·시간 통합까지](20260915_jikhanjung_P05_globe_mantle_approximate_overlay.md)
 - [jikhanjung P04 — 메인 globe에 맨틀과 인도–아시아 단면 통합](20260915_jikhanjung_P04_globe_mantle_section_integration.md)
 - [jikhanjung P03 — 지각 변형과 맨틀 대류 연결](20260915_jikhanjung_P03_crustal_deformation_mantle_coupling.md)
 - [jikhanjung P02 — 시간 범위: 마지막 빙기 한 주기 (13만 년)](20260915_jikhanjung_P02_last_glacial_cycle.md)
@@ -29,6 +30,9 @@ wwolf는 001부터 셉니다. 그 전의 001–045는 링크와 본문 속 번�
 
 ## 작업 기록
 
+- [jikhanjung 072 — v0.12.0 맨틀 통합 릴리스](20260915_jikhanjung_072_release_0120.md)
+- [jikhanjung 071 — 전 지구 맨틀·핵 표시와 시간·단면 연결](20260915_jikhanjung_071_globe_mantle_time_section.md)
+- [jikhanjung 070 — 80 Ma 메인 globe 맨틀 근사 중첩](20260915_jikhanjung_070_globe_mantle_overlay.md)
 - [jikhanjung 069 — OPT1·Müller·PALEOMAP 좌표계 정합 검사](20260915_jikhanjung_069_mantle_frame_alignment.md)
 - [jikhanjung 068 — v0.11.0: 맨틀과 인도–아시아 단면 릴리스](20260915_jikhanjung_068_release_0110.md)
 - [jikhanjung 067 — 인도–아시아 A–A′ 팝업과 3D 지표](20260915_jikhanjung_067_india_asia_section.md)

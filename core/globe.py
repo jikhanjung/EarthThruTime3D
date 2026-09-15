@@ -803,9 +803,13 @@ def globe(request):
         # to the whole series, not to a glacial cycle of it.
         frames, plan, deepest = windowed, {"interval_ma": None, "steps": 1}, None
     plan["window"] = window
+    from core.mantle import globe_overlay
+    stops = timeline(frames, plan, deepest)
+    overlay = (globe_overlay() if source in ("paleoatlas2016", "paleodem2018")
+               and not window and all(any(abs(stop[3] - age) < 1e-8 for stop in stops) for age in (80, 60, 40, 20, 0)) else None)
     return render(request, "core/home.html",
-                  {"frames": frames, "viewer_enabled": enabled(),
-                   "stops": timeline(frames, plan, deepest), "sampling": plan,
+                  {"frames": frames, "viewer_enabled": enabled(), "mantle_overlay": overlay,
+                   "stops": stops, "sampling": plan,
                    "window": window, "window_options": WINDOW_OPTIONS if windowed else None,
                    "sampling_choice": sampling_choice(plan)[0],
                    # The same boundaries name an in-between stop by its own age.

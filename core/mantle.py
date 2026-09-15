@@ -1,4 +1,4 @@
-"""Experimental published OPT1 surfaces; separate from the PALEOMAP surface model."""
+"""Published OPT1 surfaces and an explicitly approximate PALEOMAP globe overlay."""
 import hashlib
 import json
 from pathlib import Path
@@ -101,3 +101,32 @@ def mantle_asset(request, filename):
     response["Cache-Control"] = "public, max-age=31536000, immutable"
     response["X-Content-Type-Options"] = "nosniff"
     return response
+
+
+def globe_overlay():
+    """Only five audited source frames; partial or changed bundles fail closed."""
+    config = json.loads((settings.BASE_DIR / "annotations/mantle-overlay.json").read_text())
+    data = catalogue()
+    if not data or data.get("source_archive_sha256") != config["source_archive_sha256"]:
+        return None
+    frames = []
+    for expected in config["frames"]:
+        frame = next((f for f in data["frames"] if f["age_ma"] == expected["age_ma"]), None)
+        if frame is None:
+            return None
+        layers = {}
+        for name, digest in expected["layers_sha256"].items():
+            item = frame["layers"].get(name)
+            if item is None or item["sha256"] != digest:
+                return None
+            layers[name] = {k: item[k] for k in ("points", "indices", "bytes", "primitive", "sha256")}
+            layers[name]["url"] = reverse("mantle-asset", args=[item["file"]])
+        frames.append({"age_ma": expected["age_ma"], "rotation_matrix": expected["rotation_matrix"],
+                       "india_position_p95_deg": expected["india_position_p95_deg"], "layers": layers})
+    return {"frames": frames, "cutaway": config["cutaway"],
+            "strings": {"loading": _("{age} Ma 맨틀을 불러오는 중…"),
+                        "ready": _("{age} Ma · 다른 복원 모델의 근사 중첩"),
+                        "error": _("맨틀 자료를 불러오지 못했습니다. 다시 시도해 주세요."),
+                        "residual": _("인도 경계점 위치 차이 P95: {error}°"),
+                        "section": _("분홍 A–A′: OPT1 원본 단면을 근사 변환한 위치"),
+                        "unavailable": _("현재 시간 범위에서는 맨틀 중첩을 사용할 수 없습니다.")}}

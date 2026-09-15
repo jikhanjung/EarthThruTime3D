@@ -3,7 +3,8 @@
 This is the first implementation from [jikhanjung P03](../devlog/20260915_jikhanjung_P03_crustal_deformation_mantle_coupling.md).
 The [India–Asia A–A′ popup](india-asia-section.md) now adds an 80 Ma–present regional
 section, a PaleoDEM 3D comparison surface and a separately labelled local crust scenario.
-The `/mantle/` page displays published OPT1 surfaces, separately from the PALEOMAP globe.
+The `/mantle/` page remains a standalone source view. The new [80 Ma approximate
+overlay](globe-mantle-overlay.md) adds an explicitly approximate main-globe comparison.
 It does not calculate mantle convection, temperature, velocity, crustal deformation or uplift.
 
 ## Sources actually inspected

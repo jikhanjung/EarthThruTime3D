@@ -2,6 +2,8 @@ import * as THREE from 'three';
 import { OrbitControls } from '../vendor/three/OrbitControls.js';
 import { placeEquirectangular, placeMollweide, reproject } from './projection.js';
 import { RotationModel, turn } from './rotation.js';
+import { createMantleOverlay, CUT_UNIFORMS, CUT_SURFACE } from './mantle-overlay.js';
+let mantleOverlay = null;
 
 const $ = (id) => document.getElementById(id);
 const frames = JSON.parse($('globe-frames').textContent);
@@ -124,6 +126,7 @@ function periodAt(age) {
   return L.proterozoic;
 }
 function setPlaying(value) {
+  if (value && mantleOverlay?.isActive()) return;
   playing = value;
   clearTimeout(playTimer);
   $('play').setAttribute('aria-pressed', String(value));
@@ -288,6 +291,8 @@ function stopAt(value) {
            index: blend > 0.5 ? to : from, mapless: false };
 }
 function neighbourStop(direction) {
+  const age=mantleOverlay?.neighbourAge(direction);
+  if (age != null) return stops.findIndex(s=>Math.abs(s[3]-age)<1e-8);
   const marks = frameStops.filter((mark) => direction < 0 ? mark < stop : mark > stop);
   if (!marks.length) return direction < 0 ? 0 : stops.length - 1;
   return direction < 0 ? Math.max(...marks) : Math.min(...marks);
@@ -304,10 +309,12 @@ function periodLabel(place) {
   // A published map keeps its own label; a stop between two maps is named for its age.
   return place.blend === 0 ? place.from.label : periodAt(place.age);
 }
-async function selectStop(value, manual = false) {
+async function selectStop(value, manual = false, overlayManaged = false) {
+  if (!overlayManaged && mantleOverlay?.requestAge(stopAt(value).age)) return;
   if (manual) setPlaying(false);
   clearTimeout(playTimer);
   const place = stopAt(value);
+  if (overlayManaged) surfaceMesh.visible = false;
   stop = place.value;
   selected = place.index;
   const ticket = ++request;
@@ -854,13 +861,15 @@ function setMeridian(value) {
     if (lastPlace && nameLayer.visible) showNames(lastPlace, true);
   });
 }
-function setProjection(name) {
+function setProjection(name, refresh = true) {
   if (!PROJECTIONS[name] || name === projection) return;
+  mantleOverlay?.onProjection(name);
   projection = name;
   const globe = projection === 'globe';
   uniforms.projection.value = PROJECTIONS[projection].code;
   surfaceMesh.geometry.dispose();
   reliefDetailed = false;
+  uniforms.surfaceLineLift.value = .00085;
   surfaceMesh.geometry = globe
     ? new THREE.SphereGeometry(1, 96, 64)
     : new THREE.PlaneGeometry(...PROJECTIONS[projection].sheet, 1, 1);
@@ -885,7 +894,7 @@ function setProjection(name) {
   plateAge = null;
   fitCamera();
   resetView();
-  selectStop(stop);
+  if (refresh) selectStop(stop);
 }
 // Shared by both shaders: the vertex shader lifts the ground by the same height, carried
 // by the same travel field, that the fragment shader colours.
@@ -964,17 +973,26 @@ function terrainLineMaterial(colour, opacity) {
     transparent: true,
     vertexShader: `
       ${LIFT_UNIFORMS_GLSL}
+      uniform float surfaceLineLift;
+      varying vec3 vCutPosition;
       ${TRAVEL_GLSL}
       ${METRES_GLSL}
       ${LIFT_GLSL}
       void main() {
-        gl_Position = projectionMatrix * modelViewMatrix * vec4(position * terrainLift(position), 1.0);
+        vCutPosition = position;
+        vec3 attached = projection == 0 ? normalize(position) * (terrainLift(position) + surfaceLineLift) : position;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(attached, 1.0);
       }`,
     fragmentShader: `
+      ${CUT_UNIFORMS}
+      uniform float mantleSurfaceOpacity;
+      uniform vec3 mantleCamera;
       uniform vec3 colour;
       uniform float opacity;
       void main() {
-        gl_FragColor = vec4(colour, opacity);
+        ${CUT_SURFACE}
+        if ((mantleCutaway > 0.5 || mantleSurfaceOpacity < 1.0) && dot(vCutPosition, mantleCamera - vCutPosition) < 0.0) discard;
+        gl_FragColor = vec4(colour, opacity * mantleSurfaceOpacity);
         #include <colorspace_fragment>
       }`,
   });
@@ -983,6 +1001,9 @@ function globeMaterial() {
   const linear = (rgb) => new THREE.Color().setRGB(
     rgb[0] / 255, rgb[1] / 255, rgb[2] / 255, THREE.SRGBColorSpace);
   uniforms = {
+    mantleCutaway: { value: 0 }, mantleCutCentre: { value: new THREE.Vector3(1,0,0) },
+    mantleSurfaceOpacity: { value: 1 }, surfaceLineLift: { value: .00085 },
+    mantleCutCos: { value: 1 }, mantleCamera: { value: new THREE.Vector3() },
     surfaceA: { value: null }, surfaceB: { value: null },
     tempA: { value: null }, tempB: { value: null },
     iceA: { value: null }, iceB: { value: null },
@@ -1021,6 +1042,7 @@ function globeMaterial() {
     uniforms,
     vertexShader: `
       ${LIFT_UNIFORMS_GLSL}
+      varying vec3 vCutPosition;
       varying vec2 vUv;
       varying vec3 vGlobeNormal;
       ${TRAVEL_GLSL}
@@ -1032,9 +1054,12 @@ function globeMaterial() {
         // and faded in with the zoom, carried by the same motion as its colour. The sea
         // stays flat at its level, so a coastline is where the land leaves the water.
         vGlobeNormal = normalize(normalMatrix * normal);
+        vCutPosition = position;
         gl_Position = projectionMatrix * modelViewMatrix * vec4(position * terrainLift(position), 1.0);
       }`,
     fragmentShader: `
+      ${CUT_UNIFORMS}
+      uniform float mantleSurfaceOpacity;
       uniform sampler2D surfaceA;
       uniform sampler2D surfaceB;
       uniform sampler2D tempA;
@@ -1130,6 +1155,7 @@ function globeMaterial() {
         return true;
       }
       void main() {
+        ${CUT_SURFACE}
         vec2 surfaceUv;
         if (!locate(surfaceUv)) discard;
         vec3 colour;
@@ -1202,7 +1228,7 @@ function globeMaterial() {
         // Limb shading gives the sphere volume without reading height from colour. A
         // flat sheet has no limb, so it is left alone.
         if (projection == 0) colour *= 0.58 + 0.42 * pow(abs(vGlobeNormal.z), 0.45);
-        gl_FragColor = vec4(colour, 1.0);
+        gl_FragColor = vec4(colour, mantleSurfaceOpacity);
         #include <colorspace_fragment>
       }`,
   });
@@ -1234,14 +1260,18 @@ function updateRelief(factor) {
   const able = reliefWanted && projection === 'globe' && uniforms.mode.value >= 2 && uniforms.blank.value < 0.5;
   const strength = able ? 1 - THREE.MathUtils.smoothstep(factor, 0.12, 0.3) : 0;
   const was = uniforms.relief.value;
-  if (strength === was) return;
+  const detailed = projection === 'globe' && factor < .3;
+  if (strength === was && detailed === reliefDetailed) return;
   uniforms.relief.value = strength;
   stage.dataset.relief = strength.toFixed(2);
-  if ((strength > 0) !== reliefDetailed) {
-    reliefDetailed = strength > 0;
+  if (detailed !== reliefDetailed) {
+    reliefDetailed = detailed;
     surfaceMesh.geometry.dispose();
     surfaceMesh.geometry = new THREE.SphereGeometry(1, ...(reliefDetailed ? RELIEF_DETAIL : [96, 64]));
   }
+  const [segments, rings] = reliefDetailed ? RELIEF_DETAIL : [96,64];
+  uniforms.surfaceLineLift.value = 1 - Math.cos(Math.PI/segments)*Math.cos(Math.PI/(2*rings)) + .000002;
+  stage.dataset.lineLift = uniforms.surfaceLineLift.value.toFixed(7);
   if ((was > 0) !== (strength > 0)) {
     if ($('relief-note')) $('relief-note').hidden = strength === 0;
     // Tilting is a gesture of its own while the terrain stands, so the hint says so.
@@ -1415,8 +1445,8 @@ function updateNameVisibility() {
       sprite.getWorldPosition(position);
       facing = THREE.MathUtils.clamp((position.normalize().dot(toCamera) - 0.12) / 0.18, 0, 1);
     }
-    sprite.material.opacity = facing * (sprite.userData.fade ?? 1);
-    sprite.visible = sprite.material.opacity > 0.02;
+    sprite.material.opacity = facing * (sprite.userData.fade ?? 1) * uniforms.mantleSurfaceOpacity.value;
+    sprite.visible = sprite.material.opacity > 0.02 && !mantleOverlay?.cutsPoint(sprite.position);
   }
 }
 function plateEntry() {
@@ -1755,6 +1785,33 @@ function init() {
   earth.add(nameLayer);
   scene.add(earth);
   resetView();
+  const mantleConfig = JSON.parse($('globe-mantle-overlay')?.textContent ?? 'null');
+  mantleOverlay = createMantleOverlay({config: mantleConfig, earth, uniforms, stage, surfaceMaterial:surfaceMesh.material,
+    getCamera: tiltedView,
+    focus: centre => {earth.rotation.set(0,0,0);camera.position.copy(centre).multiplyScalar(3.2);controls.target.set(0,0,0);controls.update();},
+    capture: () => ({stop, projection, rotation:earth.quaternion.clone(), camera:camera.position.clone(),
+      target:controls.target.clone(), spinning, meridian, tiltAngle, tiltHeading}),
+    enter: async (age, first) => {
+      const target = stops.findIndex(entry=>Math.abs(entry[3]-age)<1e-8);
+      if (target < 0) throw new Error('80 Ma unavailable in this timeline');
+      setPlaying(false);
+      setProjection('globe',false);$('projection').value='globe';
+      spinning=false;controls.autoRotate=false;$('rotate').setAttribute('aria-pressed','false');
+      if (first) {
+        earth.rotation.set(0,0,0);
+        camera.position.copy(onSphere(mantleConfig.cutaway.longitude,mantleConfig.cutaway.latitude,3.2));
+        controls.target.set(0,0,0);controls.update();
+      }
+      await selectStop(target,true,true);
+      if (lastPlace?.age !== age || !status.classList.contains('loaded') || stage.getAttribute('aria-busy') === 'true') throw new Error('Surface unavailable');
+    },
+    restore: previous => {
+      setProjection(previous.projection,false);$('projection').value=previous.projection;
+      setMeridian(previous.meridian);setTilt(previous.tiltAngle,previous.tiltHeading);
+      earth.quaternion.copy(previous.rotation);camera.position.copy(previous.camera);controls.target.copy(previous.target);
+      spinning=previous.spinning;controls.autoRotate=spinning&&projection==='globe';
+      $('rotate').setAttribute('aria-pressed',String(spinning));controls.update();selectStop(previous.stop,true);
+    }});
   const observer = new ResizeObserver(fitCamera);
   observer.observe(stage);
   // The control panel changes height with the layers on show, which moves the framing.
@@ -1768,10 +1825,17 @@ function init() {
     controls.update(delta);
     if (spinning && projection !== 'globe' && !reducedMotion) setMeridian(meridian + delta * 12);
     updateNameVisibility();
-    renderer.render(scene, tiltedView());
+    const view = tiltedView();
+    if (uniforms.mantleCutaway.value > .5 || uniforms.mantleSurfaceOpacity.value < 1) {
+      earth.updateWorldMatrix(true,false);
+      uniforms.mantleCamera.value.copy(view.position);
+      earth.worldToLocal(uniforms.mantleCamera.value);
+    }
+    renderer.render(scene, view);
   });
   renderer.domElement.addEventListener('webglcontextlost', (event) => {
     event.preventDefault();
+    mantleOverlay?.leave(false);
     setPlaying(false);
     status.classList.remove('loaded');
     status.textContent = L.contextLost;
