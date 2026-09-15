@@ -668,6 +668,18 @@ try {
     await expect(dem.locator('#river-note')).toBeHidden();
     await dem.locator('#rivers').click();
     await expect(demGlobe).toHaveAttribute('data-rivers', 'true');
+    // Lowering the sea mixes in the field routed at the slider's lowest level, fully at
+    // the bottom of the range; back at the datum none of it shows.
+    await expect(demGlobe).toHaveAttribute('data-river-low', '0.00');
+    await dem.locator('#sealevel').fill('-130');
+    await dem.locator('#sealevel').dispatchEvent('input');
+    await expect(demGlobe).toHaveAttribute('data-river-low', '1.00');
+    await dem.locator('#sealevel').fill('-60');
+    await dem.locator('#sealevel').dispatchEvent('input');
+    await expect(demGlobe).toHaveAttribute('data-river-low', '0.46');
+    await dem.locator('#sealevel').fill('0');
+    await dem.locator('#sealevel').dispatchEvent('input');
+    await expect(demGlobe).toHaveAttribute('data-river-low', '0.00');
     // Past ice: the 300 Ma grid carries the sheet the atlas paints there, the 200 Ma grid none.
     await dem.locator('#era').selectOption(String(demFrames.findIndex(frame => frame.id === 'paleodem-3000')));
     // A freshly built texture's first load can take longer than the default wait.

@@ -699,6 +699,21 @@ class PaleodemTests(TestCase):
         self.assertContains(response, 'id="river-note"')
         self.assertEqual(self.client.get(f"/globe/rivers/{present['id']}.png").status_code, 200)
         self.assertEqual(self.client.get('/globe/rivers/nope.png').status_code, 404)
+        # The lowstand field rides along only where it exists and the slider goes below the
+        # datum; its level is the bottom of the ice sidecar's range.
+        self.assertIsNone(frames[present['id']]['rivers_low'])
+        self.assertEqual(self.client.get(f"/globe/rivers-low/{present['id']}.png").status_code, 404)
+        globe_module.rivers_low_path(present).write_bytes(b'png')
+        frames = {frame['id']: frame for frame in self.client.get('/', {'masks': 'paleodem2018'}).context['frames']}
+        self.assertIsNone(frames[present['id']]['rivers_low'], 'no range known, so no level to mix toward')
+        Path(self.dem.name, 'ice-sources.json').write_text(json.dumps(
+            {'grids': {present['id']: 'natural-earth'},
+             'sheets': {present['id']: {'volume': 26.0, 'areas': [0.3, 0.0], 'range_m': [-130, 60]}}}))
+        globe_module.ice_path(present).write_bytes(b'png')
+        frames = {frame['id']: frame for frame in self.client.get('/', {'masks': 'paleodem2018'}).context['frames']}
+        self.assertEqual(frames[present['id']]['rivers_low'],
+                         {'url': f"/globe/rivers-low/{present['id']}.png", 'level_m': -130})
+        self.assertEqual(self.client.get(f"/globe/rivers-low/{present['id']}.png").status_code, 200)
 
     def test_ice_mask_is_offered_only_where_built(self):
         for item in globe_module.series_items('paleodem2018'):

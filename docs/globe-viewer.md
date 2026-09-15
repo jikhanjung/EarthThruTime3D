@@ -438,8 +438,7 @@ serves it and a frame carries `rivers` only where the file exists; the `#rivers`
 hides the lines without unloading the fields, `#river-note` says what they are, and
 `data-rivers` on the stage says whether any are drawn.
 
-What it draws is potential drainage, not a reconstruction. Nobody has mapped the rivers
-of the Palaeozoic, and the one published attempt, the Paleo-Physiography Project of
+What it draws is potential drainage, not a reconstruction. The Paleo-Physiography Project of
 Salles, Husson, Lorcery & Boggiani (HydroShare; goSPL run on these same grids with the
 Valdes et al. 2021 rain), is CC BY-NC-SA 4.0 for three of its four time ranges, so it is
 a comparison, not a source (issue #30). The builder resamples the 6-minute grid to the
@@ -466,14 +465,23 @@ largest), its edge is antialiased over `fwidth`, and the two grids' fields mix t
 the travel offsets as the coastline's distance does, a plausible in-between rather than
 a cross-fade of pictures; a missing side weighs nothing, so the network fades across
 that gap. Rivers draw on the mask, relief and temperature surfaces, under the ice, and
-only over land after the sea-level cut: a raised sea covers them, a lowered one leaves
-them ending at the grid's coast, since the field was routed at 0 m. Routing at the
-lowstand over the exposed shelves, and an ice surface for the glacial stops, are the
-follow-ups listed in issue #30.
+only over land after the sea-level cut. A raised sea covers them. A lowered one needs
+rivers on the exposed shelf, which the field routed at 0 m cannot hold, so every grid
+whose slider reaches below its datum (the bottom of the ice sidecar's `range_m`, 31
+grids: the present at −130 m, the icehouse stops at −20 to −50 m) is routed a second
+time with the sea at that level, land being everything above it, and written as
+`<id>-rivers-low.png` (`scripts/build_rivers.py --lows` writes only these). The frame
+carries `rivers_low` with the file's URL and level; the shader mixes each side's own
+field toward its lowstand field by the offset's share of that level (`data-river-low`
+on the stage, 0 at the datum, 1 at the bottom), so a shelf river fades in as the shelf
+emerges while its land part, which both fields share, stays put. The time windows set
+the level per stop and get the same. A channel that truly shifts as the coast retreats
+only cross-fades, and nothing routes over or along the ice; an ice surface for the
+glacial stops is the follow-up listed in issue #30.
 
 `tests/rivers_check.py` covers the routing: every drop of an island with a pit reaches
-the sea, an island across the antimeridian drains as one, and the field is a cone the
-size of its river.
+the sea, an island across the antimeridian drains as one, a lowered sea routes over the
+exposed shelf, and the field is a cone the size of its river.
 
 ## Mapping pipeline
 

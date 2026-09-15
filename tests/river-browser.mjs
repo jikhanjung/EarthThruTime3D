@@ -21,6 +21,10 @@ try {
   await page.locator('#rivers').click();
   await expect(globe).toHaveAttribute('data-rivers', 'true');
   await page.locator('#settings-toggle').click();
+  await page.locator('#sealevel').fill('-130');
+  await expect(globe).toHaveAttribute('data-river-low', '1.00');
+  await page.locator('#sealevel').fill('0');
+  await expect(globe).toHaveAttribute('data-river-low', '0.00');
   await mkdir('test-results', {recursive: true});
   await page.screenshot({path: 'test-results/rivers-reviewed.png'});
   await page.setViewportSize({width: 390, height: 844});
@@ -29,6 +33,13 @@ try {
   await expect(globe).toHaveAttribute('data-rivers', 'true');
   await page.locator('#info-toggle').click();
   await expect(page.locator('#river-note')).toContainText('격자 간격과 복원 정확도는 다릅니다');
+  for (const [window, age] of [['deglacial', 21], ['lastcycle', 70]]) {
+    await page.goto(new URL(`/?masks=paleodem2018&window=${window}`, base).href);
+    const frames = JSON.parse(await page.locator('#globe-frames').textContent());
+    await page.selectOption('#era', String(frames.findIndex(frame => frame.deglacial?.age_ka === age)));
+    await expect(globe).toHaveAttribute('aria-busy', 'false');
+    expect(Number(await globe.getAttribute('data-river-low'))).toBeGreaterThan(0);
+  }
   expect(errors).toEqual([]);
-  console.log('River PNG, shader, toggle, resolution wording, mobile and languages passed');
+  console.log('River PNG, shader, toggle, resolution wording, lowstand/time windows, mobile and languages passed');
 } finally {await browser.close();}
