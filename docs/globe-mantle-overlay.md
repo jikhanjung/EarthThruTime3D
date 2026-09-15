@@ -1,6 +1,7 @@
 # 메인 globe의 맨틀 근사 중첩
 
-상태: `feature/globe-mantle-overlay`에서 구현·검증. 운영 v0.11.0에는 아직 배포하지 않았다.
+상태: v0.12.0으로 2026-09-15 운영 배포 완료.
+배포 검증은 [릴리스 기록](../devlog/20260915_jikhanjung_072_release_0120.md)을 참고한다.
 계획은 [P05](../devlog/20260915_jikhanjung_P05_globe_mantle_approximate_overlay.md),
 좌표계 근거는 [정합 검사](mantle-frame-alignment.md)를 따른다.
 
