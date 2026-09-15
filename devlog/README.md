@@ -30,6 +30,7 @@ wwolf는 001부터 셉니다. 그 전의 001–045는 링크와 본문 속 번�
 
 ## 작업 기록
 
+- [jikhanjung 072 — v0.12.0 맨틀 통합 릴리스](20260915_jikhanjung_072_release_0120.md)
 - [jikhanjung 071 — 전 지구 맨틀·핵 표시와 시간·단면 연결](20260915_jikhanjung_071_globe_mantle_time_section.md)
 - [jikhanjung 070 — 80 Ma 메인 globe 맨틀 근사 중첩](20260915_jikhanjung_070_globe_mantle_overlay.md)
 - [jikhanjung 069 — OPT1·Müller·PALEOMAP 좌표계 정합 검사](20260915_jikhanjung_069_mantle_frame_alignment.md)
