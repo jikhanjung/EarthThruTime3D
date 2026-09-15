@@ -419,6 +419,70 @@ control leaves the present mountain glaciers of High Asia, the Andes and Alaska 
 are, and the Miocene and Eocene icehouses show none there, since no reconstruction of
 their extent exists and the atlas white is high ground.
 
+## Rivers
+
+**Resolution:** the published 0.1° (6-minute) grids are resampled to a 2048×1024
+calculation grid (0.176°, about 20 km at the equator). Grid spacing describes sampling,
+not how accurately ancient terrain is known. Individual valleys, narrow outlets and
+watershed divides are not independently resolved by drawing a finer texture. The lines
+are potential drainage under the stated assumptions; a present-day river comparison
+does not validate ancient river courses. The underlying 1° grid fallback is coarser still.
+
+The field spreads across the longitude seam but never wraps from the north edge to the
+south edge. Rebuild river textures made before this boundary fix before a release.
+
+
+`scripts/build_rivers.py` routes water over every grid of the elevation series and writes
+`<id>-rivers.png` beside the fields, 2048 × 1024, one channel. `/globe/rivers/<id>.png`
+serves it and a frame carries `rivers` only where the file exists; the `#rivers` toggle
+hides the lines without unloading the fields, `#river-note` says what they are, and
+`data-rivers` on the stage says whether any are drawn.
+
+What it draws is potential drainage, not a reconstruction. The Paleo-Physiography Project of
+Salles, Husson, Lorcery & Boggiani (HydroShare; goSPL run on these same grids with the
+Valdes et al. 2021 rain), is CC BY-NC-SA 4.0 for three of its four time ranges, so it is
+a comparison, not a source (issue #30). The builder resamples the 6-minute grid to the
+texture, takes land as z > 0, fills every pit to the level at which it spills (grayscale
+reconstruction on the grid tiled three times in longitude, so a basin across the
+antimeridian fills as one), sends each land cell's water to the steepest of its eight
+neighbours over true distances, resolves a level lake in waves from its outlet inward,
+and sums the drained area in km² from the highest cell down. Rain is even and
+evaporation nil, so the number is drained area, not discharge. Every basin spills: the
+grids are too smooth to tell a basin closed by a gorge narrower than a cell (the Congo
+below Kinshasa, the Sichuan basin above the Three Gorges, the Pannonian plain above the
+Iron Gates) from one closed for real (Chad, Tarim, Eyre); a depth cap of 50, 100 or
+200 m stopped 30–50 % of all land from draining, so none is applied, as Salles et al.
+also assumed. Present-day check: the Amazon drains 5.65 Mkm² (published 6.3–7.0) with
+its mouth at 0.6° S, 51.6° W, and the Congo, Nile, Niger, Mississippi, Mackenzie, Ob,
+Yenisei, Lena, Amur, Yangtze, Ganges and Murray come out where they are.
+
+The texture is a field the shader cuts, not a picture: at each texel the largest, over
+the river cells within 4 texels, of that cell's size less 0.35 per texel of distance,
+where size is log10 of the drained area over 10³–10⁷ km² scaled to 0..1, and a cell
+drains at least 1,000 km² to count. The page draws where the field passes 0.25
+(10,000 km²), so a line's width follows its size (two texels either side for the
+largest), its edge is antialiased over `fwidth`, and the two grids' fields mix through
+the travel offsets as the coastline's distance does, a plausible in-between rather than
+a cross-fade of pictures; a missing side weighs nothing, so the network fades across
+that gap. Rivers draw on the mask, relief and temperature surfaces, under the ice, and
+only over land after the sea-level cut. A raised sea covers them. A lowered one needs
+rivers on the exposed shelf, which the field routed at 0 m cannot hold, so every grid
+whose slider reaches below its datum (the bottom of the ice sidecar's `range_m`, 31
+grids: the present at −130 m, the icehouse stops at −20 to −50 m) is routed a second
+time with the sea at that level, land being everything above it, and written as
+`<id>-rivers-low.png` (`scripts/build_rivers.py --lows` writes only these). The frame
+carries `rivers_low` with the file's URL and level; the shader mixes each side's own
+field toward its lowstand field by the offset's share of that level (`data-river-low`
+on the stage, 0 at the datum, 1 at the bottom), so a shelf river fades in as the shelf
+emerges while its land part, which both fields share, stays put. The time windows set
+the level per stop and get the same. A channel that truly shifts as the coast retreats
+only cross-fades, and nothing routes over or along the ice; an ice surface for the
+glacial stops is the follow-up listed in issue #30.
+
+`tests/rivers_check.py` covers the routing: every drop of an island with a pit reaches
+the sea, an island across the antimeridian drains as one, a lowered sea routes over the
+exposed shelf, and the field is a cone the size of its river.
+
 ## Mapping pipeline
 
 1. Django exposes only manifest-listed map IDs through `/globe/maps/<id>.jpg`.
@@ -691,6 +755,10 @@ Neither flag grants data-use rights. See `sources/README.md`, `LICENSE-DATA.md` 
   recovery. Elevation, climate, sea-level and terrain checks run when the elevation
   series is built; the script reports that section as skipped otherwise. Screenshots
   go to gitignored `data/screenshots/`.
+- `VIEWER_URL=http://127.0.0.1:8153/ node tests/river-browser.mjs`: river PNG, shader,
+  toggle, grid-spacing explanation, mobile layout and both languages (requires a built 0 Ma river field).
+- `.venv/bin/python tests/rivers_check.py` with `requirements-processing.txt`
+  installed: the river routing (see Rivers).
 - `.venv/bin/python tests/segmentation_check.py` with `requirements-processing.txt`
   installed: the inverse projection against the viewer's forward mapping, the inset
   ellipse mask and the colour conversion. Kept out of the Django suite because the web

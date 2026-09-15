@@ -8,7 +8,7 @@ code, and its terms follow the sources it was made from. Three groups.
 The files this project computes from CC BY sources are released under
 [Creative Commons Attribution 4.0](https://creativecommons.org/licenses/by/4.0/):
 
-- the elevation, temperature and ice textures, the sea-level curves and the motion
+- the elevation, temperature, ice and potential-drainage textures, the sea-level curves and the motion
   fields of the elevation series (from Scotese & Wright 2018, Scotese 2021, van der
   Meer et al. 2022, Spratt & Lisiecki 2016, Natural Earth, and the PALEOMAP
   rotation model);
