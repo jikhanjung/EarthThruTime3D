@@ -1,9 +1,14 @@
 # Source catalogues
 
-Two kinds of source, kept apart on purpose. The Scotese maps are published pictures this
+Source families are kept apart on purpose. The Scotese maps are published pictures this
 project measures; the plate models reconstruct geometry from rotation poles. Different
 authors, different licences, different limits. Anything built from them has to say which
 one it came from.
+
+- [Geodynamics experiment](../docs/geodynamics.md): Müller 2019 deformation network
+  inventory and Müller 2022 OPT1 published mantle surfaces, pinned independently under
+  `sources/geodynamics/`. Both are CC BY 4.0; the latter is a simulation output rather
+  than a plate rotation model or an observed temperature/velocity volume.
 
 - [Scotese Earth History](#scotese-earth-history-source-catalogue): 17 maps, 650 Ma to
   present, measured into land masks. `scotese-earth-history.json`.
@@ -245,4 +250,3 @@ the numbers.
 Not yet collected: the Scotese 2021 PaleoDEM update and the Straume et al. 2020
 Cenozoic palaeobathymetry. Their Zenodo records returned 504 on 2026-09-13, so neither
 licence nor contents has been checked.
-

@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "id": "muller2019",
+  "title": "Müller et al. (2019) deforming plate model v1.2",
+  "record_url": "https://zenodo.org/records/10525287",
+  "version": "1.2",
+  "retrieved_at": "2026-09-15",
+  "citation": "A Global Plate Model Including Lithospheric Deformation Along Major Rifts and Orogens Since the Triassic",
+  "paper_doi": "10.1029/2018TC005462",
+  "kind": "published_reconstruction",
+  "license": {
+    "id": "CC-BY-4.0",
+    "url": "https://creativecommons.org/licenses/by/4.0/",
+    "evidence": "Pinned Zenodo API metadata.license.id = cc-by-4.0; archive and separate License.txt agree."
+  },
+  "assets": [
+    {
+      "role": "archive",
+      "url": "https://zenodo.org/api/records/10525287/files/Muller_etal_2019_PlateMotionModel_v1.2.zip/content",
+      "path": "data/sources/geodynamics/muller2019/model.zip",
+      "bytes": 37549700,
+      "sha256": "bdd5f86a28f6009282694867131260054424ef2f9c9dfa48fc7c13f465c077cd",
+      "publisher_checksum": "md5:cdf96ad1c326a7faa507867964df6ed7"
+    },
+    {
+      "role": "license",
+      "url": "https://zenodo.org/api/records/10525287/files/License.txt/content",
+      "path": "data/sources/geodynamics/muller2019/License.txt",
+      "bytes": 253,
+      "sha256": "93b0e3272777ad090ca5720c30619412559831dcd8fccbac496cf1bec625dc8f",
+      "publisher_checksum": "md5:9e00802340255ec8002490c25f811b2b"
+    },
+    {
+      "role": "metadata",
+      "url": "https://zenodo.org/api/records/10525287",
+      "path": "data/sources/geodynamics/muller2019/record.json",
+      "bytes": 8880,
+      "sha256": "0224cf0edd39a5c8820c004a33c054429beadb4673c0513a1c1eea514743b32e"
+    }
+  ]
+}

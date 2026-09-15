@@ -3,9 +3,15 @@ from django.urls import path
 from django.views.generic import TemplateView
 from core.views import healthz, language
 from core.access import gate
+from core.mantle import mantle, mantle_asset
+from core.collision import collision, collision_data
 from core.globe import ice_mask, ice_low, temperature_map, coastline_file, globe, land_field, plate_file, source_map
 
 urlpatterns = [
+    path('collision/', collision, name='collision'),
+    path('collision/data/<slug:version>.json', collision_data, name='collision-data'),
+    path('mantle/', mantle, name='mantle'),
+    path('mantle/assets/<str:filename>', mantle_asset, name='mantle-asset'),
     path('', globe, name='home'),
     path('globe/maps/<slug:map_id>.jpg', source_map, name='globe-map'),
     path('globe/fields/<slug:map_id>.png', land_field, name='globe-field'),

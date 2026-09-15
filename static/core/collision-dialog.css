@@ -1,0 +1,6 @@
+#collision-dialog { width: min(1220px, 95vw); max-width: 95vw; height: 92dvh; max-height: 92dvh; padding: 0; border: 1px solid #517782; border-radius: 12px; background: #0b2028; color: #e1eff2; }
+#collision-dialog::backdrop { background: #000b; }
+.collision-dialog-bar { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: .65rem 1rem; }
+.collision-dialog-bar form { margin: 0; }
+#collision-dialog iframe { width: 100%; height: calc(100% - 58px); border: 0; display: block; background: #0b2028; }
+[data-collision-open] { cursor: pointer; }

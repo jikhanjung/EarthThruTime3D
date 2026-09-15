@@ -1,8 +1,10 @@
 # EarthThruTime3D Docker 배포
 
-이미지: **`honestjung/earththrutime3d:v0.10.5`**, 플랫폼 `linux/amd64`.
+이미지: **`honestjung/earththrutime3d:v0.11.0`**, 플랫폼 `linux/amd64`.
 `../hanyang3d/deploy`의 Gunicorn·버전 이미지·Compose·상태 확인 구성을 참고했고,
 데이터베이스가 있는 서비스이므로 백업과 복구 단계를 더했다.
+
+릴리스 대상: v0.11.0. 배포 검증 결과는 devlog의 릴리스 기록을 따릅니다.
 
 ## 운영 주소
 
@@ -11,7 +13,6 @@
 - 지구본: https://earththrutime.nopeoplestime.info/
 - 프로젝트 소개: https://earththrutime.nopeoplestime.info/about/
 - 상태 확인: https://earththrutime.nopeoplestime.info/healthz
-- 이미지 ID: `sha256:37b5da10ec294c805dd69c53180b7096e0610e50291b839375deea8828269ec4` (v0.10.5, 2026-09-15 배포)
 
 호스트 Nginx의 전용 사이트가 컨테이너의 8014 포트로 연결된다. HTTP는 HTTPS로 보낸다.
 Let's Encrypt 인증서와 webroot 자동 갱신을 설정했고 갱신 후 `nginx -t && systemctl reload nginx`를
@@ -45,7 +46,9 @@ CC BY 자료의 파생물과 원본 조건이 확정되지 않은 마스크를 �
     마지막 빙하기 후퇴 시기의 저수위 조각. 고도 시리즈는 생성 디렉터리가 있을 때 포함한다.
   - PaleoCoastlines의 시기별 JSON과 인덱스.
   - 판 모델별 회전·대륙 JSON, 있는 모델에 한해 추가 해안선 JSON.
-  경로·크기·SHA-256을 `manifest.json`에 기록한다. v0.10.5 릴리스에는 고도 시리즈와
+  - OPT1 맨틀 51시점과 인도–아시아 5시점 단면·3D 지표, 각 카탈로그 및 gzip 표현.
+    실험 데이터는 누락·해시 불일치·시점 누락 시 패킹을 거부한다.
+  경로·크기·SHA-256을 `manifest.json`에 기록한다. v0.11.0 릴리스에는 고도 시리즈와
   빙하 마스크 57장, 저수위 조각 25장, 12비트 0 Ma 고도 텍스처가 포함됐다. 정확한 파일 목록은 릴리스 묶음의 매니페스트를 따른다.
 - 컨테이너: Gunicorn, UID/GID `10001`, 읽기 전용 루트, 쓰기 가능한 곳은 DB 볼륨과 `/tmp`뿐.
 - 시작 순서: 설정 검사 → `migrate` → 묶음 해시 검증 → Gunicorn. 버전이 어긋난 묶음으로는 뜨지 않는다.
@@ -58,8 +61,8 @@ CC BY 자료의 파생물과 원본 조건이 확정되지 않은 마스크를 �
 
 | 동작 | 명령 |
 |---|---|
-| preflight·build | `bash deploy/build.sh v0.10.5` (개발 호스트) |
-| deploy | `bash /srv/earththrutime3d/deploy.sh v0.10.5` |
+| preflight·build | `bash deploy/build.sh v0.11.0` (개발 호스트) |
+| deploy | `bash /srv/earththrutime3d/deploy.sh v0.11.0` |
 | backup | `bash /srv/earththrutime3d/backup.sh` |
 | smoke | `bash /srv/earththrutime3d/smoke.sh` |
 | rollback | `bash /srv/earththrutime3d/deploy.sh <이전 버전>` |
@@ -67,18 +70,20 @@ CC BY 자료의 파생물과 원본 조건이 확정되지 않은 마스크를 �
 | seed | 없음. 데이터베이스에 지질 기록이 아직 없다. |
 
 `build.sh`는 Django 검사 → 마이그레이션 누락 확인 → 테스트 → 데이터 묶음 → 이미지 빌드 →
-컨테이너 실행 검사 → 내보내기 순서다. Docker Hub push나 원격 배포는 빌드에 포함하지 않는다.
+컨테이너 실행 검사 → 내보내기 순서다. 컨테이너 검사는 단면·3D 지표의 다섯 시점,
+맨틀 현재 메시와 압축 응답도 확인한다. Docker Hub push나 원격 배포는 빌드에 포함하지 않는다.
 
 `deploy.sh`는 이미지와 데이터 쌍을 먼저 검증하고, 데이터베이스를 스냅샷한 뒤 교체하고,
-스모크로 마무리한다. 실패하면 이전 구성으로 되돌린다. 코드 롤백은 `db/`를 건드리지 않는다.
+스모크로 마무리한다. 기동·healthcheck·스모크 실패 시 이전 구성으로 되돌린다.
+Compose `.env`의 기존 설정은 유지하고 이미지·자료 버전만 갱신한다. `.env.django`는 교체하지 않는다. 코드 롤백은 `db/`를 건드리지 않는다.
 
 생성 파일(Git 제외):
 
 ```text
-dist/earththrutime3d-image-v0.10.5.tar.gz
-dist/earththrutime3d-data-v0.10.5.tar.gz
-dist/earththrutime3d-host-v0.10.5.tar.gz
-dist/SHA256SUMS-v0.10.5
+dist/earththrutime3d-image-v0.11.0.tar.gz
+dist/earththrutime3d-data-v0.11.0.tar.gz
+dist/earththrutime3d-host-v0.11.0.tar.gz
+dist/SHA256SUMS-v0.11.0
 ```
 
 ## dolfinid 최초 설치
@@ -91,25 +96,25 @@ Compose 5.5.1. 기존 서비스와 분리해 `/srv/earththrutime3d`, **`127.0.0.
 
 ```bash
 ssh dolfinid 'mkdir -p ~/earththrutime3d-release'
-scp dist/earththrutime3d-*-v0.10.5.tar.gz dist/SHA256SUMS-v0.10.5 dolfinid:~/earththrutime3d-release/
+scp dist/earththrutime3d-*-v0.11.0.tar.gz dist/SHA256SUMS-v0.11.0 dolfinid:~/earththrutime3d-release/
 ```
 
 서버에서:
 
 ```bash
 cd ~/earththrutime3d-release
-sha256sum -c SHA256SUMS-v0.10.5
-docker load -i earththrutime3d-image-v0.10.5.tar.gz
+sha256sum -c SHA256SUMS-v0.11.0
+docker load -i earththrutime3d-image-v0.11.0.tar.gz
 sudo install -d -o "$(id -un)" -g "$(id -gn)" /srv/earththrutime3d
-tar -xzf earththrutime3d-host-v0.10.5.tar.gz -C /srv/earththrutime3d
-mkdir -p /srv/earththrutime3d/data/v0.10.5 /srv/earththrutime3d/db \
+tar -xzf earththrutime3d-host-v0.11.0.tar.gz -C /srv/earththrutime3d
+mkdir -p /srv/earththrutime3d/data/v0.11.0 /srv/earththrutime3d/db \
          /srv/earththrutime3d/backups /srv/earththrutime3d/acme
-tar -xzf earththrutime3d-data-v0.10.5.tar.gz -C /srv/earththrutime3d/data/v0.10.5
+tar -xzf earththrutime3d-data-v0.11.0.tar.gz -C /srv/earththrutime3d/data/v0.11.0
 cd /srv/earththrutime3d
 cp .env.django.example .env.django && chmod 600 .env.django
 # SECRET_KEY를 충분히 긴 무작위 값으로 바꾼다. 값은 출력하지 않는다.
 sudo chown -R 10001:10001 db backups   # 컨테이너가 쓰는 유일한 경로
-bash deploy.sh v0.10.5
+bash deploy.sh v0.11.0
 ```
 
 Nginx는 ACME 검증을 위해 HTTP 전용 설정을 먼저 올리고, 인증서를 받은 뒤 전체 설정으로 바꾼다.
@@ -165,6 +170,8 @@ sudo certbot certonly --webroot --webroot-path /srv/earththrutime3d/acme \
 | `ACCESS_KEY` | 비공개 자료를 여는 공유 키. 비우면 그 자료를 아예 제공하지 않는다 |
 | `SCOTESE_VIEWER_ENABLED` | 뷰어 사용 여부 |
 | `SCOTESE_SOURCE_MAPS_PUBLIC` | 원본 지도 제공 여부. 기본 꺼짐 |
+| `MANTLE_DERIVED_DIR` | 이미지 기본 `/runtime/mantle/muller2022-opt1` |
+| `INDIA_ASIA_DERIVED_DIR` | 이미지 기본 `/runtime/india-asia` |
 | `SCOTESE_DERIVED_DIR` | 컨테이너 기본 `/runtime/segmentation` |
 | `SCOTESE_VIEWER_STEPS` | 지도 사이 눈금 수. 1·2·4·8·16·32 |
 | `SCOTESE_VIEWER_INTERVAL_MA` | 대신 몇 백만 년마다 눈금을 둘지 |

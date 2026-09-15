@@ -1,0 +1,6 @@
+{% load i18n %}
+<dialog id="collision-dialog" aria-labelledby="collision-dialog-title">
+  <div class="collision-dialog-bar"><strong id="collision-dialog-title">{% trans "인도–아시아 A–A′ 단면" %}</strong>
+    <form method="dialog"><button autofocus type="submit">{% trans "닫기" %}</button></form></div>
+  <iframe title="{% trans '인도–아시아 A–A′ 단면' %}" data-src="{% url 'collision' %}"></iframe>
+</dialog>

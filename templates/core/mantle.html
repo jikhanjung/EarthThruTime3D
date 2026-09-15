@@ -1,0 +1,38 @@
+{% extends 'base.html' %}{% load static i18n %}
+{% block title %}{% trans "맨틀 모형 실험" %}{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{% static 'core/mantle.css' %}?v={{ version }}">{% endblock %}
+{% block content %}
+<section class="mantle-page">
+  <h1>{% trans "맨틀 모형 실험" %}</h1>
+  <p>{% trans "Müller 2022 · OPT1의 발표된 3D 구조입니다. 이 프로젝트가 대류를 계산한 결과는 아닙니다." %}</p>
+  {% if frames %}
+  <div class="mantle-tools">
+    <button type="button" data-collision-open aria-controls="collision-dialog" aria-expanded="false">{% trans "인도–아시아 A–A′ 단면" %}</button>
+    <label for="mantle-time">{% trans "시점" %}</label>
+    <input id="mantle-time" type="range" min="0" max="{{ frames|length|add:'-1' }}" value="{{ frames|length|add:'-1' }}" step="1">
+    <output id="mantle-age" for="mantle-time"></output>
+    <label><input id="mantle-slabs" type="checkbox" checked> {% trans "슬랩 구조" %}</label>
+    <label><input id="mantle-piles" type="checkbox" checked> {% trans "맨틀 하부 구조" %}</label>
+    <label><input id="mantle-boundaries" type="checkbox" checked> {% trans "같은 모형의 판 경계" %}</label>
+    <button id="mantle-reset" type="button">{% trans "시점 초기화" %}</button>
+  </div>
+  <div id="mantle-stage" tabindex="0" role="img" aria-label="{% trans '드래그로 회전하고 휠로 확대하는 맨틀 지구본' %}"></div>
+  <p id="mantle-status" role="status" aria-live="polite"></p>
+  <p class="mantle-legend"><span class="slabs-key">●</span> {% trans "슬랩 구조" %} · <span class="piles-key">●</span> {% trans "맨틀 하부 구조" %}</p>
+  <p>{% trans "색은 구조 종류를 구분합니다. 온도나 속도 범례가 아닙니다. 2천만 년 간격의 원본 시점을 표시하며 시점 사이는 보간하지 않습니다." %}</p>
+  <p>{% trans "판 경계도 OPT1에 동봉된 자료입니다. Scotese 지표와의 좌표계 정합은 아직 적용하지 않았습니다." %}</p>
+  <noscript><p>{% trans "지구본을 표시하려면 JavaScript를 활성화해 주세요." %}</p></noscript>
+  {{ frames|json_script:'mantle-frames' }}{{ strings|json_script:'mantle-strings' }}
+  {% else %}
+  <p>{% trans "이 환경에는 맨틀 실험 자료가 준비되지 않았거나 뷰어가 꺼져 있습니다." %}</p>
+  {% endif %}
+  <p>Müller, R. D. et al. (2022). <a href="https://doi.org/10.5194/se-13-1127-2022">A tectonic-rules-based mantle reference frame since 1 billion years ago</a>.
+    <a href="https://zenodo.org/records/6622194">OPT1 supplementary data v3.0</a>, <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>.
+    {% trans "EarthThruTime3D: 원본 표면을 웹 표시용으로 변환." %}</p>
+  <p><a href="{% url 'home' %}">{% trans "고지리 지구본" %}</a></p>
+</section>
+{% endblock %}
+{% block scripts %}{% if frames %}
+<script type="importmap">{"imports":{"three":"{% static 'vendor/three/three.module.js' %}"}}</script>
+<script type="module" src="{% static 'core/mantle.js' %}?v={{ version }}"></script>
+{% endif %}{% endblock %}

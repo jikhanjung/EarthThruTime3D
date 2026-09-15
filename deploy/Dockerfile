@@ -13,6 +13,8 @@ ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 \
     PALEOATLAS_DERIVED_DIR=/runtime/paleoatlas \
     PALEOCOASTLINES_DERIVED_DIR=/runtime/paleocoastlines \
     PALEODEM_DERIVED_DIR=/runtime/paleodem \
+    MANTLE_DERIVED_DIR=/runtime/mantle/muller2022-opt1 \
+    INDIA_ASIA_DERIVED_DIR=/runtime/india-asia \
     PLATE_MODEL_DIR=/runtime/plates \
     DATABASE_PATH=/var/lib/earththrutime3d/db.sqlite3 \
     STATIC_ROOT=/app/staticfiles \
