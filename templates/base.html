@@ -21,6 +21,8 @@
   <main id="main">{% block content %}{% endblock %}</main>
   {% include 'includes/footer.html' %}
   {% include 'includes/collision-dialog.html' %}
+  {# The import map precedes the first module script: Firefox and Safari ignore one added after module loading has begun, and every page imports "three" through it. #}
+  <script type="importmap">{"imports":{"three":"{% static 'vendor/three/three.module.js' %}","{% static 'core/projection.js' %}":"{% static 'core/projection.js' %}?v={{ version }}"}}</script>
   <script type="module" src="{% static 'core/collision-dialog.js' %}?v={{ version }}"></script>
   {% block scripts %}{% endblock %}
 </body>
