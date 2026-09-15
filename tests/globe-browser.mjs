@@ -657,6 +657,15 @@ try {
     await dem.locator('#ice').click();
     await expect(demGlobe).toHaveAttribute('data-ice', 'false');
     await dem.locator('#ice').click();
+    // Rivers are routed over every grid of the series, so the present has them; the
+    // toggle hides the lines and shows them again without a reload.
+    await expect(demGlobe).toHaveAttribute('data-rivers', 'true');
+    await expect(dem.locator('#river-note')).toBeVisible();
+    await dem.locator('#rivers').click();
+    await expect(demGlobe).toHaveAttribute('data-rivers', 'false');
+    await expect(dem.locator('#river-note')).toBeHidden();
+    await dem.locator('#rivers').click();
+    await expect(demGlobe).toHaveAttribute('data-rivers', 'true');
     // Past ice: the 300 Ma grid carries the sheet the atlas paints there, the 200 Ma grid none.
     await dem.locator('#era').selectOption(String(demFrames.findIndex(frame => frame.id === 'paleodem-3000')));
     // A freshly built texture's first load can take longer than the default wait.

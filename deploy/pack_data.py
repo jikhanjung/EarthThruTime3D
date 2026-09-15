@@ -131,6 +131,14 @@ def pack_elevation(dem, dem_source, staging, files):
             shutil.copy2(low, staging / "paleodem" / low.name)
             files.append({"path": f"paleodem/{low.name}", "bytes": (staging / "paleodem" / low.name).stat().st_size,
                           "sha256": digest(staging / "paleodem" / low.name), "map_id": item["id"]})
+    # Potential drainage routed over each grid by scripts/build_rivers.py; optional, so a
+    # bundle built before the layer existed still packs.
+    for item in dem["maps"]:
+        rivers = dem_source / f"{item['id']}-rivers.png"
+        if rivers.exists():
+            shutil.copy2(rivers, staging / "paleodem" / rivers.name)
+            files.append({"path": f"paleodem/{rivers.name}", "bytes": (staging / "paleodem" / rivers.name).stat().st_size,
+                          "sha256": digest(staging / "paleodem" / rivers.name), "map_id": item["id"]})
     # Where each mask came from, written by the same script; optional like the masks.
     kinds = dem_source / "ice-sources.json"
     if kinds.exists():

@@ -1177,3 +1177,15 @@ msgstr "Core boundary reference sphere (grey)"
 
 msgid "회색 구는 반지름 약 3,479 km의 핵 경계 참고 표시이며 계산된 온도·유동 자료가 아닙니다."
 msgstr "The grey sphere marks a reference core boundary at about 3,479 km radius; it is not a computed temperature or flow field."
+
+msgid "하천"
+msgstr "Rivers"
+
+msgid "위의 PaleoDEM 격자 위로 물을 흘려 이 프로젝트가 계산한 잠재 배수망입니다. 발표된 복원이 아닙니다."
+msgstr "Potential drainage computed by this project by routing water over the PaleoDEM grids above; not a published reconstruction."
+
+msgid "하천 표시 중입니다. 이 선은 관측이나 발표된 복원이 아니라, 각 시점의 PaleoDEM 격자 위로 물을 흘려 이 프로젝트가 계산한 잠재 배수망입니다. 격자를 2048×1024로 다시 표본화한 뒤 웅덩이를 넘치는 높이까지 메우고, 각 칸의 물을 여덟 이웃 중 가장 가파른 쪽으로 보내 상류 면적을 더했습니다. 상류 면적이 1만 km²를 넘는 칸을 선으로 그리며, 면적이 클수록 굵습니다. 비는 고르게 내리고 증발은 없다고 두었으므로 유량이 아니라 유역 면적이고, 격자가 매끈해 한 칸보다 좁은 협곡은 막혀 있어 콩고·쓰촨 분지처럼 협곡으로 빠져나가는 분지도 차드·타림처럼 실제로 막힌 분지도 모두 넘쳐 흐릅니다. 시점 사이는 두 시점의 선을 섞은 것이고, 해수면 슬라이더를 내려도 강은 격자의 해안에서 끝납니다."
+msgstr "Rivers are shown. These lines are neither observations nor a published reconstruction: they are potential drainage this project computed by routing water over each stop's PaleoDEM grid. The grid is resampled to 2048 × 1024, every pit is filled to the level at which it spills, and each cell sends its water to the steepest of its eight neighbours, summing the area upstream. Cells draining more than 10,000 km² are drawn, thicker the larger the area. Rain is taken as even and evaporation as nil, so this is drained area, not discharge; and the grids are smooth, so gorges narrower than a cell are closed and basins that drain through one (the Congo, Sichuan) spill over just as basins closed for real (Chad, Tarim) do. Between stops the two networks are mixed, and lowering the sea-level slider leaves the rivers ending at the grid's coast."
+
+msgid "하천 겹쳐 보기는 각 격자 위로 물을 흘려 이 프로젝트가 계산한 잠재 배수망입니다. 웅덩이를 넘치는 높이까지 메우고 각 칸의 물을 가장 가파른 이웃으로 보내 상류 면적을 더한 것으로, 비는 고르게 내리고 증발은 없다고 두었습니다. 발표된 복원이 아니며, 격자가 매끈해 한 칸보다 좁은 협곡은 막혀 있으므로 모든 분지가 넘쳐 흐릅니다."
+msgstr "The river overlay is potential drainage this project computed by routing water over each grid: pits filled to the level at which they spill, each cell's water sent to the steepest neighbour, the area upstream summed, rain taken as even and evaporation as nil. It is not a published reconstruction, and since the grids are smooth and close any gorge narrower than a cell, every basin spills over."

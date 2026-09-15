@@ -82,6 +82,9 @@ const seaLevelCurveToggle = $('sealevel-curve');
 // The ice overlay can be hidden in any surface mode; the masks stay loaded.
 const iceToggle = $('ice');
 let iceVisible = true;
+// Rivers likewise: the fields stay bound while the lines are hidden.
+const riverToggle = $('rivers');
+let riversVisible = true;
 let plateLayer;
 let plateAge = null;
 // Empty means the Scotese surface alone, which is where the viewer starts.
@@ -199,6 +202,11 @@ function loadTemperature(frame) {
 // the gap to it, which reads as retreat.
 function loadIce(frame) {
   return frame.ice ? loadData(`${frame.id}:ice`, frame.ice) : Promise.resolve(null);
+}
+// A river field exists for every grid of the elevation series once built. A frame
+// without one contributes no rivers, so the network fades out across the gap.
+function loadRivers(frame) {
+  return frame.rivers ? loadData(`${frame.id}:rivers`, frame.rivers) : Promise.resolve(null);
 }
 // A frame with a dated deglaciation carries lowstand slices, youngest first, each with
 // the sea level of its age; index -1 is the frame's own field, the slice at 0 m.
@@ -383,6 +391,7 @@ async function selectStop(value, manual = false, overlayManaged = false) {
       uniforms.blank.value = 1;
       uniforms.blend.value = 0;
       applyIce(null, null);
+      applyRivers(null, null);
       showIceKind(place);
       uniforms.iceCut.value.set(0.5, 0.5);
       uniforms.iceLowMix.value.set(0, 0);
@@ -399,18 +408,20 @@ async function selectStop(value, manual = false, overlayManaged = false) {
       // One stop carries slices today, the present; a side without them loads nothing.
       const sliced = stateA.low ? 'from' : stateB.low ? 'to' : null;
       const low = sliced ? (sliced === 'from' ? stateA : stateB).low : null;
-      const [first, second, warmA, warmB, iceA, iceB, low0, low1] = await Promise.all([
+      const [first, second, warmA, warmB, iceA, iceB, low0, low1, riverA, riverB] = await Promise.all([
         loadSurface(place.from), loadSurface(place.to),
         heated ? loadTemperature(place.from) : null, heated ? loadTemperature(place.to) : null,
         fielded ? loadIce(place.from) : null, fielded ? loadIce(place.to) : null,
         !fielded ? null : dated ? loadDeglacial(place.from) : low ? loadIceLow(place[sliced], low.from) : null,
-        !fielded ? null : dated ? loadDeglacial(place.to) : low ? loadIceLow(place[sliced], low.to) : null]);
+        !fielded ? null : dated ? loadDeglacial(place.to) : low ? loadIceLow(place[sliced], low.to) : null,
+        fielded ? loadRivers(place.from) : null, fielded ? loadRivers(place.to) : null]);
       if (ticket !== request) return;
       uniforms.surfaceA.value = first;
       uniforms.surfaceB.value = second;
       uniforms.tempA.value = warmA;
       uniforms.tempB.value = warmB;
       applyIce(iceA, iceB);
+      applyRivers(riverA, riverB);
       showIceKind(place);
       if (dated) {
         // Each side's slice replaces its own red, the shelves stay from the present's mask,
@@ -494,6 +505,21 @@ function showIceKind(place) {
   stage.dataset.iceKind = shown ? (limit ? 'limit' : analogue ? 'analogue' : 'drawn') : '';
   if ($('ice-limit-note')) $('ice-limit-note').hidden = !(shown && limit);
   if ($('ice-analogue-note')) $('ice-analogue-note').hidden = !(shown && analogue);
+}
+// Rivers over the surface, under the ice. The fields stay bound while hidden so a toggle
+// needs no reload; a missing field on one side weighs nothing, so the network fades
+// across that gap.
+function applyRivers(riverA, riverB) {
+  const shown = riversVisible && Boolean(riverA || riverB);
+  uniforms.riverA.value = riverA;
+  uniforms.riverB.value = riverB;
+  uniforms.riverWeight.value.set(riversVisible && riverA ? 1 : 0, riversVisible && riverB ? 1 : 0);
+  stage.dataset.rivers = String(shown);
+  if ($('river-note')) $('river-note').hidden = !shown;
+  if (riverToggle) {
+    riverToggle.setAttribute('aria-pressed', String(riversVisible));
+    riverToggle.disabled = !(riverA || riverB);
+  }
 }
 function applyIce(iceA, iceB) {
   const shown = iceVisible && Boolean(iceA || iceB);
@@ -1017,6 +1043,9 @@ function globeMaterial() {
     iceLow1: { value: null },
     iceLowT: { value: 0 },
     iceLowMix: { value: new THREE.Vector2(0, 0) },
+    riverA: { value: null }, riverB: { value: null },
+    // Which of the two bound river fields exist; a missing one counts as no rivers.
+    riverWeight: { value: new THREE.Vector2(0, 0) },
     blend: { value: 0 }, mode: { value: 0 },
     // Shaded relief: texel spacing of the bound fields, and how much the slopes are
     // exaggerated before lighting. 0 switches the shading off.
@@ -1072,6 +1101,11 @@ function globeMaterial() {
       uniform sampler2D iceLow1;
       uniform float iceLowT;
       uniform vec2 iceLowMix;
+      uniform sampler2D riverA;
+      uniform sampler2D riverB;
+      uniform vec2 riverWeight;
+      // The river field's cut: drained area above 10,000 km2, a quarter of its 10^3..10^7 span.
+      const float RIVER_CUT = 0.25;
       uniform float blend;
       uniform int mode;
       uniform float blank;
@@ -1196,6 +1230,16 @@ function globeMaterial() {
             colour = hypsometric(metres, landness) * shade(uvA, uvB, latitude);
           } else {
             colour = mix(ocean, land, landness);
+          }
+          // Rivers over the surface, under the ice. Each field is a cone the size of its
+          // river, so the cut draws a line as wide as the river is large; the two grids'
+          // fields mix like the coastline's distance, and a missing side weighs nothing.
+          // A raised sea covers them; a lowered one leaves them ending at the grid's coast.
+          if ((riverWeight.x + riverWeight.y) > 0.0) {
+            float flow = mix(texture2D(riverA, uvA).r * riverWeight.x, texture2D(riverB, uvB).r * riverWeight.y, blend);
+            float softFlow = fwidth(flow) + 0.02;
+            float river = smoothstep(RIVER_CUT - softFlow, RIVER_CUT + softFlow, flow) * landness;
+            colour = mix(colour, decode(vec3(0.16, 0.42, 0.78)), 0.85 * river);
           }
         } else {
           colour = mix(decode(texture2D(surfaceA, surfaceUv).rgb),
@@ -1973,6 +2017,12 @@ function init() {
       iceVisible = !iceVisible;
       applyIce(uniforms.iceA.value, uniforms.iceB.value);
       showIceKind(lastPlace);
+    });
+  }
+  if (riverToggle) {
+    riverToggle.addEventListener('click', () => {
+      riversVisible = !riversVisible;
+      applyRivers(uniforms.riverA.value, uniforms.riverB.value);
     });
   }
   if (temperatureToggle) {

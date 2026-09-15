@@ -680,6 +680,26 @@ class PaleodemTests(TestCase):
             self.assertContains(response, needle)
         self.assertFalse(self.client.get('/').context['sealevel_available'])
 
+    def test_river_fields_are_offered_only_where_built(self):
+        for item in globe_module.series_items('paleodem2018'):
+            self.build(item)
+        response = self.client.get('/', {'masks': 'paleodem2018'})
+        self.assertTrue(all(frame['rivers'] is None for frame in response.context['frames']))
+        self.assertFalse(response.context['rivers_available'])
+        self.assertNotContains(response, 'id="rivers"')
+        present = globe_module.catalogue('paleodem2018')['maps'][-1]
+        self.assertEqual(self.client.get(f"/globe/rivers/{present['id']}.png").status_code, 404)
+        globe_module.rivers_path(present).write_bytes(b'png')
+        response = self.client.get('/', {'masks': 'paleodem2018'})
+        frames = {frame['id']: frame for frame in response.context['frames']}
+        self.assertEqual(frames[present['id']]['rivers'], f"/globe/rivers/{present['id']}.png")
+        self.assertIsNone(frames['paleodem-0050']['rivers'])
+        self.assertTrue(response.context['rivers_available'])
+        self.assertContains(response, 'id="rivers"')
+        self.assertContains(response, 'id="river-note"')
+        self.assertEqual(self.client.get(f"/globe/rivers/{present['id']}.png").status_code, 200)
+        self.assertEqual(self.client.get('/globe/rivers/nope.png').status_code, 404)
+
     def test_ice_mask_is_offered_only_where_built(self):
         for item in globe_module.series_items('paleodem2018'):
             self.build(item)

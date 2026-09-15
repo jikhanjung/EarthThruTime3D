@@ -238,6 +238,11 @@ def temperature_path(item):
     return derived_path(item, "temp.png")
 
 
+def rivers_path(item):
+    """Potential drainage routed over the grid by scripts/build_rivers.py, one field per grid."""
+    return derived_path(item, "rivers.png")
+
+
 def sealevel_curve():
     """The long-term and Pleistocene sea-level curves and each grid's datum, as
     scripts/build_sealevel.py wrote them. Absent until that script has run."""
@@ -786,6 +791,9 @@ def globe(request):
                            "ice_lows": ([dict(low, url=reverse("globe-ice-low", args=[item["id"], low["age_ka"]]))
                                          for low in what_if_lows(kinds, item)
                                          if ice_low_path(item, low["age_ka"]).exists()] if iced else None),
+                           # Potential drainage routed over the grid itself; only where built.
+                           "rivers": (reverse("globe-rivers", args=[item["id"]])
+                                      if source == "paleodem2018" and rivers_path(item).exists() else None),
                            "field": (reverse("globe-field", args=[item["id"]])
                                      if field_path(item).exists() else None),
                            "names": landmass_names(pieces_by_frame[item["id"]]),
@@ -839,6 +847,7 @@ def globe(request):
                    "sealevel": {"long": sea["long"], "pleistocene": sea["pleistocene"]},
                    "sealevel_available": bool(sea["long"]),
                    "ice_available": any(frame.get("ice") for frame in frames),
+                   "rivers_available": any(frame.get("rivers") for frame in frames),
                    "fields_available": any(frame["field"] for frame in frames)})
 
 
@@ -885,6 +894,22 @@ def ice_mask(request, map_id):
         file = ice_path(item).open("rb")
     except FileNotFoundError:
         raise Http404("Ice mask not generated") from None
+    response = FileResponse(file, content_type="image/png")
+    response["Cache-Control"] = "private, max-age=3600"
+    return response
+
+
+@require_safe
+def river_field(request, map_id):
+    if not enabled():
+        raise Http404
+    item = find_map(map_id)
+    if item is None:
+        raise Http404
+    try:
+        file = rivers_path(item).open("rb")
+    except FileNotFoundError:
+        raise Http404("River field not generated") from None
     response = FileResponse(file, content_type="image/png")
     response["Cache-Control"] = "private, max-age=3600"
     return response
