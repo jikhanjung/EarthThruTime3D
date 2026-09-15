@@ -10,8 +10,8 @@ The files this project computes from CC BY sources are released under
 
 - the elevation, temperature, ice and potential-drainage textures, the sea-level curves and the motion
   fields of the elevation series (from Scotese & Wright 2018, Scotese 2021, van der
-  Meer et al. 2022, Spratt & Lisiecki 2016, Natural Earth, and the PALEOMAP
-  rotation model);
+  Meer et al. 2022, Spratt & Lisiecki 2016, Natural Earth, Dalton et al. 2023,
+  Hughes et al. 2016, Gowan et al. 2021 and the PALEOMAP rotation model);
 - the packed coastlines (from Kocsis & Scotese 2021);
 - the experimental mantle surface meshes (from Müller et al. 2022 OPT1 supplementary
   data v3.0; see `docs/geodynamics.md` for attribution and transformations);

@@ -259,6 +259,26 @@ def rivers_low_of(kinds, item):
     return {"url": reverse("globe-rivers-low", args=[item["id"]]), "level_m": level}
 
 
+def rivers_ice_path(item, years):
+    """The grid's rivers routed over the ice of one PaleoMIST step, named by its age in years."""
+    return derived_path(item, f"rivers-ice-{years}.png")
+
+
+def rivers_ice_of(item):
+    """The river fields routed over the ice, youngest first, each with the sea level it was
+    routed at, from the sidecar scripts/build_rivers.py --ice writes: only the steps whose
+    level is below every younger step's, so the page can bracket its level between two,
+    and only where the file exists. None where there are none."""
+    path = derived_path(item, "rivers-ice.json")
+    if not path.exists():
+        return None
+    slices = [{"age_ka": step["age_ka"], "level_m": step["level_m"],
+               "url": reverse("globe-rivers-ice", args=[item["id"], int(round(step["age_ka"] * 1000))])}
+              for step in json.loads(path.read_text()).get("slices", [])
+              if step.get("lowers") and rivers_ice_path(item, int(round(step["age_ka"] * 1000))).exists()]
+    return slices or None
+
+
 def sealevel_curve():
     """The long-term and Pleistocene sea-level curves and each grid's datum, as
     scripts/build_sealevel.py wrote them. Absent until that script has run."""
@@ -813,6 +833,11 @@ def globe(request):
                            # The shelf's rivers at the slider's lowest level, mixed in as the sea drops.
                            "rivers_low": (rivers_low_of(kinds, item)
                                           if source == "paleodem2018" and rivers_path(item).exists() else None),
+                           # The rivers routed over the ice of the last glacial cycle, one field per
+                           # PaleoMIST step with its sea level; the page brackets its level between
+                           # two, in the what-if and in the time windows alike.
+                           "rivers_ice": (rivers_ice_of(item)
+                                          if source == "paleodem2018" and rivers_path(item).exists() else None),
                            "field": (reverse("globe-field", args=[item["id"]])
                                      if field_path(item).exists() else None),
                            "names": landmass_names(pieces_by_frame[item["id"]]),
@@ -867,6 +892,7 @@ def globe(request):
                    "sealevel_available": bool(sea["long"]),
                    "ice_available": any(frame.get("ice") for frame in frames),
                    "rivers_available": any(frame.get("rivers") for frame in frames),
+                   "rivers_ice_available": any(frame.get("rivers_ice") for frame in frames),
                    "fields_available": any(frame["field"] for frame in frames)})
 
 
@@ -945,6 +971,22 @@ def river_low_field(request, map_id):
         file = rivers_low_path(item).open("rb")
     except FileNotFoundError:
         raise Http404("Lowstand river field not generated") from None
+    response = FileResponse(file, content_type="image/png")
+    response["Cache-Control"] = "private, max-age=3600"
+    return response
+
+
+@require_safe
+def river_ice_field(request, map_id, years):
+    if not enabled():
+        raise Http404
+    item = find_map(map_id)
+    if item is None:
+        raise Http404
+    try:
+        file = rivers_ice_path(item, years).open("rb")
+    except FileNotFoundError:
+        raise Http404("Ice river field not generated") from None
     response = FileResponse(file, content_type="image/png")
     response["Cache-Control"] = "private, max-age=3600"
     return response
