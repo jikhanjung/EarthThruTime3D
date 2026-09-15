@@ -22,6 +22,7 @@ wwolf는 001부터 셉니다. 그 전의 001–045는 링크와 본문 속 번�
 
 ## 계획
 
+- [jikhanjung P06 — v0.11–v0.12 맨틀 통합 리뷰 후속 수정](20260915_jikhanjung_P06_mantle_integration_review_fixes.md)
 - [jikhanjung P05 — 맨틀 근사 중첩부터 단면·시간 통합까지](20260915_jikhanjung_P05_globe_mantle_approximate_overlay.md)
 - [jikhanjung P04 — 메인 globe에 맨틀과 인도–아시아 단면 통합](20260915_jikhanjung_P04_globe_mantle_section_integration.md)
 - [jikhanjung P03 — 지각 변형과 맨틀 대류 연결](20260915_jikhanjung_P03_crustal_deformation_mantle_coupling.md)
