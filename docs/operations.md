@@ -5,12 +5,13 @@ host. Configuration and procedure live in `deploy/README.md` and `deploy/deploy.
 Builds happen on the development host; the server only loads the image and swaps.
 The shared guides are referenced privately through `.guides`; they are not copied.
 
-Current release: **v0.12.0**, deployed 2026-09-15. The runtime includes all 51 OPT1
-mantle frames and five India–Asia section/3D surface frames. The main globe now
-shows global mantle structures and a reference core sphere, adjustable cutaway and
-surface opacity, with five source ages linked to the A–A′ popup. Image and data hashes,
-the pre-deploy DB snapshot, health and public browser checks are recorded in
-[devlog 072](../devlog/20260915_jikhanjung_072_release_0120.md).
+Current release: **v0.13.0**, deployed 2026-09-16. The release adds potential river
+fields (109 standard and 31 lowstand), fixes browser import-map initialization,
+and includes the P06 mantle recovery and asset-serving fixes. Younger/Older retains
+the visible surface and mantle until both next-age datasets are ready. The runtime
+continues to include all 51 OPT1 mantle frames and five India–Asia section frames.
+Image/data hashes, the verified DB snapshot and public Firefox/Chromium checks are
+recorded in [devlog 075](../devlog/20260916_jikhanjung_075_release_0130.md).
 
 ## Adopted now
 

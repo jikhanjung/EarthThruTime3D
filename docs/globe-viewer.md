@@ -22,7 +22,7 @@ Hangul, which is how a missing translation shows up.
 ## Mask sources
 
 The globe offers three surface datasets in `core.globe.MASK_SOURCES`: two segmented
-land-mask series and one elevation series. This document describes v0.12.0 (2026-09-15).
+land-mask series and one elevation series. This document describes v0.13.0 (2026-09-16).
 
 - `paleoatlas2016`, the default: 90 maps from the PALEOMAP PaleoAtlas for GPlates
   (Scotese 2016), 750 Ma to present, segmented by `scripts/segment_paleoatlas.py`. They
