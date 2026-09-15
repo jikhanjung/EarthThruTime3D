@@ -48,17 +48,19 @@ export function createMantleOverlay({config, earth, uniforms, stage, surfaceMate
     document.dispatchEvent(new CustomEvent('globe-section-state',{detail:{active,ready,age:frame.age_ma,error:stage.dataset.mantleOverlay==='error'}}));
   }
   function visibility() {
-    const opacity=active&&ready?Number($('mantle-opacity').value)/100:1;
+    // Loading changes readiness for controls, not visibility of the last complete globe.
+    const visible=active&&Boolean(displayed);
+    const opacity=visible?Number($('mantle-opacity').value)/100:1;
     uniforms.mantleSurfaceOpacity.value=opacity;
     if(surfaceMaterial.transparent!==(opacity<1)) {surfaceMaterial.transparent=opacity<1;surfaceMaterial.needsUpdate=true;}
     surfaceMaterial.depthWrite=opacity===1;
-    uniforms.mantleCutaway.value=active&&ready&&$('mantle-cutaway').checked?1:0;
+    uniforms.mantleCutaway.value=visible&&$('mantle-cutaway').checked?1:0;
 
     if(displayed) {
-      displayed.visible=ready;
+      displayed.visible=visible;
       for(const name of ['slabs','piles','core'])displayed.getObjectByName(name).visible=$(`overlay-${name}`).checked;
     }
-    if(trace)trace.visible=active&&ready&&$('mantle-section').checked;
+    if(trace)trace.visible=visible&&$('mantle-section').checked;
     stage.dataset.mantleCutaway=String(uniforms.mantleCutaway.value===1);
     stage.dataset.mantleOpacity=String(opacity);
   }
@@ -101,30 +103,36 @@ export function createMantleOverlay({config, earth, uniforms, stage, surfaceMate
     message(config.strings.loading);retry.hidden=true;caption.hidden=false;stage.dataset.mantleOverlay='loading';
     let next=null;
     try {
-      await enter(selected.age_ma,first);
-      if(pending.signal.aborted||!active)return;
-      const payloads=await Promise.all(['slabs','piles'].map(async name=>{
-        const info=selected.layers[name],response=await fetch(info.url,{signal:pending.signal});
-        if(!response.ok)throw new Error(`HTTP ${response.status}`);
-        const buffer=await response.arrayBuffer();
-        if(info.primitive!=='triangles'||info.indices%3||buffer.byteLength!==info.bytes||info.bytes!==info.points*12+info.indices*4)throw new Error('Invalid mantle mesh length');
-        const positions=new Float32Array(buffer,0,info.points*3),indices=new Uint32Array(buffer,info.points*12,info.indices);
-        if(positions.some(v=>!Number.isFinite(v))||indices.some(i=>i>=info.points))throw new Error('Invalid mantle mesh');
-        return {name,positions,indices};
-      }));
-      if(pending.signal.aborted||!active)return;
-      next=new THREE.Group();next.add(new THREE.HemisphereLight(0xdbefff,0x152234,2));
-      const light=new THREE.DirectionalLight(0xffffff,2);light.position.set(2,3,2);next.add(light);
-      const matrix=overlayMatrix(selected.rotation_matrix);
-      for(const {name,positions,indices} of payloads) {
-        const geometry=new THREE.BufferGeometry();geometry.setAttribute('position',new THREE.BufferAttribute(positions,3));geometry.setIndex(new THREE.BufferAttribute(indices,1));
-        geometry.applyMatrix4(matrix);geometry.computeVertexNormals();
-        const material=new THREE.MeshStandardMaterial({color:name==='slabs'?0x529dd6:0xef9546,side:THREE.DoubleSide,roughness:.8});
-        const mesh=new THREE.Mesh(geometry,material);mesh.name=name;next.add(mesh);
-      }
-      const core=new THREE.Mesh(new THREE.SphereGeometry(.546,64,32),new THREE.MeshStandardMaterial({color:0x69727c,roughness:.85}));
-      core.name='core';next.add(core);
-      dispose(displayed);displayed=next;next=null;earth.add(displayed);buildTrace();ready=true;visibility();
+      const prepare = async () => {
+        const payloads=await Promise.all(['slabs','piles'].map(async name=>{
+          const info=selected.layers[name],response=await fetch(info.url,{signal:pending.signal});
+          if(!response.ok)throw new Error(`HTTP ${response.status}`);
+          const buffer=await response.arrayBuffer();
+          if(info.primitive!=='triangles'||info.indices%3||buffer.byteLength!==info.bytes||info.bytes!==info.points*12+info.indices*4)throw new Error('Invalid mantle mesh length');
+          const positions=new Float32Array(buffer,0,info.points*3),indices=new Uint32Array(buffer,info.points*12,info.indices);
+          if(positions.some(v=>!Number.isFinite(v))||indices.some(i=>i>=info.points))throw new Error('Invalid mantle mesh');
+          return {name,positions,indices};
+        }));
+        if(pending.signal.aborted||!active)throw new DOMException('Superseded','AbortError');
+        next=new THREE.Group();next.add(new THREE.HemisphereLight(0xdbefff,0x152234,2));
+        const light=new THREE.DirectionalLight(0xffffff,2);light.position.set(2,3,2);next.add(light);
+        const matrix=overlayMatrix(selected.rotation_matrix);
+        for(const {name,positions,indices} of payloads) {
+          const geometry=new THREE.BufferGeometry();geometry.setAttribute('position',new THREE.BufferAttribute(positions,3));geometry.setIndex(new THREE.BufferAttribute(indices,1));
+          geometry.applyMatrix4(matrix);geometry.computeVertexNormals();
+          const material=new THREE.MeshStandardMaterial({color:name==='slabs'?0x529dd6:0xef9546,side:THREE.DoubleSide,roughness:.8});
+          const mesh=new THREE.Mesh(geometry,material);mesh.name=name;next.add(mesh);
+        }
+        const core=new THREE.Mesh(new THREE.SphereGeometry(.546,64,32),new THREE.MeshStandardMaterial({color:0x69727c,roughness:.85}));
+        core.name='core';next.add(core);
+        return () => {
+          dispose(displayed);displayed=next;next=null;earth.add(displayed);buildTrace();
+          visibility();stage.dataset.mantleAge=String(selected.age_ma);
+        };
+      };
+      await enter(selected.age_ma,first,{prepare,isCurrent:()=>!pending.signal.aborted&&active});
+      if(pending.signal.aborted||!active){dispose(next);return;}
+      ready=true;visibility();
       stage.dataset.mantleOverlay='ready';stage.dataset.mantleAge=String(selected.age_ma);
       $('mantle-age').value=String(selected.age_ma);
       $('mantle-residual').textContent=config.strings.residual.replace('{error}',selected.india_position_p95_deg.toFixed(2));
@@ -132,7 +140,7 @@ export function createMantleOverlay({config, earth, uniforms, stage, surfaceMate
       if(first&&matchMedia('(max-width:899px)').matches){$('inspector').classList.add('closed');$('info-toggle').setAttribute('aria-expanded','false');$('info-toggle').focus();}
     } catch(error) {
       dispose(next);
-      if(!pending.signal.aborted&&active){pending.abort();ready=false;dispose(displayed);displayed=null;removeTrace();visibility();stage.dataset.mantleOverlay='error';linkedState();message(config.strings.error);retry.hidden=false;}
+      if(!pending.signal.aborted&&active){pending.abort();ready=false;dispose(displayed);displayed=null;removeTrace();visibility();stage.dataset.mantleOverlay='error';delete stage.dataset.mantleAge;linkedState();message(config.strings.error);retry.hidden=false;}
     }
   }
   function requestAge(age) {
@@ -147,7 +155,7 @@ export function createMantleOverlay({config, earth, uniforms, stage, surfaceMate
       return true;
     }
     controller?.abort();clearTimeout(debounce);frame=next;ready=false;stage.dataset.mantleOverlay='loading';visibility();linkedState();
-    delete stage.dataset.mantleAge;stage.dataset.mantleOverlay='loading';message(config.strings.loading);
+    stage.dataset.mantleOverlay='loading';message(config.strings.loading);
     $('mantle-age').value=String(frame.age_ma);debounce=setTimeout(()=>load(),180);return true;
   }
   toggle.addEventListener('change',()=>{
