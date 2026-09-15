@@ -59,6 +59,14 @@ class RoutingTests(unittest.TestCase):
         self.assertAlmostEqual(reached_seam / total_seam, 1.0, places=6)
         self.assertAlmostEqual(drained_seam.max(), drained_centre.max(), delta=drained_centre.max() * 0.02)
 
+    def test_a_lowered_sea_routes_over_the_exposed_shelf(self):
+        z = island()
+        shelf = (z > -130) & ~(z > 0)
+        self.assertGreater(shelf.sum(), 0)
+        low = route(z, z > -130)
+        self.assertTrue((low[shelf] > 0).all(), 'every shelf cell drains something')
+        self.assertGreater(low.max(), route(z, z > 0).max(), 'the island drains more land at the lowstand')
+
     def test_the_field_is_a_cone_the_size_of_its_river(self):
         land = np.ones((HEIGHT, WIDTH), bool)
         drained = np.full((HEIGHT, WIDTH), RIVER_KM2 / 10.0)

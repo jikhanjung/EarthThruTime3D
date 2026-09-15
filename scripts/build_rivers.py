@@ -19,6 +19,12 @@ draws where the field passes a cut, so a line's width follows its river's size, 
 is crisp at any zoom, and a mix of two grids' fields is a plausible in-between, as the
 coastline's distance field is. A river cell drains at least RIVER_KM2.
 
+A grid whose sea-level slider reaches below its datum (the ice sidecar's `range_m`, written
+by scripts/build_ice.py) is routed a second time with the sea at that lowest level, land
+being everything above it, and the result written as `<id>-rivers-low.png`: the rivers of
+the exposed shelf, which the page mixes in as the slider goes down. Pass --lows to write
+only those.
+
 The grids are smooth interpretive surfaces, so the lines show where trunk rivers must
 have run, not real channels.
 """
@@ -146,6 +152,15 @@ def river_field(drained, land):
     return np.round(field * 255).astype(np.uint8)
 
 
+def lowest_levels(out):
+    """Each grid's lowest slider level in metres, from the ice sidecar, where it is below 0."""
+    path = out / "ice-sources.json"
+    if not path.exists():
+        return {}
+    sheets = json.loads(path.read_text()).get("sheets", {})
+    return {grid: sheet["range_m"][0] for grid, sheet in sheets.items() if sheet.get("range_m", [0])[0] < 0}
+
+
 def route(z, land):
     """The area in km2 draining through each cell of a grid at the texture's resolution."""
     surface = fill_sinks(z, land)
@@ -159,22 +174,30 @@ def main():
     parser.add_argument("--source", type=Path, help="directory of grids; default the 6-minute set when fetched")
     parser.add_argument("--width", type=int, default=2048, choices=(1024, 2048, 4096),
                         help="texture width; the served fields are 2048")
+    parser.add_argument("--lows", action="store_true", help="write only the lowstand fields")
     parser.add_argument("ids", nargs="*", help="slice ids to build; default all")
     args = parser.parse_args()
     catalogue = json.loads(CATALOGUE.read_text())
     directory = args.source or default_source(catalogue)
     args.out.mkdir(parents=True, exist_ok=True)
+    lows = lowest_levels(args.out)
     for item in catalogue["maps"]:
         if args.ids and item["id"] not in args.ids:
             continue
+        if args.lows and item["id"] not in lows:
+            continue
         started = time.time()
         z = resample(elevation(locate(directory, item)), args.width)
-        land = z > 0
-        drained = route(z, land)
-        Image.fromarray(river_field(drained, land), "L").save(args.out / f"{item['id']}-rivers.png")
-        largest = drained[land].max() / 1e6 if land.any() else 0.0
-        print(f"{item['id']}  {item['age_ma']} Ma  largest basin {largest:.2f} Mkm2  "
-              f"river cells {(land & (drained >= RIVER_KM2)).sum() / max(land.sum(), 1):.1%} of land  {time.time() - started:.0f}s")
+        levels = [] if args.lows else [(0.0, "rivers")]
+        if item["id"] in lows:
+            levels.append((lows[item["id"]], "rivers-low"))
+        for level, suffix in levels:
+            land = z > level
+            drained = route(z, land)
+            Image.fromarray(river_field(drained, land), "L").save(args.out / f"{item['id']}-{suffix}.png")
+            largest = drained[land].max() / 1e6 if land.any() else 0.0
+            print(f"{item['id']}  {item['age_ma']} Ma  sea {level:+.0f} m  largest basin {largest:.2f} Mkm2  "
+                  f"river cells {(land & (drained >= RIVER_KM2)).sum() / max(land.sum(), 1):.1%} of land  {time.time() - started:.0f}s")
 
 
 if __name__ == "__main__":

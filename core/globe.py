@@ -243,6 +243,22 @@ def rivers_path(item):
     return derived_path(item, "rivers.png")
 
 
+def rivers_low_path(item):
+    """The same drainage routed with the sea at the grid's lowest slider level; only where the
+    slider reaches below the datum."""
+    return derived_path(item, "rivers-low.png")
+
+
+def rivers_low_of(kinds, item):
+    """The lowstand river field and its level, or None: the level is the bottom of the ice
+    sidecar's slider range, the same figure the page holds the slider to."""
+    sheet = kinds["sheets"].get(item["id"])
+    level = sheet["range_m"][0] if sheet and sheet.get("range_m") else 0
+    if level >= 0 or not rivers_low_path(item).exists():
+        return None
+    return {"url": reverse("globe-rivers-low", args=[item["id"]]), "level_m": level}
+
+
 def sealevel_curve():
     """The long-term and Pleistocene sea-level curves and each grid's datum, as
     scripts/build_sealevel.py wrote them. Absent until that script has run."""
@@ -794,6 +810,9 @@ def globe(request):
                            # Potential drainage routed over the grid itself; only where built.
                            "rivers": (reverse("globe-rivers", args=[item["id"]])
                                       if source == "paleodem2018" and rivers_path(item).exists() else None),
+                           # The shelf's rivers at the slider's lowest level, mixed in as the sea drops.
+                           "rivers_low": (rivers_low_of(kinds, item)
+                                          if source == "paleodem2018" and rivers_path(item).exists() else None),
                            "field": (reverse("globe-field", args=[item["id"]])
                                      if field_path(item).exists() else None),
                            "names": landmass_names(pieces_by_frame[item["id"]]),
@@ -910,6 +929,22 @@ def river_field(request, map_id):
         file = rivers_path(item).open("rb")
     except FileNotFoundError:
         raise Http404("River field not generated") from None
+    response = FileResponse(file, content_type="image/png")
+    response["Cache-Control"] = "private, max-age=3600"
+    return response
+
+
+@require_safe
+def river_low_field(request, map_id):
+    if not enabled():
+        raise Http404
+    item = find_map(map_id)
+    if item is None:
+        raise Http404
+    try:
+        file = rivers_low_path(item).open("rb")
+    except FileNotFoundError:
+        raise Http404("Lowstand river field not generated") from None
     response = FileResponse(file, content_type="image/png")
     response["Cache-Control"] = "private, max-age=3600"
     return response

@@ -55,12 +55,24 @@
 - `manage.py test`(52), `tests/rivers_check.py`(섬의 모든 물이 바다에 닿는가, 웅덩이가 넘치는가,
   날짜변경선 위의 섬이 하나로 흐르는가, 장이 원뿔인가), 브라우저 스위트의 하천 토글 검사.
 
+## 저수위 장 (둘째 커밋)
+
+해수면 슬라이더를 내리면 대륙붕이 드러나는데 0 m에서 흘린 장에는 그 땅의 강이 없다는 지적을
+받았다. 그래서 슬라이더가 기준면 아래로 내려가는 격자(빙하 사이드카 `range_m`의 아래 끝, 31장:
+현재 −130 m, 빙하기 시점 −20~−50 m)는 그 높이를 해수면으로 두고 한 번 더 흘려
+`<id>-rivers-low.png`로 쓴다(`build_rivers.py --lows`). 프레임은 `rivers_low`로 주소와 높이를
+싣고, 셰이더는 각 쪽의 장을 슬라이더 값이 그 높이에서 차지하는 비율만큼 저수위 장 쪽으로 섞는다
+(`data-river-low`, 기준면 0, 바닥 1). 대륙붕의 강은 붕이 드러나면서 서서히 나타나고, 두 장이
+공유하는 육지 쪽 강은 그대로다. 시간 범위(2.5만 년·13만 년)는 시점마다 해수면을 정하므로 같은
+효과를 얻는다. 현재 격자를 −130 m에서 흘리면 가장 큰 유역이 9.99 Mkm²가 된다(순다 대륙붕과
+아마존–오리노코가 합쳐지는 등 붕 위에서 유역이 이어진다).
+
 ## 남은 것 (이슈 #30)
 
-- 저수위와 최후빙기. 현재 격자를 빙하 슬라이스의 해수면마다 다시 흘리면 강이 드러난 대륙붕
-  (순다, 도거랜드의 해협강, 베링기아)을 건넌다. 얼음 아래는 빙하 마스크의 거리장으로 포물선
-  얼음 표면(h = k√d)을 격자에 더해 흘리면 융빙수가 가장자리를 따라 흐르고 빙하호가 차서
-  넘친다(아가시 → 미시시피). 얼음 두께 자체는 PaleoMIST 1.0(CC BY 4.0, 3.5 GB)이 후보다.
+- 최후빙기의 얼음. 해안이 물러나며 실제로 자리를 옮기는 물길은 두 장의 섞임으로만 보인다.
+  얼음 아래는 빙하 마스크의 거리장으로 포물선 얼음 표면(h = k√d)을 격자에 더해 흘리면
+  융빙수가 가장자리를 따라 흐르고 빙하호가 차서 넘친다(아가시 → 미시시피). 얼음 두께 자체는
+  PaleoMIST 1.0(CC BY 4.0, 3.5 GB)을 쓰기로 했다.
 - 호수 깊이(메운 높이 − 격자)를 둘째 채널로.
 - 현재 시점에 Natural Earth 강을 겹쳐 비교.
 - 시점 사이는 두 장의 선형 섞임이라 강의 역사가 아니라 페이드다. 지형 진화 모델 없이는
@@ -69,10 +81,10 @@
 ## 바뀐 파일
 
 - `scripts/build_rivers.py`, `tests/rivers_check.py` (새로)
-- `core/globe.py`, `config/urls.py`: `rivers_path`, 프레임의 `rivers`, `/globe/rivers/<id>.png`,
-  `rivers_available`
+- `core/globe.py`, `config/urls.py`: `rivers_path`, `rivers_low_path`, 프레임의 `rivers`·`rivers_low`,
+  `/globe/rivers/<id>.png`, `/globe/rivers-low/<id>.png`, `rivers_available`
 - `templates/core/home.html`, `templates/core/about.html`, `locale/en/LC_MESSAGES/django.po`:
   `#rivers` 토글, `#river-note`, 출처 줄
-- `static/core/globe.js`: `loadRivers`, `applyRivers`, `riverA/riverB/riverWeight`, 셰이더의 하천
+- `static/core/globe.js`: `loadRivers`, `loadRiversLow`, `applyRivers`, `riverA/riverB/riverWeight`, `riverLow0/riverLow1/riverLowT`, 셰이더의 하천
 - `deploy/pack_data.py`: `*-rivers.png` 포장(없으면 건너뜀)
 - `core/tests.py`, `tests/globe-browser.mjs`, `docs/globe-viewer.md` "Rivers"
