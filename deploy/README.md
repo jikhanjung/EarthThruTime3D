@@ -4,13 +4,17 @@
 `../hanyang3d/deploy`의 Gunicorn·버전 이미지·Compose·상태 확인 구성을 참고했고,
 데이터베이스가 있는 서비스이므로 백업과 복구 단계를 더했다.
 
-릴리스 대상: v0.11.0. 배포 검증 결과는 devlog의 릴리스 기록을 따릅니다.
+2026-09-15 v0.11.0 운영 배포 완료. 이미지 ID:
+`sha256:89f5bd0aa0a1a1e1e13e369b61085c9e8f7369beeed4333ba9debcba20b634d1`.
+배포·백업·공개 화면 검증 결과는 [릴리스 기록](../devlog/20260915_jikhanjung_068_release_0110.md)에 있다.
 
 ## 운영 주소
 
 2026-09-12 dolfinid에 배포했다.
 
 - 지구본: https://earththrutime.nopeoplestime.info/
+- 인도–아시아 단면·3D 지표: https://earththrutime.nopeoplestime.info/collision/
+- 맨틀 모형: https://earththrutime.nopeoplestime.info/mantle/
 - 프로젝트 소개: https://earththrutime.nopeoplestime.info/about/
 - 상태 확인: https://earththrutime.nopeoplestime.info/healthz
 

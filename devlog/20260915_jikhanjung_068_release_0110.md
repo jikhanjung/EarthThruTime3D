@@ -1,6 +1,6 @@
 # jikhanjung 068 — v0.11.0: 맨틀과 인도–아시아 단면 릴리스
 
-날짜: 2026-09-15 · 상태: 배포 준비
+날짜: 2026-09-15 · 상태: 운영 배포 완료
 
 ## 릴리스 내용
 
@@ -26,3 +26,25 @@ gzip 420,502 bytes다. 코드 버전은 v0.11.0, Django는 5.2 계열을 유지�
 
 DB migration 변화나 seed는 없다. 배포 직전 백업은 기존 스냅샷 API 경로로 만들며
 검증된 이미지·데이터 쌍만 교체한다. 코드 롤백은 DB를 복원하지 않는다.
+
+## 최종 결과
+
+- 기능 PR [#33](https://github.com/jikhanjung/EarthThruTime3D/pull/33)을 main에 병합했다.
+  빌드 소스는 `3cda804`, 병합 커밋은 `17b2d3a`다.
+- `make check`, Django 61개 테스트, 전처리·수치 검사와 Docker 컨테이너 스모크가 통과했다.
+  운영 묶음은 926개 파일, 384,445,753 bytes이며 전송 후 SHA-256을 다시 검증했다.
+- 개발 호스트에서 빌드한 `honestjung/earththrutime3d:v0.11.0`을 아카이브로 전송해
+  dolfinid에서 load·교체했다. 운영 이미지 ID는
+  `sha256:89f5bd0aa0a1a1e1e13e369b61085c9e8f7369beeed4333ba9debcba20b634d1`이다.
+- 배포 직전 `db-20260915T082043Z.sqlite3`(131,072 bytes)를 생성하고 무결성을 확인했다.
+  기존 운영 비밀 설정과 DB를 유지했다. 이전 v0.10.5 이미지·자료는 롤백용으로 보존했다.
+- 공개 HTTPS `/healthz`: `status=ok`, `version=0.11.0`, 기본 PaleoAtlas 필드 90개,
+  누락 0. 컨테이너 healthy와 호스트 스모크도 통과했다.
+- 공개 사이트에서 Playwright로 A–A′ 팝업의 지연 로딩, 80→0 Ma 전환, 3D 지표,
+  수직 배율, 지각 가정 조절, 재생, Escape·포커스 복원, 모바일·영문 화면을 검증했다.
+- 맨틀 화면도 공개 주소에서 gzip 전송, 시점 전환, 연속 입력 취소, 레이어 토글,
+  브라우저 내 요청 실패 모의·복구, 모바일·영문 표시를 확인했다. 페이지 오류는 없었다.
+
+운영 화면: [지구본](https://earththrutime.nopeoplestime.info/),
+[인도–아시아 단면](https://earththrutime.nopeoplestime.info/collision/),
+[맨틀 모형](https://earththrutime.nopeoplestime.info/mantle/).
