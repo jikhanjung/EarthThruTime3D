@@ -289,8 +289,7 @@ the pixels. `/globe/ice/<id>.png` serves it and a frame carries `ice` only where
 exists.
 
 The present day comes from Natural Earth's 10 m glaciated areas and Antarctic ice
-shelves, public domain; polygon parts are filled one by one, so a hole is filled as ice
-too, which touches a few nunataks and nothing else at this resolution. Every older grid
+shelves, public domain; polygon parts are filled one by one. Every older grid
 takes the ice the 2016 PaleoAtlas paints on the map nearest its age, within 5 Myr and
 the younger map on a tie, as the names and motions are borrowed. `segment_paleoatlas.ice`
 reads it with the same pale threshold and overprint refill as the land masks, then keeps
@@ -305,12 +304,19 @@ speck at the map's polar edge and is dropped. 46 of the 109 grids get a mask, 14
 them from a map up to 5 Myr away. A grid whose map paints no ice gets no file, so the
 overlay fades out across that gap, which there means retreat rather than missing data. The atlas
 prelude older than 540 Ma gets none, and no map draws a mountain glacier, so those
-appear only at the present. Before the mask is written its edge is smoothed along
-longitude with a width that grows toward the poles, about 0.15° at the equator and up
-to 8° of longitude at the pole, because every column of the texture becomes a wedge
-there and a hard edge read from the atlas's one-degree cells turned into spokes when the
-globe was viewed from above Antarctica. The relief ramp used to run to white above 4000 m as well;
-its top is now a grey, so white on the globe means ice.
+appear only at the present. Before the mask is written its edge is smoothed by half a
+degree, and wider along longitude toward the poles, up to 8° at the pole: the atlas's
+white is read from one-degree cells whose staircase shows at close zoom, and every
+column of the texture becomes a wedge at the pole, where a hard edge turned into spokes
+when the globe was viewed from above Antarctica. Every mask then has its enclosed gaps
+below 500,000 km² filled, one rule for all three sources. The atlas draws hachures,
+grey mountains and blue basins inside its white sheets, and the opening that cleans the
+pale pieces turned the hachured white into holes, 660,000 km² of them in Antarctica at
+20 Ma and 580,000 km² in the Gondwana sheet at 300 Ma, about 4% of the ice; Natural
+Earth leaves nunataks and slivers between neighbouring polygons, 57,000 km². No drawn
+sheet holds a real ice-free enclave near that size, and Hudson Bay, 1.2 million km²,
+stays open if a reconstruction leaves it so. The relief ramp used to run to white above
+4000 m as well; its top is now a grey, so white on the globe means ice.
 
 The shader draws grounded ice near-opaque white and shelves paler over whatever
 surface is showing, in relief, mask and temperature modes, sampled through the same
@@ -345,8 +351,20 @@ less than the deposits say at the ice age's start and end, 380 to 340 Ma and 280
 255 Ma, where it paints a small polar cap and the localities sit at 55 to 70°, and it
 draws nothing for the Early Cretaceous dropstone localities or the Miocene mountain and
 tidewater glaciers of Alaska, Iceland and Kamchatka. The compilation has nothing before
-the Devonian, so the Ordovician sheets go unchecked. Coupling the extent to the
-sea-level control is issue #7's next step.
+the Devonian, so the Ordovician sheets go unchecked.
+
+Tibet and the Himalaya carry no sheet at any stop, and that is what the evidence says.
+The atlas paints the plateau white as high ground, which the 45° rule drops, and at the
+last glacial maximum no reconstruction puts an ice sheet there: the plateau-wide sheet
+once proposed by Kuhle was rejected by field mapping and cosmogenic exposure dating
+(Owen & Dortch 2014, Quaternary Science Reviews 88, 14–54; Heyman 2014, Quaternary
+Science Reviews 91, 30–41), which find valley glaciers and small ice caps advancing
+kilometres to a few tens of kilometres beyond their present fronts, the dry plateau
+interior ice-free, and in the monsoon-fed ranges the largest advances before the global
+maximum, in marine isotope stage 3, when the monsoon was stronger. So the sea-level
+control leaves the present mountain glaciers of High Asia, the Andes and Alaska as they
+are, and the Miocene and Eocene icehouses show none there, since no reconstruction of
+their extent exists and the atlas white is high ground.
 
 ## Mapping pipeline
 
