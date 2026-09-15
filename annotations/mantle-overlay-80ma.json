@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "age_ma": 80,
+  "source": "muller2022-opt1",
+  "target": "paleomap2016",
+  "mode": "approximate_overlay",
+  "method": "Africa-anchored rotation; user-accepted rough comparison, not exact alignment",
+  "audit": "docs/validation/mantle-frame-alignment.json",
+  "source_archive_sha256": "8e6d64a5910bc6fc1f335a135b4e53d0be5a51f8b38a772f82376cf905482f67",
+  "rotation_matrix": [
+    [
+      0.9939646555125462,
+      -0.09190469683973979,
+      0.05989816600381425
+    ],
+    [
+      0.08931377306139272,
+      0.9950048929335978,
+      0.04459050324607349
+    ],
+    [
+      -0.06369704493430542,
+      -0.03897165299285633,
+      0.9972080508748624
+    ]
+  ],
+  "layers_sha256": {
+    "slabs": "318e245ce3f3c2eb0fbda9ff46c31ef6d5ba4d125caaf5812e5584f6357df086",
+    "piles": "cd3d06cbe1fe306f982943518a9603a325b626c52f7ff30fc3addcf9f6181f92"
+  },
+  "india_position_p95_deg": 3.0661206058141657,
+  "cutaway": {
+    "longitude": 80,
+    "latitude": 10,
+    "radius_degrees": 45
+  }
+}

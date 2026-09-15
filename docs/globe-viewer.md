@@ -1,8 +1,10 @@
 # Reference globe viewer
 
 The separate [`/mantle/` experiment](geodynamics.md) displays published Müller 2022
-OPT1 mantle surfaces and their accompanying plate boundaries. It is not a layer of
-the PALEOMAP surface, and does not calculate convection or crustal deformation.
+OPT1 mantle surfaces and their accompanying plate boundaries. The new
+[80 Ma approximate overlay](globe-mantle-overlay.md) places slab and pile surfaces
+beneath the main PALEOMAP globe using an explicitly approximate Africa-anchored rotation.
+Neither view calculates convection or crustal deformation.
 The inspector's [India–Asia A–A′ popup](india-asia-section.md) compares the regional
 mantle section and PaleoDEM 3D terrain, with independent vertical exaggeration controls.
 

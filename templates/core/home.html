@@ -10,6 +10,7 @@
   <section class="globe-panel" aria-label="{% trans '회전 가능한 3D 지구본' %}">
     <div id="globe" tabindex="0" role="img" aria-label="{% trans '고지리 지구본. 마우스 또는 방향키로 회전, 휠이나 더하기 빼기 키로 확대 축소.' %}"></div>
     <div class="globe-caption"><span class="live-dot"></span><span id="globe-age">{% trans "현재" %}</span></div>
+    <p id="mantle-overlay-caption" class="mantle-overlay-caption" hidden></p>
     <div id="status" role="status" aria-live="polite">{% trans "지구본을 준비하고 있습니다…" %}</div>
     <button id="retry" class="retry" hidden>{% trans "다시 불러오기" %}</button>
     <p class="gesture" id="gesture">{% trans "드래그로 회전 · 스크롤 / 핀치로 확대" %}</p>
@@ -17,6 +18,22 @@
   </section>
   <aside class="inspector" id="inspector" aria-label="{% trans '선택한 시대 정보' %}">
     <button type="button" data-collision-open aria-controls="collision-dialog" aria-expanded="false">{% trans "인도–아시아 A–A′ 단면" %}</button>
+    {% if mantle_overlay %}
+    <fieldset class="mantle-overlay-panel" id="mantle-overlay-panel">
+      <legend>{% trans "지구 내부 · 80 Ma" %}</legend>
+      <label><input type="checkbox" id="mantle-overlay" autocomplete="off"> {% trans "맨틀 근사 중첩" %}</label>
+      <div id="mantle-overlay-options" hidden>
+        <label><input type="checkbox" id="mantle-cutaway" checked autocomplete="off"> {% trans "인도–아시아 지표 절개" %}</label>
+        <label><input type="checkbox" id="overlay-slabs" checked autocomplete="off"> {% trans "섭입 잔재 표면 (파랑)" %}</label>
+        <label><input type="checkbox" id="overlay-piles" checked autocomplete="off"> {% trans "심부 구조 표면 (주황)" %}</label>
+        <p class="model-note">{% trans "서로 다른 복원 모델을 아프리카 기준으로 근사 정렬했습니다. 인도 경계점의 위치 차이는 약 3°(P95)이며, 지표와 맨틀의 정확한 연결을 뜻하지 않습니다. 맨틀 깊이 배율은 ×1입니다." %}</p>
+        <p class="model-note">{% trans "절개는 내부를 보기 위한 표시입니다. 색은 온도나 유속이 아니라 구조의 종류를 나타냅니다." %}
+        <a href="https://zenodo.org/records/6622194" target="_blank" rel="noopener">Müller et al. 2022 OPT1 · CC BY 4.0</a></p>
+        <p id="mantle-overlay-status" role="status" aria-live="polite"></p>
+        <button type="button" id="mantle-overlay-retry" hidden>{% trans "다시 불러오기" %}</button>
+      </div>
+    </fieldset>
+    {% endif %}
     <p class="eyebrow">SELECTED TIME</p><h2 id="period">{% trans "현재" %}</h2><p id="age" class="age">0 <span>Ma</span></p><p id="source-title">Modern World</p>{% if temperature_available %}<p id="mean-temp" class="mean-temp"></p><figure id="temp-legend" class="temp-legend" aria-label="{% trans '기온 색 범례' %}" hidden><div class="temp-bar"><span id="temp-today" class="temp-mark today"><span>{% trans "현재" %}</span></span><span id="temp-now" class="temp-mark now" hidden></span></div><figcaption><span>−30 °C</span><span>0</span><span>20</span><span>40 °C</span></figcaption></figure>{% endif %}{% if sealevel_available %}<p id="sea-level" class="mean-temp"></p>{% endif %}
 {% if mask.relief %}    <label for="shading">{% trans "지형 음영" %}</label><select id="shading" autocomplete="off"><option value="0">{% trans "음영 없음" %}</option><option value="1" selected>{% trans "실제 기복" %}</option><option value="5">{% trans "기복 ×5" %}</option><option value="20">{% trans "기복 ×20" %}</option></select>
 {% endif %}{% if sealevel_available %}    <label for="sealevel">{% trans "해수면" %} <span id="sealevel-value" class="sealevel-value">+0 m</span></label><input id="sealevel" type="range" min="-150" max="150" step="10" value="0" list="sealevel-marks" autocomplete="off"><datalist id="sealevel-marks"></datalist><p id="sealevel-notes" class="sealevel-notes" hidden></p><label class="check-toggle"><input type="checkbox" id="sealevel-curve" autocomplete="off"> {% trans "곡선 편차 적용" %}</label>
@@ -98,6 +115,7 @@
 {{ temperature_curve|json_script:'globe-temperature' }}
 {{ sealevel|json_script:'globe-sealevel' }}
 {{ strings|json_script:'globe-strings' }}
+{{ mantle_overlay|json_script:'globe-mantle-overlay' }}
 {% else %}<section class="notice"><h2>{% trans "고지리 지구본" %}</h2><p>{% trans "이 실행 환경에서는 연구용 지도 뷰어가 활성화되지 않았습니다." %}</p></section>{% endif %}
 {% endblock %}
 {% block scripts %}{% if viewer_enabled %}

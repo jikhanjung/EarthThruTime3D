@@ -236,3 +236,10 @@ summary{cursor:pointer;color:#c9dce2}
 .check-toggle{display:flex;align-items:center;gap:8px;font-size:.78rem;color:#b6cbd4;margin:0 0 14px;cursor:pointer}
 .check-toggle input{accent-color:#88dfcc;margin:0}
 .sealevel-notes{font-size:.7rem;color:#95afbb;margin:-6px 0 10px}
+
+.mantle-overlay-panel { margin: 1rem 0; padding: .65rem; border: 1px solid var(--border, #40515f); border-radius: .5rem; }
+.mantle-overlay-panel legend { font-size: .85rem; }
+.mantle-overlay-panel label { display: flex; align-items: center; gap: .4rem; margin: .5rem 0; font-size: .85rem; }
+.mantle-overlay-panel input[type=checkbox] { width: auto; flex: none; }
+#mantle-overlay-status { font-size: .8rem; }
+.mantle-overlay-caption { position: absolute; top: 42px; left: 18px; max-width: calc(100% - 36px); margin: 0; padding: 5px 9px; border-radius: 5px; background: #102630e6; color: #c9ece4; font-size: .74rem; pointer-events: none; }
