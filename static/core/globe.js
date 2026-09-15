@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { OrbitControls } from '../vendor/three/OrbitControls.js';
 import { placeEquirectangular, placeMollweide, reproject } from './projection.js';
 import { RotationModel, turn } from './rotation.js';
+import { densifySegments } from './surface-lines.js';
 import { createMantleOverlay, CUT_UNIFORMS, CUT_SURFACE } from './mantle-overlay.js';
 let mantleOverlay = null;
 
@@ -1582,7 +1583,7 @@ function drawPlates(age, loaded) {
       }
     }
   }
-  const geometry = new THREE.BufferGeometry().setFromPoints(points);
+  const geometry = new THREE.BufferGeometry().setFromPoints(flat ? points : densifySegments(points));
   if (plateLayer) {
     plateLayer.geometry.dispose();
     plateLayer.geometry = geometry;
@@ -1670,7 +1671,7 @@ function drawCoastline(entry, rings, key = `${entry.age}|${projection}`) {
       previousLongitude = longitude;
     }
   }
-  const geometry = new THREE.BufferGeometry().setFromPoints(points);
+  const geometry = new THREE.BufferGeometry().setFromPoints(flat ? points : densifySegments(points));
   if (coastlineLayer) {
     coastlineLayer.geometry.dispose();
     coastlineLayer.geometry = geometry;

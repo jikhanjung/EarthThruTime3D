@@ -150,3 +150,32 @@ The [frame alignment audit](mantle-frame-alignment.md) now establishes a diagnos
 OPT1-to-Müller v1.2.4 rotation at five ages (80–0 Ma), verified on eight continental
 plate interiors. PALEOMAP does not pass the same global-rotation test. The audit does
 not change runtime geometry or establish alignment of the PaleoDEM raster.
+
+
+## Optional runtime data and verification
+
+Malformed or unreadable experiment catalogues disable the optional view and are logged;
+they do not prevent the home page from loading. The standalone mantle and section pages
+show their existing unavailable-data message. Asset endpoints still reject missing,
+malformed, out-of-directory or mismatched assets with 404.
+
+`core/experiment_assets.py` streams verified files. A bounded per-process cache stores
+successful SHA-256 checks keyed by path, device, inode, size, nanosecond modification time
+and change time. Replacing or rewriting a file invalidates that result, including a
+same-size rewrite that restores its modification time. JSON documents use the same
+filesystem identity with a 16-entry cache. Runtime bundles remain immutable; this is not
+a scheme for editing served files in place. Matching `If-None-Match` returns 304 only
+after the representation has been verified. Gzip is optional in both experiment servers
+and the runtime packer. The packer validates section paths and hashes before reading JSON.
+
+Processing checks are separate from Django because they require the processing dependencies:
+
+```bash
+.venv/bin/python tests/geodynamics_check.py
+.venv/bin/python tests/india_asia_check.py
+.venv/bin/python tests/frame_alignment_check.py
+```
+
+These small analytical/fixture checks do not themselves compare every source frame.
+`make check`, `make test`, and `npm test` cover application checks and JS unit tests.
+Browser scripts in `tests/` require a running development server and built data.

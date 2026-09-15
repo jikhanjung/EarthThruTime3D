@@ -1158,9 +1158,6 @@ msgid "분홍 A–A′: OPT1 원본 단면을 근사 변환한 위치"
 msgstr "Pink A–A′: approximately transformed original OPT1 section"
 
 #: core/mantle.py core/collision.py templates/core/home.html templates/core/collision.html
-msgid "현재 시간 범위에서는 맨틀 중첩을 사용할 수 없습니다."
-msgstr "Mantle overlay is unavailable in this time window."
-
 #: core/mantle.py core/collision.py templates/core/home.html templates/core/collision.html
 msgid "메인 지구본의 같은 시점 자료를 기다리는 중…"
 msgstr "Waiting for the same age on the main globe…"

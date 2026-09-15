@@ -172,7 +172,7 @@ async function load() {
     const result = await response.json();
     if (result.schema_version !== 1 || result.frames.length !== 5 || result.frames.some((f, i) => f.age_ma !== 80-i*20)) throw new Error('Invalid section');
     data = result;slider.value=String(data.frames.findIndex(f=>f.age_ma===desiredAge));
-    slider.disabled=waiting&&!linkedError;$('collision-play').disabled=linked;draw();
+    setWaiting(waiting,linkedError);$('collision-play').disabled=linked;draw();
   } catch (error) {
     if (error.name !== 'AbortError') { $('collision-status').textContent = strings.error; $('collision-retry').hidden = false; }
   }
@@ -180,6 +180,7 @@ async function load() {
 function setWaiting(value,error=false) {
   waiting=value;linkedError=error;slider.disabled=(value&&!error)||!data;
   document.querySelector('.plots').hidden=value;
+  $('crust-panel').hidden=value||!$('collision-crust').checked;
   $('collision-overview').hidden=value;
   $('collision-linked-status').hidden=!value;
   $('collision-linked-status').textContent=error?strings.linkedError:strings.linkedLoading;

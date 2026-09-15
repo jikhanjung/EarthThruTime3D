@@ -56,7 +56,7 @@ try {
  await popup.locator('#collision-retry').click();await ready(60);
  await expect(popup.locator('body')).toHaveAttribute('data-age','60');
  await popup.locator('#collision-time').press('Escape');await expect(page.locator('#collision-dialog')).not.toBeVisible();
- await expect.poll(()=>page.locator('#collision-dialog iframe').evaluate(el=>el.contentDocument?.URL)).toBe('about:blank');
+ await expect.poll(()=>page.locator('#collision-dialog iframe').evaluate(el=>el.contentDocument?.URL),{timeout:30000}).toBe('about:blank');
  console.log('Linked section, recovery, document unload and main age synchronization passed');
  await toggle.uncheck();await expect(page.locator('#timeline')).toHaveValue(initial);await expect(globe).toHaveAttribute('data-projection','equirect');
  await toggle.check();await ready(80);

@@ -15,6 +15,34 @@ from deploy.pack_data import verified_experiment_path
 
 
 class ReleaseTests(SimpleTestCase):
+    def test_experiment_bundle_allows_uncompressed_assets(self):
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+            mantle = root / 'data/derived/mantle/muller2022-opt1'
+            section = root / 'data/derived/india-asia'
+            mantle.mkdir(parents=True)
+            section.mkdir(parents=True)
+            content = b'mesh'
+            item = {'file': 'mesh.bin', 'bytes': len(content),
+                    'sha256': hashlib.sha256(content).hexdigest()}
+            (mantle/'mesh.bin').write_bytes(content)
+            (mantle/'catalogue.json').write_text(json.dumps({
+                'schema_version': 1, 'source': 'muller2022-opt1',
+                'frames': [{'index': i, 'layers': {name: item for name in ('slabs', 'piles', 'boundaries')}}
+                           for i in range(51)]}))
+            content = json.dumps({'frames': [{'age_ma': age, 'surface': {}}
+                                            for age in (80, 60, 40, 20, 0)]}).encode()
+            (section/'section.json').write_bytes(content)
+            (section/'catalogue.json').write_text(json.dumps({
+                'schema_version': 1, 'source': 'muller2022-opt1', 'file': 'section.json',
+                'bytes': len(content), 'sha256': hashlib.sha256(content).hexdigest()}))
+            files = []
+            with patch('deploy.pack_data.BASE_DIR', root):
+                pack_experiments(root/'stage', files)
+            self.assertEqual((root/'stage/india-asia/section.json').read_bytes(), content)
+            self.assertTrue(files)
+            self.assertFalse(any(entry['path'].endswith('.gz') for entry in files))
+
     def test_unsafe_section_path_is_rejected_before_reading(self):
         with TemporaryDirectory() as directory:
             root = Path(directory)
