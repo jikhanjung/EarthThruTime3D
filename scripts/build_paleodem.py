@@ -9,7 +9,10 @@ nothing (--bits 8, 59 m steps, files 1.8x smaller). The viewer decodes both the 
 way, so an 8-bit texture reads 9 m low, below its own step. 8 is the default, chosen
 by the owner to keep the runtime bundle small (about 83 MB against 150 MB); the cost is
 that the sea-level control cuts the coast from 59 m height steps. For shading alone the
-two renders differ by one grey level. Pass --bits 12 for the finer set.
+two renders differ by one grey level. Pass --bits 12 for the finer set. The present grid
+is written at 12 bits whatever --bits says: the time windows of the last glacial cycle
+move the sea over it by more than a hundred metres, which 59 m steps would reduce to two
+jumps of the coast, and one finer texture costs about 1.5 MB.
 The DEM is bilinearly resampled to the texture grid before the sea-level cut, so the
 coastline is the 0 m contour of the grid rather than a staircase of cells.
 
@@ -38,6 +41,7 @@ from scripts.segment_paleoatlas import FIELD_WIDTH, signed_field  # noqa: E402
 
 CATALOGUE = ROOT / "sources/paleodem-slices.json"
 Z_MIN, Z_MAX = -9000.0, 6000.0   # metres; the grids' own range, sea level at 0.6
+PRESENT_BITS = 12                # the grid the time windows move the sea over
 
 
 def elevation(path):
@@ -113,8 +117,9 @@ def main():
         if args.ids and item["id"] not in args.ids:
             continue
         z = elevation(locate(directory, item))
-        Image.fromarray(texture(z, args.width, args.bits)).save(args.out / f"{item['id']}-field.png")
-        print(f"{item['id']}  {item['age_ma']} Ma  land {(z > 0).mean():.1%}")
+        bits = PRESENT_BITS if item["age_ma"] == 0 else args.bits
+        Image.fromarray(texture(z, args.width, bits)).save(args.out / f"{item['id']}-field.png")
+        print(f"{item['id']}  {item['age_ma']} Ma  land {(z > 0).mean():.1%}  {bits}-bit")
 
 
 if __name__ == "__main__":

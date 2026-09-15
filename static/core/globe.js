@@ -333,7 +333,8 @@ async function selectStop(value, manual = false) {
     : (between ? `${place.from.title} → ${place.to.title}` : place.from.title);
   $('globe-age').textContent = [periodLabel(place), ageLabel(place),
     place.mapless ? null : (masked ? L.mask : relief ? L.relief : heated ? L.temperature : null),
-    place.mapless ? L.noMap : (between ? L.interpolated : null)].filter(Boolean).join(' / ');
+    place.mapless ? L.noMap : (between ? L.interpolated : null),
+    !place.mapless && place.from.ice_kind === 'analogue' ? L.analogueIce : null].filter(Boolean).join(' / ');
   // Older than any map there is no source to preview, and leaving the last one up
   // would read as if it applied.
   if ($('source-figure')) $('source-figure').hidden = place.mapless;
@@ -382,9 +383,10 @@ async function selectStop(value, manual = false) {
       stage.dataset.iceCut = '';
       stage.dataset.iceLow = '';
     } else {
-      // In the time window each frame is the present at one age: its dated slice stands in
-      // for the frame's own ice and the age sets the sea level, so no offset cuts the ice.
-      const dated = Boolean(place.from.deglacial);
+      // In a time window each frame is the present at one age, the age setting the sea level.
+      // Where a dated slice exists it stands in for the frame's own ice and no offset cuts
+      // it; older than any slice the frame takes the what-if path at that level.
+      const dated = Boolean(place.from.deglacial?.url);
       const stateA = dated ? { cut: 0.5, low: null } : iceState(place.from, seaOffset);
       const stateB = dated ? { cut: 0.5, low: null } : iceState(place.to, seaOffset);
       // One stop carries slices today, the present; a side without them loads nothing.
@@ -478,9 +480,13 @@ async function selectStop(value, manual = false) {
 function showIceKind(place) {
   const pair = place && !place.mapless ? [place.from, place.to] : [];
   const limit = pair.some(frame => frame.ice && frame.ice_kind === 'limit');
+  // In a time window, ice older than any dated slice is the retreat's shape borrowed at the
+  // same sea level, an assumption rather than a reconstruction.
+  const analogue = pair.some(frame => frame.ice && frame.ice_kind === 'analogue');
   const shown = stage.dataset.ice === 'true';
-  stage.dataset.iceKind = shown ? (limit ? 'limit' : 'drawn') : '';
+  stage.dataset.iceKind = shown ? (limit ? 'limit' : analogue ? 'analogue' : 'drawn') : '';
   if ($('ice-limit-note')) $('ice-limit-note').hidden = !(shown && limit);
+  if ($('ice-analogue-note')) $('ice-analogue-note').hidden = !(shown && analogue);
 }
 function applyIce(iceA, iceB) {
   const shown = iceVisible && Boolean(iceA || iceB);

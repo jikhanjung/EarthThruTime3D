@@ -760,6 +760,34 @@ try {
       await expect(dem.locator('#sampling')).toHaveCount(1);
       await expect(dem.locator('#sealevel')).toBeEnabled();
       console.log('Time window passed');
+      // The last glacial cycle: dated slices to 25 ka, and before them the retreat's shape at
+      // the stack's own level, named as assumed ice.
+      await dem.goto(new URL('?masks=paleodem2018&window=lastcycle', base).href);
+      await expect(demGlobe).toHaveAttribute('aria-busy', 'false', {timeout: 15000});
+      const cycleFrames = await dem.locator('#globe-frames').textContent().then(JSON.parse);
+      expect(cycleFrames.length).toBe(131);
+      await expect(dem.locator('#timeline')).toHaveAttribute('max', '130');
+      const at = async (ka) => {
+        await dem.locator('#era').selectOption(String(cycleFrames.findIndex(frame => frame.deglacial.age_ka === ka)));
+        await expect(demGlobe).toHaveAttribute('data-ice-age', String(ka));
+        await expect(demGlobe).toHaveAttribute('aria-busy', 'false');
+      };
+      await at(21);
+      await expect(demGlobe).toHaveAttribute('data-ice-kind', 'drawn');
+      await expect(dem.locator('#ice-analogue-note')).toBeHidden();
+      await dem.locator('#projection').selectOption('equirect');
+      await dem.screenshot({path:'data/screenshots/globe-cycle-21ka.png'});
+      await at(70);
+      await expect(demGlobe).toHaveAttribute('data-ice-kind', 'analogue');
+      await expect(dem.locator('#ice-analogue-note')).toBeVisible();
+      await expect(demGlobe).not.toHaveAttribute('data-ice-low', '');
+      await expect(demGlobe).toHaveAttribute('data-sealevel', String(Math.round(cycleFrames.find(frame => frame.deglacial.age_ka === 70).deglacial.level_m)));
+      await expect(dem.locator('#sealevel')).toBeDisabled();
+      await at(121);
+      await expect(demGlobe).toHaveAttribute('data-ice-low', '');
+      await dem.screenshot({path:'data/screenshots/globe-cycle-121ka.png'});
+      await dem.locator('#projection').selectOption('globe');
+      console.log('Last glacial cycle passed');
     }
   }
   expect(errors).toEqual([]);

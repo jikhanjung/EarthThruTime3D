@@ -789,6 +789,43 @@ class PaleodemTests(TestCase):
         self.assertIsNone(self.client.get('/', {'window': 'deglacial'}).context['window'])
         self.assertIsNone(self.client.get('/', {'masks': 'paleodem2018', 'window': 'nope'}).context['window'])
 
+    def test_the_last_glacial_cycle_borrows_the_retreat_where_no_slice_exists(self):
+        for item in globe_module.series_items('paleodem2018'):
+            self.build(item)
+        present = globe_module.catalogue('paleodem2018')['maps'][-1]
+        globe_module.ice_path(present).write_bytes(b'png')
+        lows = [{'age_ka': 1, 'level_m': 0.0, 'lowers': False, 'volume': 26.0, 'areas': [0.3, 0.0]},
+                {'age_ka': 2, 'level_m': -5.0, 'lowers': True, 'volume': 28.0, 'areas': [0.3, 0.0]}]
+        Path(self.dem.name, 'ice-sources.json').write_text(json.dumps(
+            {'grids': {present['id']: 'natural-earth'},
+             'sheets': {present['id']: {'volume': 26.0, 'areas': [0.3, 0.0], 'range_m': [-130, 60]}},
+             'lows': {present['id']: lows}}))
+        for low in lows:
+            globe_module.ice_low_path(present, low['age_ka']).write_bytes(b'png')
+        # The stack starts high and swings: past the slices its own level is used, not held.
+        Path(self.dem.name, 'sealevel-curve.json').write_text(json.dumps(
+            {'long': [[540, 48.1, 26.7, 63.9, 0.0], [0, 0, 0, 0, 23.5]],
+             'pleistocene': [[0, 9.0], [1, 7.7], [2, -3.0], [3, -60.0], [4, 0.4]], 'stops': {}}))
+        response = self.client.get('/', {'masks': 'paleodem2018', 'window': 'lastcycle'})
+        self.assertEqual(response.context['window'], 'lastcycle')
+        self.assertContains(response, '<option value="lastcycle" selected>')
+        frames = response.context['frames']
+        self.assertEqual([(frame['deglacial']['age_ka'], frame['deglacial']['level_m'], frame['ice_kind'])
+                          for frame in frames],
+                         [(4, 0.4, 'analogue'), (3, -60.0, 'analogue'), (2, -5.0, 'dated'), (1, 0.0, 'dated'),
+                          (0, 0.0, 'natural-earth')])
+        # An analogue frame keeps the what-if slices and the sheet, which the page mixes at the
+        # stack's level; a dated frame has its slice and nothing to mix.
+        self.assertIsNone(frames[1]['deglacial']['url'])
+        self.assertEqual([low['age_ka'] for low in frames[1]['ice_lows']], [2])
+        self.assertEqual(frames[1]['ice_sheet']['volume'], 26.0)
+        self.assertEqual(frames[2]['deglacial']['url'], f"/globe/ice-low/{present['id']}/2.png")
+        self.assertIsNone(frames[2]['ice_lows'])
+        self.assertTrue(all(frame['temp'] is None for frame in frames))
+        self.assertEqual(len(response.context['stops']), 5)
+        english = self.client.get('/', {'masks': 'paleodem2018', 'window': 'lastcycle'}, HTTP_ACCEPT_LANGUAGE='en')
+        self.assertNotRegex(english.content.decode(), '[가-힣]')
+
     def test_grids_borrow_the_pieces_of_the_nearest_atlas_map(self):
         def report(name):
             return json.dumps({'pieces': [{'names': [{'name': name, 'lon': 1.0, 'lat': 2.0}]}]})

@@ -763,11 +763,11 @@ msgstr "Showing ice. North America is <a href=\"https://doi.org/10.1016/j.quasci
 msgid "해수면, 최근 2.5만 년"
 msgstr "Sea level, last 25,000 years"
 
-msgid "그 나이의 해수면, 현재에서 과거로 가며 가장 낮았던 값"
-msgstr "sea level at each age, the lowest reached going back from the present"
+msgid "그 나이의 해수면: 2.5만 년까지는 현재에서 과거로 가며 가장 낮았던 값, 그보다 오래되면 곡선 값"
+msgstr "sea level at each age: to 25,000 years the lowest reached going back from the present, older the curve itself"
 
-msgid "마지막 빙하기 후퇴 %(count)s개 시점 · 1천 년 간격 · 지형은 현재"
-msgstr "last deglaciation, %(count)s stops · a thousand years apart · today's terrain"
+msgid "%(count)s개 시점 · 1천 년 간격 · 지형은 현재"
+msgstr "%(count)s stops · a thousand years apart · today's terrain"
 
 msgid "{age} ka · 과거"
 msgstr "{age} ka · past"
@@ -777,3 +777,18 @@ msgstr "Sea level about {value} (relative to present, Spratt & Lisiecki 2016 at 
 
 msgid "이 범위에서는 해수면이 나이에서 정해져 옮길 수 없습니다"
 msgstr "In this range the age sets the sea level, so it cannot be moved"
+
+msgid "최근 13만 년"
+msgstr "Last 130,000 years"
+
+msgid "가정 빙하: 해수면이 같았던 후퇴기의 모양"
+msgstr "Assumed ice: the retreat's shape at the same sea level"
+
+msgid "가정 빙하"
+msgstr "assumed ice"
+
+msgid "해수면, 최근 13만 년"
+msgstr "Sea level, last 130,000 years"
+
+msgid "이 시점의 빙하는 복원이 아니라 가정입니다. 25 ka보다 오래된 빙상 윤곽은 공개된 자료가 없어, 그 나이의 해수면과 같은 해수면이었던 마지막 빙기 후퇴기의 조각 모양을 빌렸습니다. 빙상이 자랄 때와 녹을 때의 모양 차이는 반영하지 않았습니다. 해수면은 <a href=\"https://doi.org/10.5194/cp-12-1079-2016\" target=\"_blank\" rel=\"noopener\">Spratt &amp; Lisiecki (2016)</a> 곡선 값 그대로이며, 여러 기록의 주성분이라 마지막 간빙기(약 12만 5천 년 전)의 +6~9 m 고수위는 재현하지 않습니다."
+msgstr "The ice at this stop is an assumption, not a reconstruction. No open ice-sheet outlines exist older than 25 ka, so the shape is borrowed from the slices of the last deglaciation at the same sea level as this age. Ice sheets grow and melt in different shapes, which this ignores. Sea level is the <a href=\"https://doi.org/10.5194/cp-12-1079-2016\" target=\"_blank\" rel=\"noopener\">Spratt &amp; Lisiecki (2016)</a> curve as it is; being the principal component of many records, it does not reach the +6 to 9 m highstand of the last interglacial, about 125,000 years ago."
