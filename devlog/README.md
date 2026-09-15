@@ -27,6 +27,7 @@ wwolf는 001부터 셉니다. 그 전의 001–045는 링크와 본문 속 번�
 
 ## 작업 기록
 
+- [jikhanjung 065 — v0.10.5: 최근 13만 년 시간 범위](20260915_jikhanjung_065_release_0105.md)
 - [jikhanjung 064 — 시간 범위: 최근 13만 년](20260915_jikhanjung_064_last_glacial_cycle.md)
 - [jikhanjung 063 — v0.10.4: 최근 2.5만 년 시간 범위](20260915_jikhanjung_063_release_0104.md)
 - [jikhanjung 062 — 시간 범위: 최근 2.5만 년](20260915_jikhanjung_062_deglacial_time_window.md)
