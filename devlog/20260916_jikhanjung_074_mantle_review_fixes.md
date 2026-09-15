@@ -55,3 +55,6 @@ PaleoDEM 카탈로그는 원본 아카이브를 고정하지만 파생 PNG의 �
 이를 검증하려면 PaleoDEM 산출물 manifest 도입이 먼저 필요하다. 이 항목과 선택 유지보수인
 전체 JS 포맷 정리·넓은 모듈 분리·브랜치 정리는 후속으로 남겼다.
 버전 올림·운영 배포·원본 및 전체 런타임 자료 재생성은 수행하지 않았다.
+
+구현 PR [#40](https://github.com/jikhanjung/EarthThruTime3D/pull/40)은 사용자 배포 요청 후 병합했다.
+릴리스·배포는 [075](20260916_jikhanjung_075_release_0130.md)에 이어 기록한다.

@@ -31,6 +31,8 @@ wwolf는 001부터 셉니다. 그 전의 001–045는 링크와 본문 속 번�
 
 ## 작업 기록
 
+- [jikhanjung 075 — v0.13.0 하천·맨틀 리뷰 수정 릴리스](20260916_jikhanjung_075_release_0130.md)
+
 - [jikhanjung 074 — 맨틀 통합 리뷰 후속 수정](20260916_jikhanjung_074_mantle_review_fixes.md)
 
 - [jikhanjung 073 — 하천 PR 검토와 위도 경계 수정](20260916_jikhanjung_073_river_review_fixes.md)
