@@ -59,6 +59,24 @@ class RoutingTests(unittest.TestCase):
         self.assertAlmostEqual(reached_seam / total_seam, 1.0, places=6)
         self.assertAlmostEqual(drained_seam.max(), drained_centre.max(), delta=drained_centre.max() * 0.02)
 
+    def test_field_does_not_copy_between_north_and_south_edges(self):
+        land = np.ones((HEIGHT, WIDTH), bool)
+        for row, opposite in [(0, slice(-CONE_RADIUS, None)), (-1, slice(0, CONE_RADIUS))]:
+            with self.subTest(row=row):
+                drained = np.zeros((HEIGHT, WIDTH))
+                drained[row, 64] = 1e7
+                field = river_field(drained, land)
+                self.assertEqual(int(field[row, 64]), 255)
+                self.assertTrue((field[opposite] == 0).all())
+
+    def test_field_still_wraps_across_longitude_seam(self):
+        land = np.ones((HEIGHT, WIDTH), bool)
+        drained = np.zeros((HEIGHT, WIDTH))
+        drained[32, 0] = 1e7
+        field = river_field(drained, land)
+        self.assertEqual(field[32, -1], field[32, 1])
+        self.assertGreater(field[32, -1], 0)
+
     def test_the_field_is_a_cone_the_size_of_its_river(self):
         land = np.ones((HEIGHT, WIDTH), bool)
         drained = np.full((HEIGHT, WIDTH), RIVER_KM2 / 10.0)

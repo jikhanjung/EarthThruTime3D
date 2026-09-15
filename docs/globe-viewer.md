@@ -421,6 +421,17 @@ their extent exists and the atlas white is high ground.
 
 ## Rivers
 
+**Resolution:** the published 0.1° (6-minute) grids are resampled to a 2048×1024
+calculation grid (0.176°, about 20 km at the equator). Grid spacing describes sampling,
+not how accurately ancient terrain is known. Individual valleys, narrow outlets and
+watershed divides are not independently resolved by drawing a finer texture. The lines
+are potential drainage under the stated assumptions; a present-day river comparison
+does not validate ancient river courses. The underlying 1° grid fallback is coarser still.
+
+The field spreads across the longitude seam but never wraps from the north edge to the
+south edge. Rebuild river textures made before this boundary fix before a release.
+
+
 `scripts/build_rivers.py` routes water over every grid of the elevation series and writes
 `<id>-rivers.png` beside the fields, 2048 × 1024, one channel. `/globe/rivers/<id>.png`
 serves it and a frame carries `rivers` only where the file exists; the `#rivers` toggle
@@ -736,6 +747,8 @@ Neither flag grants data-use rights. See `sources/README.md`, `LICENSE-DATA.md` 
   recovery. Elevation, climate, sea-level and terrain checks run when the elevation
   series is built; the script reports that section as skipped otherwise. Screenshots
   go to gitignored `data/screenshots/`.
+- `VIEWER_URL=http://127.0.0.1:8153/ node tests/river-browser.mjs`: river PNG, shader,
+  toggle, grid-spacing explanation, mobile layout and both languages (requires a built 0 Ma river field).
 - `.venv/bin/python tests/rivers_check.py` with `requirements-processing.txt`
   installed: the river routing (see Rivers).
 - `.venv/bin/python tests/segmentation_check.py` with `requirements-processing.txt`

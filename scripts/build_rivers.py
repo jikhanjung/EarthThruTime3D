@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Route the water over every PaleoDEM grid and write one river field per grid.
 
-Nobody has mapped the rivers of 300 million years ago; what a grid can give is where
-water would have had to run over the land it draws. For each slice of the elevation
-series the 6-minute grid is resampled to the 2048 x 1024 texture, every pit is filled to
+These fields estimate potential drainage from the reconstructed terrain under the
+assumptions used here; they are not published ancient river reconstructions.
+For each slice of the elevation series the 6-minute grid is resampled to the 2048 x 1024 texture, every pit is filled to
 the level at which it spills, every land cell sends its water to the steepest of its
 eight neighbours, and the area draining through each cell is summed. Rain is taken as
 even and evaporation as nil, so the result is drained area, not discharge; sea level is
@@ -19,8 +19,8 @@ draws where the field passes a cut, so a line's width follows its river's size, 
 is crisp at any zoom, and a mix of two grids' fields is a plausible in-between, as the
 coastline's distance field is. A river cell drains at least RIVER_KM2.
 
-The grids are smooth interpretive surfaces, so the lines show where trunk rivers must
-have run, not real channels.
+The grids are interpretive surfaces. Their sampling interval is not a measure of
+reconstruction accuracy; these lines are potential drainage paths, not known channels.
 """
 import argparse
 import json
@@ -79,9 +79,9 @@ def shifted(a, dr, dc):
 def rows_ok(shape, dr):
     ok = np.ones(shape, bool)
     if dr < 0:
-        ok[0] = False
+        ok[:min(-dr, shape[0])] = False
     if dr > 0:
-        ok[-1] = False
+        ok[max(0, shape[0] - dr):] = False
     return ok
 
 
@@ -142,7 +142,9 @@ def river_field(drained, land):
         for dc in range(-CONE_RADIUS, CONE_RADIUS + 1):
             reach = np.hypot(dr, dc)
             if reach <= CONE_RADIUS:
-                np.maximum(field, shifted(size, dr, dc) - CONE_SLOPE * reach, out=field)   # np.roll wraps in longitude
+                # Longitude wraps; north and south edges are not neighbours.
+                spread = shifted(size, dr, dc) - CONE_SLOPE * reach
+                np.maximum(field, spread, out=field, where=rows_ok(size.shape, dr))
     return np.round(field * 255).astype(np.uint8)
 
 

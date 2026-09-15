@@ -1,0 +1,34 @@
+import {chromium, expect} from '@playwright/test';
+import {mkdir} from 'node:fs/promises';
+const browser = await chromium.launch({headless: true, args: ['--enable-unsafe-swiftshader']});
+const base = process.env.VIEWER_URL || 'http://127.0.0.1:8153/';
+try {
+  const page = await browser.newPage({locale: 'en-US', viewport: {width: 1280, height: 900}});
+  page.setDefaultTimeout(20000);
+  const errors = [];
+  page.on('pageerror', error => errors.push(error.message));
+  page.on('console', message => {if (message.type() === 'error') errors.push(message.text());});
+  const river = page.waitForResponse(response => response.url().includes('/globe/rivers/paleodem-0000.png'));
+  await page.goto(new URL('/?masks=paleodem2018', base).href);
+  expect((await river).status()).toBe(200);
+  const globe = page.locator('#globe');
+  await expect(globe).toHaveAttribute('data-rivers', 'true');
+  await expect(page.locator('#river-note')).toContainText('Grid spacing is not reconstruction accuracy');
+  await page.locator('#settings-toggle').click();
+  await page.locator('#rivers').click();
+  await expect(globe).toHaveAttribute('data-rivers', 'false');
+  await expect(page.locator('#river-note')).toBeHidden();
+  await page.locator('#rivers').click();
+  await expect(globe).toHaveAttribute('data-rivers', 'true');
+  await page.locator('#settings-toggle').click();
+  await mkdir('test-results', {recursive: true});
+  await page.screenshot({path: 'test-results/rivers-reviewed.png'});
+  await page.setViewportSize({width: 390, height: 844});
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await page.goto(new URL('/lang/ko/?next=/?masks=paleodem2018', base).href);
+  await expect(globe).toHaveAttribute('data-rivers', 'true');
+  await page.locator('#info-toggle').click();
+  await expect(page.locator('#river-note')).toContainText('격자 간격과 복원 정확도는 다릅니다');
+  expect(errors).toEqual([]);
+  console.log('River PNG, shader, toggle, resolution wording, mobile and languages passed');
+} finally {await browser.close();}

@@ -1189,3 +1189,6 @@ msgstr "Rivers are shown. These lines are neither observations nor a published r
 
 msgid "하천 겹쳐 보기는 각 격자 위로 물을 흘려 이 프로젝트가 계산한 잠재 배수망입니다. 웅덩이를 넘치는 높이까지 메우고 각 칸의 물을 가장 가파른 이웃으로 보내 상류 면적을 더한 것으로, 비는 고르게 내리고 증발은 없다고 두었습니다. 발표된 복원이 아니며, 격자가 매끈해 한 칸보다 좁은 협곡은 막혀 있으므로 모든 분지가 넘쳐 흐릅니다."
 msgstr "The river overlay is potential drainage this project computed by routing water over each grid: pits filled to the level at which they spill, each cell's water sent to the steepest neighbour, the area upstream summed, rain taken as even and evaporation as nil. It is not a published reconstruction, and since the grids are smooth and close any gorge narrower than a cell, every basin spills over."
+
+msgid "원자료의 격자 간격과 복원 정확도는 다릅니다. 2048×1024 계산 격자는 적도에서 약 20 km 간격이며, 개별 계곡·협곡이나 실제 고대 하천 경로를 검증하지 않습니다."
+msgstr "Grid spacing is not reconstruction accuracy. The 2048×1024 calculation grid spans about 20 km per cell at the equator; it does not validate individual valleys, gorges, or actual ancient river courses."
