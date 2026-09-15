@@ -24,6 +24,7 @@ export function createSurface(stage, select, reset) {
   const material = new THREE.MeshStandardMaterial({vertexColors: true, roughness: .9, side: THREE.DoubleSide});
   const sectionMaterial = new THREE.LineBasicMaterial({color: 0xff83b2});
   let mesh, section, current, currentAge;
+  let sectionVisible=true;const sectionLabels=[];
   const draw = () => renderer.render(scene, camera);
   const observer = new ResizeObserver(() => {
     const w = stage.clientWidth, h = stage.clientHeight;
@@ -37,7 +38,7 @@ export function createSurface(stage, select, reset) {
     const texture = new THREE.CanvasTexture(canvas);
     const sprite = new THREE.Sprite(new THREE.SpriteMaterial({map: texture, depthTest: false}));
     const [x] = terrainPosition(85, 0, 0, 1);
-    sprite.position.set(x, .12, z); sprite.scale.set(.16, .12, 1); scene.add(sprite);
+    sprite.position.set(x, .12, z); sprite.scale.set(.16, .12, 1); scene.add(sprite);sectionLabels.push(sprite);
   }
   label('A', terrainPosition(85, -40, 0, 1)[2]);
   label('A′', terrainPosition(85, 60, 0, 1)[2]);
@@ -74,12 +75,12 @@ export function createSurface(stage, select, reset) {
     geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
     geometry.setIndex(indices); geometry.computeVertexNormals();
     mesh = new THREE.Mesh(geometry, material); scene.add(mesh);
-    section = new THREE.Line(new THREE.BufferGeometry().setFromPoints(sectionPoints), sectionMaterial); scene.add(section);
+    section = new THREE.Line(new THREE.BufferGeometry().setFromPoints(sectionPoints), sectionMaterial); section.visible=sectionVisible;scene.add(section);
     stage.dataset.age = String(age); stage.dataset.ve = String(exaggeration);
     draw();
   }
   select.addEventListener('change', () => { if (current) update(current, currentAge); });
-  return {update, dispose() {
+  return {update, setSectionVisible(visible) {sectionVisible=visible;if(section)section.visible=visible;sectionLabels.forEach(label=>label.visible=visible);draw();}, dispose() {
     observer.disconnect(); controls.dispose();
     scene.traverse(object => {
       object.geometry?.dispose(); object.material?.map?.dispose(); object.material?.dispose();

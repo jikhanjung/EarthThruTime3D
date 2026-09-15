@@ -1088,3 +1088,92 @@ msgstr "Could not load mantle data. Please try again."
 #: templates/core/home.html core/mantle.py
 msgid "현재 시간 범위에서는 80 Ma 중첩을 사용할 수 없습니다."
 msgstr "The 80 Ma overlay is unavailable in this time window."
+
+#: core/mantle.py core/collision.py templates/core/home.html templates/core/collision.html
+msgid "지구 내부 · 80 Ma–현재"
+msgstr "Earth interior · 80 Ma–present"
+
+#: core/mantle.py core/collision.py templates/core/home.html templates/core/collision.html
+msgid "맨틀 원본 시점"
+msgstr "Mantle source age"
+
+#: core/mantle.py core/collision.py templates/core/home.html templates/core/collision.html
+msgid "시간 조절기는 다섯 원본 시점으로 맞춥니다. 메시 사이를 보간하지 않습니다."
+msgstr "Time controls snap to the five source ages. Meshes are not interpolated."
+
+#: core/mantle.py core/collision.py templates/core/home.html templates/core/collision.html
+msgid "절개 중심 경도"
+msgstr "Cutaway centre longitude"
+
+#: core/mantle.py core/collision.py templates/core/home.html templates/core/collision.html
+msgid "절개 중심 위도"
+msgstr "Cutaway centre latitude"
+
+#: core/mantle.py core/collision.py templates/core/home.html templates/core/collision.html
+msgid "절개 각반경"
+msgstr "Cutaway angular radius"
+
+#: core/mantle.py core/collision.py templates/core/home.html templates/core/collision.html
+msgid "지표 불투명도"
+msgstr "Surface opacity"
+
+#: core/mantle.py core/collision.py templates/core/home.html templates/core/collision.html
+msgid "지표를 투명하게 하면 전 지구 맨틀을 표시합니다. 절개 이동은 고정 A–A′ 단면을 바꾸지 않습니다."
+msgstr "A transparent surface shows the global mantle. Moving the cutaway does not change the fixed A–A′ section."
+
+#: core/mantle.py core/collision.py templates/core/home.html templates/core/collision.html
+msgid "절개 중심으로 이동"
+msgstr "View cutaway centre"
+
+#: core/mantle.py core/collision.py templates/core/home.html templates/core/collision.html
+msgid "A–A′ 단면선 표시"
+msgstr "Show A–A′ section trace"
+
+#: core/mantle.py core/collision.py templates/core/home.html templates/core/collision.html
+msgid "연결된 A–A′ 단면 열기"
+msgstr "Open linked A–A′ section"
+
+#: core/mantle.py core/collision.py templates/core/home.html templates/core/collision.html
+msgid "서로 다른 복원 모델을 아프리카 기준으로 근사 정렬했습니다. 지표와 맨틀의 정확한 연결을 뜻하지 않으며 맨틀 깊이 배율은 ×1입니다."
+msgstr "Different reconstructions are approximately aligned on Africa. This does not establish an exact surface–mantle connection. Mantle depth scale is ×1."
+
+#: core/mantle.py core/collision.py templates/core/home.html templates/core/collision.html
+msgid "메인 지구본과 연대를 연결했습니다. 지구본의 분홍 선은 OPT1 85°E 원본 단면을 근사 변환한 위치입니다. 아래 지역 지표는 같은 연대의 비교 화면이며, 다른 기준틀의 85°E 선은 숨깁니다."
+msgstr "Ages are linked to the main globe. Its pink trace is the approximately transformed original OPT1 85°E section. The regional terrain below compares the same age; its different-frame 85°E trace is hidden."
+
+#: core/mantle.py core/collision.py templates/core/home.html templates/core/collision.html
+msgid "{age} Ma 맨틀을 불러오는 중…"
+msgstr "Loading the {age} Ma mantle…"
+
+#: core/mantle.py core/collision.py templates/core/home.html templates/core/collision.html
+msgid "{age} Ma · 다른 복원 모델의 근사 중첩"
+msgstr "{age} Ma · approximate overlay of different reconstructions"
+
+#: core/mantle.py core/collision.py templates/core/home.html templates/core/collision.html
+msgid "인도 경계점 위치 차이 P95: {error}°"
+msgstr "Indian boundary position difference P95: {error}°"
+
+#: core/mantle.py core/collision.py templates/core/home.html templates/core/collision.html
+msgid "분홍 A–A′: OPT1 원본 단면을 근사 변환한 위치"
+msgstr "Pink A–A′: approximately transformed original OPT1 section"
+
+#: core/mantle.py core/collision.py templates/core/home.html templates/core/collision.html
+msgid "현재 시간 범위에서는 맨틀 중첩을 사용할 수 없습니다."
+msgstr "Mantle overlay is unavailable in this time window."
+
+#: core/mantle.py core/collision.py templates/core/home.html templates/core/collision.html
+msgid "메인 지구본의 같은 시점 자료를 기다리는 중…"
+msgstr "Waiting for the same age on the main globe…"
+
+#: core/mantle.py core/collision.py templates/core/home.html templates/core/collision.html
+msgid "메인 지구본의 자료 로딩에 실패했습니다. 단면을 닫고 다시 시도해 주세요."
+msgstr "The main globe could not load its data. Close the section and retry."
+
+msgid "전 지구 맨틀과 핵 기준 구를 표시합니다. 절개 이동은 고정 A–A′ 단면을 바꾸지 않습니다."
+msgstr "The global mantle and a core reference sphere are shown. Moving the cutaway does not change the fixed A–A′ section."
+
+msgid "핵 경계 기준 구 (회색)"
+msgstr "Core boundary reference sphere (grey)"
+
+msgid "회색 구는 반지름 약 3,479 km의 핵 경계 참고 표시이며 계산된 온도·유동 자료가 아닙니다."
+msgstr "The grey sphere marks a reference core boundary at about 3,479 km radius; it is not a computed temperature or flow field."

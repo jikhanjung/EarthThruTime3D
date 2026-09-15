@@ -119,3 +119,13 @@ The checks cover analytic slicing, clipping and duplicate edges; area conservati
 scenario bounds; verified data delivery and same-origin framing; lazy popup loading,
 frame/terrain age synchronization, vertical scaling, toggles, playback, Escape/focus,
 mobile layout and English. They do not validate mantle convection or crustal evolution.
+
+## Main globe connection
+
+The [mantle overlay](globe-mantle-overlay.md) draws the original OPT1 85°E section
+(40°S–60°N), transformed into PALEOMAP for each of the five source ages. Clicking
+that trace opens this panel at the same age. Time changes synchronize both ways;
+loading hides the old section until the globe is ready. Linked playback is disabled.
+The regional terrain remains a comparison in its own frame, with its 85°E trace
+hidden in linked mode. Moving the globe cutaway does not move the fixed section.
+Standalone use retains independent playback.

@@ -20,13 +20,27 @@
     <button type="button" data-collision-open aria-controls="collision-dialog" aria-expanded="false">{% trans "인도–아시아 A–A′ 단면" %}</button>
     {% if mantle_overlay %}
     <fieldset class="mantle-overlay-panel" id="mantle-overlay-panel">
-      <legend>{% trans "지구 내부 · 80 Ma" %}</legend>
+      <legend>{% trans "지구 내부 · 80 Ma–현재" %}</legend>
       <label><input type="checkbox" id="mantle-overlay" autocomplete="off"> {% trans "맨틀 근사 중첩" %}</label>
       <div id="mantle-overlay-options" hidden>
+        <label for="mantle-age">{% trans "맨틀 원본 시점" %}</label>
+        <select id="mantle-age"><option value="80">80 Ma</option><option value="60">60 Ma</option><option value="40">40 Ma</option><option value="20">20 Ma</option><option value="0">0 Ma</option></select>
+        <p class="model-note">{% trans "시간 조절기는 다섯 원본 시점으로 맞춥니다. 메시 사이를 보간하지 않습니다." %}</p>
         <label><input type="checkbox" id="mantle-cutaway" checked autocomplete="off"> {% trans "인도–아시아 지표 절개" %}</label>
+        <label for="mantle-longitude">{% trans "절개 중심 경도" %} <output id="mantle-longitude-value">80°</output></label><input id="mantle-longitude" type="range" min="-180" max="180" step="1" value="80">
+        <label for="mantle-latitude">{% trans "절개 중심 위도" %} <output id="mantle-latitude-value">10°</output></label><input id="mantle-latitude" type="range" min="-90" max="90" step="1" value="10">
+        <label for="mantle-radius">{% trans "절개 각반경" %} <output id="mantle-radius-value">45°</output></label><input id="mantle-radius" type="range" min="10" max="90" step="1" value="45">
+        <label for="mantle-opacity">{% trans "지표 불투명도" %} <output id="mantle-opacity-value">100%</output></label><input id="mantle-opacity" type="range" min="0" max="100" step="5" value="100">
+        <p class="model-note">{% trans "전 지구 맨틀과 핵 기준 구를 표시합니다. 절개 이동은 고정 A–A′ 단면을 바꾸지 않습니다." %}</p>
+        <button id="mantle-focus" type="button">{% trans "절개 중심으로 이동" %}</button>
+        <label><input type="checkbox" id="mantle-section" checked> {% trans "A–A′ 단면선 표시" %}</label>
+        <button id="mantle-section-open" type="button" data-collision-open>{% trans "연결된 A–A′ 단면 열기" %}</button>
+        <p id="mantle-residual" class="model-note"></p>
         <label><input type="checkbox" id="overlay-slabs" checked autocomplete="off"> {% trans "섭입 잔재 표면 (파랑)" %}</label>
         <label><input type="checkbox" id="overlay-piles" checked autocomplete="off"> {% trans "심부 구조 표면 (주황)" %}</label>
-        <p class="model-note">{% trans "서로 다른 복원 모델을 아프리카 기준으로 근사 정렬했습니다. 인도 경계점의 위치 차이는 약 3°(P95)이며, 지표와 맨틀의 정확한 연결을 뜻하지 않습니다. 맨틀 깊이 배율은 ×1입니다." %}</p>
+        <label><input type="checkbox" id="overlay-core" checked> {% trans "핵 경계 기준 구 (회색)" %}</label>
+        <p class="model-note">{% trans "회색 구는 반지름 약 3,479 km의 핵 경계 참고 표시이며 계산된 온도·유동 자료가 아닙니다." %}</p>
+        <p class="model-note">{% trans "서로 다른 복원 모델을 아프리카 기준으로 근사 정렬했습니다. 지표와 맨틀의 정확한 연결을 뜻하지 않으며 맨틀 깊이 배율은 ×1입니다." %}</p>
         <p class="model-note">{% trans "절개는 내부를 보기 위한 표시입니다. 색은 온도나 유속이 아니라 구조의 종류를 나타냅니다." %}
         <a href="https://zenodo.org/records/6622194" target="_blank" rel="noopener">Müller et al. 2022 OPT1 · CC BY 4.0</a></p>
         <p id="mantle-overlay-status" role="status" aria-live="polite"></p>

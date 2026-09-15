@@ -806,7 +806,7 @@ def globe(request):
     from core.mantle import globe_overlay
     stops = timeline(frames, plan, deepest)
     overlay = (globe_overlay() if source in ("paleoatlas2016", "paleodem2018")
-               and not window and any(abs(stop[3] - 80) < 1e-8 for stop in stops) else None)
+               and not window and all(any(abs(stop[3] - age) < 1e-8 for stop in stops) for age in (80, 60, 40, 20, 0)) else None)
     return render(request, "core/home.html",
                   {"frames": frames, "viewer_enabled": enabled(), "mantle_overlay": overlay,
                    "stops": stops, "sampling": plan,

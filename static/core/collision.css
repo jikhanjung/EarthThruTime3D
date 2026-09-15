@@ -19,3 +19,4 @@ canvas { display: block; width: 100%; height: auto; background: #071820; border:
 #collision-surface canvas { border: 0; touch-action: none; }
 #collision-status { min-height: 1.4em; } .credits { border-top: 1px solid #36525f; padding-top: .7rem; }
 @media(max-width: 720px) { .plots { grid-template-columns: 1fr; } #collision-map { max-width: 400px; margin: auto; } main { padding: .65rem; } }
+.plots[hidden] { display: none; }

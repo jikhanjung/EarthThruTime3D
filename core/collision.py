@@ -34,6 +34,8 @@ def collision(request):
     return render(request, 'core/collision.html', {
         'data_url': reverse('collision-data', args=[doc['sha256'][:16]]) if doc else None,
         'strings': {
+            'linkedLoading': _('메인 지구본의 같은 시점 자료를 기다리는 중…'),
+            'linkedError': _('메인 지구본의 자료 로딩에 실패했습니다. 단면을 닫고 다시 시도해 주세요.'),
             'loading': _('단면 자료를 불러오는 중…'), 'error': _('단면을 불러오지 못했습니다.'),
             'cratons': _('대륙 핵부 윤곽'), 'boundaries': _('판 경계'),
             'section': _('맨틀 구조의 실제 교차선'), 'flow': _('대류 개념도 · 속도 자료 없음'),

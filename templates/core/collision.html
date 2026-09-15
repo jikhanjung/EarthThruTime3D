@@ -5,6 +5,8 @@
 <body><main>
 <h1>{% trans "인도–아시아 A–A′ 단면" %}</h1>
 <p>{% trans "80 Ma–현재 · 동경 85° · A: 남위 40°, A′: 북위 60°. 현재 히말라야 중앙부를 지나는 고정 공간 단면입니다." %}</p>
+<p id="collision-linked-note" hidden>{% trans "메인 지구본과 연대를 연결했습니다. 지구본의 분홍 선은 OPT1 85°E 원본 단면을 근사 변환한 위치입니다. 아래 지역 지표는 같은 연대의 비교 화면이며, 다른 기준틀의 85°E 선은 숨깁니다." %}</p>
+<p id="collision-linked-status" role="status" hidden></p>
 {% if data_url %}
 <div class="controls"><button id="collision-play" type="button" disabled>{% trans "재생" %}</button>
 <label for="collision-time">{% trans "시점" %}</label><input id="collision-time" type="range" min="0" max="4" value="0" step="1" disabled><output id="collision-age">80 Ma</output>

@@ -4,9 +4,15 @@ const $ = id => document.getElementById(id);
 const strings = JSON.parse($('collision-strings').textContent);
 const slider = $('collision-time');
 let data, timer, request;
+const query=new URL(location.href).searchParams;
+const linked=query.get('linked')==='1'&&window.parent!==window;
+let desiredAge=[80,60,40,20,0].includes(Number(query.get('age')))&&query.has('age')?Number(query.get('age')):80;
+let waiting=false;
+$('collision-linked-note').hidden=!linked;
 let terrain;
 try { terrain = createSurface($('collision-surface'), $('surface-ve'), $('surface-reset')); }
 catch { $('surface-status').textContent = strings.surfaceError; }
+if(linked)terrain?.setSectionVisible(false);
 
 function canvas(id, height) {
   const element = $(id), width = element.clientWidth;
@@ -118,7 +124,7 @@ function crust(frame) {
   $('crust-panel').dataset.thickness = state.thickness.toFixed(1);
 }
 function draw() {
-  if (!data) return;
+  if (!data || waiting) return;
   const frame = data.frames[Number(slider.value)];
   $('collision-age').textContent = `${frame.age_ma} Ma`;
   slider.setAttribute('aria-valuetext', `${frame.age_ma} Ma`);
@@ -130,6 +136,7 @@ function draw() {
       terrain.update(frame.surface, frame.age_ma);
       $('surface-status').textContent = `PaleoDEM · ${frame.age_ma} Ma · PALEOMAP`;
     } catch { $('surface-status').textContent = strings.surfaceError; }
+if(linked)terrain?.setSectionVisible(false);
   }
 }
 function stop() { clearInterval(timer); timer = null; $('collision-play').textContent = strings.play; }
@@ -142,7 +149,14 @@ $('collision-play').addEventListener('click', () => {
     if (Number(slider.value) === 4) stop();
   }, 1600);
 });
-slider.addEventListener('input', () => { stop(); draw(); });
+slider.addEventListener('input', () => {
+  stop();
+  if(linked){
+    const age=data.frames[Number(slider.value)].age_ma;
+    if(String(age)===document.body.dataset.age)return;
+    setWaiting(true);window.parent.postMessage({type:'collision-age-change',age},location.origin);
+  } else draw();
+});
 for (const id of ['continents', 'mantle', 'flow', 'crust', 'onset', 'shortening']) {
   $(`collision-${id}`).addEventListener('input', draw);
 }
@@ -157,11 +171,26 @@ async function load() {
     if (!response.ok) throw new Error(response.status);
     const result = await response.json();
     if (result.schema_version !== 1 || result.frames.length !== 5 || result.frames.some((f, i) => f.age_ma !== 80-i*20)) throw new Error('Invalid section');
-    data = result; slider.disabled = false; $('collision-play').disabled = false; draw();
+    data = result;slider.value=String(data.frames.findIndex(f=>f.age_ma===desiredAge));
+    slider.disabled=waiting;$('collision-play').disabled=linked;draw();
   } catch (error) {
     if (error.name !== 'AbortError') { $('collision-status').textContent = strings.error; $('collision-retry').hidden = false; }
   }
 }
+function setWaiting(value,error=false) {
+  waiting=value;slider.disabled=value||!data;
+  document.querySelector('.plots').hidden=value;
+  $('collision-overview').hidden=value;
+  $('collision-linked-status').hidden=!value;
+  $('collision-linked-status').textContent=error?strings.linkedError:strings.linkedLoading;
+  if(value){delete document.body.dataset.age;$('collision-age').textContent='…';}
+}
+window.addEventListener('message',event=>{
+  if(!linked||event.origin!==location.origin||event.source!==window.parent||event.data?.type!=='collision-link-state')return;
+  const state=event.data;if(![80,60,40,20,0].includes(state.age))return;
+  stop();desiredAge=state.age;setWaiting(!state.ready,Boolean(state.error));
+  if(data&&state.ready){slider.value=String(data.frames.findIndex(f=>f.age_ma===desiredAge));draw();}
+});
 $('collision-retry').addEventListener('click', load);
 document.addEventListener('visibilitychange', () => { if (document.hidden) stop(); });
 window.addEventListener('pagehide', () => { stop(); request?.abort(); observer.disconnect(); terrain?.dispose(); });
