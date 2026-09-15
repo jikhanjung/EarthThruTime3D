@@ -1,16 +1,16 @@
 """Published OPT1 surfaces and an explicitly approximate PALEOMAP globe overlay."""
-import hashlib
-import json
 from pathlib import Path
 import re
 
 from django.conf import settings
-from django.http import Http404, HttpResponse
+from django.http import Http404
 from django.shortcuts import render
 from django.urls import reverse
 from django.utils.translation import gettext as _
-from django.utils.cache import patch_vary_headers
 from django.views.decorators.http import require_safe
+
+from core.experiment_assets import (DATA_ERRORS, asset_response, catalogue as read_catalogue,
+                                    logger, read_json, validate_asset)
 
 LAYERS = ("slabs", "piles", "boundaries")
 
@@ -22,28 +22,23 @@ def directory():
 def catalogue():
     if not settings.SCOTESE_VIEWER_ENABLED:
         return None
-    try:
-        data = json.loads((directory() / "catalogue.json").read_text())
-    except FileNotFoundError:
-        return None
-    if data.get("schema_version") != 1 or data.get("source") != "muller2022-opt1":
-        raise ValueError("Unexpected mantle catalogue")
-    return data
+    return read_catalogue(directory() / 'catalogue.json', validate_catalogue)
 
 
-def accepts_gzip(header):
-    qualities = {}
-    for token in header.lower().split(","):
-        encoding, *parameters = token.strip().split(";")
-        quality = 1.0
-        for parameter in parameters:
-            if parameter.strip().startswith("q="):
-                try:
-                    quality = float(parameter.strip()[2:])
-                except ValueError:
-                    quality = 0
-        qualities[encoding] = quality
-    return 0 < qualities.get("gzip", qualities.get("*", 0)) <= 1
+def validate_catalogue(data):
+    if not isinstance(data['frames'], list):
+        raise ValueError('Invalid mantle frames')
+    for frame in data['frames']:
+        if type(frame['index']) is not int or not isinstance(frame['age_ma'], (int, float)):
+            raise ValueError('Invalid mantle frame')
+        for name in LAYERS:
+            item = frame['layers'][name]
+            validate_asset(item)
+            if (type(item['points']) is not int or type(item['indices']) is not int
+                    or item['points'] < 0 or item['indices'] < 0
+                    or item['primitive'] not in ('lines', 'triangles')
+                    or item['bytes'] != item['points'] * 12 + item['indices'] * 4):
+                raise ValueError('Invalid mantle geometry')
 
 
 @require_safe
@@ -78,34 +73,20 @@ def mantle_asset(request, filename):
                  if f["layers"][name]["file"] == filename), None)
     if item is None:
         raise Http404
-    compressed = "gzip" in item and accepts_gzip(request.headers.get("Accept-Encoding", ""))
-    representation = item["gzip"] if compressed else item
-    expected_name = filename + ".gz" if compressed else filename
-    if representation["file"] != expected_name:
-        raise Http404
-    path = (directory() / expected_name).resolve()
-    if not path.is_relative_to(directory().resolve()):
-        raise Http404
-    try:
-        content = path.read_bytes()
-    except FileNotFoundError:
-        raise Http404 from None
-    if (len(content) != representation["bytes"]
-            or hashlib.sha256(content).hexdigest() != representation["sha256"]):
-        raise Http404
-    response = HttpResponse(content, content_type="application/octet-stream")
-    response["ETag"] = f'"{representation["sha256"]}"'
-    if compressed:
-        response["Content-Encoding"] = "gzip"
-    patch_vary_headers(response, ["Accept-Encoding"])
-    response["Cache-Control"] = "public, max-age=31536000, immutable"
-    response["X-Content-Type-Options"] = "nosniff"
-    return response
+    return asset_response(request, directory(), item, filename, 'application/octet-stream')
 
 
 def globe_overlay():
     """Only five audited source frames; partial or changed bundles fail closed."""
-    config = json.loads((settings.BASE_DIR / "annotations/mantle-overlay.json").read_text())
+    try:
+        return _globe_overlay()
+    except DATA_ERRORS:
+        logger.warning('Unavailable globe mantle overlay', exc_info=True)
+        return None
+
+
+def _globe_overlay():
+    config = read_json(settings.BASE_DIR / "annotations/mantle-overlay.json")
     data = catalogue()
     if not data or data.get("source_archive_sha256") != config["source_archive_sha256"]:
         return None
@@ -128,5 +109,4 @@ def globe_overlay():
                         "ready": _("{age} Ma · 다른 복원 모델의 근사 중첩"),
                         "error": _("맨틀 자료를 불러오지 못했습니다. 다시 시도해 주세요."),
                         "residual": _("인도 경계점 위치 차이 P95: {error}°"),
-                        "section": _("분홍 A–A′: OPT1 원본 단면을 근사 변환한 위치"),
-                        "unavailable": _("현재 시간 범위에서는 맨틀 중첩을 사용할 수 없습니다.")}}
+                        "section": _("분홍 A–A′: OPT1 원본 단면을 근사 변환한 위치")}}

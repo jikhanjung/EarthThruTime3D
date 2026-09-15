@@ -132,7 +132,12 @@ function start() {
   });
   load();
   renderer.domElement.addEventListener('webglcontextlost', (event) => {
-    event.preventDefault(); pending?.abort(); status.textContent = strings.webgl;
+    event.preventDefault(); clearTimeout(debounce); pending?.abort();
+    slider.disabled = true; stage.dataset.loading = 'false';
+    delete stage.dataset.frame; status.textContent = strings.webgl;
+  });
+  renderer.domElement.addEventListener('webglcontextrestored', () => {
+    slider.disabled = false; load();
   });
   window.addEventListener('pagehide', () => {
     clearTimeout(debounce); pending?.abort(); resize.disconnect(); controls.dispose();

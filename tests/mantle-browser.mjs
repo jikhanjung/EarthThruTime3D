@@ -39,6 +39,15 @@ try {
   await expect(stage).not.toHaveAttribute('data-frame', /.+/);
   await page.locator('#mantle-time').fill('50');
   await expect(stage).toHaveAttribute('data-frame', '50');
+  // A real context loss must recover without a page reload.
+  await page.locator('#mantle-stage canvas').evaluate(canvas => {
+    const extension=canvas.getContext('webgl2').getExtension('WEBGL_lose_context');
+    window.restoreMantleContext=()=>extension.restoreContext();extension.loseContext();
+  });
+  await expect(page.locator('#mantle-time')).toBeDisabled();
+  await page.evaluate(()=>window.restoreMantleContext());
+  await expect(stage).toHaveAttribute('data-frame','50');
+  await expect(page.locator('#mantle-time')).toBeEnabled();
   await mkdir('test-results', {recursive: true});
   await page.screenshot({path: 'test-results/mantle-desktop.png', fullPage: true});
   await page.setViewportSize({width: 390, height: 844});

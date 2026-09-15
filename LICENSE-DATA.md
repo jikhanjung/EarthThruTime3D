@@ -15,6 +15,9 @@ The files this project computes from CC BY sources are released under
 - the packed coastlines (from Kocsis & Scotese 2021);
 - the experimental mantle surface meshes (from Müller et al. 2022 OPT1 supplementary
   data v3.0; see `docs/geodynamics.md` for attribution and transformations);
+- the India–Asia section bundle (OPT1 surface intersections, craton outlines and
+  plate boundaries, plus resampled Scotese & Wright 2018 PaleoDEM regional terrain;
+  see `docs/india-asia-section.md`);
 - the packed plate polygons and rotations (from Merdith et al. 2021, Müller et al.
   2022, Cao et al. 2024, Matthews et al. 2016 and Scotese 2016);
 - the catalogues and annotations under `sources/` and `annotations/`.

@@ -1,30 +1,21 @@
 """An optional regional section; source geometry and illustrative physics stay separate."""
-import hashlib
-import json
 from pathlib import Path
 
 from django.conf import settings
-from django.http import Http404, HttpResponse
+from django.http import Http404
 from django.shortcuts import render
 from django.urls import reverse
-from django.utils.cache import patch_vary_headers
 from django.utils.translation import gettext as _
 from django.views.decorators.http import require_safe
 from django.views.decorators.clickjacking import xframe_options_sameorigin
 
-from core.mantle import accepts_gzip
+from core.experiment_assets import asset_response, catalogue as read_catalogue, validate_asset
 
 
 def catalogue():
     if not settings.SCOTESE_VIEWER_ENABLED:
         return None
-    try:
-        doc = json.loads((Path(settings.INDIA_ASIA_DERIVED_DIR)/'catalogue.json').read_text())
-    except FileNotFoundError:
-        return None
-    if doc.get('schema_version') != 1 or doc.get('source') != 'muller2022-opt1':
-        raise ValueError('Unexpected section catalogue')
-    return doc
+    return read_catalogue(Path(settings.INDIA_ASIA_DERIVED_DIR) / 'catalogue.json', validate_asset)
 
 
 @require_safe
@@ -35,7 +26,7 @@ def collision(request):
         'data_url': reverse('collision-data', args=[doc['sha256'][:16]]) if doc else None,
         'strings': {
             'linkedLoading': _('메인 지구본의 같은 시점 자료를 기다리는 중…'),
-            'linkedError': _('메인 지구본의 자료 로딩에 실패했습니다. 단면을 닫고 다시 시도해 주세요.'),
+            'linkedError': _('메인 지구본의 자료 로딩에 실패했습니다. 다른 시점을 선택하거나 다시 불러오세요.'),
             'loading': _('단면 자료를 불러오는 중…'), 'error': _('단면을 불러오지 못했습니다.'),
             'cratons': _('대륙 핵부 윤곽'), 'boundaries': _('판 경계'),
             'section': _('맨틀 구조의 실제 교차선'), 'flow': _('대류 개념도 · 속도 자료 없음'),
@@ -54,25 +45,5 @@ def collision_data(request, version):
     doc = catalogue()
     if doc is None or version != doc['sha256'][:16]:
         raise Http404
-    use_gzip = accepts_gzip(request.headers.get('Accept-Encoding', ''))
-    asset = doc['gzip'] if use_gzip else doc
-    filename = f'section-{version}.json' + ('.gz' if use_gzip else '')
-    if asset['file'] != filename:
-        raise Http404
-    base = Path(settings.INDIA_ASIA_DERIVED_DIR).resolve()
-    path = (base/filename).resolve()
-    if not path.is_relative_to(base):
-        raise Http404
-    try:
-        content = path.read_bytes()
-    except FileNotFoundError:
-        raise Http404 from None
-    if len(content) != asset['bytes'] or hashlib.sha256(content).hexdigest() != asset['sha256']:
-        raise Http404
-    response = HttpResponse(content, content_type='application/json')
-    if use_gzip:
-        response['Content-Encoding'] = 'gzip'
-    response['ETag'] = f'"{asset["sha256"]}"'
-    response['Cache-Control'] = 'public, max-age=31536000, immutable'
-    patch_vary_headers(response, ['Accept-Encoding'])
-    return response
+    return asset_response(request, settings.INDIA_ASIA_DERIVED_DIR, doc,
+                          f'section-{version}.json', 'application/json')

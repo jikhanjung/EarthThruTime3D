@@ -1166,8 +1166,8 @@ msgid "메인 지구본의 같은 시점 자료를 기다리는 중…"
 msgstr "Waiting for the same age on the main globe…"
 
 #: core/mantle.py core/collision.py templates/core/home.html templates/core/collision.html
-msgid "메인 지구본의 자료 로딩에 실패했습니다. 단면을 닫고 다시 시도해 주세요."
-msgstr "The main globe could not load its data. Close the section and retry."
+msgid "메인 지구본의 자료 로딩에 실패했습니다. 다른 시점을 선택하거나 다시 불러오세요."
+msgstr "The main globe could not load its data. Choose another age or retry."
 
 msgid "전 지구 맨틀과 핵 기준 구를 표시합니다. 절개 이동은 고정 A–A′ 단면을 바꾸지 않습니다."
 msgstr "The global mantle and a core reference sphere are shown. Moving the cutaway does not change the fixed A–A′ section."
@@ -1177,3 +1177,6 @@ msgstr "Core boundary reference sphere (grey)"
 
 msgid "회색 구는 반지름 약 3,479 km의 핵 경계 참고 표시이며 계산된 온도·유동 자료가 아닙니다."
 msgstr "The grey sphere marks a reference core boundary at about 3,479 km radius; it is not a computed temperature or flow field."
+
+msgid "EarthThruTime3D: OPT1 표면에서 단면 교차선을 추출하고, PaleoDEM을 지역 지표 격자로 다시 표본화했습니다."
+msgstr "EarthThruTime3D: extracted section intersections from OPT1 surfaces and resampled PaleoDEM into a regional terrain grid."

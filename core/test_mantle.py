@@ -1,3 +1,5 @@
+import os
+from unittest.mock import patch
 import hashlib
 import gzip
 import json
@@ -42,7 +44,7 @@ class MantleTests(SimpleTestCase):
         self.assertEqual(response.context['frames'][0]['age_ma'], 0)
         self.assertContains(response, 'OPT1')
         response = self.client.get('/mantle/assets/' + self.filename)
-        self.assertEqual(response.content, self.content)
+        self.assertEqual(b''.join(response.streaming_content), self.content)
         self.assertEqual(response['ETag'], f'"{self.digest}"')
         self.assertEqual(self.client.post('/mantle/').status_code, 405)
 
@@ -65,11 +67,38 @@ class MantleTests(SimpleTestCase):
         (self.folder / (self.filename + '.gz')).write_bytes(compressed)
         response = self.client.get('/mantle/assets/' + self.filename, HTTP_ACCEPT_ENCODING='br, gzip')
         self.assertEqual(response['Content-Encoding'], 'gzip')
-        self.assertEqual(gzip.decompress(response.content), self.content)
+        self.assertEqual(gzip.decompress(b''.join(response.streaming_content)), self.content)
         self.assertIn('Accept-Encoding', response['Vary'])
         response = self.client.get('/mantle/assets/' + self.filename, HTTP_ACCEPT_ENCODING='*;q=1,gzip;q=0')
         self.assertNotIn('Content-Encoding', response)
-        self.assertEqual(response.content, self.content)
+        self.assertEqual(b''.join(response.streaming_content), self.content)
         (self.folder / (self.filename + '.gz')).write_bytes(b'broken')
         self.assertEqual(self.client.get('/mantle/assets/' + self.filename,
                                         HTTP_ACCEPT_ENCODING='gzip').status_code, 404)
+
+    def test_conditional_response_revalidates_after_same_size_same_mtime_edit(self):
+        self.install()
+        url = '/mantle/assets/' + self.filename
+        original_digest = hashlib.file_digest
+        with patch('core.experiment_assets.hashlib.file_digest', wraps=original_digest) as digest:
+            first = self.client.get(url)
+            self.assertEqual(b''.join(first.streaming_content), self.content)
+            response = self.client.get(url, HTTP_IF_NONE_MATCH='W/' + first['ETag'])
+            self.assertEqual(response.status_code, 304)
+            self.assertEqual(digest.call_count, 1)
+            path = self.folder / self.filename
+            stat = path.stat()
+            path.write_bytes(b'x' * len(self.content))
+            os.utime(path, ns=(stat.st_atime_ns, stat.st_mtime_ns))
+            self.assertEqual(self.client.get(url, HTTP_IF_NONE_MATCH=first['ETag']).status_code, 404)
+            self.assertEqual(digest.call_count, 2)
+
+    def test_gzip_whitespace_and_missing_gzip_fallback(self):
+        from core.experiment_assets import accepts_gzip
+        self.assertTrue(accepts_gzip('gzip ; q=1'))
+        self.assertFalse(accepts_gzip('*;q=1, gzip ; q=0'))
+        self.install()
+        response = self.client.get('/mantle/assets/' + self.filename, HTTP_ACCEPT_ENCODING='gzip')
+        self.assertEqual(b''.join(response.streaming_content), self.content)
+        self.assertNotIn('Content-Encoding', response)
+

@@ -46,7 +46,8 @@
 <script type="importmap">{"imports":{"three":"{% static 'vendor/three/three.module.js' %}"}}</script>
 <script type="module" src="{% static 'core/collision.js' %}?v={{ version }}"></script>
 {% else %}<p>{% trans "이 환경에는 단면 자료가 준비되지 않았거나 뷰어가 꺼져 있습니다." %}</p>{% endif %}
-<p class="credits">Müller et al. (2022), <a href="https://zenodo.org/records/6622194">OPT1 v3.0</a>, CC BY 4.0 · EarthThruTime3D / PaleoBytes.
+<p class="credits">Müller et al. (2022), <a href="https://zenodo.org/records/6622194">OPT1 v3.0</a>, <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a> · EarthThruTime3D / PaleoBytes.
 <a href="https://doi.org/10.1029/2010JB007673">{% trans "충돌 연대 연구" %}</a></p>
-<p class="credits">Scotese &amp; Wright (2018), <a href="https://doi.org/10.5281/zenodo.5460860">PaleoDEM</a>, CC BY 4.0.</p>
+<p class="credits">Scotese &amp; Wright (2018), <a href="https://doi.org/10.5281/zenodo.5460860">PaleoDEM</a>, <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>.</p>
+<p class="credits">{% trans "EarthThruTime3D: OPT1 표면에서 단면 교차선을 추출하고, PaleoDEM을 지역 지표 격자로 다시 표본화했습니다." %}</p>
 </main><script src="{% static 'core/collision-escape.js' %}"></script></body></html>

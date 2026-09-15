@@ -33,6 +33,16 @@ def digest(path):
     return reader.hexdigest()
 
 
+def verified_experiment_path(source, record):
+    name = record['file']
+    path = (source / name).resolve()
+    if Path(name).name != name or not path.is_relative_to(source.resolve()):
+        raise ValueError('Unsafe experiment asset path')
+    if path.stat().st_size != record['bytes'] or digest(path) != record['sha256']:
+        raise ValueError(f'Experiment differs from catalogue: {name}')
+    return path
+
+
 def pack_experiments(staging, files):
     """Ship only catalogued, verified outputs; raw archives never enter runtime."""
     for relative in ('mantle/muller2022-opt1', 'india-asia'):
@@ -48,7 +58,7 @@ def pack_experiments(staging, files):
                       for name in ('slabs', 'piles', 'boundaries')]
         else:
             assets = [document]
-            region = json.loads((source / document['file']).read_text())
+            region = json.loads(verified_experiment_path(source, document).read_text())
             if [f['age_ma'] for f in region['frames']] != [80, 60, 40, 20, 0]:
                 raise ValueError('Release requires all five collision frames')
             if any('surface' not in frame for frame in region['frames']):
@@ -56,14 +66,12 @@ def pack_experiments(staging, files):
         records = [{'file': 'catalogue.json', 'bytes': catalogue.stat().st_size,
                     'sha256': digest(catalogue)}]
         for asset in assets:
-            records.extend((asset, asset['gzip']))
+            records.append(asset)
+            if 'gzip' in asset:
+                records.append(asset['gzip'])
         for record in records:
             name = record['file']
-            path = (source / name).resolve()
-            if Path(name).name != name or not path.is_relative_to(source.resolve()):
-                raise ValueError('Unsafe experiment asset path')
-            if path.stat().st_size != record['bytes'] or digest(path) != record['sha256']:
-                raise ValueError(f'Experiment differs from catalogue: {name}')
+            path = verified_experiment_path(source, record)
             target = staging / relative / name
             target.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(path, target)

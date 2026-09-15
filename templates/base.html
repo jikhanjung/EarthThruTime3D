@@ -12,7 +12,7 @@
   <link rel="icon" href="{% static 'core/favicon.svg' %}" type="image/svg+xml">
   {# ?v= releases a cached stylesheet on a version bump, so a viewer does not keep an old one. #}
   <link rel="stylesheet" href="{% static 'core/site.css' %}?v={{ version }}">
-  <link rel="stylesheet" href="{% static 'core/collision-dialog.css' %}?v={{ version }}">
+  {% block dialog_head %}{% endblock %}
   {% block extra_head %}{% endblock %}
 </head>
 <body{% block body_attrs %}{% endblock %}>
@@ -20,8 +20,7 @@
   <header><a class="brand" href="{% url 'home' %}">{{ app_title }} <span class="brand-version">v{{ version }}</span></a>{% block header_title %}{% endblock %}<nav class="lang" aria-label="{% trans '언어' %}">{% for code, name in LANGUAGES %}{% if not forloop.first %}<span aria-hidden="true">|</span>{% endif %}<a href="{% url 'language' code %}?next={{ request.get_full_path|urlencode }}" lang="{{ code }}" hreflang="{{ code }}"{% if code == LANGUAGE_CODE %} aria-current="true"{% endif %}>{{ code|upper }}</a>{% endfor %}</nav></header>
   <main id="main">{% block content %}{% endblock %}</main>
   {% include 'includes/footer.html' %}
-  {% include 'includes/collision-dialog.html' %}
-  <script type="module" src="{% static 'core/collision-dialog.js' %}?v={{ version }}"></script>
+  {% block viewer_scripts %}{% endblock %}
   {% block scripts %}{% endblock %}
 </body>
 </html>
