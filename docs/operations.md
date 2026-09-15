@@ -5,10 +5,12 @@ host. Configuration and procedure live in `deploy/README.md` and `deploy/deploy.
 Builds happen on the development host; the server only loads the image and swaps.
 The shared guides are referenced privately through `.guides`; they are not copied.
 
-Current release: **v0.11.0**, deployed 2026-09-15. The runtime includes all 51 OPT1
-mantle frames and five India–Asia section/3D surface frames. Image and data hashes,
+Current release: **v0.12.0**, deployed 2026-09-15. The runtime includes all 51 OPT1
+mantle frames and five India–Asia section/3D surface frames. The main globe now
+shows global mantle structures and a reference core sphere, adjustable cutaway and
+surface opacity, with five source ages linked to the A–A′ popup. Image and data hashes,
 the pre-deploy DB snapshot, health and public browser checks are recorded in
-[devlog 068](../devlog/20260915_jikhanjung_068_release_0110.md).
+[devlog 072](../devlog/20260915_jikhanjung_072_release_0120.md).
 
 ## Adopted now
 

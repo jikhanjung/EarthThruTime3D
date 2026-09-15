@@ -1,6 +1,6 @@
 # jikhanjung P05 — 맨틀 근사 중첩부터 단면·시간 통합까지
 
-날짜: 2026-09-15 · 기준: v0.11.0 및 jikhanjung 069 · 상태: 1–3단계 구현·검증, 운영 미배포
+날짜: 2026-09-15 · 기준: v0.11.0 및 jikhanjung 069 · 상태: 1–3단계 구현·검증, v0.12.0 운영 배포 완료
 
 구현 기록: [jikhanjung 070](20260915_jikhanjung_070_globe_mantle_overlay.md),
 [jikhanjung 071](20260915_jikhanjung_071_globe_mantle_time_section.md).
