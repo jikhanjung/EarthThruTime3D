@@ -19,8 +19,11 @@ const OCEAN_COLOUR = [22, 86, 135];
 const stops = JSON.parse($('globe-stops').textContent);
 // How the server spaced the stops: so many per map, or one every so many Myr.
 const sampling = JSON.parse($('globe-sampling')?.textContent ?? '{}');
-// With a fixed span in Myr, playback moves at one stop per this many milliseconds, so time
-// runs evenly; per-map sampling keeps its pace per source map.
+// The time window, when the page shows one: every frame is then the present grid at one
+// age of the last deglaciation, carrying its dated ice slice and sea level as `deglacial`.
+const timeWindow = sampling.window || null;
+// With a fixed span in Myr, or the window's thousand years, playback moves at one stop per
+// this many milliseconds, so time runs evenly; per-map sampling keeps its pace per source map.
 const INTERVAL_STEP_MS = 300;
 // ICS period boundaries as [upper age, Korean name], to name a stop by its own age.
 const periods = JSON.parse($('globe-periods')?.textContent ?? '[]');
@@ -113,7 +116,7 @@ let scene, camera, renderer, controls, earth, grid;
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 function ageText(frame) {
-  return frame.age === 0 ? '0 Ma' : frame.age < 1 ? fmt(L.yearsAgo, { years: (frame.age * 1e6).toLocaleString() }) : `${frame.age} Ma`;
+  return frame.age === 0 ? '0 Ma' : frame.age < 1 ? fmt(L.yearsAgo, { years: Math.round(frame.age * 1e6).toLocaleString() }) : `${frame.age} Ma`;
 }
 function periodAt(age) {
   if (age === 0) return L.present;
@@ -132,7 +135,7 @@ function scheduleNext() {
   // Playback walks the stops, holding the same pace per source map however densely
   // the timeline was sampled.
   const perFrame = (stops.length - 1) / Math.max(1, frames.length - 1);
-  const delay = sampling.interval_ma ? INTERVAL_STEP_MS : Math.max(60, 2400 / perFrame);
+  const delay = sampling.interval_ma || timeWindow ? INTERVAL_STEP_MS : Math.max(60, 2400 / perFrame);
   if (playing) {
     playTimer = setTimeout(() => selectStop(stop >= stops.length - 1 ? 0 : stop + 1), delay);
   }
@@ -199,6 +202,12 @@ function loadIce(frame) {
 function loadIceLow(frame, index) {
   const low = frame.ice_lows && index >= 0 ? frame.ice_lows[index] : null;
   return low ? loadData(`${frame.id}:ice-low:${low.age_ka}`, low.url) : Promise.resolve(null);
+}
+// In the time window a frame's ice is its age's dated slice; at 0 ka the present's own
+// mask stands, so there is nothing more to load.
+function loadDeglacial(frame) {
+  const slice = frame.deglacial;
+  return slice?.url ? loadData(`${frame.id}:deglacial:${slice.age_ka}`, slice.url) : Promise.resolve(null);
 }
 // The sea-level offset as a volume of ice, the paper's ratio, and the level of a frame's
 // ice field that encloses the area that volume implies: area goes as volume to the 0.8,
@@ -373,8 +382,11 @@ async function selectStop(value, manual = false) {
       stage.dataset.iceCut = '';
       stage.dataset.iceLow = '';
     } else {
-      const stateA = iceState(place.from, seaOffset);
-      const stateB = iceState(place.to, seaOffset);
+      // In the time window each frame is the present at one age: its dated slice stands in
+      // for the frame's own ice and the age sets the sea level, so no offset cuts the ice.
+      const dated = Boolean(place.from.deglacial);
+      const stateA = dated ? { cut: 0.5, low: null } : iceState(place.from, seaOffset);
+      const stateB = dated ? { cut: 0.5, low: null } : iceState(place.to, seaOffset);
       // One stop carries slices today, the present; a side without them loads nothing.
       const sliced = stateA.low ? 'from' : stateB.low ? 'to' : null;
       const low = sliced ? (sliced === 'from' ? stateA : stateB).low : null;
@@ -382,8 +394,8 @@ async function selectStop(value, manual = false) {
         loadSurface(place.from), loadSurface(place.to),
         heated ? loadTemperature(place.from) : null, heated ? loadTemperature(place.to) : null,
         fielded ? loadIce(place.from) : null, fielded ? loadIce(place.to) : null,
-        fielded && low ? loadIceLow(place[sliced], low.from) : null,
-        fielded && low ? loadIceLow(place[sliced], low.to) : null]);
+        !fielded ? null : dated ? loadDeglacial(place.from) : low ? loadIceLow(place[sliced], low.from) : null,
+        !fielded ? null : dated ? loadDeglacial(place.to) : low ? loadIceLow(place[sliced], low.to) : null]);
       if (ticket !== request) return;
       uniforms.surfaceA.value = first;
       uniforms.surfaceB.value = second;
@@ -391,14 +403,26 @@ async function selectStop(value, manual = false) {
       uniforms.tempB.value = warmB;
       applyIce(iceA, iceB);
       showIceKind(place);
-      const own = sliced === 'from' ? iceA : iceB;
-      uniforms.iceLow0.value = low0 || own;
-      uniforms.iceLow1.value = low1 || own;
-      uniforms.iceLowT.value = low ? low.t : 0;
-      uniforms.iceCut.value.set(stateA.cut, stateB.cut);
-      uniforms.iceLowMix.value.set(sliced === 'from' && own ? 1 : 0, sliced === 'to' && own ? 1 : 0);
-      stage.dataset.iceCut = (stateA.cut + (stateB.cut - stateA.cut) * place.blend).toFixed(3);
-      stage.dataset.iceLow = low && own ? low.age.toFixed(1) : '';
+      if (dated) {
+        // Each side's slice replaces its own red, the shelves stay from the present's mask,
+        // and the lowstand pair follows the blend.
+        uniforms.iceLow0.value = low0 || iceA;
+        uniforms.iceLow1.value = low1 || iceB;
+        uniforms.iceLowT.value = place.blend;
+        uniforms.iceCut.value.set(0.5, 0.5);
+        uniforms.iceLowMix.value.set(low0 ? 1 : 0, low1 ? 1 : 0);
+        stage.dataset.iceCut = '0.500';
+        stage.dataset.iceLow = '';
+      } else {
+        const own = sliced === 'from' ? iceA : iceB;
+        uniforms.iceLow0.value = low0 || own;
+        uniforms.iceLow1.value = low1 || own;
+        uniforms.iceLowT.value = low ? low.t : 0;
+        uniforms.iceCut.value.set(stateA.cut, stateB.cut);
+        uniforms.iceLowMix.value.set(sliced === 'from' && own ? 1 : 0, sliced === 'to' && own ? 1 : 0);
+        stage.dataset.iceCut = (stateA.cut + (stateB.cut - stateA.cut) * place.blend).toFixed(3);
+        stage.dataset.iceLow = low && own ? low.age.toFixed(1) : '';
+      }
       uniforms.blend.value = place.blend;
       uniforms.blank.value = 0;
     }
@@ -408,6 +432,7 @@ async function selectStop(value, manual = false) {
       uniforms.vegetation.value = vegetationAt(place.age);
     }
     uniforms.seaLevel.value = seaOffset;
+    stage.dataset.iceAge = !place.mapless && place.from.deglacial ? String(place.from.deglacial.age_ka) : '';
     if ($('sea-note')) $('sea-note').hidden = seaOffset === 0;
     stage.dataset.sealevel = String(Math.round(seaOffset));
     applyMotion(place);
@@ -490,6 +515,11 @@ function seaLevelOffset(place, fielded) {
   // The slider is a what-if in metres, held to the ice the stop has (see seaRange); the
   // curve box adds the published curve's departure from the bracketing grids' own datum,
   // zero at a grid stop.
+  // In the time window the age sets the level: the stack's, held from the present.
+  if (place.from.deglacial) {
+    const [from, to] = [place.from.deglacial.level_m, place.to.deglacial.level_m];
+    return from + (to - from) * place.blend;
+  }
   const range = seaRange(place);
   const fixed = Math.min(range[1], Math.max(range[0], Number(seaLevelControl.value) || 0));
   if (!seaLevelCurveToggle?.checked) return fixed;
@@ -515,10 +545,12 @@ function showSeaLevel(place, offset) {
       + (volume > 0 ? fmt(L.seaLevelIce, { value: `${ice >= 0 ? '+' : '−'}${Math.abs(ice).toFixed(0)}` }) : '')
     : '';
   showSeaMarks(place);
-  out.textContent = level == null
-    ? L.seaLevelNone
-    : fmt(L.seaLevel, { value: signed(level), offset: change });
-  stage.dataset.seaCurve = level == null ? '' : level.toFixed(0);
+  // In the time window the level shown is the one applied, the age's own.
+  const dated = !place.mapless && Boolean(place.from.deglacial);
+  out.textContent = dated
+    ? fmt(L.seaLevelDated, { value: signed(offset) })
+    : level == null ? L.seaLevelNone : fmt(L.seaLevel, { value: signed(level), offset: change });
+  stage.dataset.seaCurve = dated ? offset.toFixed(0) : level == null ? '' : level.toFixed(0);
   const mark = $('sea-now');
   if (mark) {
     mark.setAttribute('x1', String(stop + 0.5));
@@ -545,6 +577,19 @@ function showSeaMarks(place) {
   const marks = $('sealevel-marks');
   const notes = $('sealevel-notes');
   if (!marks || !notes || !seaLevelControl) return;
+  if (!place.mapless && place.from.deglacial) {
+    // The age sets the level here; the slider shows it and does not move.
+    const level = String(Math.round(seaLevelOffset(place, true)));
+    seaLevelControl.min = level;
+    seaLevelControl.max = level;
+    seaLevelControl.value = level;
+    seaLevelControl.disabled = true;
+    showSeaSetting();
+    marks.replaceChildren();
+    notes.textContent = L.seaFromAge;
+    notes.hidden = false;
+    return;
+  }
   const range = seaRange(place);
   seaLevelControl.min = String(range[0]);
   seaLevelControl.max = String(range[1]);
@@ -581,6 +626,10 @@ function seaY(metres) {
 function drawSeaLevelStrip() {
   const svg = $('sea-strip');
   if (!svg || !seaLevel.long.length) return;
+  if (timeWindow) {
+    drawWindowSeaStrip(svg);
+    return;
+  }
   const { height } = SEA_STRIP;
   const y = seaY;
   const n = stops.length;
@@ -630,6 +679,38 @@ function drawSeaLevelStrip() {
   if (axis) {
     axis.replaceChildren();
     labelAxis(axis, [200, 100, 0, -100].map((level) => ({ top: y(level) / height * 100, text: `${level > 0 ? '+' : ''}${level} m` })));
+  }
+}
+// The strip in the time window: the level each stop stands at, the stack's running minimum
+// held from the present, one column per thousand years, on a scale that fits a lowstand.
+function drawWindowSeaStrip(svg) {
+  const { height } = SEA_STRIP;
+  const y = (metres) => (height - 2) - (metres + 140) / 160 * (height - 4);
+  const n = stops.length;
+  svg.setAttribute('viewBox', `0 0 ${n} ${height}`);
+  svg.setAttribute('preserveAspectRatio', 'none');
+  const ns = 'http://www.w3.org/2000/svg';
+  const make = (tag, attrs) => {
+    const node = document.createElementNS(ns, tag);
+    for (const [key, value] of Object.entries(attrs)) node.setAttribute(key, String(value));
+    return node;
+  };
+  const children = [];
+  for (const level of [-50, -100]) {
+    children.push(make('line', { x1: 0, x2: n, y1: y(level).toFixed(1), y2: y(level).toFixed(1), class: 'sea-grid' }));
+  }
+  children.push(make('line', { x1: 0, x2: n, y1: y(0).toFixed(1), y2: y(0).toFixed(1), class: 'sea-base' }));
+  children.push(make('polyline', {
+    points: stops.map(([from], index) => `${index + 0.5},${y(frames[from].deglacial.level_m).toFixed(1)}`).join(' '),
+    class: 'sea-line',
+  }));
+  // The chosen stop, moved by showSeaLevel.
+  children.push(make('line', { id: 'sea-now', x1: n - 0.5, x2: n - 0.5, y1: 0, y2: height, class: 'sea-now' }));
+  svg.replaceChildren(...children);
+  const axis = $('sea-axis');
+  if (axis) {
+    axis.replaceChildren();
+    labelAxis(axis, [0, -50, -100].map((level) => ({ top: y(level) / height * 100, text: `${level} m` })));
   }
 }
 // The last 800,000 years, glacial cycles that no 5 Myr slice can show: a chart of the
@@ -1705,7 +1786,8 @@ function init() {
   if ($('timeline-oldest')) {
     $('timeline-oldest').textContent = oldest[0] < 0
       ? fmt(L.oldestNoMap, { age: oldest[3] })
-      : fmt(L.oldestPast, { age: oldest[3] });
+      : timeWindow ? fmt(L.oldestWindow, { age: frames[oldest[0]].deglacial.age_ka })
+        : fmt(L.oldestPast, { age: oldest[3] });
   }
   $('era').addEventListener('change', () => selectFrame(Number($('era').value), true));
   $('timeline').addEventListener('input', () => selectStop(Number($('timeline').value), true));
@@ -1838,6 +1920,8 @@ function init() {
     seaLevelControl.addEventListener('input', () => { showSeaSetting(); selectStop(stop, true); });
     if (seaLevelCurveToggle) {
       seaLevelCurveToggle.checked = false;
+      // In the time window the age already takes the level from the stack.
+      seaLevelCurveToggle.disabled = Boolean(timeWindow);
       seaLevelCurveToggle.addEventListener('change', () => selectStop(stop, true));
     }
   }
@@ -1929,6 +2013,17 @@ function init() {
       location.assign(url.href);
     });
   }
+  if ($('window')) {
+    // The window is its own stop table, so a new page too. It opens at the present, and
+    // leaving it lands on the present of the whole series, where its ages all round to.
+    $('window').addEventListener('change', () => {
+      const url = new URL(location.href);
+      url.searchParams.delete('age');
+      if ($('window').value) url.searchParams.set('window', $('window').value);
+      else url.searchParams.delete('window');
+      location.assign(url.href);
+    });
+  }
   if ($('relief3d')) {
     $('relief3d').addEventListener('click', () => {
       reliefWanted = !reliefWanted;
@@ -1949,6 +2044,7 @@ function init() {
     $('dataset').addEventListener('change', () => {
       const url = new URL(location.href);
       url.searchParams.set('masks', $('dataset').value);
+      url.searchParams.delete('window');   // the window belongs to the elevation series
       url.searchParams.set('age', String(stops[stop][3]));
       location.assign(url.href);
     });

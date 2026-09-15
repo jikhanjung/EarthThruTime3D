@@ -42,8 +42,10 @@ the optimal North American margins of NADI-1 (Dalton et al. 2023) and the most-c
 Eurasian margins of DATED-1 (Hughes et al. 2016) laid over today's ice, so Antarctica,
 Greenland, Iceland and the mountain glaciers keep their present extent. Each slice
 carries the sea level of its age from the Spratt & Lisiecki (2016) stack, taken as the
-running minimum back from the present so the levels fall with age and a slice that
-lowers nothing is dropped; the page mixes the two slices bracketing the offset.
+running minimum back from the present so the levels fall with age. Every thousand years
+is written for the time window, which steps through the ages; a slice that lowers
+nothing is marked so the sea-level what-if, which mixes the two slices bracketing the
+offset, skips it.
 
 Check: the glacial deposits Cao et al. (2018) compiled, tillites and diamictites since
 the Devonian, are rotated to each map's age with the PALEOMAP model and counted inside
@@ -206,18 +208,30 @@ def stack():
     return {int(round(age)): level for age, level in pleistocene(path)}
 
 
+def held_levels(levels, ages=SLICES_KA):
+    """Each age's sea level as the running minimum back from the present, and whether it
+    lies below every younger age's, as (age, level, lowers). The stack starts above
+    today's level, which is its noise, so the present counts as 0 m."""
+    held, lowest = [], 0.0
+    for age in ages:
+        lowers = levels[age] < lowest
+        lowest = min(lowest, levels[age])
+        held.append((age, lowest, lowers))
+    return held
+
+
 def deglacial(folders, grounded, levels, today, out):
     """The last deglaciation as dated lowstand fields over today's ice, one per thousand
-    years that lowers the sea further: NADI-1's optimal North American margins and
-    DATED-1's most-credible Eurasian margins, each at its age's level from the stack."""
+    years: NADI-1's optimal North American margins and DATED-1's most-credible Eurasian
+    margins, each at the running minimum of the stack's level back from the present.
+
+    Every age is written, because the time window steps through them all; `lowers` marks
+    the ones whose level is below every younger slice's, the only ones the sea-level
+    what-if can mix between, since a level that does not fall has no single age."""
     for stale in out.glob("paleodem-0000-ice-low*.png"):
         stale.unlink()
-    slices, lowest = [], 0.0
-    for age in SLICES_KA:
-        level = levels[age]
-        if level >= lowest:
-            continue                     # the sea already stood lower at a younger slice
-        lowest = level
+    slices = []
+    for age, level, lowers in held_levels(levels):
         mask = grounded > 0
         mask |= rasterise(folders["nadi1"].parent / NADI.format(age=age)) > 0
         dated = folders["dated1"].parent / DATED.format(age=age)
@@ -225,8 +239,10 @@ def deglacial(folders, grounded, levels, today, out):
             mask |= rasterise(dated, transform=polar_laea_inverse) > 0
         field = distance_field(mask.astype(np.uint8) * 255)
         Image.fromarray(np.dstack([field, np.zeros_like(field), np.zeros_like(field)])).save(out / f"paleodem-0000-ice-low-{age}.png")
-        slices.append({"age_ka": age, "level_m": level, "volume": today - level / SEA_PER_MKM3, "areas": area_table(field)})
-        print(f"  {age:2d} ka  sea {level:7.1f} m  ice {share(field >= 128):5.2f}% of the globe -> paleodem-0000-ice-low-{age}.png")
+        slices.append({"age_ka": age, "level_m": level, "lowers": lowers,
+                       "volume": today - level / SEA_PER_MKM3, "areas": area_table(field)})
+        print(f"  {age:2d} ka  sea {level:7.1f} m{'' if lowers else ' (held)'}  ice {share(field >= 128):5.2f}% "
+              f"of the globe -> paleodem-0000-ice-low-{age}.png")
     return slices
 
 
@@ -416,7 +432,8 @@ def main():
                         "thousand years of the last deglaciation, `<id>-ice-low-<ka>.png`, NADI-1's optimal "
                         "North American margins and DATED-1's most-credible Eurasian margins over today's ice, "
                         "each at its age's sea level from the Spratt & Lisiecki stack taken as the running "
-                        "minimum back from the present; the page mixes the two slices bracketing the offset "
+                        "minimum back from the present. The time window steps through every slice; the sea-level "
+                        "what-if uses only those whose `lowers` is true, mixes the two bracketing the offset "
                         "and applies the area law below the deepest."),
         "grids": sources, "sheets": sheets, "lows": lows}, indent=1))
     print(f"{written} grids given the atlas's ice ({borrowed} borrowing a map at another age), "
