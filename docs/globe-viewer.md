@@ -13,8 +13,8 @@ Hangul, which is how a missing translation shows up.
 
 ## Mask sources
 
-The globe can draw its land masks from two sources, and `core.globe.MASK_SOURCES` lists
-them:
+The globe offers three surface datasets in `core.globe.MASK_SOURCES`: two segmented
+land-mask series and one elevation series. This document describes v0.10.3 (2026-09-15).
 
 - `paleoatlas2016`, the default: 90 maps from the PALEOMAP PaleoAtlas for GPlates
   (Scotese 2016), 750 Ma to present, segmented by `scripts/segment_paleoatlas.py`. They
@@ -35,7 +35,7 @@ them:
 
 `MASK_SOURCE` sets the default; `?masks=scotese2002`, `?masks=paleoatlas2016` or
 `?masks=paleodem2018` picks one per page, and anything else falls back to the default. `/globe/fields/<id>.png` finds a
-field by map id in either source; `/globe/maps/` only ever has the 2002 maps.
+field by map id across the three sources; `/globe/maps/` only ever has the 2002 maps.
 
 The 2016 maps carry no lettering, so their names come from the plate model.
 `scripts/segment_paleoatlas.py` rasterises the PALEOMAP polygons at each map's age, a
@@ -68,14 +68,13 @@ ages the index lists. The layer is not offered over the 2002 maps, whose longitu
 from the PALEOMAP frame. Where the orange line runs inside the mask's edge, marine fossils
 say that ground was sea.
 
-The rest of this document describes the 2002 path, which is where the viewer began.
-
-The home page renders the 17 Scotese reference maps with Three.js 0.186.0. Selectors
-use original image ages from the provenance catalogue, including 356 Ma and 50.2 Ma.
-The slider carries sub-steps between neighbouring maps, so dragging it moves rather
-than jumps. Only the stops that land on a published map are observations; the ones
-between are interpolated, and the caption, the inspector and the slider's accessible
-value all say so.
+The viewer uses Three.js 0.186.0 for all three datasets. The original 2002 path keeps
+its image-title ages, including 356 Ma and 50.2 Ma, and its approximate image reprojection;
+those details do not describe the equirectangular 2016 atlas or PaleoDEM grids.
+The slider carries intermediate stops between source maps. Source-map stops reproduce
+published reconstructions, not direct observations of the past; intervening surfaces
+are this project's interpolations and are labelled accordingly. The sections below
+cover both shared viewer behavior and dataset-specific processing.
 
 ## Elevation series
 
@@ -408,23 +407,26 @@ The server builds the slider's stops and sends them as `[from frame, to frame, b
 age]`, so the viewer consumes a table rather than a rule and does not care how the stops
 were spaced. Two samplings exist:
 
-- `SCOTESE_VIEWER_STEPS` divides every gap into the same number of sub-steps, 1, 2, 4,
-  8, 16 or 32, defaulting to 4, which gives 65 stops over the 17 maps. A stop is then a
-  fraction of the way from one map to the next, regardless of how much time that gap
-  covers, so the slider moves faster through deep time than through the Cenozoic.
-- `SCOTESE_VIEWER_INTERVAL_MA` instead places a stop every so many million years, 0.5,
-  1, 2, 5, 10 or 25, which makes the slider move at a constant rate through time. One
-  stop per million year gives 653 stops. This is the sampling GPlates-style continuous
-  time would want; see `docs/gplates-reference.md`.
+- `SCOTESE_VIEWER_STEPS` divides each source-map gap into 1, 2, 4, 8, 16 or 32
+  sub-steps, defaulting to 4. Within source coverage, N maps produce
+  `(N - 1) * steps + 1` stops: 357 for the default 90-map atlas, 65 for the
+  17-map comparison series, and 445 for the 112-frame elevation series at 4 steps.
+  Equal sub-step counts do not mean equal durations across gaps.
+- `SCOTESE_VIEWER_INTERVAL_MA` uses 0.5, 1, 2, 5, 10 or 25 million years between
+  regular stops, also retaining every source age. Counts therefore depend on the
+  selected series and on source ages that fall between regular stops. A 10,000-year
+  (0.01 Ma) viewer interval is not currently supported.
 
-The interval wins when both are set. Either way the published map ages are always stops
-of their own, so the slider can still land on what the source actually drew, and the
-blend at every stop is linear in age between the two maps that bracket it. `?steps=` and
-`?interval=` override per request so a density can be tried without a restart; every
-path goes through the same allowlists, so none can hand the slider an odd range.
+The interval wins when both are set. `?steps=` and `?interval=` override the setting
+per request through the same allowlists. Within each gap the blend is linear in age.
+Older, model-only stops may extend the timeline beyond the oldest source map; the
+counts above exclude that extension. More display stops do not add source information
+or establish the accuracy of the intervening reconstruction.
 
-More stops cost nothing in texture memory. Only 17 fields are ever loaded, whatever the
-sampling; the extra stops are positions between them.
+Intermediate stops reuse source textures rather than generating a texture per tick.
+The main texture cache is an LRU cache capped at 12 entries (`TEXTURE_CACHE` in
+`static/core/globe.js`); it is not an always-resident set of 17 maps. Climate and other
+layers also have resources, so this cap is not a bound on all viewer memory.
 
 ## Interpolated stops
 
@@ -619,26 +621,41 @@ projections, where a wrap would otherwise draw a line back across the map.
 
 Three.js modules and their MIT license are vendored locally using `npm run vendor`.
 No browser CDN requests are needed. The only outgoing links are user-opened citations.
-The browser caches a texture promise per frame. A monotonically increasing request ID
+The main texture loader caches promises by frame and texture kind, with LRU eviction
+and disposal at 12 entries. A monotonically increasing request ID
 ensures stale asynchronous loads cannot replace the latest selected era. Failures are
 retryable. Playback pauses on manual selection or when the page becomes hidden.
 
-Development enables `SCOTESE_VIEWER_ENABLED`; production defaults it off. Activating
-the production flag exposes all 17 original JPEGs to site visitors, so it is an explicit
-operator choice after checking deployment and data-use terms. This does not grant a
-new license. The allowlist does not expose arbitrary files, HTML snapshots, or DB files.
+`SCOTESE_VIEWER_ENABLED` controls the viewer. Production settings default it off, while
+the deployed environment enables it. Original 2002 JPEGs have a separate gate,
+`SCOTESE_SOURCE_MAPS_PUBLIC`, which defaults off in production and stays off in the
+operating deployment. Enabling the viewer alone does not expose originals: it displays
+derived fields, while `/globe/maps/<id>.jpg` returns 404 and original-map UI is hidden.
+Original assets are omitted from both the container image and the runtime data bundle.
+Where both flags and local files permit originals, only the 17 allowlisted 2002 JPEGs
+are served; arbitrary files, HTML snapshots and DB files remain inaccessible.
+Neither flag grants data-use rights. See `sources/README.md`, `LICENSE-DATA.md` and
+`deploy/README.md` for source terms and deployment boundaries.
 
 ## Verification
 
 - `make check`, `make test`: catalogue, age exceptions, allowlisting, disabled and
   missing-data behavior, plus the existing site tests.
-- `npm test`: projection landmarks, hemisphere signs, ellipse containment and raster
-  axis orientation.
-- `npm run test:browser` with the development server running: all 17 maps, keyboard
-  rotation, mouse drag/zoom, playback, rapid selection, the land-mask toggle, mobile
-  overflow, failed-load recovery and JS errors. Screenshots go to gitignored
-  `data/screenshots/`.
+- `npm test`: projection and rotation tests (`tests/projection.test.mjs` and
+  `tests/rotation.test.mjs`).
+- `npm run test:browser` with the development server running: the 2002 comparison
+  frames, default 2016 atlas, dataset selection, interpolation and deep time, plate and
+  coastline overlays, languages, projections, navigation, mobile layouts and failed-load
+  recovery. Elevation, climate, sea-level and terrain checks run when the elevation
+  series is built; the script reports that section as skipped otherwise. Screenshots
+  go to gitignored `data/screenshots/`.
 - `.venv/bin/python tests/segmentation_check.py` with `requirements-processing.txt`
   installed: the inverse projection against the viewer's forward mapping, the inset
   ellipse mask and the colour conversion. Kept out of the Django suite because the web
   app does not depend on those packages.
+
+- Processing checks also include `tests/paleoatlas_check.py` (segmentation and motion),
+  `tests/rotation_check.py` (rotation math) and `tests/ice_check.py` (ice-mask helpers).
+  Run each with `.venv/bin/python` and `requirements-processing.txt` installed; these
+  are separate from the Django suite. A passing web test alone does not validate the
+  scientific accuracy of the source reconstructions or interpolated surfaces.

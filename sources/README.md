@@ -168,9 +168,14 @@ The site's [license information](http://www.scotese.com/license.htm) permits cre
 personal, teaching, research and scientific-publication uses, while reserving commercial
 uses for written consent. It also discusses Internet websites among restricted uses.
 This catalogue is for local research; no public redistribution permission is assumed.
-Original images and page snapshots are not committed. The local development viewer
-serves only the 17 allowlisted JPEGs; page snapshots remain inaccessible. The viewer
-and image route default off in production (`SCOTESE_VIEWER_ENABLED=false`).
+Original images and page snapshots are not committed. A local viewer with originals
+allowed can serve only the 17 allowlisted 2002 JPEGs; page snapshots remain inaccessible.
+`SCOTESE_VIEWER_ENABLED` enables the viewer, while `SCOTESE_SOURCE_MAPS_PUBLIC` separately
+allows these originals. Both settings default off in production code; the deployed
+environment enables the viewer and keeps original-image access off. Public rendering
+uses derived fields, and original rasters are excluded from the image and runtime bundle.
+See [data licence](../LICENSE-DATA.md) for the distinct terms of the mask and CC BY
+source families; enabling a setting does not settle those terms.
 
 Attribution: C. R. Scotese, PALEOMAP Project, www.scotese.com.
 Reference: Scotese, C. R. (2001), *Atlas of Earth History*, Volume 1, Paleogeography,

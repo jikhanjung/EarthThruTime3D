@@ -1,9 +1,9 @@
 # GPlates: what it does, and where this project stands
 
-Notes gathered to aim this project at the capability GPlates already has. GPlates is the
-reference implementation of interactive plate reconstruction, from EarthByte at the
-University of Sydney and collaborators. Nothing here is our own measurement; it is a
-reading of the project's own feature page, user manual and tutorials, listed at the end.
+The GPlates feature overview below is based on its feature page, manual and tutorials,
+listed at the end. The EarthThruTime3D comparison was checked against v0.10.3 on
+2026-09-15. It distinguishes implemented plate kinematics from approximate surface
+interpolation and from deformation capabilities that remain unimplemented.
 
 ## The idea that separates GPlates from what we do now
 
@@ -18,14 +18,18 @@ circuit down to the anchored plate and applies the result to each feature's pres
 coordinates. When the asked-for time falls between two samples in a sequence, it
 interpolates between the two nearest ones.
 
-That is why the GPlates time control is genuinely continuous: any time is as valid as
-any other, because geometry is computed rather than looked up. Our timeline is the
-opposite. We hold 17 published pictures and blend between them, so only 17 stops are
-observations and everything between is a geometric guess with no plate in it.
+EarthThruTime3D now also composes finite rotations through plate circuits and draws
+reconstructed vector outlines. Its surface pipeline is still different: the default
+90-map PaleoAtlas series uses regions whose centroids are carried by PALEOMAP plate
+rotations, while the renderer translates their neighbourhoods and blends their shapes.
+PaleoDEM borrows atlas regions and motions. The 17-map 2002 comparison series uses
+named-landmass matching instead. These intermediate surfaces are approximations, not
+rigidly rotated per-plate meshes or a dynamically deforming crust. Even published
+source maps are reconstructions rather than direct observations of past geography.
 
 ## Functional areas
 
-The user manual runs to 24 chapters. Grouped by what they do:
+The referenced capabilities can be grouped by purpose:
 
 **Reconstruction core**
 - Total reconstruction sequences: the rotation file, edited as sequences per plate pair.
@@ -74,45 +78,48 @@ at the left. The step buttons move one frame, bound to Ctrl+I and Ctrl+Shift+I. 
 Configure Animation dialog, under the Reconstruction menu, sets the time range, the
 increment between frames and the frame rate.
 
-This is the shape our slider is moving toward. We already let the sampling be set as an
-even number of sub-steps per published map, or as a fixed span in millions of years,
-which is the GPlates-style constant time increment. What we do not have is a reason for
-any particular intermediate frame to look the way it does.
+Our viewer supports sub-steps per map or a fixed 0.5, 1, 2, 5, 10 or 25 Ma interval,
+retaining source-map ages. Model-only stops extend beyond map coverage where a plate
+model is available. There is no arbitrary-time input or 0.01 Ma viewer interval yet.
+A finer stop spacing changes display sampling, not the source data's accuracy.
 
 ## What we have, against that list
 
-| GPlates capability | Here |
+| GPlates capability | EarthThruTime3D v0.10.3 |
 | --- | --- |
-| Rotation model, plate IDs, plate circuit | none |
-| Continuous reconstruction time | slider is continuous in appearance only |
-| Reconstructing vector features | outlines exist as GeoJSON, never rotated |
-| Reconstructing rasters | source maps are reprojected, not reconstructed |
-| Topological plate boundaries | none |
-| Deforming networks | none |
-| Flowlines, motion paths, velocities | none |
-| Globe and map display | globe only |
-| Layers | one surface at a time, with a toggle |
-| Scripting interface | offline Python scripts, no viewer API |
+| Rotation model, plate IDs, plate circuit | Finite-rotation composition and interpolation; multiple model manifests, with access restricted for unpublished sources |
+| Continuous reconstruction time | Configurable stop table; rotations evaluated for the selected stop, surfaces interpolated between source frames |
+| Reconstructing vector features | Packed plate outlines rotated in the viewer; PaleoCoastlines can also follow a surface gap's motion field |
+| Reconstructing rasters | Atlas/PaleoDEM surface interpolation guided by plate-carried centroids; 2002 maps use named-landmass motions |
+| Topological plate boundaries | Polygon overlays; no time-dependent topology editor or solver |
+| Deforming networks | Not implemented |
+| Flowlines, motion paths, velocities | No dedicated viewer products or validated velocity export |
+| Globe and map display | Globe, Mollweide and equirectangular views; zoomed PaleoDEM terrain relief and tilt |
+| Layers | Plate/coastline overlays and elevation, temperature, sea-level and ice controls where data supports them |
+| Scripting interface | Offline Python data builders and validation scripts; no general reconstruction API |
 
-## What it would take to close the gap
+The plate-model and source inventory is maintained in [sources/README.md](../sources/README.md).
+Rendering details and their limits are in [globe-viewer.md](globe-viewer.md).
 
-In rough order of dependency:
+## Remaining work toward reconstruction and deformation
 
-1. **Plate IDs on our segmented pieces.** Each piece already has a name and an outline.
-   Assigning a plate ID is the step that makes a piece something a rotation can act on.
-2. **A rotation model.** Either adopt a published one, which pins us to its plate IDs
-   and its reference frame, or fit rotations to our own pieces between the 17 maps. The
-   second is a research task, and its output would be our interpretation, not Scotese's.
-3. **Compose and apply rotations in the viewer**, replacing the distance-field blend for
-   any time a rotation model covers. The distance-field blend stays useful for the parts
-   no rotation model covers, such as shorelines and shelf, which move for reasons other
-   than plate motion.
-4. **Continuous time** then becomes meaningful, and the stop table can be dropped in
-   favour of a plain time input.
-5. Derived products, flowlines, motion paths, velocities, only make sense after 3.
+1. **Upgrade surface motion from local translation to per-plate rotation.** Atlas regions
+   already have dominant plate IDs, and a rotation model is already used to move their
+   centroids. The remaining step is to rotate all relevant surface geometry consistently,
+   handling regions that span multiple plates rather than merely translating a neighbourhood.
+2. **Separate tectonic transport from changing geography.** Shoreline, shelf, ice and
+   sea-level changes cannot all be inferred from plate rotation. Preserve source ages,
+   reference frames, assumptions and uncertainty while improving the interpolated shape.
+3. **Add controlled time evaluation.** An arbitrary-time or 10,000-year display mode needs
+   bounds and performance checks; it should not imply that the sources resolve that interval.
+4. **Implement regional deformation.** India–Eurasia collision and Himalayan uplift need
+   additional constraints and an explicit extension/shortening or crustal-thickness model.
+   The current terrain display uses supplied elevation grids, not an uplift solver.
+5. **Validate derived motion products and later mantle coupling.** Flowlines, velocities,
+   deforming networks and mantle-convection coupling remain separate development tasks.
 
-Steps 1 and 2 are where the scientific content lives; everything else is engineering.
-Until step 3 exists, our intermediate frames must keep saying they are interpolated.
+Existing rotation-guided interpolation must continue to be labelled as interpolation;
+using a published rotation model does not make its blended coastlines a published result.
 
 ## Reference frames and palaeolongitude
 

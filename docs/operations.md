@@ -25,11 +25,16 @@ The shared guides are referenced privately through `.guides`; they are not copie
   snapshot: the database has no user accounts, only the administrator's.
 - Licence: MIT for the code (`LICENSE`), CC BY 4.0 for the data derived from CC BY
   sources, the unsettled masks under their sources' terms (`LICENSE-DATA.md`).
-- `/healthz`: `ok`/200 for a reachable database with migration history,
-  `unhealthy`/503 if unavailable/uninitialized, `degraded`/200 if an
-  `INTEGRITY_FAIL` sentinel exists beside the database. No expensive integrity scan.
-- Seed: **(none)**. No geological records exist yet; schema readiness is the temporary
-  health invariant. Replace it with a meaningful domain invariant once data exists.
+- `/healthz`: `ok`/200 requires a reachable database with migration history and, when
+  the viewer is enabled, every field in the configured default surface series. The
+  deployed default is `paleoatlas2016`: 90 expected fields. Missing DB/schema or required
+  fields yields `unhealthy`/503; an `INTEGRITY_FAIL` sentinel after those checks pass
+  yields `degraded`/200. The JSON includes source, expected count and missing count.
+  This is an existence check, not a per-request integrity scan or a full check of
+  optional climate, ice and plate layers. Bundle hashes are checked at startup.
+- Seed: **(none)**. Geological assets are files described by provenance manifests,
+  not database seed rows. The domain invariant is already implemented as default-series
+  field completeness; the database stores Django administrative/session state.
 
 ## Adopted at the 2026-09-12 deployment
 
@@ -37,8 +42,9 @@ The shared guides are referenced privately through `.guides`; they are not copie
   `backup`. `seed` is still **(none)**. Preflight runs Django's checks, the
   missing-migration check and the test suite before any image is built.
 - Smoke requires status `ok`, the expected version, and the domain invariant: every
-  derived land field of the default mask source present and served (17 at the first
-  deployment, 90 since the 2016 PaleoAtlas became the default).
+  derived land field of the default mask source present (17 at the first deployment,
+  90 since the 2016 PaleoAtlas became the default). `smoke.sh` checks the health JSON
+  and version; it does not fetch every field URL. Image/browser checks cover serving.
 - Rollback is the deploy command with the previous version, exercised in both
   directions on the day of the first deployment.
 - Build happens on the development host. The server loads an immutable versioned image
