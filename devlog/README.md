@@ -23,7 +23,6 @@ wwolf는 001부터 셉니다. 그 전의 001–045는 링크와 본문 속 번�
 ## 작업 기록
 
 - [jikhanjung 061 — 현재 구현에 맞춘 문서 정리](20260915_jikhanjung_061_documentation_refresh.md)
-
 - [jikhanjung 060 — v0.10.3: 빙하 구멍 메우기, 마지막 빙하기 물러남의 조각](20260915_jikhanjung_060_release_0103.md)
 - [jikhanjung 059 — 터치 기울이기, 짧은 화면의 메뉴](20260915_jikhanjung_059_touch_tilt_short_menu.md)
 - [jikhanjung 058 — v0.10.1: 휠 클릭으로 기울이기](20260914_jikhanjung_058_release_0101.md)

@@ -653,7 +653,6 @@ Neither flag grants data-use rights. See `sources/README.md`, `LICENSE-DATA.md` 
   installed: the inverse projection against the viewer's forward mapping, the inset
   ellipse mask and the colour conversion. Kept out of the Django suite because the web
   app does not depend on those packages.
-
 - Processing checks also include `tests/paleoatlas_check.py` (segmentation and motion),
   `tests/rotation_check.py` (rotation math) and `tests/ice_check.py` (ice-mask helpers).
   Run each with `.venv/bin/python` and `requirements-processing.txt` installed; these
