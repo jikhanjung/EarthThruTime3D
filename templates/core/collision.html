@@ -43,6 +43,7 @@
 <p>{% trans "원본 자료는 80·60·40·20·0 Ma의 다섯 시점입니다. 재생은 원본 시점 전환이며, 그 사이의 이동·변형을 보간하지 않습니다. 80 Ma는 관찰 시작점으로 선택했으며 충돌 시작 연대라는 뜻은 아닙니다." %}</p>
 {{ strings|json_script:'collision-strings' }}
 <div id="collision-data" data-url="{{ data_url }}" hidden></div>
+{# A standalone document, not a child of base.html, so it carries its own import map. #}
 <script type="importmap">{"imports":{"three":"{% static 'vendor/three/three.module.js' %}"}}</script>
 <script type="module" src="{% static 'core/collision.js' %}?v={{ version }}"></script>
 {% else %}<p>{% trans "이 환경에는 단면 자료가 준비되지 않았거나 뷰어가 꺼져 있습니다." %}</p>{% endif %}
