@@ -1,7 +1,7 @@
 contract_version = 1
 instance = "earththrutime3d"
 image = "honestjung/earththrutime3d"
-version = "v0.10.2"
+version = "v0.10.3"
 platform = "linux/amd64"
 settings = "config.settings.production"
 has_database = true
@@ -9,9 +9,9 @@ health_url = "/healthz"
 services = ["earththrutime3d"]
 
 [verbs]
-preflight = "bash deploy/build.sh v0.10.2"
-build = "bash deploy/build.sh v0.10.2"
-deploy = "bash /srv/earththrutime3d/deploy.sh v0.10.2"
+preflight = "bash deploy/build.sh v0.10.3"
+build = "bash deploy/build.sh v0.10.3"
+deploy = "bash /srv/earththrutime3d/deploy.sh v0.10.3"
 seed = "none: no geological records are stored in the database yet"
 smoke = "bash /srv/earththrutime3d/smoke.sh"
 rollback = "bash /srv/earththrutime3d/deploy.sh <previous-version>"
