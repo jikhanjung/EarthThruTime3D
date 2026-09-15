@@ -1,5 +1,11 @@
 # Reference globe viewer
 
+The separate [`/mantle/` experiment](geodynamics.md) displays published Müller 2022
+OPT1 mantle surfaces and their accompanying plate boundaries. It is not a layer of
+the PALEOMAP surface, and does not calculate convection or crustal deformation.
+The inspector's [India–Asia A–A′ popup](india-asia-section.md) compares the regional
+mantle section and PaleoDEM 3D terrain, with independent vertical exaggeration controls.
+
 ## Languages
 
 Korean is the source language and English lives in `locale/en/LC_MESSAGES/django.po`. The

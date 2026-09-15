@@ -1,0 +1,10 @@
+.mantle-page { max-width: 1100px; margin: 0 auto; padding: 1rem; }
+.mantle-tools { display: flex; flex-wrap: wrap; align-items: center; gap: .8rem; margin: 1rem 0; }
+.mantle-tools label { white-space: nowrap; }
+#mantle-time { flex: 1 1 180px; }
+#mantle-age { min-width: 6em; font-variant-numeric: tabular-nums; }
+#mantle-stage { width: 100%; height: min(65vh, 650px); min-height: 280px; background: #09151f; border-radius: 12px; overflow: hidden; }
+#mantle-stage canvas { display: block; width: 100%; height: 100%; touch-action: none; }
+#mantle-status { min-height: 1.5em; }
+.slabs-key { color: #2277ba; }
+.piles-key { color: #bd5915; }

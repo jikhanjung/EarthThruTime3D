@@ -33,6 +33,44 @@ def digest(path):
     return reader.hexdigest()
 
 
+def pack_experiments(staging, files):
+    """Ship only catalogued, verified outputs; raw archives never enter runtime."""
+    for relative in ('mantle/muller2022-opt1', 'india-asia'):
+        source = BASE_DIR / 'data/derived' / relative
+        catalogue = source / 'catalogue.json'
+        document = json.loads(catalogue.read_text())
+        if document.get('schema_version') != 1 or document.get('source') != 'muller2022-opt1':
+            raise ValueError(f'Unexpected experiment catalogue: {relative}')
+        if relative.startswith('mantle/'):
+            if [frame['index'] for frame in document['frames']] != list(range(51)):
+                raise ValueError('Release requires all 51 mantle frames')
+            assets = [frame['layers'][name] for frame in document['frames']
+                      for name in ('slabs', 'piles', 'boundaries')]
+        else:
+            assets = [document]
+            region = json.loads((source / document['file']).read_text())
+            if [f['age_ma'] for f in region['frames']] != [80, 60, 40, 20, 0]:
+                raise ValueError('Release requires all five collision frames')
+            if any('surface' not in frame for frame in region['frames']):
+                raise ValueError('Collision terrain is missing')
+        records = [{'file': 'catalogue.json', 'bytes': catalogue.stat().st_size,
+                    'sha256': digest(catalogue)}]
+        for asset in assets:
+            records.extend((asset, asset['gzip']))
+        for record in records:
+            name = record['file']
+            path = (source / name).resolve()
+            if Path(name).name != name or not path.is_relative_to(source.resolve()):
+                raise ValueError('Unsafe experiment asset path')
+            if path.stat().st_size != record['bytes'] or digest(path) != record['sha256']:
+                raise ValueError(f'Experiment differs from catalogue: {name}')
+            target = staging / relative / name
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(path, target)
+            files.append({'path': f'{relative}/{name}', 'bytes': record['bytes'],
+                          'sha256': record['sha256'], 'dataset': relative})
+
+
 def pack_elevation(dem, dem_source, staging, files):
     """Stage the elevation series; scripts/build_paleodem.py writes it."""
     (staging / "paleodem").mkdir()
@@ -183,6 +221,7 @@ def main():
             files.append({"path": f"plates/{model}/{name}", "bytes": target.stat().st_size,
                           "sha256": digest(target), "dataset": model})
 
+    pack_experiments(staging, files)
     manifest = {"schema_version": 2, "version": version, "files": files,
                 "contains_source_maps": False,
                 "note": ("Derived land fields and piece reports produced by "

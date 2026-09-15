@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "id": "muller2022-opt1",
+  "title": "Müller et al. (2022) OPT1 published mantle surfaces",
+  "record_url": "https://zenodo.org/records/6622194",
+  "version": "3.0",
+  "retrieved_at": "2026-09-15",
+  "citation": "Supplementary data – A tectonic-rules based mantle reference frame since 1 billion years ago – implications for supercontinent cycles and plate-mantle system evolution",
+  "paper_doi": "10.5194/se-13-1127-2022",
+  "kind": "published_simulation",
+  "license": {
+    "id": "CC-BY-4.0",
+    "url": "https://creativecommons.org/licenses/by/4.0/",
+    "evidence": "Pinned Zenodo API metadata.license.id = cc-by-4.0."
+  },
+  "assets": [
+    {
+      "role": "archive",
+      "url": "https://zenodo.org/api/records/6622194/files/OPT1_3D_visualisation_ParaView.zip/content",
+      "path": "data/sources/geodynamics/muller2022-opt1/visualisation.zip",
+      "bytes": 205811467,
+      "sha256": "8e6d64a5910bc6fc1f335a135b4e53d0be5a51f8b38a772f82376cf905482f67",
+      "publisher_checksum": "md5:5d232569cec8a5973e8ac8571cd69d0e"
+    },
+    {
+      "role": "metadata",
+      "url": "https://zenodo.org/api/records/6622194",
+      "path": "data/sources/geodynamics/muller2022-opt1/record.json",
+      "bytes": 12936,
+      "sha256": "f7e0a280c03007cc9f4eaeddf87ad7f36f267f8c11ab9f7d95debb2e06d230d9"
+    }
+  ],
+  "reference_frame": "OPT1 optimised mantle; retain accompanying reconstruction geometry",
+  "fields": [
+    "Depth(km)",
+    "NonDimDepth"
+  ],
+  "not_in_this_archive": [
+    "temperature volume",
+    "velocity field"
+  ],
+  "time": {
+    "source": "StateFile/OPT1-model.pvsm TimeToTextConvertor",
+    "scale_ma": -20,
+    "shift_ma": 1000,
+    "frame_count": 51
+  },
+  "coordinates": {
+    "surface_radius": 1,
+    "earth_radius_km": 6371,
+    "storage": "publisher Cartesian xyz; no PALEOMAP alignment applied"
+  }
+}

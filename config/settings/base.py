@@ -138,6 +138,10 @@ PALEODEM_DERIVED_DIR = Path(os.environ.get(
     'PALEODEM_DERIVED_DIR', BASE_DIR / 'data' / 'derived' / 'paleodem'))
 PALEOCOASTLINES_DERIVED_DIR = Path(os.environ.get(
     'PALEOCOASTLINES_DERIVED_DIR', BASE_DIR / 'data' / 'derived' / 'paleocoastlines'))
+MANTLE_DERIVED_DIR = Path(os.environ.get(
+    'MANTLE_DERIVED_DIR', BASE_DIR / 'data' / 'derived' / 'mantle' / 'muller2022-opt1'))
+INDIA_ASIA_DERIVED_DIR = Path(os.environ.get(
+    'INDIA_ASIA_DERIVED_DIR', BASE_DIR / 'data' / 'derived' / 'india-asia'))
 
 # Which land masks the globe shows by default: 'paleoatlas2016' (the 2016 atlas, same
 # edition as the PALEOMAP rotation model) or 'scotese2002' (the 2002 web maps). A page

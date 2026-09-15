@@ -23,11 +23,13 @@ bash backup.sh "$version"
 
 next_env=$(mktemp .env.next.XXXXXX)
 trap 'rm -f "$next_env"' EXIT
-printf 'IMAGE_TAG=%s\nDATA_VERSION=%s\nHOST_PORT=%s\n' "$version" "$version" "${HOST_PORT:-8014}" > "$next_env"
+python3 update_compose_env.py "$version" "$next_env"
 docker compose --env-file "$next_env" config --quiet
 if [[ -f .env ]]; then cp .env .env.previous; fi
 mv "$next_env" .env
-if ! docker compose up -d --wait --wait-timeout 90; then
+if ! docker compose up -d --wait --wait-timeout 90 \
+    || ! docker compose exec -T earththrutime3d python /app/deploy/healthcheck.py </dev/null \
+    || ! bash smoke.sh "${version#v}"; then
     docker compose logs --tail 50
     if [[ -f .env.previous ]]; then
         cp .env.previous .env
@@ -36,7 +38,5 @@ if ! docker compose up -d --wait --wait-timeout 90; then
     echo 'Deployment failed; inspect logs.' >&2
     exit 1
 fi
-docker compose exec -T earththrutime3d python /app/deploy/healthcheck.py </dev/null
-bash smoke.sh "${version#v}"
 docker compose ps
 echo "Deployed $version. Rollback uses the same command with the previous version."

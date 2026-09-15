@@ -5,6 +5,7 @@ carrying the published maps, the viewer coming up without its fields, and the li
 decision not being honoured by the running code.
 """
 import json
+import gzip
 import socket
 import subprocess
 import sys
@@ -131,6 +132,27 @@ def main():
             if "Creative Commons" not in about:
                 raise SystemExit("The plate models are served without their licence.")
             fetch("/static/core/globe.js")
+            collision = fetch('/collision/').decode()
+            region_manifest = json.loads((runtime/'india-asia/catalogue.json').read_text())
+            region_url = '/collision/data/' + region_manifest['sha256'][:16] + '.json'
+            if region_url not in collision or 'collision-surface' not in collision:
+                raise SystemExit('Collision popup has no data/terrain')
+            region = json.loads(fetch(region_url))
+            if [f['age_ma'] for f in region['frames']] != [80, 60, 40, 20, 0]:
+                raise SystemExit('Collision ages are missing')
+            request = urllib.request.Request(f'http://127.0.0.1:{PORT}'+region_url,
+                                             headers={'Accept-Encoding': 'gzip'})
+            with urllib.request.urlopen(request) as response:
+                if response.headers.get('Content-Encoding') != 'gzip':
+                    raise SystemExit('Collision gzip response missing')
+                if json.loads(gzip.decompress(response.read())) != region:
+                    raise SystemExit('Collision compressed data differs')
+            if 'mantle-frames' not in fetch('/mantle/').decode():
+                raise SystemExit('Mantle data missing')
+            mantle = json.loads((runtime/'mantle/muller2022-opt1/catalogue.json').read_text())
+            for layer in mantle['frames'][-1]['layers'].values():
+                fetch('/mantle/assets/'+layer['file'])
+            fetch('/static/core/collision-surface.js')
             fetch("/about/")
             print(f"Smoke passed: {version}, {report['fields']['expected']} land fields, "
                   f"five plate models, {shapes} shapes in the last, "

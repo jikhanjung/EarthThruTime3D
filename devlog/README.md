@@ -22,11 +22,15 @@ wwolf는 001부터 셉니다. 그 전의 001–045는 링크와 본문 속 번�
 
 ## 계획
 
+- [jikhanjung P03 — 지각 변형과 맨틀 대류 연결](20260915_jikhanjung_P03_crustal_deformation_mantle_coupling.md)
 - [jikhanjung P02 — 시간 범위: 마지막 빙기 한 주기 (13만 년)](20260915_jikhanjung_P02_last_glacial_cycle.md)
 - [jikhanjung P01 — 시간 범위 선택: 최근 2.5만 년](20260915_jikhanjung_P01_deglacial_time_window.md)
 
 ## 작업 기록
 
+- [jikhanjung 068 — v0.11.0: 맨틀과 인도–아시아 단면 릴리스](20260915_jikhanjung_068_release_0110.md)
+- [jikhanjung 067 — 인도–아시아 A–A′ 팝업과 3D 지표](20260915_jikhanjung_067_india_asia_section.md)
+- [jikhanjung 066 — 지각 변형 자료 목록과 맨틀 3D 표면 실험](20260915_jikhanjung_066_mantle_source_preview.md)
 - [jikhanjung 065 — v0.10.5: 최근 13만 년 시간 범위](20260915_jikhanjung_065_release_0105.md)
 - [jikhanjung 064 — 시간 범위: 최근 13만 년](20260915_jikhanjung_064_last_glacial_cycle.md)
 - [jikhanjung 063 — v0.10.4: 최근 2.5만 년 시간 범위](20260915_jikhanjung_063_release_0104.md)

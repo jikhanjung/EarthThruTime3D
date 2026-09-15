@@ -792,3 +792,255 @@ msgstr "Sea level, last 130,000 years"
 
 msgid "이 시점의 빙하는 복원이 아니라 가정입니다. 25 ka보다 오래된 빙상 윤곽은 공개된 자료가 없어, 그 나이의 해수면과 같은 해수면이었던 마지막 빙기 후퇴기의 조각 모양을 빌렸습니다. 빙상이 자랄 때와 녹을 때의 모양 차이는 반영하지 않았습니다. 해수면은 <a href=\"https://doi.org/10.5194/cp-12-1079-2016\" target=\"_blank\" rel=\"noopener\">Spratt &amp; Lisiecki (2016)</a> 곡선 값 그대로이며, 여러 기록의 주성분이라 마지막 간빙기(약 12만 5천 년 전)의 +6~9 m 고수위는 재현하지 않습니다."
 msgstr "The ice at this stop is an assumption, not a reconstruction. No open ice-sheet outlines exist older than 25 ka, so the shape is borrowed from the slices of the last deglaciation at the same sea level as this age. Ice sheets grow and melt in different shapes, which this ignores. Sea level is the <a href=\"https://doi.org/10.5194/cp-12-1079-2016\" target=\"_blank\" rel=\"noopener\">Spratt &amp; Lisiecki (2016)</a> curve as it is; being the principal component of many records, it does not reach the +6 to 9 m highstand of the last interglacial, about 125,000 years ago."
+
+#: templates/core/mantle.html core/mantle.py
+msgid "맨틀 모형 실험"
+msgstr "Mantle model experiment"
+
+#: templates/core/mantle.html core/mantle.py
+msgid "Müller 2022 · OPT1의 발표된 3D 구조입니다. 이 프로젝트가 대류를 계산한 결과는 아닙니다."
+msgstr "Published 3D structures from Müller 2022 · OPT1. This project has not simulated mantle convection."
+
+#: templates/core/mantle.html core/mantle.py
+msgid "슬랩 구조"
+msgstr "Slab structures"
+
+#: templates/core/mantle.html core/mantle.py
+msgid "맨틀 하부 구조"
+msgstr "Lower mantle structures"
+
+#: templates/core/mantle.html core/mantle.py
+msgid "같은 모형의 판 경계"
+msgstr "Plate boundaries from the same model"
+
+#: templates/core/mantle.html core/mantle.py
+msgid "시점"
+msgstr "Age"
+
+#: templates/core/mantle.html core/mantle.py
+msgid "드래그로 회전하고 휠로 확대하는 맨틀 지구본"
+msgstr "Mantle globe: drag to rotate and scroll to zoom"
+
+#: templates/core/mantle.html core/mantle.py
+msgid "색은 구조 종류를 구분합니다. 온도나 속도 범례가 아닙니다. 2천만 년 간격의 원본 시점을 표시하며 시점 사이는 보간하지 않습니다."
+msgstr "Colours distinguish structure types, not temperature or velocity. Original frames are spaced 20 million years apart, with no interpolation."
+
+#: templates/core/mantle.html core/mantle.py
+msgid "판 경계도 OPT1에 동봉된 자료입니다. Scotese 지표와의 좌표계 정합은 아직 적용하지 않았습니다."
+msgstr "Plate boundaries come from the OPT1 archive too. Alignment with the Scotese surface reference frame has not been applied."
+
+#: templates/core/mantle.html core/mantle.py
+msgid "이 환경에는 맨틀 실험 자료가 준비되지 않았거나 뷰어가 꺼져 있습니다."
+msgstr "Mantle experiment data is not prepared in this environment, or the viewer is disabled."
+
+#: templates/core/mantle.html core/mantle.py
+msgid "EarthThruTime3D: 원본 표면을 웹 표시용으로 변환."
+msgstr "EarthThruTime3D: original surfaces converted for web display."
+
+#: templates/core/mantle.html core/mantle.py
+msgid "맨틀 구조를 불러오는 중…"
+msgstr "Loading mantle structures…"
+
+#: templates/core/mantle.html core/mantle.py
+msgid "자료를 불러오지 못했습니다. 시점을 다시 선택해 주세요."
+msgstr "Could not load the data. Please select an age again."
+
+#: templates/core/mantle.html core/mantle.py
+msgid "발표된 모형 · 원본 시점"
+msgstr "Published model · original frame"
+
+#: templates/core/mantle.html core/mantle.py
+msgid "이 브라우저에서 3D 화면을 시작할 수 없습니다."
+msgstr "The 3D view could not start in this browser."
+
+#: templates/core/collision.html core/collision.py
+msgid "인도–아시아 A–A′ 단면"
+msgstr "India–Asia section A–A′"
+
+#: templates/core/collision.html core/collision.py
+msgid "닫기"
+msgstr "Close"
+
+#: templates/core/collision.html core/collision.py
+msgid "80 Ma–현재 · 동경 85° · A: 남위 40°, A′: 북위 60°. 현재 히말라야 중앙부를 지나는 고정 공간 단면입니다."
+msgstr "80 Ma–present · 85°E · A: 40°S, A′: 60°N. A fixed spatial section through the present-day central Himalaya."
+
+#: templates/core/collision.html core/collision.py
+msgid "단면 자료를 불러오는 중…"
+msgstr "Loading section data…"
+
+#: templates/core/collision.html core/collision.py
+msgid "단면을 불러오지 못했습니다."
+msgstr "Could not load the section."
+
+#: templates/core/collision.html core/collision.py
+msgid "표시 레이어"
+msgstr "Visible layers"
+
+#: templates/core/collision.html core/collision.py
+msgid "대륙 이동"
+msgstr "Continental motion"
+
+#: templates/core/collision.html core/collision.py
+msgid "맨틀 구조 단면"
+msgstr "Mantle structure section"
+
+#: templates/core/collision.html core/collision.py
+msgid "대류 개념도"
+msgstr "Conceptual convection"
+
+#: templates/core/collision.html core/collision.py
+msgid "지각 변형 가정"
+msgstr "Crust deformation scenario"
+
+#: templates/core/collision.html core/collision.py
+msgid "대륙 이동과 단면 위치"
+msgstr "Continental motion and section location"
+
+#: templates/core/collision.html core/collision.py
+msgid "원본 시점별 대륙 핵부 윤곽과 A–A′ 위치"
+msgstr "Craton outlines at original frames and the location of A–A′"
+
+#: templates/core/collision.html core/collision.py
+msgid "노랑: 대륙 핵부(크라톤) · 흰색: 판 경계 · 분홍: A–A′. OPT1 동봉 복원이며 해안선 전체는 아닙니다."
+msgstr "Yellow: cratons · white: plate boundaries · pink: A–A′. Reconstructions supplied with OPT1, not complete coastlines."
+
+#: templates/core/collision.html core/collision.py
+msgid "위도와 깊이에 따른 맨틀 구조 교차선"
+msgstr "Mantle surface intersections by latitude and depth"
+
+#: templates/core/collision.html core/collision.py
+msgid "파랑: 슬랩 · 주황: 맨틀 하부 구조. 3D 표면을 실제로 잘라 얻은 교차선이며 온도장이나 유속이 아닙니다."
+msgstr "Blue: slabs · orange: lower mantle structures. Actual intersections of published 3D surfaces, not temperature or velocity fields."
+
+#: templates/core/collision.html core/collision.py
+msgid "대류 개념도의 순환 화살표는 설명용 가정입니다. 위치·방향·속도를 자료에서 추정하지 않았으며 지각 계산을 구동하지 않습니다."
+msgstr "The conceptual circulation arrows are illustrative. Their locations, directions and speeds are not inferred from data, and they do not drive the crust calculation."
+
+#: templates/core/collision.html core/collision.py
+msgid "국소 지각 변형 · 가정 모형"
+msgstr "Local crust deformation · assumed model"
+
+#: templates/core/collision.html core/collision.py
+msgid "위 지리 단면과 별개의 국소 거리좌표입니다. 판 회전·변형 네트워크로 계산한 히말라야 단면은 아닙니다."
+msgstr "Local distance coordinates separate from the geographic section above. This is not a Himalayan section calculated from plate rotations or deformation networks."
+
+#: templates/core/collision.html core/collision.py
+msgid "가정한 단축 시작"
+msgstr "Assumed shortening onset"
+
+#: templates/core/collision.html core/collision.py
+msgid "현재까지의 총 단축량"
+msgstr "Total shortening to the present"
+
+#: templates/core/collision.html core/collision.py
+msgid "체적 보존으로 단축과 두꺼워짐을 연결한 가정 모형"
+msgstr "Assumed model connecting shortening and thickening through volume conservation"
+
+#: templates/core/collision.html core/collision.py
+msgid "초기 폭 2000 km·두께 35 km, 지각/맨틀 밀도 2800/3300 kg/m³를 가정합니다. 체적 보존과 단순 등압평형만 적용하며 침식·섭입·탄성 휨은 제외합니다. 조절 범위는 신뢰구간이 아닙니다."
+msgstr "Assumed initial width: 2000 km; thickness: 35 km; crust/mantle densities: 2800/3300 kg/m³. Only volume conservation and simple isostasy apply; erosion, subduction and flexure are excluded. Control ranges are not confidence intervals."
+
+#: templates/core/collision.html core/collision.py
+msgid "원본 자료는 80·60·40·20·0 Ma의 다섯 시점입니다. 재생은 원본 시점 전환이며, 그 사이의 이동·변형을 보간하지 않습니다. 80 Ma는 관찰 시작점으로 선택했으며 충돌 시작 연대라는 뜻은 아닙니다."
+msgstr "The five original frames are 80, 60, 40, 20 and 0 Ma. Playback switches between them without interpolating motion or deformation. 80 Ma is the chosen viewing start, not the age of collision onset."
+
+#: templates/core/collision.html core/collision.py
+msgid "이 환경에는 단면 자료가 준비되지 않았거나 뷰어가 꺼져 있습니다."
+msgstr "Section data is not prepared in this environment, or the viewer is disabled."
+
+#: templates/core/collision.html core/collision.py
+msgid "충돌 연대 연구"
+msgstr "Research on collision timing"
+
+#: templates/core/collision.html core/collision.py
+msgid "대륙 핵부 윤곽"
+msgstr "Craton outlines"
+
+#: templates/core/collision.html core/collision.py
+msgid "판 경계"
+msgstr "Plate boundaries"
+
+#: templates/core/collision.html core/collision.py
+msgid "맨틀 구조의 실제 교차선"
+msgstr "Actual mantle surface intersections"
+
+#: templates/core/collision.html core/collision.py
+msgid "대류 개념도 · 속도 자료 없음"
+msgstr "Conceptual convection · no velocity data"
+
+#: templates/core/collision.html core/collision.py
+msgid "지각 두께"
+msgstr "Crustal thickness"
+
+#: templates/core/collision.html core/collision.py
+msgid "누적 단축"
+msgstr "Cumulative shortening"
+
+#: templates/core/collision.html core/collision.py
+msgid "등압평형 융기"
+msgstr "Isostatic uplift"
+
+#: templates/core/collision.html core/collision.py
+msgid "남쪽"
+msgstr "South"
+
+#: templates/core/collision.html core/collision.py
+msgid "북쪽"
+msgstr "North"
+
+#: templates/core/collision.html core/collision.py
+msgid "깊이"
+msgstr "Depth"
+
+#: templates/core/collision.html core/collision.py
+msgid "국소 거리"
+msgstr "Local distance"
+
+#: templates/core/collision.html core/collision.py
+msgid "재생"
+msgstr "Play"
+
+#: templates/core/collision.html core/collision.py
+msgid "정지"
+msgstr "Pause"
+
+#: templates/core/collision.html core/collision.py
+msgid "원본 시점"
+msgstr "Original frame"
+
+#: templates/core/collision.html core/collision.py
+msgid "수직 배율"
+msgstr "Vertical scale"
+
+#: templates/core/collision.html core/collision.py
+msgid "맨틀 단면 수직 배율"
+msgstr "Mantle section vertical scale"
+
+#: templates/core/collision.html core/collision.py
+msgid "지각 단면 수직 배율"
+msgstr "Crust section vertical scale"
+
+#: templates/core/collision.html core/collision.py
+msgid "같은 시기의 3D 지표"
+msgstr "3D surface at the same age"
+
+#: templates/core/collision.html core/collision.py
+msgid "지표 고도 배율"
+msgstr "Surface elevation scale"
+
+#: templates/core/collision.html core/collision.py
+msgid "회전하고 확대할 수 있는 PaleoDEM 지역 지표와 A–A′ 위치"
+msgstr "Rotatable and zoomable regional PaleoDEM terrain with A–A′"
+
+#: templates/core/collision.html core/collision.py
+msgid "PaleoDEM 지표 · 고도 배율 ×50 기본. 드래그로 회전하고 휠로 확대합니다. 해수면은 0 m입니다."
+msgstr "PaleoDEM surface · default elevation scale ×50. Drag to rotate and scroll to zoom. Sea level is 0 m."
+
+#: templates/core/collision.html core/collision.py
+msgid "PaleoDEM은 PALEOMAP 기준, 맨틀은 OPT1 기준입니다. 같은 시기와 경위도 범위를 비교하며 두 모형을 공간적으로 결합한 결과는 아닙니다."
+msgstr "PaleoDEM uses the PALEOMAP frame; the mantle uses OPT1. This compares the same age and geographic window, without spatially coupling the models."
+
+#: templates/core/collision.html core/collision.py
+msgid "3D 지표를 시작할 수 없습니다. 단면은 계속 볼 수 있습니다."
+msgstr "The 3D surface could not start. The sections remain available."

@@ -1,0 +1,50 @@
+{% load static i18n %}<!doctype html>
+<html lang="{{ LANGUAGE_CODE }}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{% trans "인도–아시아 A–A′ 단면" %}</title>
+<link rel="stylesheet" href="{% static 'core/collision.css' %}?v={{ version }}"></head>
+<body><main>
+<h1>{% trans "인도–아시아 A–A′ 단면" %}</h1>
+<p>{% trans "80 Ma–현재 · 동경 85° · A: 남위 40°, A′: 북위 60°. 현재 히말라야 중앙부를 지나는 고정 공간 단면입니다." %}</p>
+{% if data_url %}
+<div class="controls"><button id="collision-play" type="button" disabled>{% trans "재생" %}</button>
+<label for="collision-time">{% trans "시점" %}</label><input id="collision-time" type="range" min="0" max="4" value="0" step="1" disabled><output id="collision-age">80 Ma</output>
+<button id="collision-retry" type="button" hidden>{% trans "다시 불러오기" %}</button></div>
+<fieldset class="controls"><legend>{% trans "표시 레이어" %}</legend>
+<label><input id="collision-continents" type="checkbox" checked>{% trans "대륙 이동" %}</label>
+<label><input id="collision-mantle" type="checkbox" checked>{% trans "맨틀 구조 단면" %}</label>
+<label><input id="collision-flow" type="checkbox">{% trans "대류 개념도" %}</label>
+<label><input id="collision-crust" type="checkbox" checked>{% trans "지각 변형 가정" %}</label></fieldset>
+<div class="controls"><label for="section-ve">{% trans "맨틀 단면 수직 배율" %}</label><select id="section-ve"><option>1</option><option selected>2</option><option>5</option><option>10</option></select>×
+<label for="crust-ve">{% trans "지각 단면 수직 배율" %}</label><select id="crust-ve"><option>1</option><option>5</option><option selected>10</option><option>20</option><option>50</option></select>×</div>
+<p id="collision-status" role="status" aria-live="polite"></p>
+<details id="collision-overview"><summary>{% trans "대륙 이동과 단면 위치" %}</summary><canvas id="collision-map" width="440" height="460" role="img" aria-label="{% trans '원본 시점별 대륙 핵부 윤곽과 A–A′ 위치' %}"></canvas>
+<p>{% trans "노랑: 대륙 핵부(크라톤) · 흰색: 판 경계 · 분홍: A–A′. OPT1 동봉 복원이며 해안선 전체는 아닙니다." %}</p></details>
+<div class="plots">
+<section><h2>{% trans "같은 시기의 3D 지표" %}</h2>
+<div class="controls"><label for="surface-ve">{% trans "지표 고도 배율" %}</label><select id="surface-ve"><option>1</option><option>10</option><option>25</option><option selected>50</option><option>100</option></select>×
+<button id="surface-reset" type="button">{% trans "시점 초기화" %}</button></div>
+<div id="collision-surface" tabindex="0" role="img" aria-label="{% trans '회전하고 확대할 수 있는 PaleoDEM 지역 지표와 A–A′ 위치' %}"></div>
+<p id="surface-status" role="status"></p>
+<p>{% trans "PaleoDEM 지표 · 고도 배율 ×50 기본. 드래그로 회전하고 휠로 확대합니다. 해수면은 0 m입니다." %}</p>
+<p>{% trans "PaleoDEM은 PALEOMAP 기준, 맨틀은 OPT1 기준입니다. 같은 시기와 경위도 범위를 비교하며 두 모형을 공간적으로 결합한 결과는 아닙니다." %}</p></section>
+<section><h2>{% trans "맨틀 구조 단면" %}</h2><div class="section-scroll"><canvas id="collision-section" width="960" height="400" role="img" aria-label="{% trans '위도와 깊이에 따른 맨틀 구조 교차선' %}"></canvas></div>
+<p>{% trans "파랑: 슬랩 · 주황: 맨틀 하부 구조. 3D 표면을 실제로 잘라 얻은 교차선이며 온도장이나 유속이 아닙니다." %}</p>
+<p>{% trans "대류 개념도의 순환 화살표는 설명용 가정입니다. 위치·방향·속도를 자료에서 추정하지 않았으며 지각 계산을 구동하지 않습니다." %}</p></section>
+</div>
+<section id="crust-panel"><h2>{% trans "국소 지각 변형 · 가정 모형" %}</h2>
+<p>{% trans "위 지리 단면과 별개의 국소 거리좌표입니다. 판 회전·변형 네트워크로 계산한 히말라야 단면은 아닙니다." %}</p>
+<div class="controls"><label for="collision-onset">{% trans "가정한 단축 시작" %}</label><select id="collision-onset"><option>50</option><option selected>60</option><option>65</option></select> Ma
+<label for="collision-shortening">{% trans "현재까지의 총 단축량" %}</label><input id="collision-shortening" type="range" min="0" max="1200" step="100" value="1000"><output id="shortening-value">1000 km</output></div>
+<div class="section-scroll"><canvas id="collision-crust-view" width="1100" height="240" role="img" aria-label="{% trans '체적 보존으로 단축과 두꺼워짐을 연결한 가정 모형' %}"></canvas></div>
+<p id="crust-values"></p>
+<p>{% trans "초기 폭 2000 km·두께 35 km, 지각/맨틀 밀도 2800/3300 kg/m³를 가정합니다. 체적 보존과 단순 등압평형만 적용하며 침식·섭입·탄성 휨은 제외합니다. 조절 범위는 신뢰구간이 아닙니다." %}</p></section>
+<p>{% trans "원본 자료는 80·60·40·20·0 Ma의 다섯 시점입니다. 재생은 원본 시점 전환이며, 그 사이의 이동·변형을 보간하지 않습니다. 80 Ma는 관찰 시작점으로 선택했으며 충돌 시작 연대라는 뜻은 아닙니다." %}</p>
+{{ strings|json_script:'collision-strings' }}
+<div id="collision-data" data-url="{{ data_url }}" hidden></div>
+<script type="importmap">{"imports":{"three":"{% static 'vendor/three/three.module.js' %}"}}</script>
+<script type="module" src="{% static 'core/collision.js' %}?v={{ version }}"></script>
+{% else %}<p>{% trans "이 환경에는 단면 자료가 준비되지 않았거나 뷰어가 꺼져 있습니다." %}</p>{% endif %}
+<p class="credits">Müller et al. (2022), <a href="https://zenodo.org/records/6622194">OPT1 v3.0</a>, CC BY 4.0 · EarthThruTime3D / PaleoBytes.
+<a href="https://doi.org/10.1029/2010JB007673">{% trans "충돌 연대 연구" %}</a></p>
+<p class="credits">Scotese &amp; Wright (2018), <a href="https://doi.org/10.5281/zenodo.5460860">PaleoDEM</a>, CC BY 4.0.</p>
+</main><script src="{% static 'core/collision-escape.js' %}"></script></body></html>
