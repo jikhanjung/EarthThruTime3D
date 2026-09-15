@@ -323,12 +323,12 @@ function periodLabel(place) {
   // A published map keeps its own label; a stop between two maps is named for its age.
   return place.blend === 0 ? place.from.label : periodAt(place.age);
 }
-async function selectStop(value, manual = false, overlayManaged = false) {
+async function selectStop(value, manual = false, overlayManaged = false, transition = null) {
   if (!overlayManaged && mantleOverlay?.requestAge(stopAt(value).age)) return;
   if (manual) setPlaying(false);
   clearTimeout(playTimer);
   const place = stopAt(value);
-  if (overlayManaged) surfaceMesh.visible = false;
+  const displayedLabel = $('globe-age').textContent;
   stop = place.value;
   selected = place.index;
   const ticket = ++request;
@@ -356,6 +356,8 @@ async function selectStop(value, manual = false, overlayManaged = false) {
     place.mapless ? null : (masked ? L.mask : relief ? L.relief : heated ? L.temperature : null),
     place.mapless ? L.noMap : (between ? L.interpolated : null),
     !place.mapless && place.from.ice_kind === 'analogue' ? L.analogueIce : null].filter(Boolean).join(' / ');
+  const nextLabel = $('globe-age').textContent;
+  if (transition) $('globe-age').textContent = displayedLabel;
   // Older than any map there is no source to preview, and leaving the last one up
   // would read as if it applied.
   if ($('source-figure')) $('source-figure').hidden = place.mapless;
@@ -392,6 +394,7 @@ async function selectStop(value, manual = false, overlayManaged = false) {
   status.classList.remove('loaded');
   $('retry').hidden = true;
   stage.setAttribute('aria-busy', 'true');
+  let commitOverlay = null;
   try {
     if (place.mapless) {
       uniforms.blank.value = 1;
@@ -414,15 +417,21 @@ async function selectStop(value, manual = false, overlayManaged = false) {
       // One stop carries slices today, the present; a side without them loads nothing.
       const sliced = stateA.low ? 'from' : stateB.low ? 'to' : null;
       const low = sliced ? (sliced === 'from' ? stateA : stateB).low : null;
-      const [first, second, warmA, warmB, iceA, iceB, low0, low1, riverA, riverB, riverLowA, riverLowB] = await Promise.all([
+      const [first, second, warmA, warmB, iceA, iceB, low0, low1, riverA, riverB, riverLowA, riverLowB, preparedOverlay] = await Promise.all([
         loadSurface(place.from), loadSurface(place.to),
         heated ? loadTemperature(place.from) : null, heated ? loadTemperature(place.to) : null,
         fielded ? loadIce(place.from) : null, fielded ? loadIce(place.to) : null,
         !fielded ? null : dated ? loadDeglacial(place.from) : low ? loadIceLow(place[sliced], low.from) : null,
         !fielded ? null : dated ? loadDeglacial(place.to) : low ? loadIceLow(place[sliced], low.to) : null,
         fielded ? loadRivers(place.from) : null, fielded ? loadRivers(place.to) : null,
-        fielded ? loadRiversLow(place.from) : null, fielded ? loadRiversLow(place.to) : null]);
-      if (ticket !== request) return;
+        fielded ? loadRiversLow(place.from) : null, fielded ? loadRiversLow(place.to) : null,
+        transition?.prepare(),
+        // Prepare line data too; committing the surface must not wait on another fetch.
+        transition && showPlates() && !locked() ? loadPlateModel() : null,
+        transition && $('coastline')?.checked && coastlineEntry(place.age)
+          ? loadCoastline(coastlineEntry(place.age)) : null]);
+      if (ticket !== request || (transition && !transition.isCurrent())) return;
+      commitOverlay = preparedOverlay;
       uniforms.surfaceA.value = first;
       uniforms.surfaceB.value = second;
       uniforms.tempA.value = warmA;
@@ -464,6 +473,8 @@ async function selectStop(value, manual = false, overlayManaged = false) {
     stage.dataset.sealevel = String(Math.round(seaOffset));
     applyMotion(place);
     surfaceMesh.visible = true;
+    commitOverlay?.();
+    $('globe-age').textContent = nextLabel;
     lastPlace = place;
     // Names go on any surface without lettering of its own: the mask, and on the
     // elevation series the relief and the temperature; a photographed map has its own.
@@ -489,7 +500,7 @@ async function selectStop(value, manual = false, overlayManaged = false) {
     scheduleNext();
     return true;
   } catch (error) {
-    if (ticket !== request) return;
+    if (ticket !== request || (transition && !transition.isCurrent())) return;
     if (overlayManaged) {
       // A neutral globe is explicit missing data, never old terrain under a new age.
       uniforms.blank.value = 1;
@@ -1876,7 +1887,7 @@ function init() {
     focus: centre => {earth.rotation.set(0,0,0);camera.position.copy(centre).multiplyScalar(3.2);controls.target.set(0,0,0);controls.update();},
     capture: () => ({stop, projection, rotation:earth.quaternion.clone(), camera:camera.position.clone(),
       target:controls.target.clone(), spinning, meridian, tiltAngle, tiltHeading}),
-    enter: async (age, first) => {
+    enter: async (age, first, transition) => {
       const target = stops.findIndex(entry=>Math.abs(entry[3]-age)<1e-8);
       if (target < 0) throw new Error('80 Ma unavailable in this timeline');
       setPlaying(false);
@@ -1887,7 +1898,7 @@ function init() {
         camera.position.copy(onSphere(mantleConfig.cutaway.longitude,mantleConfig.cutaway.latitude,3.2));
         controls.target.set(0,0,0);controls.update();
       }
-      if (!await selectStop(target,true,true)) throw new Error('Surface unavailable');
+      if (!await selectStop(target,true,true,transition)) throw new Error('Surface unavailable');
     },
     restore: previous => {
       setProjection(previous.projection,false);$('projection').value=previous.projection;
