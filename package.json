@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "vendor": "node scripts/vendor-three.mjs",
-    "test": "node --test tests/projection.test.mjs tests/rotation.test.mjs",
+    "test": "node --test tests/*.test.mjs",
     "test:browser": "node tests/globe-browser.mjs"
   },
   "dependencies": {"three": "0.186.0"},

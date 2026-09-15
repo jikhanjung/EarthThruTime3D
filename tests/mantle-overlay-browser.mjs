@@ -33,6 +33,12 @@ try {
  const stops=JSON.parse(await page.locator('#globe-stops').textContent());
  const closest=age=>String(stops.reduce((best,s,i)=>Math.abs(s[3]-age)<Math.abs(stops[best][3]-age)?i:best,0));
  await page.locator('#timeline').fill(closest(31));await ready(40);
+ const sameFrameRequests=requests.length;
+ await page.locator('#timeline').fill(closest(35));
+ await expect(page.locator('#timeline')).toHaveValue(closest(40));
+ await ready(40);
+ await page.waitForTimeout(300);
+ expect(requests.length).toBe(sameFrameRequests);
  await page.locator('#mantle-section-open').click();
  const popup=page.frameLocator('#collision-dialog iframe');
  await expect(popup.locator('body')).toHaveAttribute('data-age','40',{timeout:30000});
@@ -40,8 +46,18 @@ try {
  await expect(popup.locator('#collision-play')).toBeDisabled();
  await popup.locator('#collision-time').fill('3');await ready(20);
  await expect(popup.locator('body')).toHaveAttribute('data-age','20');
+ // Linked failure remains navigable and retryable inside the popup.
+ await page.route('**/mantle/assets/slabs-47-*',r=>r.fulfill({status:503}));
+ await popup.locator('#collision-time').fill('1');
+ await expect(globe).toHaveAttribute('data-mantle-overlay','error');
+ await expect(popup.locator('#collision-time')).toBeEnabled();
+ await expect(popup.locator('#collision-retry')).toBeVisible();
+ await page.unroute('**/mantle/assets/slabs-47-*');
+ await popup.locator('#collision-retry').click();await ready(60);
+ await expect(popup.locator('body')).toHaveAttribute('data-age','60');
  await popup.locator('#collision-time').press('Escape');await expect(page.locator('#collision-dialog')).not.toBeVisible();
- console.log('Linked section and main age synchronization passed');
+ await expect.poll(()=>page.locator('#collision-dialog iframe').evaluate(el=>el.contentDocument?.URL),{timeout:30000}).toBe('about:blank');
+ console.log('Linked section, recovery, document unload and main age synchronization passed');
  await toggle.uncheck();await expect(page.locator('#timeline')).toHaveValue(initial);await expect(globe).toHaveAttribute('data-projection','equirect');
  await toggle.check();await ready(80);
  // Failed selected frame hides the old geometry, recovers without stale age.
@@ -61,6 +77,19 @@ try {
  await page.screenshot({path:'test-results/mantle-multi-mobile.png',fullPage:true});
  await page.goto(new URL('/lang/en/?next=/',base).href);
  await expect(page.locator('#mantle-overlay-panel')).toContainText('Surface opacity');
+ const failedSurface=await browser.newPage();
+ await failedSurface.route('**/globe/fields/paleodem-0800.png',r=>r.fulfill({status:503}));
+ await failedSurface.goto(new URL('/?masks=paleodem2018',base).href);
+ await expect(failedSurface.locator('#globe')).toHaveAttribute('aria-busy','false');
+ await failedSurface.locator('#mantle-overlay').check();
+ await expect(failedSurface.locator('#globe')).toHaveAttribute('data-mantle-overlay','error');
+ await expect(failedSurface.locator('#globe')).toHaveAttribute('data-surface','unavailable');
+ await expect(failedSurface.locator('#status')).toBeVisible();
+ await failedSurface.unroute('**/globe/fields/paleodem-0800.png');
+ await failedSurface.locator('#mantle-overlay-retry').click();
+ await expect(failedSurface.locator('#globe')).toHaveAttribute('data-mantle-overlay','ready',{timeout:30000});
+ await expect(failedSurface.locator('#globe')).not.toHaveAttribute('data-surface','unavailable');
+ await failedSurface.close();
  expect(errors).toEqual([]);
  console.log('Cancellation, failure/retry, projection restore, mobile and English passed');
 } finally {await browser.close()}

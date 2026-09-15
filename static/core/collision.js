@@ -7,7 +7,7 @@ let data, timer, request;
 const query=new URL(location.href).searchParams;
 const linked=query.get('linked')==='1'&&window.parent!==window;
 let desiredAge=[80,60,40,20,0].includes(Number(query.get('age')))&&query.has('age')?Number(query.get('age')):80;
-let waiting=false;
+let waiting=false, linkedError=false;
 $('collision-linked-note').hidden=!linked;
 let terrain;
 try { terrain = createSurface($('collision-surface'), $('surface-ve'), $('surface-reset')); }
@@ -172,17 +172,19 @@ async function load() {
     const result = await response.json();
     if (result.schema_version !== 1 || result.frames.length !== 5 || result.frames.some((f, i) => f.age_ma !== 80-i*20)) throw new Error('Invalid section');
     data = result;slider.value=String(data.frames.findIndex(f=>f.age_ma===desiredAge));
-    slider.disabled=waiting;$('collision-play').disabled=linked;draw();
+    setWaiting(waiting,linkedError);$('collision-play').disabled=linked;draw();
   } catch (error) {
     if (error.name !== 'AbortError') { $('collision-status').textContent = strings.error; $('collision-retry').hidden = false; }
   }
 }
 function setWaiting(value,error=false) {
-  waiting=value;slider.disabled=value||!data;
+  waiting=value;linkedError=error;slider.disabled=(value&&!error)||!data;
   document.querySelector('.plots').hidden=value;
+  $('crust-panel').hidden=value||!$('collision-crust').checked;
   $('collision-overview').hidden=value;
   $('collision-linked-status').hidden=!value;
   $('collision-linked-status').textContent=error?strings.linkedError:strings.linkedLoading;
+  $('collision-retry').hidden=!error;
   if(value){delete document.body.dataset.age;$('collision-age').textContent='…';}
 }
 window.addEventListener('message',event=>{
@@ -191,7 +193,12 @@ window.addEventListener('message',event=>{
   stop();desiredAge=state.age;setWaiting(!state.ready,Boolean(state.error));
   if(data&&state.ready){slider.value=String(data.frames.findIndex(f=>f.age_ma===desiredAge));draw();}
 });
-$('collision-retry').addEventListener('click', load);
+$('collision-retry').addEventListener('click', () => {
+  if(linked&&linkedError&&data) {
+    setWaiting(true);
+    window.parent.postMessage({type:'collision-age-change',age:desiredAge},location.origin);
+  } else load();
+});
 document.addEventListener('visibilitychange', () => { if (document.hidden) stop(); });
 window.addEventListener('pagehide', () => { stop(); request?.abort(); observer.disconnect(); terrain?.dispose(); });
 load();

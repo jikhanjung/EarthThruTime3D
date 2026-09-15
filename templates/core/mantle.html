@@ -35,3 +35,9 @@
 {% block scripts %}{% if frames %}
 <script type="module" src="{% static 'core/mantle.js' %}?v={{ version }}"></script>
 {% endif %}{% endblock %}
+{% block dialog_head %}{% if frames %}<link rel="stylesheet" href="{% static 'core/collision-dialog.css' %}?v={{ version }}">{% endif %}{% endblock %}
+{% block viewer_scripts %}{% if frames %}
+<script type="importmap">{"imports":{"three":"{% static 'vendor/three/three.module.js' %}","{% static 'core/projection.js' %}":"{% static 'core/projection.js' %}?v={{ version }}"}}</script>
+{% include 'includes/collision-dialog.html' %}
+<script type="module" src="{% static 'core/collision-dialog.js' %}?v={{ version }}"></script>
+{% endif %}{% endblock %}

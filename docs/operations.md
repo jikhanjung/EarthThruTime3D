@@ -50,8 +50,9 @@ the pre-deploy DB snapshot, health and public browser checks are recorded in
   missing-migration check and the test suite before any image is built.
 - Smoke requires status `ok`, the expected version, and the domain invariant: every
   derived land field of the default mask source present (17 at the first deployment,
-  90 since the 2016 PaleoAtlas became the default). `smoke.sh` checks the health JSON
-  and version; it does not fetch every field URL. Image/browser checks cover serving.
+  90 since the 2016 PaleoAtlas became the default). `smoke.sh` resolves the published
+  port through `docker compose config --format json` and checks the health JSON and
+  version; it does not fetch every field URL. Image/browser checks cover serving.
 - Rollback is the deploy command with the previous version, exercised in both
   directions on the day of the first deployment.
 - Build happens on the development host. The server loads an immutable versioned image

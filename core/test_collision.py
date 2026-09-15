@@ -32,8 +32,7 @@ class CollisionTests(SimpleTestCase):
 
     def test_lazy_modal_and_missing_data(self):
         response = self.client.get('/about/')
-        self.assertContains(response, 'id="collision-dialog"')
-        self.assertContains(response, 'data-src="/collision/"')
+        self.assertNotContains(response, 'collision-dialog')
         self.assertNotContains(response, 'src="/collision/" title=')
         self.assertIsNone(self.client.get('/collision/').context['data_url'])
 
@@ -42,12 +41,24 @@ class CollisionTests(SimpleTestCase):
         self.assertEqual(self.client.get('/collision/').context['data_url'], url)
         self.assertEqual(self.client.get('/collision/')['X-Frame-Options'], 'SAMEORIGIN')
         response = self.client.get(url, HTTP_ACCEPT_ENCODING='gzip')
-        self.assertEqual(gzip.decompress(response.content), content)
+        self.assertEqual(gzip.decompress(b''.join(response.streaming_content)), content)
         self.assertEqual(response['Content-Encoding'], 'gzip')
-        self.assertEqual(self.client.get(url, HTTP_ACCEPT_ENCODING='gzip;q=0').content, content)
+        self.assertEqual(b''.join(self.client.get(url, HTTP_ACCEPT_ENCODING='gzip;q=0').streaming_content), content)
         with self.settings(SCOTESE_VIEWER_ENABLED=False):
             self.assertEqual(self.client.get(url).status_code, 404)
         self.assertEqual(self.client.get('/collision/data/wrong.json').status_code, 404)
         (self.path/name).write_bytes(b'corrupt')
         self.assertEqual(self.client.get(url).status_code, 404)
         self.assertEqual(self.client.post('/collision/').status_code, 405)
+
+    def test_optional_gzip_and_conditional_request(self):
+        url, _, content = self.install()
+        path = self.path / 'catalogue.json'
+        data = json.loads(path.read_text())
+        del data['gzip']
+        path.write_text(json.dumps(data))
+        response = self.client.get(url, HTTP_ACCEPT_ENCODING='gzip')
+        self.assertEqual(b''.join(response.streaming_content), content)
+        self.assertEqual(response['X-Content-Type-Options'], 'nosniff')
+        self.assertEqual(self.client.get(url, HTTP_IF_NONE_MATCH=response['ETag']).status_code, 304)
+

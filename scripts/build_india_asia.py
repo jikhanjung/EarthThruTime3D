@@ -4,7 +4,7 @@ import gzip
 import hashlib
 import json
 import math
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 import tempfile
 import zipfile
 
@@ -141,10 +141,10 @@ def build(output):
                 root = ET.fromstring(bundle.read(parent))
                 segments = []
                 for member in root.findall('.//Piece'):
-                    relative = Path(member.get('Source'))
+                    relative = PurePosixPath(member.get('Source'))
                     if relative.is_absolute() or '..' in relative.parts:
                         raise ValueError('Unsafe member')
-                    path = str(Path(parent).parent / relative)
+                    path = str(PurePosixPath(parent).parent / relative)
                     p, cells, _, time = read_piece(bundle.read(path), 'triangles')
                     if time != index:
                         raise ValueError('Source time mismatch')

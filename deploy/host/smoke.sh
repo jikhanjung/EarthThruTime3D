@@ -3,7 +3,9 @@
 # viewer needs is present. Run after every deploy.
 set -euo pipefail
 cd "$(dirname "$0")"
-port=${HOST_PORT:-8014}
+# Ask Compose for the effective value: handles .env, quoting and shell overrides
+# with exactly the same precedence as deploy.sh, without sourcing executable text.
+port=$(docker compose config --format json | python3 -c 'import json, sys; print(next(p["published"] for p in json.load(sys.stdin)["services"]["earththrutime3d"]["ports"] if p["target"] == 8000))')
 expected=${1:-$(grep -oP '(?<=^IMAGE_TAG=).*' .env | tr -d 'v')}
 report=$(curl -fsS "http://127.0.0.1:$port/healthz")
 echo "$report"

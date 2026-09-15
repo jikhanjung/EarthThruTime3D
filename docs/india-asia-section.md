@@ -129,3 +129,16 @@ loading hides the old section until the globe is ready. Linked playback is disab
 The regional terrain remains a comparison in its own frame, with its 85°E trace
 hidden in linked mode. Moving the globe cutaway does not move the fixed section.
 Standalone use retains independent playback.
+
+
+## Runtime recovery and input provenance
+
+When a linked globe load fails, the popup keeps old plots hidden and enables another
+age selection or retry. Closing the popup removes the iframe source; browser checks
+also verify navigation to `about:blank`, rather than checking the attribute alone.
+
+The section records the SHA-256 of the PaleoDEM PNG it samples. The existing
+`sources/paleodem-slices.json` does not contain expected hashes for derived PNGs; its
+archive references describe source grids. Therefore this recorded PNG hash is provenance,
+not comparison against an independently pinned derived-field hash. Adding that comparison
+requires a versioned output manifest from the PaleoDEM builder and remains separate work.

@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { OrbitControls } from '../vendor/three/OrbitControls.js';
 import { placeEquirectangular, placeMollweide, reproject } from './projection.js';
 import { RotationModel, turn } from './rotation.js';
+import { densifySegments } from './surface-lines.js';
 import { createMantleOverlay, CUT_UNIFORMS, CUT_SURFACE } from './mantle-overlay.js';
 let mantleOverlay = null;
 
@@ -486,8 +487,18 @@ async function selectStop(value, manual = false, overlayManaged = false) {
                               between: between ? L.shownBetween : '' });
     status.classList.add('loaded');
     scheduleNext();
+    return true;
   } catch (error) {
     if (ticket !== request) return;
+    if (overlayManaged) {
+      // A neutral globe is explicit missing data, never old terrain under a new age.
+      uniforms.blank.value = 1;
+      surfaceMesh.visible = true;
+      nameLayer.visible = false;
+      if (plateLayer) plateLayer.visible = false;
+      if (coastlineLayer) coastlineLayer.visible = false;
+      stage.dataset.surface = 'unavailable';
+    }
     status.classList.remove('loaded');
     status.textContent = masked
       ? L.failedField
@@ -496,6 +507,7 @@ async function selectStop(value, manual = false, overlayManaged = false) {
     $('retry').hidden = false;
     setPlaying(false);
     console.error(error);
+    return false;
   }
 }
 // Which kind of ice the bound masks are: a drawing (Natural Earth, the atlas) or a cap at
@@ -1571,7 +1583,7 @@ function drawPlates(age, loaded) {
       }
     }
   }
-  const geometry = new THREE.BufferGeometry().setFromPoints(points);
+  const geometry = new THREE.BufferGeometry().setFromPoints(flat ? points : densifySegments(points));
   if (plateLayer) {
     plateLayer.geometry.dispose();
     plateLayer.geometry = geometry;
@@ -1659,7 +1671,7 @@ function drawCoastline(entry, rings, key = `${entry.age}|${projection}`) {
       previousLongitude = longitude;
     }
   }
-  const geometry = new THREE.BufferGeometry().setFromPoints(points);
+  const geometry = new THREE.BufferGeometry().setFromPoints(flat ? points : densifySegments(points));
   if (coastlineLayer) {
     coastlineLayer.geometry.dispose();
     coastlineLayer.geometry = geometry;
@@ -1857,6 +1869,10 @@ function init() {
   const mantleConfig = JSON.parse($('globe-mantle-overlay')?.textContent ?? 'null');
   mantleOverlay = createMantleOverlay({config: mantleConfig, earth, uniforms, stage, surfaceMaterial:surfaceMesh.material,
     getCamera: tiltedView,
+    snapTimeline: age => {
+      $('timeline').value = stops.findIndex(entry => Math.abs(entry[3] - age) < 1e-8);
+      $('era').value = selected;
+    },
     focus: centre => {earth.rotation.set(0,0,0);camera.position.copy(centre).multiplyScalar(3.2);controls.target.set(0,0,0);controls.update();},
     capture: () => ({stop, projection, rotation:earth.quaternion.clone(), camera:camera.position.clone(),
       target:controls.target.clone(), spinning, meridian, tiltAngle, tiltHeading}),
@@ -1871,8 +1887,7 @@ function init() {
         camera.position.copy(onSphere(mantleConfig.cutaway.longitude,mantleConfig.cutaway.latitude,3.2));
         controls.target.set(0,0,0);controls.update();
       }
-      await selectStop(target,true,true);
-      if (lastPlace?.age !== age || !status.classList.contains('loaded') || stage.getAttribute('aria-busy') === 'true') throw new Error('Surface unavailable');
+      if (!await selectStop(target,true,true)) throw new Error('Surface unavailable');
     },
     restore: previous => {
       setProjection(previous.projection,false);$('projection').value=previous.projection;

@@ -36,7 +36,7 @@ export function sectionPath(rotation) {
       .applyMatrix4(matrix).multiplyScalar(1.006);
   });
 }
-export function createMantleOverlay({config, earth, uniforms, stage, surfaceMaterial, capture, enter, focus, restore, getCamera}) {
+export function createMantleOverlay({config, earth, uniforms, stage, surfaceMaterial, capture, enter, focus, restore, getCamera, snapTimeline}) {
   if (!config || !$('mantle-overlay')) return null;
   const toggle=$('mantle-overlay'), options=$('mantle-overlay-options'), caption=$('mantle-overlay-caption');
   const status=$('mantle-overlay-status'), retry=$('mantle-overlay-retry');
@@ -139,7 +139,13 @@ export function createMantleOverlay({config, earth, uniforms, stage, surfaceMate
     if(!active)return false;
     if(!Number.isFinite(age)||age<0||age>80){leave(false);return false;}
     const next=closestFrame(config.frames,age);
-    if(next===frame&&ready&&age===frame.age_ma)return false;
+    if(next===frame&&ready) {
+      // Exact-age calls can change surface options. An in-between age must stay
+      // snapped without falling through to selectStop with unsynchronised terrain.
+      if(age===frame.age_ma)return false;
+      snapTimeline(frame.age_ma);
+      return true;
+    }
     controller?.abort();clearTimeout(debounce);frame=next;ready=false;stage.dataset.mantleOverlay='loading';visibility();linkedState();
     delete stage.dataset.mantleAge;stage.dataset.mantleOverlay='loading';message(config.strings.loading);
     $('mantle-age').value=String(frame.age_ma);debounce=setTimeout(()=>load(),180);return true;
