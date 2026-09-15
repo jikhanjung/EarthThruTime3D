@@ -311,6 +311,20 @@ the note says. `data-ice-age` on the stage is the age shown. The window is only 
 where the slices have been built, and any other value, or another series, gets the whole
 timeline.
 
+`?window=lastcycle` reaches 130 ka instead, one glacial cycle (plan jikhanjung P02): the
+end of the previous glacial, the last interglacial, the growth to the maximum and the
+retreat, 131 stops. Up to 25 ka the frames are the dated slices as above (`ice_kind`
+`dated`). Older, no open reconstruction exists, so a frame keeps the present's `ice_sheet`
+and `ice_lows` and carries the stack's own level for its age, not the running minimum, as
+the cycle rises and falls; the page takes the what-if path at that level, which mixes the
+two slices of the retreat that bracket it (`ice_kind` `analogue`, `data-ice-kind`
+`analogue`, "assumed ice" in the caption, and a note). That borrows the retreat's shape at
+the same sea level and ignores that sheets grow and melt in different shapes. The stack is
+a principal component of many records and peaks at +0.4 m at 121 ka, not the last
+interglacial's +6 to 9 m, which the note says too. So that a hundred metres of sea level
+moves the coast visibly, the present grid's texture is 12-bit whatever `--bits` says
+(`build_paleodem.py`, 3.7 m steps, about 1.2 MB more); the other grids stay 8-bit.
+
 ## Ice
 
 `scripts/build_ice.py` writes one ice mask per grid of the elevation series onto the
