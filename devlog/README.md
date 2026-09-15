@@ -29,6 +29,7 @@ wwolf는 001부터 셉니다. 그 전의 001–045는 링크와 본문 속 번�
 
 ## 작업 기록
 
+- [jikhanjung 069 — OPT1·Müller·PALEOMAP 좌표계 정합 검사](20260915_jikhanjung_069_mantle_frame_alignment.md)
 - [jikhanjung 068 — v0.11.0: 맨틀과 인도–아시아 단면 릴리스](20260915_jikhanjung_068_release_0110.md)
 - [jikhanjung 067 — 인도–아시아 A–A′ 팝업과 3D 지표](20260915_jikhanjung_067_india_asia_section.md)
 - [jikhanjung 066 — 지각 변형 자료 목록과 맨틀 3D 표면 실험](20260915_jikhanjung_066_mantle_source_preview.md)

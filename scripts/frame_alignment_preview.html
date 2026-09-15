@@ -1,0 +1,46 @@
+<!doctype html><html lang="ko"><meta charset="utf-8"><title>OPT1 기준틀 정합 검사</title>
+<style>body{font:16px system-ui;background:#121923;color:#e8eef6;max-width:1150px;margin:24px auto;padding:0 16px}select,input{margin:8px}canvas{width:100%;background:#1c2939;border:1px solid #587086}small{color:#b5c7d9}table{border-collapse:collapse;width:100%;font-size:14px}td,th{padding:6px;border-bottom:1px solid #425268;text-align:right}td:first-child,th:first-child{text-align:left}</style>
+<h1>OPT1 기준틀 정합 검사</h1>
+<p>같은 현재 경계점에서 비교한 진단 결과입니다. 지표 높이·지각 변형·온도장 검증은 아닙니다.</p>
+<label>연대 <select id="age"><option>80</option><option>60</option><option>40</option><option>20</option><option>0</option></select> Ma</label>
+<label>비교 모델 <select id="model"><option value="muller">Müller v1.2.4</option><option value="paleomap">PALEOMAP 2016</option></select></label>
+<label><input id="anchor" type="checkbox" checked>아프리카 기준 회전 보정</label>
+<label><input id="region" type="checkbox">인도–아시아 확대</label>
+<p><span style="color:#54dce7">● OPT1 경계점</span> / <span style="color:#ffb65c">+ 비교 모델로 복원한 점</span></p>
+<canvas id="map" width="1100" height="540" aria-label="경도·위도 비교도"></canvas>
+<p id="status"></p>
+<small>정거원통 비교도 · 경도는 동경 양수, 위도는 북위 양수. 그림은 판별 최대 약 100점으로 줄였으며 표는 모든 대응점을 사용합니다.
+회전 잔차는 판 자세의 차이, 위치 P95는 선택 경계점의 각거리 95백분위입니다. 0.1° 판 자세 잔차 기준은 표시 정합 검사 기준이며 과학적 불확실성이 아닙니다.</small>
+<table><thead><tr><th>판/블록</th><th>회전 잔차 °</th><th>위치 P95 °</th><th>위치 최대 °</th></tr></thead><tbody id="rows"></tbody></table>
+<p>출처: <a href="https://zenodo.org/records/6622194">OPT1</a>, <a href="https://zenodo.org/records/13636799">Müller 판 모델</a>,
+<a href="https://zenodo.org/records/10251792">PALEOMAP</a> (CC BY 4.0). 변환은 프로젝트에서 계산한 진단값입니다.</p>
+<script id="report" type="application/json">REPORT_JSON</script>
+<script>
+const data=JSON.parse(document.getElementById('report').textContent), $=id=>document.getElementById(id);
+function rotate(m,p){return m.map(row=>row.reduce((s,v,i)=>s+v*p[i],0))}
+function draw(){const f=data.frames.find(f=>f.age_ma===Number($('age').value)), model=$('model').value, anchored=$('anchor').checked;
+ const m=f.africa_anchor[`opt1_to_${model==='muller'?'muller':'paleomap'}_matrix`], c=$('map').getContext('2d'),w=1100,h=540;
+ const box=$('region').checked?[40,115,-40,65]:[-180,180,-90,90];
+ const project=([lon,lat])=>[(lon-box[0])/(box[1]-box[0])*w,(box[3]-lat)/(box[3]-box[2])*h];
+ c.clearRect(0,0,w,h);c.strokeStyle='#425268';c.fillStyle='#c0c9d5';c.font='13px system-ui';
+ for(let lon=Math.ceil(box[0]/20)*20;lon<=box[1];lon+=20){const [x]=project([lon,0]);c.beginPath();c.moveTo(x,0);c.lineTo(x,h);c.stroke();c.fillText(`${lon}°E`,x+4,h-5)}
+ for(let lat=Math.ceil(box[2]/20)*20;lat<=box[3];lat+=20){const [,y]=project([0,lat]);c.beginPath();c.moveTo(0,y);c.lineTo(w,y);c.stroke();c.fillText(`${lat}°N`,4,y-4)}
+ $('rows').replaceChildren();
+ for(const [pid,p] of Object.entries(f.plates)){
+  for(const [kind,color] of [['opt1','#54dce7'],[model,'#ffb65c']]){
+   c.fillStyle=color;c.strokeStyle=color;
+   for(let v of p.preview[kind]){if(kind==='opt1'&&anchored)v=rotate(m,v);
+    const lon=Math.atan2(v[1],v[0])*180/Math.PI,lat=Math.atan2(v[2],Math.hypot(v[0],v[1]))*180/Math.PI;
+    if(lon<box[0]||lon>box[1]||lat<box[2]||lat>box[3])continue;
+    const [x,y]=project([lon,lat]);if(kind==='opt1'){c.beginPath();c.arc(x,y,2,0,2*Math.PI);c.fill()}
+    else{c.beginPath();c.moveTo(x-3,y);c.lineTo(x+3,y);c.moveTo(x,y-3);c.lineTo(x,y+3);c.stroke()}
+   }
+  }
+  const stats=p[`${model}_${anchored?'after_anchor':'direct'}`],tr=document.createElement('tr');
+  for(const value of [data.plates[pid].label,anchored?p[`${model}_rotation_residual_deg`].toFixed(6):'—',stats.p95_deg.toFixed(6),stats.max_deg.toFixed(6)]){const td=document.createElement('td');td.textContent=value;tr.append(td)}
+  $('rows').append(tr);
+ }
+ $('status').textContent=`${f.age_ma} Ma · 보정 회전 ${f.africa_anchor[model==='muller'?'muller_angle_deg':'paleomap_angle_deg'].toFixed(6)}° · 보정 후 검사 ${f[model==='muller'?'muller_anchor_screen_pass':'paleomap_anchor_screen_pass']?'통과':'미통과'} (검증한 8개 판에 한함)`;
+}
+for(const id of ['age','model','anchor','region'])$(id).addEventListener('change',draw);draw();
+</script></html>

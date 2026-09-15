@@ -144,3 +144,8 @@ Next: resolve the Müller 2019 regional networks with a pinned GPlates implement
 reconstruct material meshes and establish compatible reference frames. Temperature
 sections require a different archive. Strain, crustal thickness, uplift and an offline
 solver remain subsequent P03 stages.
+
+The [frame alignment audit](mantle-frame-alignment.md) now establishes a diagnostic
+OPT1-to-Müller v1.2.4 rotation at five ages (80–0 Ma), verified on eight continental
+plate interiors. PALEOMAP does not pass the same global-rotation test. The audit does
+not change runtime geometry or establish alignment of the PaleoDEM raster.

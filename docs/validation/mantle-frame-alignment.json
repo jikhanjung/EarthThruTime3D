@@ -1,0 +1,1822 @@
+{
+  "schema_version": 1,
+  "kind": "diagnostic_only",
+  "runtime_alignment_approved": false,
+  "ages_ma": [
+    80,
+    60,
+    40,
+    20,
+    0
+  ],
+  "mapping_scope": "Sampled ages only; eight tested plate interiors; no interpolation or terrain alignment",
+  "craton_member": "Cratons/shapes_cratons_Merdith_etal.gpml",
+  "thresholds_deg": {
+    "vertex_match": 0.001,
+    "held_out_rigidity": 0.01,
+    "frame_colocation": 0.1
+  },
+  "sources": {
+    "opt1_archive_sha256": "8e6d64a5910bc6fc1f335a135b4e53d0be5a51f8b38a772f82376cf905482f67",
+    "muller2022": {
+      "manifest": "sources/plate-models/muller2022.json",
+      "archive_sha256": "add1f4975360ecd259517b99860f4fb0d176170d909333387e8022c69255bbcd",
+      "rotation_member": "optimisation/1000_0_rotfile_MantleOpt.rot",
+      "rotation_sha256": "09ddb15a4bcfabc43e363d0582445d42cf06dd31ed39e5cbd528f304e1a3759f"
+    },
+    "paleomap2016": {
+      "manifest": "sources/plate-models/paleomap2016.json",
+      "archive_sha256": "7bf15709970645465df17542e20f9e2e9ed01d20797f38513ed83621e4ace2a0",
+      "rotation_member": "PALEOMAP_PlateModel.rot",
+      "rotation_sha256": "d56846bb3c6260805d088171066bc18e9d54e831892b660fd31315260e288022"
+    },
+    "cratons_gpml_sha256": "3192c369f87637f78a42c92deb38b76d283893d7b13bed70454bef95bf8d4308"
+  },
+  "plates": {
+    "701": {
+      "label": "Africa",
+      "paleomap_proxy_id": 701,
+      "matched_unique_vertices": 408,
+      "gpml_vertices": 555
+    },
+    "501": {
+      "label": "India",
+      "paleomap_proxy_id": 501,
+      "matched_unique_vertices": 229,
+      "gpml_vertices": 480
+    },
+    "5011": {
+      "label": "India internal block",
+      "paleomap_proxy_id": 501,
+      "matched_unique_vertices": 151,
+      "gpml_vertices": 304
+    },
+    "302": {
+      "label": "Baltica",
+      "paleomap_proxy_id": 302,
+      "matched_unique_vertices": 2330,
+      "gpml_vertices": 2340
+    },
+    "401": {
+      "label": "Siberia",
+      "paleomap_proxy_id": 401,
+      "matched_unique_vertices": 869,
+      "gpml_vertices": 1452
+    },
+    "801": {
+      "label": "Australia",
+      "paleomap_proxy_id": 801,
+      "matched_unique_vertices": 8494,
+      "gpml_vertices": 12503
+    },
+    "101": {
+      "label": "North America",
+      "paleomap_proxy_id": 101,
+      "matched_unique_vertices": 2318,
+      "gpml_vertices": 4336
+    },
+    "201": {
+      "label": "South America",
+      "paleomap_proxy_id": 201,
+      "matched_unique_vertices": 350,
+      "gpml_vertices": 492
+    }
+  },
+  "frames": [
+    {
+      "age_ma": 80,
+      "source": {
+        "member": "OPT1_3D_visualisation_ParaView/Reconstruction/Cratons/Cratons_gcm32__46.vtu",
+        "sha256": "d0d544b8e97ead1e489b30da3b647bfcc8747d151e10c9b49b2e6a945a3bd008"
+      },
+      "plates": {
+        "701": {
+          "held_out_rigid_fit": {
+            "median_deg": 4.463410113697233e-07,
+            "p95_deg": 8.713605438251576e-07,
+            "max_deg": 1.184820430631577e-06
+          },
+          "training_index_inlier_fraction": 0.9313725490196079,
+          "held_out_vertices": 204,
+          "full_spatial_fit": {
+            "median_deg": 4.443373337479826e-07,
+            "p95_deg": 8.614978023549825e-07,
+            "max_deg": 1.1968042793153225e-06
+          },
+          "spatial_rematch_count": 117,
+          "muller_direct": {
+            "median_deg": 0.18744961502347024,
+            "p95_deg": 0.23070222603235083,
+            "max_deg": 0.2340207652206447
+          },
+          "muller_after_anchor": {
+            "median_deg": 4.443373281459732e-07,
+            "p95_deg": 8.614978010796024e-07,
+            "max_deg": 1.1968042694846477e-06
+          },
+          "paleomap_direct": {
+            "median_deg": 5.775852027164243,
+            "p95_deg": 6.311307045439277,
+            "max_deg": 6.447807296320559
+          },
+          "paleomap_after_anchor": {
+            "median_deg": 4.4433732992520585e-07,
+            "p95_deg": 8.614977977396927e-07,
+            "max_deg": 1.196804270914428e-06
+          },
+          "muller_rotation_residual_deg": 0.0,
+          "paleomap_rotation_residual_deg": 0.0
+        },
+        "501": {
+          "held_out_rigid_fit": {
+            "median_deg": 4.2790141507237294e-07,
+            "p95_deg": 8.767987324189751e-07,
+            "max_deg": 1.0292990457611219e-06
+          },
+          "training_index_inlier_fraction": 0.9478260869565217,
+          "held_out_vertices": 114,
+          "full_spatial_fit": {
+            "median_deg": 4.2889764599525065e-07,
+            "p95_deg": 8.813712286474616e-07,
+            "max_deg": 1.1846270623931624e-06
+          },
+          "spatial_rematch_count": 81,
+          "muller_direct": {
+            "median_deg": 0.2523261191306383,
+            "p95_deg": 0.2676225575858062,
+            "max_deg": 0.2712473292973403
+          },
+          "muller_after_anchor": {
+            "median_deg": 4.4428125187050565e-07,
+            "p95_deg": 9.107269147914174e-07,
+            "max_deg": 1.1236327409966278e-06
+          },
+          "paleomap_direct": {
+            "median_deg": 9.1856243011609,
+            "p95_deg": 9.767748704792716,
+            "max_deg": 9.792782496755638
+          },
+          "paleomap_after_anchor": {
+            "median_deg": 2.5223057569691467,
+            "p95_deg": 3.0661206058141657,
+            "max_deg": 3.081049230997193
+          },
+          "muller_rotation_residual_deg": 0.0,
+          "paleomap_rotation_residual_deg": 5.656511354894361
+        },
+        "5011": {
+          "held_out_rigid_fit": {
+            "median_deg": 3.66408859409838e-07,
+            "p95_deg": 8.609824735425194e-07,
+            "max_deg": 1.1401619396900206e-06
+          },
+          "training_index_inlier_fraction": 0.9868421052631579,
+          "held_out_vertices": 75,
+          "full_spatial_fit": {
+            "median_deg": 3.971914513276676e-07,
+            "p95_deg": 8.297945120534167e-07,
+            "max_deg": 1.1401619396900206e-06
+          },
+          "spatial_rematch_count": 19,
+          "muller_direct": {
+            "median_deg": 0.23453492055485084,
+            "p95_deg": 0.26724853924516023,
+            "max_deg": 0.27019216297593707
+          },
+          "muller_after_anchor": {
+            "median_deg": 3.953338318870976e-07,
+            "p95_deg": 8.127914677144574e-07,
+            "max_deg": 1.202148846179437e-06
+          },
+          "paleomap_direct": {
+            "median_deg": 8.499044208511197,
+            "p95_deg": 9.41770605431703,
+            "max_deg": 9.682872247356988
+          },
+          "paleomap_after_anchor": {
+            "median_deg": 2.0640018972369227,
+            "p95_deg": 2.7180986970745318,
+            "max_deg": 3.0076967262113214
+          },
+          "muller_rotation_residual_deg": 0.0,
+          "paleomap_rotation_residual_deg": 5.656511517567087
+        },
+        "302": {
+          "held_out_rigid_fit": {
+            "median_deg": 3.8281157075902543e-07,
+            "p95_deg": 7.937541082310938e-07,
+            "max_deg": 9.89082466905929e-07
+          },
+          "training_index_inlier_fraction": 1.0,
+          "held_out_vertices": 1165,
+          "full_spatial_fit": {
+            "median_deg": 3.710169177125081e-07,
+            "p95_deg": 8.01835046294049e-07,
+            "max_deg": 9.89082466905929e-07
+          },
+          "spatial_rematch_count": 8,
+          "muller_direct": {
+            "median_deg": 0.16739747919261927,
+            "p95_deg": 0.1951651935146937,
+            "max_deg": 0.20217587620016922
+          },
+          "muller_after_anchor": {
+            "median_deg": 4.176371058313178e-07,
+            "p95_deg": 8.302531724022374e-07,
+            "max_deg": 1.0434493848238732e-06
+          },
+          "paleomap_direct": {
+            "median_deg": 7.3200539046111,
+            "p95_deg": 7.343715309698613,
+            "max_deg": 7.343889942156928
+          },
+          "paleomap_after_anchor": {
+            "median_deg": 1.7986743031869166,
+            "p95_deg": 2.8596242537631085,
+            "max_deg": 3.2868695548355777
+          },
+          "muller_rotation_residual_deg": 1.2074182697257333e-06,
+          "paleomap_rotation_residual_deg": 4.263574504499803
+        },
+        "401": {
+          "held_out_rigid_fit": {
+            "median_deg": 3.057481718310488e-07,
+            "p95_deg": 7.872796327557989e-07,
+            "max_deg": 8.928748680414189e-07
+          },
+          "training_index_inlier_fraction": 1.0,
+          "held_out_vertices": 434,
+          "full_spatial_fit": {
+            "median_deg": 3.4076664854927664e-07,
+            "p95_deg": 7.863283834887732e-07,
+            "max_deg": 9.595338076723553e-07
+          },
+          "spatial_rematch_count": 319,
+          "muller_direct": {
+            "median_deg": 0.2688454424676327,
+            "p95_deg": 0.27969979520554866,
+            "max_deg": 0.28147080461788926
+          },
+          "muller_after_anchor": {
+            "median_deg": 3.6835025352637624e-07,
+            "p95_deg": 8.627632438499325e-07,
+            "max_deg": 1.1036072175471623e-06
+          },
+          "paleomap_direct": {
+            "median_deg": 5.671045260148096,
+            "p95_deg": 6.74746939240964,
+            "max_deg": 6.8648547879746
+          },
+          "paleomap_after_anchor": {
+            "median_deg": 3.8778271851219475,
+            "p95_deg": 4.060585111652332,
+            "max_deg": 4.104155124946843
+          },
+          "muller_rotation_residual_deg": 0.0,
+          "paleomap_rotation_residual_deg": 4.26357456454675
+        },
+        "801": {
+          "held_out_rigid_fit": {
+            "median_deg": 3.147236764069645e-07,
+            "p95_deg": 5.551666338586219e-07,
+            "max_deg": 7.092784808861668e-07
+          },
+          "training_index_inlier_fraction": 0.6574052272192136,
+          "held_out_vertices": 4247,
+          "full_spatial_fit": {
+            "median_deg": 3.144790958602537e-07,
+            "p95_deg": 5.560034012207734e-07,
+            "max_deg": 7.131492866682684e-07
+          },
+          "spatial_rematch_count": 4942,
+          "muller_direct": {
+            "median_deg": 0.2686384296696108,
+            "p95_deg": 0.2788358026736692,
+            "max_deg": 0.2795213361176595
+          },
+          "muller_after_anchor": {
+            "median_deg": 3.1654651126192007e-07,
+            "p95_deg": 5.696848208580036e-07,
+            "max_deg": 7.365917236559714e-07
+          },
+          "paleomap_direct": {
+            "median_deg": 5.335531029363809,
+            "p95_deg": 5.351261102119512,
+            "max_deg": 5.3514324829459365
+          },
+          "paleomap_after_anchor": {
+            "median_deg": 1.1498666581491683,
+            "p95_deg": 1.329320869414407,
+            "max_deg": 1.3800162372044626
+          },
+          "muller_rotation_residual_deg": 1.7075472925031877e-06,
+          "paleomap_rotation_residual_deg": 2.259225319956874
+        },
+        "101": {
+          "held_out_rigid_fit": {
+            "median_deg": 4.0677917333950326e-07,
+            "p95_deg": 8.312419898918001e-07,
+            "max_deg": 1.1098848145015413e-06
+          },
+          "training_index_inlier_fraction": 0.9905090595340811,
+          "held_out_vertices": 1159,
+          "full_spatial_fit": {
+            "median_deg": 4.148448677198591e-07,
+            "p95_deg": 8.328165008969994e-07,
+            "max_deg": 1.1098848145015413e-06
+          },
+          "spatial_rematch_count": 1005,
+          "muller_direct": {
+            "median_deg": 0.26419016155756453,
+            "p95_deg": 0.2821266420266917,
+            "max_deg": 0.2829057241593518
+          },
+          "muller_after_anchor": {
+            "median_deg": 4.2958539438228025e-07,
+            "p95_deg": 9.071927409994664e-07,
+            "max_deg": 1.2963445618004084e-06
+          },
+          "paleomap_direct": {
+            "median_deg": 6.440717541012706,
+            "p95_deg": 6.622358013591058,
+            "max_deg": 6.626696536082183
+          },
+          "paleomap_after_anchor": {
+            "median_deg": 0.1894061719848924,
+            "p95_deg": 0.25524106850932604,
+            "max_deg": 0.2624120498243068
+          },
+          "muller_rotation_residual_deg": 0.0,
+          "paleomap_rotation_residual_deg": 0.2888598527023495
+        },
+        "201": {
+          "held_out_rigid_fit": {
+            "median_deg": 4.526804069834776e-07,
+            "p95_deg": 8.987595459292905e-07,
+            "max_deg": 1.0698547159441502e-06
+          },
+          "training_index_inlier_fraction": 1.0,
+          "held_out_vertices": 175,
+          "full_spatial_fit": {
+            "median_deg": 4.635164949920646e-07,
+            "p95_deg": 8.993727902482092e-07,
+            "max_deg": 1.1127492038212525e-06
+          },
+          "spatial_rematch_count": 80,
+          "muller_direct": {
+            "median_deg": 0.2564458881152108,
+            "p95_deg": 0.2775032444723975,
+            "max_deg": 0.2790128752932141
+          },
+          "muller_after_anchor": {
+            "median_deg": 4.579982362044537e-07,
+            "p95_deg": 9.182774002206692e-07,
+            "max_deg": 1.2209087016425371e-06
+          },
+          "paleomap_direct": {
+            "median_deg": 5.319128800345346,
+            "p95_deg": 5.738436143882602,
+            "max_deg": 5.78840103737475
+          },
+          "paleomap_after_anchor": {
+            "median_deg": 0.1007132217912549,
+            "p95_deg": 0.1495112439342938,
+            "max_deg": 0.15422967193467618
+          },
+          "muller_rotation_residual_deg": 0.0,
+          "paleomap_rotation_residual_deg": 0.260935824880565
+        }
+      },
+      "connectivity_identical": false,
+      "correspondence_pass": true,
+      "africa_anchor": {
+        "opt1_to_muller_matrix": [
+          [
+            0.9999975209820212,
+            -0.0018870511842302,
+            0.001181976158662229
+          ],
+          [
+            0.0018922418807985175,
+            0.9999885035501751,
+            -0.0044059264799196024
+          ],
+          [
+            -0.0011736483613506387,
+            0.00440815214233808,
+            0.9999895953179786
+          ]
+        ],
+        "opt1_to_paleomap_matrix": [
+          [
+            0.9939646555125462,
+            -0.09190469683973979,
+            0.05989816600381425
+          ],
+          [
+            0.08931377306139272,
+            0.9950048929335978,
+            0.04459050324607349
+          ],
+          [
+            -0.06369704493430542,
+            -0.03897165299285633,
+            0.9972080508748624
+          ]
+        ],
+        "muller_angle_deg": 0.28290541399379304,
+        "paleomap_angle_deg": 6.74007631065281
+      },
+      "muller_anchor_screen_pass": true,
+      "paleomap_anchor_screen_pass": false
+    },
+    {
+      "age_ma": 60,
+      "source": {
+        "member": "OPT1_3D_visualisation_ParaView/Reconstruction/Cratons/Cratons_gcm32__47.vtu",
+        "sha256": "28f726e24ce6b0781e6814ba7c79b1abf1434b94c7f6a7c1d5d95e7f8c054503"
+      },
+      "plates": {
+        "701": {
+          "held_out_rigid_fit": {
+            "median_deg": 4.260626495728509e-07,
+            "p95_deg": 8.327249943360642e-07,
+            "max_deg": 1.0468366980202202e-06
+          },
+          "training_index_inlier_fraction": 0.9313725490196079,
+          "held_out_vertices": 204,
+          "full_spatial_fit": {
+            "median_deg": 4.573443522118998e-07,
+            "p95_deg": 8.297453220135202e-07,
+            "max_deg": 1.0468366980202202e-06
+          },
+          "spatial_rematch_count": 128,
+          "muller_direct": {
+            "median_deg": 0.1782251642444688,
+            "p95_deg": 0.21863020770242306,
+            "max_deg": 0.22344664599888825
+          },
+          "muller_after_anchor": {
+            "median_deg": 4.5734435448100445e-07,
+            "p95_deg": 8.29745322219936e-07,
+            "max_deg": 1.0468367111246042e-06
+          },
+          "paleomap_direct": {
+            "median_deg": 3.9509964968212445,
+            "p95_deg": 4.143144946603005,
+            "max_deg": 4.174348551514295
+          },
+          "paleomap_after_anchor": {
+            "median_deg": 4.573443596506524e-07,
+            "p95_deg": 8.297453258682817e-07,
+            "max_deg": 1.0468367177958094e-06
+          },
+          "muller_rotation_residual_deg": 2.4148365394514667e-06,
+          "paleomap_rotation_residual_deg": 2.699869328381916e-06
+        },
+        "501": {
+          "held_out_rigid_fit": {
+            "median_deg": 4.742472899402546e-07,
+            "p95_deg": 9.113951189964863e-07,
+            "max_deg": 1.0762583836171157e-06
+          },
+          "training_index_inlier_fraction": 0.9478260869565217,
+          "held_out_vertices": 114,
+          "full_spatial_fit": {
+            "median_deg": 4.63108396746437e-07,
+            "p95_deg": 8.901303294077087e-07,
+            "max_deg": 1.0762583836171157e-06
+          },
+          "spatial_rematch_count": 83,
+          "muller_direct": {
+            "median_deg": 0.21692582286250892,
+            "p95_deg": 0.24234334510204467,
+            "max_deg": 0.24804702841241008
+          },
+          "muller_after_anchor": {
+            "median_deg": 4.842345294450709e-07,
+            "p95_deg": 8.638751428155197e-07,
+            "max_deg": 1.0226837800486572e-06
+          },
+          "paleomap_direct": {
+            "median_deg": 7.039284910953818,
+            "p95_deg": 7.2595074546411045,
+            "max_deg": 7.271655420409357
+          },
+          "paleomap_after_anchor": {
+            "median_deg": 3.3629761941265484,
+            "p95_deg": 3.91823159352014,
+            "max_deg": 3.929888392324992
+          },
+          "muller_rotation_residual_deg": 1.2074182697257333e-06,
+          "paleomap_rotation_residual_deg": 5.79574196912366
+        },
+        "5011": {
+          "held_out_rigid_fit": {
+            "median_deg": 3.84770448462067e-07,
+            "p95_deg": 7.051478505321651e-07,
+            "max_deg": 9.905812991253299e-07
+          },
+          "training_index_inlier_fraction": 0.9868421052631579,
+          "held_out_vertices": 75,
+          "full_spatial_fit": {
+            "median_deg": 4.095108520071514e-07,
+            "p95_deg": 7.991341698093892e-07,
+            "max_deg": 1.0143218225761469e-06
+          },
+          "spatial_rematch_count": 15,
+          "muller_direct": {
+            "median_deg": 0.1928820810165451,
+            "p95_deg": 0.2398648100609078,
+            "max_deg": 0.24628005765216018
+          },
+          "muller_after_anchor": {
+            "median_deg": 4.3403792466335854e-07,
+            "p95_deg": 7.582720263481178e-07,
+            "max_deg": 1.059648942878584e-06
+          },
+          "paleomap_direct": {
+            "median_deg": 6.673668435358536,
+            "p95_deg": 7.0964536503129105,
+            "max_deg": 7.2104830521203045
+          },
+          "paleomap_after_anchor": {
+            "median_deg": 2.908131705254171,
+            "p95_deg": 3.604810562923987,
+            "max_deg": 3.8721492881165025
+          },
+          "muller_rotation_residual_deg": 0.0,
+          "paleomap_rotation_residual_deg": 5.795741859548206
+        },
+        "302": {
+          "held_out_rigid_fit": {
+            "median_deg": 3.494430856784177e-07,
+            "p95_deg": 8.078305479384455e-07,
+            "max_deg": 1.0071344220808078e-06
+          },
+          "training_index_inlier_fraction": 1.0,
+          "held_out_vertices": 1165,
+          "full_spatial_fit": {
+            "median_deg": 3.6126333261162143e-07,
+            "p95_deg": 8.108794024921878e-07,
+            "max_deg": 1.012717046898924e-06
+          },
+          "spatial_rematch_count": 9,
+          "muller_direct": {
+            "median_deg": 0.18887580851693925,
+            "p95_deg": 0.21043550671073832,
+            "max_deg": 0.21334018849075215
+          },
+          "muller_after_anchor": {
+            "median_deg": 3.689897347720859e-07,
+            "p95_deg": 8.14800063504907e-07,
+            "max_deg": 1.0445595008026014e-06
+          },
+          "paleomap_direct": {
+            "median_deg": 4.506662422251104,
+            "p95_deg": 4.519073766367038,
+            "max_deg": 4.51912840511535
+          },
+          "paleomap_after_anchor": {
+            "median_deg": 0.8045937734309089,
+            "p95_deg": 1.3589648754880044,
+            "max_deg": 1.5975745133502945
+          },
+          "muller_rotation_residual_deg": 2.699869328381916e-06,
+          "paleomap_rotation_residual_deg": 2.1582288154697586
+        },
+        "401": {
+          "held_out_rigid_fit": {
+            "median_deg": 3.6657142521607124e-07,
+            "p95_deg": 7.90641878359076e-07,
+            "max_deg": 1.0150729312664331e-06
+          },
+          "training_index_inlier_fraction": 1.0,
+          "held_out_vertices": 434,
+          "full_spatial_fit": {
+            "median_deg": 3.6871885201152034e-07,
+            "p95_deg": 7.994248611430354e-07,
+            "max_deg": 1.0150729312664331e-06
+          },
+          "spatial_rematch_count": 309,
+          "muller_direct": {
+            "median_deg": 0.267758165823604,
+            "p95_deg": 0.27943418084849575,
+            "max_deg": 0.28111574369430115
+          },
+          "muller_after_anchor": {
+            "median_deg": 3.7239902247414593e-07,
+            "p95_deg": 8.00699841936776e-07,
+            "max_deg": 1.1037263863778982e-06
+          },
+          "paleomap_direct": {
+            "median_deg": 3.549522832010812,
+            "p95_deg": 4.197972101088759,
+            "max_deg": 4.251695131073091
+          },
+          "paleomap_after_anchor": {
+            "median_deg": 1.9128165142438234,
+            "p95_deg": 2.0190266572801776,
+            "max_deg": 2.04549558098797
+          },
+          "muller_rotation_residual_deg": 0.0,
+          "paleomap_rotation_residual_deg": 2.158228824873094
+        },
+        "801": {
+          "held_out_rigid_fit": {
+            "median_deg": 3.2160601354024145e-07,
+            "p95_deg": 5.577900388473776e-07,
+            "max_deg": 6.974186992813209e-07
+          },
+          "training_index_inlier_fraction": 0.6574052272192136,
+          "held_out_vertices": 4247,
+          "full_spatial_fit": {
+            "median_deg": 3.2316200460764027e-07,
+            "p95_deg": 5.567994129627705e-07,
+            "max_deg": 7.129270408723398e-07
+          },
+          "spatial_rematch_count": 4971,
+          "muller_direct": {
+            "median_deg": 0.2757309249150187,
+            "p95_deg": 0.2821780142493973,
+            "max_deg": 0.28244107902557825
+          },
+          "muller_after_anchor": {
+            "median_deg": 3.5461036079907824e-07,
+            "p95_deg": 7.153551014344659e-07,
+            "max_deg": 9.32320519611511e-07
+          },
+          "paleomap_direct": {
+            "median_deg": 4.362375736677301,
+            "p95_deg": 4.649783196157895,
+            "max_deg": 4.695810815069809
+          },
+          "paleomap_after_anchor": {
+            "median_deg": 0.9789586851250123,
+            "p95_deg": 1.4302174515614317,
+            "max_deg": 1.5534572173332235
+          },
+          "muller_rotation_residual_deg": 0.0,
+          "paleomap_rotation_residual_deg": 2.422903627637556
+        },
+        "101": {
+          "held_out_rigid_fit": {
+            "median_deg": 4.05216324205805e-07,
+            "p95_deg": 8.338901427010878e-07,
+            "max_deg": 1.0577803851863108e-06
+          },
+          "training_index_inlier_fraction": 0.9905090595340811,
+          "held_out_vertices": 1159,
+          "full_spatial_fit": {
+            "median_deg": 4.0704540240075694e-07,
+            "p95_deg": 8.339666327500271e-07,
+            "max_deg": 1.0587619724137523e-06
+          },
+          "spatial_rematch_count": 1020,
+          "muller_direct": {
+            "median_deg": 0.2774865541016128,
+            "p95_deg": 0.2825870406490457,
+            "max_deg": 0.282770592223799
+          },
+          "muller_after_anchor": {
+            "median_deg": 4.0320289847858266e-07,
+            "p95_deg": 8.538567429882129e-07,
+            "max_deg": 1.1336541854214033e-06
+          },
+          "paleomap_direct": {
+            "median_deg": 3.890305331836924,
+            "p95_deg": 3.926329497957608,
+            "max_deg": 3.926839965717197
+          },
+          "paleomap_after_anchor": {
+            "median_deg": 0.2635099447507969,
+            "p95_deg": 0.26878381607509233,
+            "max_deg": 0.2688363324319624
+          },
+          "muller_rotation_residual_deg": 2.4148365394514667e-06,
+          "paleomap_rotation_residual_deg": 0.26883627175148284
+        },
+        "201": {
+          "held_out_rigid_fit": {
+            "median_deg": 4.6208687750564175e-07,
+            "p95_deg": 9.424859336328692e-07,
+            "max_deg": 1.1907358852985555e-06
+          },
+          "training_index_inlier_fraction": 1.0,
+          "held_out_vertices": 175,
+          "full_spatial_fit": {
+            "median_deg": 4.615714225512786e-07,
+            "p95_deg": 8.94966390167489e-07,
+            "max_deg": 1.1907358852985555e-06
+          },
+          "spatial_rematch_count": 85,
+          "muller_direct": {
+            "median_deg": 0.27563945087018393,
+            "p95_deg": 0.2826750608322377,
+            "max_deg": 0.2827688775685036
+          },
+          "muller_after_anchor": {
+            "median_deg": 4.803452101084649e-07,
+            "p95_deg": 9.339853191244825e-07,
+            "max_deg": 1.1330212396824242e-06
+          },
+          "paleomap_direct": {
+            "median_deg": 2.4972452558335423,
+            "p95_deg": 2.896409174446597,
+            "max_deg": 2.9533906764064892
+          },
+          "paleomap_after_anchor": {
+            "median_deg": 0.31861506535203676,
+            "p95_deg": 0.32158232776797774,
+            "max_deg": 0.3216167008550594
+          },
+          "muller_rotation_residual_deg": 3.1945284701301985e-06,
+          "paleomap_rotation_residual_deg": 0.3216164658594468
+        }
+      },
+      "connectivity_identical": false,
+      "correspondence_pass": true,
+      "africa_anchor": {
+        "opt1_to_muller_matrix": [
+          [
+            0.9999967970404415,
+            -0.0017589185140925022,
+            0.0018199215691522715
+          ],
+          [
+            0.0017666134613852217,
+            0.9999894708443009,
+            -0.004235242308667482
+          ],
+          [
+            -0.0018124529608063579,
+            0.004238443841300467,
+            0.9999893752475913
+          ]
+        ],
+        "opt1_to_paleomap_matrix": [
+          [
+            0.9976048498794137,
+            -0.04491952563666104,
+            0.05260037750481371
+          ],
+          [
+            0.04367057932293748,
+            0.9987416405552721,
+            0.0246579788823506
+          ],
+          [
+            -0.053641812037538344,
+            -0.022301830363016636,
+            0.9983111661019262
+          ]
+        ],
+        "muller_angle_deg": 0.282770299249423,
+        "paleomap_angle_deg": 4.1887578580095965
+      },
+      "muller_anchor_screen_pass": true,
+      "paleomap_anchor_screen_pass": false
+    },
+    {
+      "age_ma": 40,
+      "source": {
+        "member": "OPT1_3D_visualisation_ParaView/Reconstruction/Cratons/Cratons_gcm32__48.vtu",
+        "sha256": "b7f92d28e10f4b0635510c9bf79682066174cb39b983a734eeb7d456a7eaa104"
+      },
+      "plates": {
+        "701": {
+          "held_out_rigid_fit": {
+            "median_deg": 4.425370218644539e-07,
+            "p95_deg": 8.79767759058598e-07,
+            "max_deg": 1.2693968745624468e-06
+          },
+          "training_index_inlier_fraction": 0.9558823529411765,
+          "held_out_vertices": 204,
+          "full_spatial_fit": {
+            "median_deg": 4.7014837824360763e-07,
+            "p95_deg": 8.798763864869055e-07,
+            "max_deg": 1.2693968745624468e-06
+          },
+          "spatial_rematch_count": 109,
+          "muller_direct": {
+            "median_deg": 0.10637796387782503,
+            "p95_deg": 0.14197711045586822,
+            "max_deg": 0.1477452521718802
+          },
+          "muller_after_anchor": {
+            "median_deg": 4.701483834581738e-07,
+            "p95_deg": 8.798763924465178e-07,
+            "max_deg": 1.269396878601829e-06
+          },
+          "paleomap_direct": {
+            "median_deg": 1.5892406492587494,
+            "p95_deg": 1.5968830581908995,
+            "max_deg": 1.5970670606303425
+          },
+          "paleomap_after_anchor": {
+            "median_deg": 4.701483803928588e-07,
+            "p95_deg": 8.798763923262424e-07,
+            "max_deg": 1.2693968767342418e-06
+          },
+          "muller_rotation_residual_deg": 2.091309789151873e-06,
+          "paleomap_rotation_residual_deg": 1.7075472925031877e-06
+        },
+        "501": {
+          "held_out_rigid_fit": {
+            "median_deg": 4.645536731874746e-07,
+            "p95_deg": 8.635320423124499e-07,
+            "max_deg": 1.0419393896452381e-06
+          },
+          "training_index_inlier_fraction": 0.9478260869565217,
+          "held_out_vertices": 114,
+          "full_spatial_fit": {
+            "median_deg": 4.570085716858118e-07,
+            "p95_deg": 8.981492692879353e-07,
+            "max_deg": 1.0419393896452381e-06
+          },
+          "spatial_rematch_count": 74,
+          "muller_direct": {
+            "median_deg": 0.15308852072447657,
+            "p95_deg": 0.18921505054473764,
+            "max_deg": 0.19231717821832878
+          },
+          "muller_after_anchor": {
+            "median_deg": 4.627896519553619e-07,
+            "p95_deg": 9.006330474552673e-07,
+            "max_deg": 1.0600905252250957e-06
+          },
+          "paleomap_direct": {
+            "median_deg": 4.314518154436511,
+            "p95_deg": 4.698201677934391,
+            "max_deg": 4.709335166625267
+          },
+          "paleomap_after_anchor": {
+            "median_deg": 3.266367232924571,
+            "p95_deg": 3.753417185737434,
+            "max_deg": 3.767852908567052
+          },
+          "muller_rotation_residual_deg": 1.2074182697257333e-06,
+          "paleomap_rotation_residual_deg": 5.68469126131764
+        },
+        "5011": {
+          "held_out_rigid_fit": {
+            "median_deg": 4.260229959258354e-07,
+            "p95_deg": 7.972224563418318e-07,
+            "max_deg": 1.0512045011734238e-06
+          },
+          "training_index_inlier_fraction": 0.9868421052631579,
+          "held_out_vertices": 75,
+          "full_spatial_fit": {
+            "median_deg": 4.2158436733305834e-07,
+            "p95_deg": 7.983657811637176e-07,
+            "max_deg": 1.0512045011734238e-06
+          },
+          "spatial_rematch_count": 17,
+          "muller_direct": {
+            "median_deg": 0.13114386069895234,
+            "p95_deg": 0.17935263762019388,
+            "max_deg": 0.190894753178105
+          },
+          "muller_after_anchor": {
+            "median_deg": 4.197613604009254e-07,
+            "p95_deg": 7.652972690581493e-07,
+            "max_deg": 1.048948210084762e-06
+          },
+          "paleomap_direct": {
+            "median_deg": 3.932026503708446,
+            "p95_deg": 4.474764702638451,
+            "max_deg": 4.6528442845954725
+          },
+          "paleomap_after_anchor": {
+            "median_deg": 2.786135535731648,
+            "p95_deg": 3.4460785118920025,
+            "max_deg": 3.693717380251851
+          },
+          "muller_rotation_residual_deg": 1.7075472925031877e-06,
+          "paleomap_rotation_residual_deg": 5.684691364600286
+        },
+        "302": {
+          "held_out_rigid_fit": {
+            "median_deg": 3.8105203371137067e-07,
+            "p95_deg": 8.19415221376928e-07,
+            "max_deg": 1.0347164324169273e-06
+          },
+          "training_index_inlier_fraction": 1.0,
+          "held_out_vertices": 1165,
+          "full_spatial_fit": {
+            "median_deg": 3.7494602436545436e-07,
+            "p95_deg": 8.181068311420311e-07,
+            "max_deg": 1.0430954279755923e-06
+          },
+          "spatial_rematch_count": 8,
+          "muller_direct": {
+            "median_deg": 0.18189052454411458,
+            "p95_deg": 0.19533019821008643,
+            "max_deg": 0.19707684271795026
+          },
+          "muller_after_anchor": {
+            "median_deg": 3.7298856985233765e-07,
+            "p95_deg": 8.18372577122619e-07,
+            "max_deg": 1.0802788697623258e-06
+          },
+          "paleomap_direct": {
+            "median_deg": 1.3251983534801326,
+            "p95_deg": 1.4250166919434206,
+            "max_deg": 1.4338085560401235
+          },
+          "paleomap_after_anchor": {
+            "median_deg": 0.3492422441784898,
+            "p95_deg": 0.4425290271340288,
+            "max_deg": 0.48048795207654865
+          },
+          "muller_rotation_residual_deg": 1.7075472925031877e-06,
+          "paleomap_rotation_residual_deg": 0.5121765436390435
+        },
+        "401": {
+          "held_out_rigid_fit": {
+            "median_deg": 3.799856241659565e-07,
+            "p95_deg": 7.88221259322587e-07,
+            "max_deg": 9.217890627145432e-07
+          },
+          "training_index_inlier_fraction": 1.0,
+          "held_out_vertices": 434,
+          "full_spatial_fit": {
+            "median_deg": 3.6611609290371095e-07,
+            "p95_deg": 7.898285142276787e-07,
+            "max_deg": 9.797112554839548e-07
+          },
+          "spatial_rematch_count": 318,
+          "muller_direct": {
+            "median_deg": 0.22342722991832104,
+            "p95_deg": 0.22715243537321936,
+            "max_deg": 0.22717116427164916
+          },
+          "muller_after_anchor": {
+            "median_deg": 3.630223557537141e-07,
+            "p95_deg": 7.998673682001672e-07,
+            "max_deg": 1.0273853071618784e-06
+          },
+          "paleomap_direct": {
+            "median_deg": 0.7373978569520693,
+            "p95_deg": 0.980492130814639,
+            "max_deg": 1.002936988361786
+          },
+          "paleomap_after_anchor": {
+            "median_deg": 0.5039942553168222,
+            "p95_deg": 0.5106095901463206,
+            "max_deg": 0.5111529942635492
+          },
+          "muller_rotation_residual_deg": 0.0,
+          "paleomap_rotation_residual_deg": 0.5121765440190429
+        },
+        "801": {
+          "held_out_rigid_fit": {
+            "median_deg": 3.282071215740019e-07,
+            "p95_deg": 5.668449956268372e-07,
+            "max_deg": 7.132436670235294e-07
+          },
+          "training_index_inlier_fraction": 0.767836119613845,
+          "held_out_vertices": 4247,
+          "full_spatial_fit": {
+            "median_deg": 3.2501154891798157e-07,
+            "p95_deg": 5.653744346309038e-07,
+            "max_deg": 7.160921041915415e-07
+          },
+          "spatial_rematch_count": 4513,
+          "muller_direct": {
+            "median_deg": 0.22641667956245248,
+            "p95_deg": 0.22715351218093163,
+            "max_deg": 0.22717168765439716
+          },
+          "muller_after_anchor": {
+            "median_deg": 3.5179780078970065e-07,
+            "p95_deg": 6.734210723981642e-07,
+            "max_deg": 9.035788943950455e-07
+          },
+          "paleomap_direct": {
+            "median_deg": 1.6186834222331798,
+            "p95_deg": 1.7740366528641494,
+            "max_deg": 1.7976204106695144
+          },
+          "paleomap_after_anchor": {
+            "median_deg": 0.26642022230127504,
+            "p95_deg": 0.5496952321136123,
+            "max_deg": 0.6360632130408707
+          },
+          "muller_rotation_residual_deg": 2.9575586669421963e-06,
+          "paleomap_rotation_residual_deg": 1.4965796743518094
+        },
+        "101": {
+          "held_out_rigid_fit": {
+            "median_deg": 3.9453690388692277e-07,
+            "p95_deg": 8.530905933832183e-07,
+            "max_deg": 1.0763571143356737e-06
+          },
+          "training_index_inlier_fraction": 0.9905090595340811,
+          "held_out_vertices": 1159,
+          "full_spatial_fit": {
+            "median_deg": 4.048860846791443e-07,
+            "p95_deg": 8.538933407035062e-07,
+            "max_deg": 1.093562202278865e-06
+          },
+          "spatial_rematch_count": 1072,
+          "muller_direct": {
+            "median_deg": 0.22435339713844513,
+            "p95_deg": 0.22711210717603875,
+            "max_deg": 0.2271719373725295
+          },
+          "muller_after_anchor": {
+            "median_deg": 4.0778502843731246e-07,
+            "p95_deg": 8.636546520072216e-07,
+            "max_deg": 1.086812074935137e-06
+          },
+          "paleomap_direct": {
+            "median_deg": 1.4540282063654566,
+            "p95_deg": 1.5114119085153799,
+            "max_deg": 1.5121057301736667
+          },
+          "paleomap_after_anchor": {
+            "median_deg": 0.23851361287624126,
+            "p95_deg": 0.24784552866831572,
+            "max_deg": 0.2480953354711132
+          },
+          "muller_rotation_residual_deg": 2.4148365394514667e-06,
+          "paleomap_rotation_residual_deg": 0.24809481380138843
+        },
+        "201": {
+          "held_out_rigid_fit": {
+            "median_deg": 4.713854594964164e-07,
+            "p95_deg": 8.933834136921043e-07,
+            "max_deg": 1.2167068443771433e-06
+          },
+          "training_index_inlier_fraction": 1.0,
+          "held_out_vertices": 175,
+          "full_spatial_fit": {
+            "median_deg": 4.6413031949455555e-07,
+            "p95_deg": 8.935906573783231e-07,
+            "max_deg": 1.2167068443771433e-06
+          },
+          "spatial_rematch_count": 78,
+          "muller_direct": {
+            "median_deg": 0.2254167675837941,
+            "p95_deg": 0.22712091179951033,
+            "max_deg": 0.22717137100819385
+          },
+          "muller_after_anchor": {
+            "median_deg": 4.7509164238539933e-07,
+            "p95_deg": 9.103678197486981e-07,
+            "max_deg": 1.1863597220759081e-06
+          },
+          "paleomap_direct": {
+            "median_deg": 1.0020189685057959,
+            "p95_deg": 1.133987996885515,
+            "max_deg": 1.1511757702496244
+          },
+          "paleomap_after_anchor": {
+            "median_deg": 0.42696057834724827,
+            "p95_deg": 0.5025735698252133,
+            "max_deg": 0.5086840694615762
+          },
+          "muller_rotation_residual_deg": 2.4148365394514667e-06,
+          "paleomap_rotation_residual_deg": 0.5292996031868882
+        }
+      },
+      "connectivity_identical": false,
+      "correspondence_pass": true,
+      "africa_anchor": {
+        "opt1_to_muller_matrix": [
+          [
+            0.9999982533233096,
+            -0.0007444166715217009,
+            0.0017144078128591151
+          ],
+          [
+            0.0007504068934883235,
+            0.9999936072115094,
+            -0.003496058581761275
+          ],
+          [
+            -0.0017117943287197639,
+            0.003497338978718257,
+            0.9999924191613874
+          ]
+        ],
+        "opt1_to_paleomap_matrix": [
+          [
+            0.9996116854459474,
+            -0.022472803501914558,
+            0.0164757829154392
+          ],
+          [
+            0.02248159837415662,
+            0.9997471960943497,
+            -0.00034876357140327553
+          ],
+          [
+            -0.016463780077960826,
+            0.0007190300758372784,
+            0.9998642042504043
+          ]
+        ],
+        "muller_angle_deg": 0.22717125857975362,
+        "paleomap_angle_deg": 1.5970673250639205
+      },
+      "muller_anchor_screen_pass": true,
+      "paleomap_anchor_screen_pass": false
+    },
+    {
+      "age_ma": 20,
+      "source": {
+        "member": "OPT1_3D_visualisation_ParaView/Reconstruction/Cratons/Cratons_gcm32__49.vtu",
+        "sha256": "e13be9058480e235bfb263d1589560f09e67ca457828a04e2fe110e72bdc383c"
+      },
+      "plates": {
+        "701": {
+          "held_out_rigid_fit": {
+            "median_deg": 4.518317226356832e-07,
+            "p95_deg": 8.883586225984168e-07,
+            "max_deg": 1.039651469874725e-06
+          },
+          "training_index_inlier_fraction": 0.9558823529411765,
+          "held_out_vertices": 204,
+          "full_spatial_fit": {
+            "median_deg": 4.540848401870127e-07,
+            "p95_deg": 8.875456118986407e-07,
+            "max_deg": 1.187494379366376e-06
+          },
+          "spatial_rematch_count": 120,
+          "muller_direct": {
+            "median_deg": 0.07622384206737298,
+            "p95_deg": 0.09555165754311817,
+            "max_deg": 0.09769155590528011
+          },
+          "muller_after_anchor": {
+            "median_deg": 4.540848519458836e-07,
+            "p95_deg": 8.875455994172069e-07,
+            "max_deg": 1.1874943630698843e-06
+          },
+          "paleomap_direct": {
+            "median_deg": 2.562038258467708,
+            "p95_deg": 2.627337765503108,
+            "max_deg": 2.633258228727184
+          },
+          "paleomap_after_anchor": {
+            "median_deg": 4.540848543475979e-07,
+            "p95_deg": 8.875455986493315e-07,
+            "max_deg": 1.1874943598936831e-06
+          },
+          "muller_rotation_residual_deg": 0.0,
+          "paleomap_rotation_residual_deg": 0.0
+        },
+        "501": {
+          "held_out_rigid_fit": {
+            "median_deg": 4.936191837629798e-07,
+            "p95_deg": 8.518160597995542e-07,
+            "max_deg": 9.88333367562433e-07
+          },
+          "training_index_inlier_fraction": 0.9478260869565217,
+          "held_out_vertices": 114,
+          "full_spatial_fit": {
+            "median_deg": 4.923328505516609e-07,
+            "p95_deg": 8.595152107417535e-07,
+            "max_deg": 9.88333367562433e-07
+          },
+          "spatial_rematch_count": 76,
+          "muller_direct": {
+            "median_deg": 0.11504363163081424,
+            "p95_deg": 0.12794878084203617,
+            "max_deg": 0.12886903552117926
+          },
+          "muller_after_anchor": {
+            "median_deg": 4.837894921368443e-07,
+            "p95_deg": 8.518449102962128e-07,
+            "max_deg": 1.0220521917365064e-06
+          },
+          "paleomap_direct": {
+            "median_deg": 5.587917303337479,
+            "p95_deg": 6.10574577719657,
+            "max_deg": 6.116515792713828
+          },
+          "paleomap_after_anchor": {
+            "median_deg": 3.125279618321388,
+            "p95_deg": 3.5972312359883123,
+            "max_deg": 3.6327942376542866
+          },
+          "muller_rotation_residual_deg": 1.7075472925031877e-06,
+          "paleomap_rotation_residual_deg": 5.681477910667711
+        },
+        "5011": {
+          "held_out_rigid_fit": {
+            "median_deg": 4.155191544156865e-07,
+            "p95_deg": 7.871159367581459e-07,
+            "max_deg": 1.1433827407166996e-06
+          },
+          "training_index_inlier_fraction": 0.9868421052631579,
+          "held_out_vertices": 75,
+          "full_spatial_fit": {
+            "median_deg": 4.068075755706439e-07,
+            "p95_deg": 7.773233326913161e-07,
+            "max_deg": 1.1433827407166996e-06
+          },
+          "spatial_rematch_count": 17,
+          "muller_direct": {
+            "median_deg": 0.10242871258101147,
+            "p95_deg": 0.11747536030708203,
+            "max_deg": 0.12767721665751633
+          },
+          "muller_after_anchor": {
+            "median_deg": 4.188368202185053e-07,
+            "p95_deg": 7.760748753484694e-07,
+            "max_deg": 1.0522382537042e-06
+          },
+          "paleomap_direct": {
+            "median_deg": 5.128081782363205,
+            "p95_deg": 5.795737386411021,
+            "max_deg": 6.057128819916192
+          },
+          "paleomap_after_anchor": {
+            "median_deg": 2.644636044399228,
+            "p95_deg": 3.2782981403886002,
+            "max_deg": 3.53233800680233
+          },
+          "muller_rotation_residual_deg": 1.7075472925031877e-06,
+          "paleomap_rotation_residual_deg": 5.681477852195383
+        },
+        "302": {
+          "held_out_rigid_fit": {
+            "median_deg": 3.569139121480068e-07,
+            "p95_deg": 7.755165231991886e-07,
+            "max_deg": 9.686916266365155e-07
+          },
+          "training_index_inlier_fraction": 1.0,
+          "held_out_vertices": 1165,
+          "full_spatial_fit": {
+            "median_deg": 3.608660978401923e-07,
+            "p95_deg": 7.96668818847694e-07,
+            "max_deg": 9.993493749739393e-07
+          },
+          "spatial_rematch_count": 11,
+          "muller_direct": {
+            "median_deg": 0.14631595108766204,
+            "p95_deg": 0.14672645442265808,
+            "max_deg": 0.14672845193155357
+          },
+          "muller_after_anchor": {
+            "median_deg": 3.6180742490678287e-07,
+            "p95_deg": 7.967319514447771e-07,
+            "max_deg": 1.0271575130809482e-06
+          },
+          "paleomap_direct": {
+            "median_deg": 1.4739949986195366,
+            "p95_deg": 2.088794852191384,
+            "max_deg": 2.1392281802884994
+          },
+          "paleomap_after_anchor": {
+            "median_deg": 0.26592590880269373,
+            "p95_deg": 0.2807875296683396,
+            "max_deg": 0.28153693900197124
+          },
+          "muller_rotation_residual_deg": 2.699869328381916e-06,
+          "paleomap_rotation_residual_deg": 0.30403920716840305
+        },
+        "401": {
+          "held_out_rigid_fit": {
+            "median_deg": 4.1773762381824414e-07,
+            "p95_deg": 8.156226435511991e-07,
+            "max_deg": 9.8918869708268e-07
+          },
+          "training_index_inlier_fraction": 1.0,
+          "held_out_vertices": 434,
+          "full_spatial_fit": {
+            "median_deg": 3.8299249318073116e-07,
+            "p95_deg": 7.964745618364426e-07,
+            "max_deg": 1.034927504947802e-06
+          },
+          "spatial_rematch_count": 331,
+          "muller_direct": {
+            "median_deg": 0.14467313401885087,
+            "p95_deg": 0.14669808542917676,
+            "max_deg": 0.14672861709373372
+          },
+          "muller_after_anchor": {
+            "median_deg": 3.8833276055306867e-07,
+            "p95_deg": 8.048587047414214e-07,
+            "max_deg": 9.931465223989034e-07
+          },
+          "paleomap_direct": {
+            "median_deg": 1.5035970179424334,
+            "p95_deg": 1.7786982593916167,
+            "max_deg": 1.824425380750922
+          },
+          "paleomap_after_anchor": {
+            "median_deg": 0.20565454245243733,
+            "p95_deg": 0.2352717578439049,
+            "max_deg": 0.2389051686522669
+          },
+          "muller_rotation_residual_deg": 2.699869328381916e-06,
+          "paleomap_rotation_residual_deg": 0.3040391848596996
+        },
+        "801": {
+          "held_out_rigid_fit": {
+            "median_deg": 3.5107080002255296e-07,
+            "p95_deg": 5.815869126246025e-07,
+            "max_deg": 7.4271438572932e-07
+          },
+          "training_index_inlier_fraction": 0.767836119613845,
+          "held_out_vertices": 4247,
+          "full_spatial_fit": {
+            "median_deg": 3.5308562590858403e-07,
+            "p95_deg": 5.854220061171265e-07,
+            "max_deg": 7.685079194877032e-07
+          },
+          "spatial_rematch_count": 4454,
+          "muller_direct": {
+            "median_deg": 0.13384055283577823,
+            "p95_deg": 0.14286740174921814,
+            "max_deg": 0.144856705559082
+          },
+          "muller_after_anchor": {
+            "median_deg": 3.6263090580796484e-07,
+            "p95_deg": 6.298341743690462e-07,
+            "max_deg": 8.819746093446754e-07
+          },
+          "paleomap_direct": {
+            "median_deg": 1.6284404817620803,
+            "p95_deg": 1.7335626572270761,
+            "max_deg": 1.7615685499625005
+          },
+          "paleomap_after_anchor": {
+            "median_deg": 0.338231911959724,
+            "p95_deg": 0.43362536241272076,
+            "max_deg": 0.4678013832879283
+          },
+          "muller_rotation_residual_deg": 0.0,
+          "paleomap_rotation_residual_deg": 0.8116987031801233
+        },
+        "101": {
+          "held_out_rigid_fit": {
+            "median_deg": 4.090699560012899e-07,
+            "p95_deg": 8.311304798010979e-07,
+            "max_deg": 1.0078487486361166e-06
+          },
+          "training_index_inlier_fraction": 1.0,
+          "held_out_vertices": 1159,
+          "full_spatial_fit": {
+            "median_deg": 4.0448528656635857e-07,
+            "p95_deg": 8.292816998288712e-07,
+            "max_deg": 1.109599553010987e-06
+          },
+          "spatial_rematch_count": 990,
+          "muller_direct": {
+            "median_deg": 0.11051144855262487,
+            "p95_deg": 0.1370468184202967,
+            "max_deg": 0.14285553375597557
+          },
+          "muller_after_anchor": {
+            "median_deg": 4.070763713198915e-07,
+            "p95_deg": 8.285735251121365e-07,
+            "max_deg": 1.1100800697302902e-06
+          },
+          "paleomap_direct": {
+            "median_deg": 1.258455472254341,
+            "p95_deg": 1.826341384906757,
+            "max_deg": 1.992308860702612
+          },
+          "paleomap_after_anchor": {
+            "median_deg": 0.10253586078444746,
+            "p95_deg": 0.18007925803683572,
+            "max_deg": 0.1943753816053956
+          },
+          "muller_rotation_residual_deg": 0.0,
+          "paleomap_rotation_residual_deg": 0.3350692189920796
+        },
+        "201": {
+          "held_out_rigid_fit": {
+            "median_deg": 4.878245360867151e-07,
+            "p95_deg": 8.935044429893397e-07,
+            "max_deg": 1.0866931856816123e-06
+          },
+          "training_index_inlier_fraction": 1.0,
+          "held_out_vertices": 175,
+          "full_spatial_fit": {
+            "median_deg": 4.792627695792317e-07,
+            "p95_deg": 8.966413108914312e-07,
+            "max_deg": 1.0866931856816123e-06
+          },
+          "spatial_rematch_count": 65,
+          "muller_direct": {
+            "median_deg": 0.14347506561126092,
+            "p95_deg": 0.1467180335958151,
+            "max_deg": 0.14672845896098352
+          },
+          "muller_after_anchor": {
+            "median_deg": 4.793835968853734e-07,
+            "p95_deg": 8.742591885845274e-07,
+            "max_deg": 1.05128448098542e-06
+          },
+          "paleomap_direct": {
+            "median_deg": 2.1850561127911186,
+            "p95_deg": 2.210570416082952,
+            "max_deg": 2.212492020320741
+          },
+          "paleomap_after_anchor": {
+            "median_deg": 0.4357114520025155,
+            "p95_deg": 0.4760647812489251,
+            "max_deg": 0.4788104340912509
+          },
+          "muller_rotation_residual_deg": 1.2074182697257333e-06,
+          "paleomap_rotation_residual_deg": 0.47944777814808287
+        }
+      },
+      "connectivity_identical": false,
+      "correspondence_pass": true,
+      "africa_anchor": {
+        "opt1_to_muller_matrix": [
+          [
+            0.999998349905721,
+            0.0008394992173434477,
+            0.0016110328671143852
+          ],
+          [
+            -0.0008365899611083167,
+            0.9999980198562815,
+            -0.0018056579835693555
+          ],
+          [
+            -0.001612545525501718,
+            0.0018043072301396153,
+            0.9999970720818874
+          ]
+        ],
+        "opt1_to_paleomap_matrix": [
+          [
+            0.998948483747248,
+            -0.04491123505183851,
+            -0.009214542050048518
+          ],
+          [
+            0.04494331066386464,
+            0.998984075670544,
+            0.003303843707078495
+          ],
+          [
+            0.009056801071291982,
+            -0.003714501687704719,
+            0.9999520872679686
+          ]
+        ],
+        "muller_angle_deg": 0.1467282123138199,
+        "paleomap_angle_deg": 2.635435405087582
+      },
+      "muller_anchor_screen_pass": true,
+      "paleomap_anchor_screen_pass": false
+    },
+    {
+      "age_ma": 0,
+      "source": {
+        "member": "OPT1_3D_visualisation_ParaView/Reconstruction/Cratons/Cratons_gcm32__50.vtu",
+        "sha256": "35fd86527c919be1afd9841ea7266d765ce80039d426fa3a369ead5011bcfd8f"
+      },
+      "plates": {
+        "701": {
+          "held_out_rigid_fit": {
+            "median_deg": 8.196101812329257e-15,
+            "p95_deg": 1.137220500842568e-14,
+            "max_deg": 1.4747625359977756e-14
+          },
+          "training_index_inlier_fraction": 1.0,
+          "held_out_vertices": 204,
+          "full_spatial_fit": {
+            "median_deg": 8.171924309839499e-15,
+            "p95_deg": 1.1495186408590538e-14,
+            "max_deg": 1.4747625359977756e-14
+          },
+          "spatial_rematch_count": 0,
+          "muller_direct": {
+            "median_deg": 0.0,
+            "p95_deg": 0.0,
+            "max_deg": 0.0
+          },
+          "muller_after_anchor": {
+            "median_deg": 1.0100860296787025e-14,
+            "p95_deg": 1.8079572067460553e-14,
+            "max_deg": 2.067360542951286e-14
+          },
+          "paleomap_direct": {
+            "median_deg": 0.0,
+            "p95_deg": 0.0,
+            "max_deg": 0.0
+          },
+          "paleomap_after_anchor": {
+            "median_deg": 1.0100860296787025e-14,
+            "p95_deg": 1.8079572067460553e-14,
+            "max_deg": 2.067360542951286e-14
+          },
+          "muller_rotation_residual_deg": 0.0,
+          "paleomap_rotation_residual_deg": 0.0
+        },
+        "501": {
+          "held_out_rigid_fit": {
+            "median_deg": 2.4687743253023645e-14,
+            "p95_deg": 3.4025528832364254e-14,
+            "max_deg": 3.58275932313636e-14
+          },
+          "training_index_inlier_fraction": 1.0,
+          "held_out_vertices": 114,
+          "full_spatial_fit": {
+            "median_deg": 2.5008346149665064e-14,
+            "p95_deg": 3.374289013230168e-14,
+            "max_deg": 3.58275932313636e-14
+          },
+          "spatial_rematch_count": 0,
+          "muller_direct": {
+            "median_deg": 0.0,
+            "p95_deg": 0.0,
+            "max_deg": 0.0
+          },
+          "muller_after_anchor": {
+            "median_deg": 2.6082487678510862e-14,
+            "p95_deg": 2.945503173294623e-14,
+            "max_deg": 3.018386610202983e-14
+          },
+          "paleomap_direct": {
+            "median_deg": 0.0,
+            "p95_deg": 0.0,
+            "max_deg": 0.0
+          },
+          "paleomap_after_anchor": {
+            "median_deg": 2.6082487678510862e-14,
+            "p95_deg": 2.945503173294623e-14,
+            "max_deg": 3.018386610202983e-14
+          },
+          "muller_rotation_residual_deg": 0.0,
+          "paleomap_rotation_residual_deg": 0.0
+        },
+        "5011": {
+          "held_out_rigid_fit": {
+            "median_deg": 1.018274338467978e-14,
+            "p95_deg": 1.6404702253172993e-14,
+            "max_deg": 1.9411808804083304e-14
+          },
+          "training_index_inlier_fraction": 1.0,
+          "held_out_vertices": 75,
+          "full_spatial_fit": {
+            "median_deg": 1.018274338467978e-14,
+            "p95_deg": 1.642318587949634e-14,
+            "max_deg": 1.9411808804083304e-14
+          },
+          "spatial_rematch_count": 0,
+          "muller_direct": {
+            "median_deg": 0.0,
+            "p95_deg": 0.0,
+            "max_deg": 0.0
+          },
+          "muller_after_anchor": {
+            "median_deg": 2.3854160110976374e-14,
+            "p95_deg": 2.937116808257441e-14,
+            "max_deg": 3.0092085748507733e-14
+          },
+          "paleomap_direct": {
+            "median_deg": 0.0,
+            "p95_deg": 0.0,
+            "max_deg": 0.0
+          },
+          "paleomap_after_anchor": {
+            "median_deg": 2.3854160110976374e-14,
+            "p95_deg": 2.937116808257441e-14,
+            "max_deg": 3.0092085748507733e-14
+          },
+          "muller_rotation_residual_deg": 2.4148365394514667e-06,
+          "paleomap_rotation_residual_deg": 2.4148365394514667e-06
+        },
+        "302": {
+          "held_out_rigid_fit": {
+            "median_deg": 3.578124016646457e-15,
+            "p95_deg": 7.790736068605902e-15,
+            "max_deg": 1.1131941385122309e-14
+          },
+          "training_index_inlier_fraction": 1.0,
+          "held_out_vertices": 1165,
+          "full_spatial_fit": {
+            "median_deg": 3.578124016646457e-15,
+            "p95_deg": 7.790736068605902e-15,
+            "max_deg": 1.2420463085051912e-14
+          },
+          "spatial_rematch_count": 0,
+          "muller_direct": {
+            "median_deg": 0.0,
+            "p95_deg": 0.0,
+            "max_deg": 0.0
+          },
+          "muller_after_anchor": {
+            "median_deg": 3.643783144938181e-14,
+            "p95_deg": 3.947765406022948e-14,
+            "max_deg": 4.19562813843876e-14
+          },
+          "paleomap_direct": {
+            "median_deg": 0.0,
+            "p95_deg": 0.0,
+            "max_deg": 0.0
+          },
+          "paleomap_after_anchor": {
+            "median_deg": 3.643783144938181e-14,
+            "p95_deg": 3.947765406022948e-14,
+            "max_deg": 4.19562813843876e-14
+          },
+          "muller_rotation_residual_deg": 0.0,
+          "paleomap_rotation_residual_deg": 0.0
+        },
+        "401": {
+          "held_out_rigid_fit": {
+            "median_deg": 2.145369040039114e-14,
+            "p95_deg": 3.133034833281735e-14,
+            "max_deg": 3.502222551346164e-14
+          },
+          "training_index_inlier_fraction": 1.0,
+          "held_out_vertices": 434,
+          "full_spatial_fit": {
+            "median_deg": 2.1571571379059445e-14,
+            "p95_deg": 3.132483078857108e-14,
+            "max_deg": 3.502222551346164e-14
+          },
+          "spatial_rematch_count": 0,
+          "muller_direct": {
+            "median_deg": 0.0,
+            "p95_deg": 0.0,
+            "max_deg": 0.0
+          },
+          "muller_after_anchor": {
+            "median_deg": 3.431325096654886e-14,
+            "p95_deg": 3.803800568360735e-14,
+            "max_deg": 4.1085116909298944e-14
+          },
+          "paleomap_direct": {
+            "median_deg": 0.0,
+            "p95_deg": 0.0,
+            "max_deg": 0.0
+          },
+          "paleomap_after_anchor": {
+            "median_deg": 3.431325096654886e-14,
+            "p95_deg": 3.803800568360735e-14,
+            "max_deg": 4.1085116909298944e-14
+          },
+          "muller_rotation_residual_deg": 1.7075472925031877e-06,
+          "paleomap_rotation_residual_deg": 1.7075472925031877e-06
+        },
+        "801": {
+          "held_out_rigid_fit": {
+            "median_deg": 1.1131941385122309e-14,
+            "p95_deg": 2.5043712605568853e-14,
+            "max_deg": 3.196417895488211e-14
+          },
+          "training_index_inlier_fraction": 1.0,
+          "held_out_vertices": 4247,
+          "full_spatial_fit": {
+            "median_deg": 1.1131941385122309e-14,
+            "p95_deg": 2.5043712605568853e-14,
+            "max_deg": 3.196417895488211e-14
+          },
+          "spatial_rematch_count": 0,
+          "muller_direct": {
+            "median_deg": 0.0,
+            "p95_deg": 0.0,
+            "max_deg": 0.0
+          },
+          "muller_after_anchor": {
+            "median_deg": 4.2552921481826936e-14,
+            "p95_deg": 4.696032710520583e-14,
+            "max_deg": 4.886060813477416e-14
+          },
+          "paleomap_direct": {
+            "median_deg": 0.0,
+            "p95_deg": 0.0,
+            "max_deg": 0.0
+          },
+          "paleomap_after_anchor": {
+            "median_deg": 4.2552921481826936e-14,
+            "p95_deg": 4.696032710520583e-14,
+            "max_deg": 4.886060813477416e-14
+          },
+          "muller_rotation_residual_deg": 2.4148365394514667e-06,
+          "paleomap_rotation_residual_deg": 2.4148365394514667e-06
+        },
+        "101": {
+          "held_out_rigid_fit": {
+            "median_deg": 1.3977262288422811e-14,
+            "p95_deg": 2.4222382804819397e-14,
+            "max_deg": 2.7954524576845623e-14
+          },
+          "training_index_inlier_fraction": 1.0,
+          "held_out_vertices": 1159,
+          "full_spatial_fit": {
+            "median_deg": 1.3795140341383871e-14,
+            "p95_deg": 2.4222382804819397e-14,
+            "max_deg": 3.0173391048408103e-14
+          },
+          "spatial_rematch_count": 0,
+          "muller_direct": {
+            "median_deg": 0.0,
+            "p95_deg": 0.0,
+            "max_deg": 0.0
+          },
+          "muller_after_anchor": {
+            "median_deg": 4.614716592154778e-14,
+            "p95_deg": 5.0314123290238466e-14,
+            "max_deg": 5.333952355430709e-14
+          },
+          "paleomap_direct": {
+            "median_deg": 0.0,
+            "p95_deg": 0.0,
+            "max_deg": 0.0
+          },
+          "paleomap_after_anchor": {
+            "median_deg": 4.614716592154778e-14,
+            "p95_deg": 5.0314123290238466e-14,
+            "max_deg": 5.333952355430709e-14
+          },
+          "muller_rotation_residual_deg": 0.0,
+          "paleomap_rotation_residual_deg": 0.0
+        },
+        "201": {
+          "held_out_rigid_fit": {
+            "median_deg": 3.643783144938182e-15,
+            "p95_deg": 6.868441404028717e-15,
+            "max_deg": 7.668039643568837e-15
+          },
+          "training_index_inlier_fraction": 1.0,
+          "held_out_vertices": 175,
+          "full_spatial_fit": {
+            "median_deg": 3.834019821784418e-15,
+            "p95_deg": 6.897570170691936e-15,
+            "max_deg": 8.108855192415676e-15
+          },
+          "spatial_rematch_count": 0,
+          "muller_direct": {
+            "median_deg": 0.0,
+            "p95_deg": 0.0,
+            "max_deg": 0.0
+          },
+          "muller_after_anchor": {
+            "median_deg": 3.604997023166231e-14,
+            "p95_deg": 3.9276952942805676e-14,
+            "max_deg": 4.070768316788002e-14
+          },
+          "paleomap_direct": {
+            "median_deg": 0.0,
+            "p95_deg": 0.0,
+            "max_deg": 0.0
+          },
+          "paleomap_after_anchor": {
+            "median_deg": 3.604997023166231e-14,
+            "p95_deg": 3.9276952942805676e-14,
+            "max_deg": 4.070768316788002e-14
+          },
+          "muller_rotation_residual_deg": 0.0,
+          "paleomap_rotation_residual_deg": 0.0
+        }
+      },
+      "connectivity_identical": true,
+      "correspondence_pass": true,
+      "africa_anchor": {
+        "opt1_to_muller_matrix": [
+          [
+            1.0,
+            1.736105798725322e-17,
+            2.6668308709939283e-16
+          ],
+          [
+            1.652535159804987e-17,
+            1.0000000000000002,
+            -6.993588665093964e-16
+          ],
+          [
+            -2.312348605962018e-16,
+            5.72799015221883e-16,
+            0.9999999999999999
+          ]
+        ],
+        "opt1_to_paleomap_matrix": [
+          [
+            1.0,
+            1.736105798725322e-17,
+            2.6668308709939283e-16
+          ],
+          [
+            1.652535159804987e-17,
+            1.0000000000000002,
+            -6.993588665093964e-16
+          ],
+          [
+            -2.312348605962018e-16,
+            5.72799015221883e-16,
+            0.9999999999999999
+          ]
+        ],
+        "muller_angle_deg": 0.0,
+        "paleomap_angle_deg": 0.0
+      },
+      "muller_anchor_screen_pass": true,
+      "paleomap_anchor_screen_pass": true
+    }
+  ]
+}
