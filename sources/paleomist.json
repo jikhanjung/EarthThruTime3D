@@ -1,0 +1,29 @@
+{
+  "title": "PaleoMIST 1.0: global ice-sheet reconstruction for the past 80,000 years (Gowan et al. 2021), the ice thickness and glacially deformed topography the river builder routes over for the glacial stops",
+  "authors": "Gowan, Evan J.",
+  "license": {
+    "id": "CC-BY-4.0",
+    "url": "https://creativecommons.org/licenses/by/4.0/",
+    "evidence": "The PANGAEA landing page https://doi.pangaea.de/10.1594/PANGAEA.905800 states the licence as 'Creative Commons Attribution 4.0 International (CC-BY-4.0)', read 2026-09-15. The landing page and the PANGAEA API record are not pinned by hash: such records change (statistics, citations) and a pin of them can never match again."
+  },
+  "cite": "Gowan, E. J., Zhang, X., Khosravi, S., Rovere, A., Stocchi, P., Hughes, A. L. C., Gyllencreutz, R., Mangerud, J., Svendsen, J.-I., & Lohmann, G. (2021). A new global ice sheet reconstruction for the past 80 000 years. Nature Communications, 12, 1199. https://doi.org/10.1038/s41467-021-21469-w. Data: Gowan, E. J. (2019). Global ice sheet reconstruction for the past 80000 years. PANGAEA, https://doi.org/10.1594/PANGAEA.905800",
+  "retrieved": "2026-09-15",
+  "note": "One 3.5 GB archive. Only the merged global grids are kept: `reconstruction_0.25_degree.nc` and `reconstruction_1_degree.nc` under global_grid/, 33 time steps from 80 ka to the present every 2,500 years, with `ice_thickness` (grounded ice, m), `sea_level` (the SELEN sea-level change relative to the land, eustatic fall plus glacial isostatic deformation, m, 0 at the present), `base_topography` (RTopo-2 bed less that change) and `paleo_topography` (base plus ice, relative to the sea of its time). Grids are 1441 x 721 and 361 x 181, longitude -180..180 and latitude -90..90 inclusive. The rest of the archive (5 km projected regional grids, margins, Stokes coefficients, SELEN sources, plots, the 'a1' maximal MIS 3 scenario) is not extracted, and the archive is deleted after extraction; `scripts/fetch_paleodem.py --manifest sources/paleomist.json` then accepts the extracted folder in its place. scripts/build_rivers.py --ice reads the 0.25 degree grid; see docs/globe-viewer.md \"Rivers\".",
+  "grid": "ice_reconstruction/global_grid/reconstruction_0.25_degree.nc",
+  "assets": [
+    {
+      "path": "data/sources/ice/Gowan_ice_reconstruction.zip",
+      "url": "https://hs.pangaea.de/Maps/Global_Ice_Sheets/Gowan_ice_reconstruction.zip",
+      "bytes": 3706381549,
+      "sha256": "e413799140fa1062bfe1c6ae6e4f9ce983e13553c6fa12866f4804bd633cdd57",
+      "unzip": "paleomist",
+      "members": [
+        "ice_reconstruction/readme.txt",
+        "ice_reconstruction/global_grid/create_global_grid.sh",
+        "ice_reconstruction/global_grid/reconstruction_1_degree.nc",
+        "ice_reconstruction/global_grid/reconstruction_0.25_degree.nc"
+      ],
+      "discard": true
+    }
+  ]
+}

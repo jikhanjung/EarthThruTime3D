@@ -406,6 +406,14 @@ draws nothing for the Early Cretaceous dropstone localities or the Miocene mount
 tidewater glaciers of Alaska, Iceland and Kamchatka. The compilation has nothing before
 the Devonian, so the Ordovician sheets go unchecked.
 
+The ice the rivers of the glacial stops run off is not this layer's: it is PaleoMIST 1.0
+(see Rivers, "Over the ice"), a reconstruction with thickness and a depressed crust,
+which the ice layer does not draw; it keeps NADI-1 and DATED-1 to 25 ka and the
+same-sea-level analogue beyond. PaleoMIST could replace the analogue at 26–80 ka with
+reconstructed margins and supply the crustal depression the 130 ka window lacks; that
+proposal, and the caveat that PaleoMIST's own sea level at 26–80 ka sits well above the
+stack's (a minimal MIS 3 reconstruction), is on issue #30.
+
 Tibet and the Himalaya carry no sheet at any stop, and that is what the evidence says.
 The atlas paints the plateau white as high ground, which the 45° rule drops, and at the
 last glacial maximum no reconstruction puts an ice sheet there: the plateau-wide sheet
@@ -476,12 +484,68 @@ field toward its lowstand field by the offset's share of that level (`data-river
 on the stage, 0 at the datum, 1 at the bottom), so a shelf river fades in as the shelf
 emerges while its land part, which both fields share, stays put. The time windows set
 the level per stop and get the same. A channel that truly shifts as the coast retreats
-only cross-fades, and nothing routes over or along the ice; an ice surface for the
-glacial stops is the follow-up listed in issue #30.
+only cross-fades.
+
+**Over the ice.** The present grid is routed a third way, over the ice of the last
+glacial cycle, so that the glacial stops have meltwater along the ice margins and lakes
+dammed by ice rather than today's rivers running under a white overlay. The ice is
+PaleoMIST 1.0 (Gowan et al. 2021, Nature Communications 12, 1199; PANGAEA
+10.1594/PANGAEA.905800, CC BY 4.0, pinned in `sources/paleomist.json`): grounded ice
+thickness, the crust's glacial isostatic deformation from SELEN and the resulting
+paleo-topography, 80 ka to the present every 2,500 years, as global 0.25° and 1° NetCDF
+grids. Only the two global grids are extracted from the 3.5 GB archive (`members` in
+the manifest) and the archive is deleted afterwards (`discard`); `fetch_paleodem.py
+--manifest sources/paleomist.json` then accepts the extracted folder in its place.
+`scripts/build_rivers.py --ice` writes `paleodem-0000-rivers-ice-<years>.png` for
+each step to 25 ka (`--ice-to 80` for all of them) and a sidecar
+`paleodem-0000-rivers-ice.json` with each step's age, sea level and whether it lowers
+the sea below every younger step's.
+
+The routing surface is the 0 Ma grid with today's ice taken off where the grid holds it
+(the grid carries Greenland's ice surface but Antarctica's bed, so as much of the
+present thickness as the grid stands above the present bed is removed), the crust
+pressed down by the step's deformation (the `sea_level` field less its mean over
+today's ocean, so the eustatic part, which the page's own level supplies, is left out),
+and the step's grounded ice laid on top. The sea is at the level the page gives that
+age: the ice sidecar's held level to 25 ka, the stack beyond, a half step the mean of
+its neighbours. Three surfaces were compared at 12.5, 10 and 20 ka: PaleoMIST's own
+paleo-topography (0.25°, blockier, its own sea level, and RTopo-2 puts the Great Lakes'
+floors below the sea, so the St Lawrence ended in Lake Michigan); the grid plus the
+thickness alone; and the grid plus thickness and deformation, which was kept, because
+the depression at the margins is what makes the proglacial lakes and the Champlain Sea.
+A depression the deformation opens inland without reaching the ocean (the Great Slave
+lowland at 12.5 ka, the southern North Sea between the joined British and Scandinavian
+sheets at 20 ka) is land, a lake that fills to its spill, while a basin the grid itself
+holds below the datum, the Caspian, stays sea as in every other field; that rule is
+what sends the Elbe and Weser west through the Dover Strait. Water is routed over the
+ice as terrain, so a sheet's whole surface drains to its margin, but only cells off the
+ice are drawn. Checks: at 20 ka the Channel River drains 2.65 Mkm² through the Strait
+(the literature figure is about 2.5 Mkm², the Rhine, Thames, Meuse, Seine and the
+ice-marginal valleys of the Elbe and Weser); Lake Agassiz spills east into the
+Champlain Sea at 12.5 ka and south to the Mississippi at 10 ka. The 20 km grid cannot
+resolve the real sills, so the outlets are plausible, not dated, and the ice the rivers
+run off is PaleoMIST's, whose margins differ by up to a few hundred kilometres from the
+NADI-1 and DATED-1 margins the ice layer draws; where the drawn ice is wider it covers
+the rivers, where narrower a strip goes without.
+
+The frame carries `rivers_ice`, youngest first, only the steps that lower the sea below
+every younger step's and only where the file exists, each with its level and URL
+(`/globe/rivers-ice/<id>/<years>.png`). `riverChoice` in the page picks, for a frame with
+slices and a lowered sea, the two bracketing the offset, the frame's own field standing
+at 0 m and the deepest holding below it, and mixes them by the offset's share of the
+gap through the same `riverLow0/1` and `riverLowT` uniforms the shelf fields use, so
+the shader is unchanged; `data-river-low` is that share and `data-river-ice` the
+interpolated age of the ice. The time windows inherit the list with the present frame,
+and their stops set the offset to the age's level, so a dated stop shows the step at its
+level (20 ka shows the 20 ka field) and an older stop of the 130 ka window the step at
+the same sea level, the analogue the ice layer already draws there. Grids without
+slices keep the 0 m and lowstand fields.
 
 `tests/rivers_check.py` covers the routing: every drop of an island with a pit reaches
 the sea, an island across the antimeridian drains as one, a lowered sea routes over the
-exposed shelf, and the field is a cone the size of its river.
+exposed shelf, the field is a cone the size of its river, a depression pressed open
+inland is a lake and not the sea, and the ice surface strips today's ice only where
+the grid holds it.
 
 ## Mapping pipeline
 
@@ -758,7 +822,7 @@ Neither flag grants data-use rights. See `sources/README.md`, `LICENSE-DATA.md` 
 - `VIEWER_URL=http://127.0.0.1:8153/ node tests/river-browser.mjs`: river PNG, shader,
   toggle, grid-spacing explanation, mobile layout and both languages (requires a built 0 Ma river field).
 - `.venv/bin/python tests/rivers_check.py` with `requirements-processing.txt`
-  installed: the river routing (see Rivers).
+  installed: the river routing (see Rivers), the ice surface included.
 - `.venv/bin/python tests/segmentation_check.py` with `requirements-processing.txt`
   installed: the inverse projection against the viewer's forward mapping, the inset
   ellipse mask and the colour conversion. Kept out of the Django suite because the web

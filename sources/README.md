@@ -167,6 +167,17 @@ catalogues the grids; `scripts/build_paleodem.py` (needs `requirements-processin
 writes the textures into `data/derived/paleodem/`. Unlike the web JPEGs, these grids may
 be redistributed with attribution.
 
+## Ice of the last glacial cycle
+
+`paleomist.json` pins PaleoMIST 1.0 (Gowan et al. 2021, PANGAEA 10.1594/PANGAEA.905800,
+CC BY 4.0): one 3.5 GB archive of which only the two global grids are kept, ice
+thickness, isostatic deformation and paleo-topography every 2,500 years from 80 ka, at
+0.25° and 1°. The manifest's `members` limits the extraction and `discard` deletes the
+archive afterwards; `fetch_paleodem.py --manifest sources/paleomist.json` accepts the
+extracted folder in its place. `scripts/build_rivers.py --ice` routes the present grid's
+rivers over it (docs/globe-viewer.md "Rivers"). The ice layer itself still draws NADI-1
+and DATED-1 (`ice.json`).
+
 ## Attribution and use
 
 The site's [license information](http://www.scotese.com/license.htm) permits credited
