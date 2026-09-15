@@ -20,6 +20,10 @@ wwolf는 001부터 셉니다. 그 전의 001–045는 링크와 본문 속 번�
 [docs/operations.md](../docs/operations.md), 뷰어 구조는
 [docs/globe-viewer.md](../docs/globe-viewer.md)에 있습니다.
 
+## 계획
+
+- [jikhanjung P01 — 시간 범위 선택: 최근 2.5만 년](20260915_jikhanjung_P01_deglacial_time_window.md)
+
 ## 작업 기록
 
 - [jikhanjung 061 — 현재 구현에 맞춘 문서 정리](20260915_jikhanjung_061_documentation_refresh.md)
