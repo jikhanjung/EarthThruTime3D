@@ -747,3 +747,33 @@ msgstr "Today's glaciers, ice sheets and Antarctic ice shelves are <a href=\"htt
 
 msgid "{age} Ma 해안선을 판 운동을 따라 {now}까지 옮겨 그렸습니다."
 msgstr "The {age} Ma coastline, carried by the plate motion to {now}."
+
+msgid "전체 시대"
+msgstr "Whole timeline"
+
+msgid "최근 2.5만 년"
+msgstr "Last 25,000 years"
+
+msgid "시간 범위"
+msgstr "Time range"
+
+msgid "빙하 표시 중입니다. 북미는 <a href=\"https://doi.org/10.1016/j.quascirev.2023.108345\" target=\"_blank\" rel=\"noopener\">NADI-1</a>(Dalton et al. 2023, CC BY 4.0), 유라시아는 <a href=\"https://doi.org/10.1111/bor.12142\" target=\"_blank\" rel=\"noopener\">DATED-1</a>(Hughes et al. 2016, CC BY 3.0)이 그 나이에 발표한 빙상 복원이고, 10 ka 이후의 유라시아는 자료가 없어 비어 있습니다. 남극·그린란드·산악 빙하와 빙붕은 현재 범위(Natural Earth)입니다. 지형은 모든 시점에서 현재 고도이며, 빙하 무게로 지각이 눌린 효과는 반영하지 않았습니다. 해수면은 그 나이의 <a href=\"https://doi.org/10.5194/cp-12-1079-2016\" target=\"_blank\" rel=\"noopener\">Spratt &amp; Lisiecki (2016)</a> 값을 현재에서 과거로 가며 가장 낮았던 값으로 이어 받은 것입니다."
+msgstr "Showing ice. North America is <a href=\"https://doi.org/10.1016/j.quascirev.2023.108345\" target=\"_blank\" rel=\"noopener\">NADI-1</a> (Dalton et al. 2023, CC BY 4.0) and Eurasia <a href=\"https://doi.org/10.1111/bor.12142\" target=\"_blank\" rel=\"noopener\">DATED-1</a> (Hughes et al. 2016, CC BY 3.0), the ice-sheet reconstructions published for that age; Eurasia after 10 ka has no data and stays empty. Antarctica, Greenland, mountain glaciers and ice shelves keep their present extent (Natural Earth). The terrain is today's at every stop, without the crust pressed down by the weight of the ice. Sea level is the <a href=\"https://doi.org/10.5194/cp-12-1079-2016\" target=\"_blank\" rel=\"noopener\">Spratt &amp; Lisiecki (2016)</a> value for that age, held at the lowest reached going back from the present."
+
+msgid "해수면, 최근 2.5만 년"
+msgstr "Sea level, last 25,000 years"
+
+msgid "그 나이의 해수면, 현재에서 과거로 가며 가장 낮았던 값"
+msgstr "sea level at each age, the lowest reached going back from the present"
+
+msgid "마지막 빙하기 후퇴 %(count)s개 시점 · 1천 년 간격 · 지형은 현재"
+msgstr "last deglaciation, %(count)s stops · a thousand years apart · today's terrain"
+
+msgid "{age} ka · 과거"
+msgstr "{age} ka · past"
+
+msgid "해수면 약 {value} (현재 대비, 그 나이의 Spratt & Lisiecki 2016 값)"
+msgstr "Sea level about {value} (relative to present, Spratt & Lisiecki 2016 at this age)"
+
+msgid "이 범위에서는 해수면이 나이에서 정해져 옮길 수 없습니다"
+msgstr "In this range the age sets the sea level, so it cannot be moved"

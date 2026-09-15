@@ -12,7 +12,17 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
 import numpy as np  # noqa: E402
 
-from build_ice import HOLE_KM2, WGS84_A, WGS84_E2, fill_holes, polar_laea_inverse, polar_smooth  # noqa: E402
+from build_ice import (HOLE_KM2, WGS84_A, WGS84_E2, fill_holes, held_levels,  # noqa: E402
+                       polar_laea_inverse, polar_smooth)
+
+
+class HeldLevelTests(unittest.TestCase):
+    def test_level_is_the_running_minimum_and_marks_the_ages_that_lower_it(self):
+        # The stack starts above today's level, which counts as 0 m; a rise back toward the
+        # present holds the lower level and does not lower it again.
+        levels = {1: 7.7, 2: -3.0, 3: -1.0, 4: -8.0}
+        self.assertEqual(held_levels(levels, ages=range(1, 5)),
+                         [(1, 0.0, False), (2, -3.0, True), (3, -3.0, False), (4, -8.0, True)])
 
 
 class FillHolesTests(unittest.TestCase):

@@ -162,6 +162,55 @@ def lows_of(kinds, item):
     return lows if isinstance(lows, list) else []
 
 
+def what_if_lows(kinds, item):
+    """The slices the sea-level what-if mixes between: those that lower the sea below every
+    younger slice. A sidecar from before `lowers` wrote only those, so a missing flag counts."""
+    return [low for low in lows_of(kinds, item) if low.get("lowers", True)]
+
+
+# The time window: instead of the whole series, the last deglaciation one thousand years at
+# a stop, where the present's dated slices give every age its own ice and sea level.
+WINDOWS = ("deglacial",)
+WINDOW_OPTIONS = [("", gettext_lazy("전체 시대")), ("deglacial", gettext_lazy("최근 2.5만 년"))]
+HOLOCENE_KA = 11.7
+DEGLACIAL_SOURCE = "https://doi.org/10.5281/zenodo.8161764"
+
+
+def time_window(request, source):
+    """The window asked for, where the series can have one; anything else is the whole series."""
+    asked = request.GET.get("window") if request is not None else None
+    return asked if asked in WINDOWS and source == "paleodem2018" else None
+
+
+def deglacial_frames(frames, kinds):
+    """The window's frames: the present grid once per dated slice, oldest first, then the
+    present itself; None where the slices have not been built.
+
+    Every frame is the 0 Ma grid, so the terrain is today's. What changes with the age is
+    the ice, the slice NADI-1 and DATED-1 give for it, and the sea level, the stack's
+    running minimum. The sheet and the what-if slices are dropped: the age sets the sea
+    level, so the slider has nothing to move. So is the temperature: the present's 5 Myr
+    map would read as the climate of the glacial maximum, which it says nothing about.
+    """
+    present = next((frame for frame in frames if frame["relief"] and frame["age"] == 0 and frame["ice"]), None)
+    if present is None:
+        return None
+    item = find_map(present["id"])
+    slices = sorted((low for low in lows_of(kinds, item) if ice_low_path(item, low["age_ka"]).exists()),
+                    key=lambda low: -low["age_ka"])
+    if not slices:
+        return None
+    fixed = {"ice_kind": "deglacial", "ice_sheet": None, "ice_lows": None, "temp": None, "mean_c": None}
+    window = [dict(present, **fixed, age=low["age_ka"] / 1000,
+                   label=_("홀로세") if low["age_ka"] < HOLOCENE_KA else _("플라이스토세"),
+                   title=f"NADI-1 · DATED-1, {low['age_ka']} ka", source=DEGLACIAL_SOURCE,
+                   deglacial={"age_ka": low["age_ka"], "level_m": low["level_m"],
+                              "url": reverse("globe-ice-low", args=[present["id"], low["age_ka"]])})
+              for low in slices]
+    window.append(dict(present, **fixed, deglacial={"age_ka": 0, "level_m": 0.0, "url": None}))
+    return window
+
+
 def ice_low_path(item, age):
     """One dated lowstand field for the ice, a slice of the present's deglaciation at `age`
     thousand years; only where built."""
@@ -325,6 +374,8 @@ def viewer_strings():
         "seaMarkMax": _("빙하 최대 {value}"),
         "seaNoIce": _("이 시점에는 얼음이 없어 해수면을 옮길 수 없습니다"),
         "seaLevelNone": _("장기 해수면: 자료 없음 (540 Ma 이전)"),
+        "seaLevelDated": _("해수면 약 {value} (현재 대비, 그 나이의 Spratt & Lisiecki 2016 값)"),
+        "seaFromAge": _("이 범위에서는 해수면이 나이에서 정해져 옮길 수 없습니다"),
         "noMap": _("지도 없음"),
         "interpolated": _("보간"),
         "sourceAlt": _("{label} ({age}) Scotese 원본 지도"),
@@ -357,6 +408,7 @@ def viewer_strings():
         "contextLost": _("그래픽 연결이 끊겼습니다. 페이지를 새로고침해 주세요."),
         "oldestNoMap": _("{age} Ma · 지도 없음"),
         "oldestPast": _("{age} Ma · 과거"),
+        "oldestWindow": _("{age} ka · 과거"),
         "webglFailed": _("3D 화면을 시작하지 못했습니다. WebGL을 지원하는 브라우저에서 하드웨어 가속을 확인해 주세요."),
         "proterozoic": _("원생대"),
     }
@@ -715,7 +767,7 @@ def globe(request):
                            # deglaciation is reconstructed, each with its sea level, youngest first.
                            "ice_sheet": kinds["sheets"].get(item["id"]) if iced else None,
                            "ice_lows": ([dict(low, url=reverse("globe-ice-low", args=[item["id"], low["age_ka"]]))
-                                         for low in lows_of(kinds, item)
+                                         for low in what_if_lows(kinds, item)
                                          if ice_low_path(item, low["age_ka"]).exists()] if iced else None),
                            "field": (reverse("globe-field", args=[item["id"]])
                                      if field_path(item).exists() else None),
@@ -724,9 +776,17 @@ def globe(request):
     plan = sampling(request)
     models = plate_models(request)
     deepest = max((model["covers"][1] for model in models), default=None)
+    dated = deglacial_frames(frames, kinds) if source == "paleodem2018" else None
+    window = time_window(request, source) if dated else None
+    if window:
+        # One stop per thousand years and nothing older: the deep, map-less stops belong
+        # to the whole series, not to 25,000 years of it.
+        frames, plan, deepest = dated, {"interval_ma": None, "steps": 1}, None
+    plan["window"] = window
     return render(request, "core/home.html",
                   {"frames": frames, "viewer_enabled": enabled(),
                    "stops": timeline(frames, plan, deepest), "sampling": plan,
+                   "window": window, "window_options": WINDOW_OPTIONS if dated else None,
                    "sampling_choice": sampling_choice(plan)[0],
                    # The same boundaries name an in-between stop by its own age.
                    "periods": [(upper, _(name)) for upper, name in PERIODS],

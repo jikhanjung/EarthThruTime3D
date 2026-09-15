@@ -731,6 +731,36 @@ try {
     expect(await dem.locator('body').textContent()).not.toMatch(/[가-힣]/);
     await dem.screenshot({path:'data/screenshots/globe-elevation-english.png', fullPage:true});
     console.log('Elevation series passed');
+    // The time window: the last 25,000 years a thousand years at a stop, each age with its
+    // dated ice slice and the stack's sea level, the slider locked to it.
+    await dem.goto(new URL('?masks=paleodem2018&window=deglacial', base).href);
+    const windowFrames = await dem.locator('#globe-frames').textContent().then(JSON.parse);
+    if (!windowFrames[0].deglacial) {
+      console.log('Deglacial slices not built here; time window skipped');
+    } else {
+      await expect(demGlobe).toHaveAttribute('aria-busy', 'false', {timeout: 15000});
+      expect(windowFrames.length).toBe(26);
+      await expect(dem.locator('#window')).toHaveValue('deglacial');
+      await expect(dem.locator('#sampling')).toHaveCount(0);
+      await expect(dem.locator('#timeline')).toHaveAttribute('max', '25');
+      await expect(demGlobe).toHaveAttribute('data-ice-age', '0');
+      await expect(demGlobe).toHaveAttribute('data-sealevel', '0');
+      await expect(dem.locator('#sealevel')).toBeDisabled();
+      await dem.locator('#era').selectOption(String(windowFrames.findIndex(frame => frame.deglacial.age_ka === 21)));
+      await expect(demGlobe).toHaveAttribute('data-ice-age', '21');
+      await expect(demGlobe).toHaveAttribute('aria-busy', 'false');
+      expect(Number(await demGlobe.getAttribute('data-sealevel'))).toBeLessThan(-100);
+      await expect(dem.locator('#sealevel')).toBeDisabled();
+      await expect(dem.locator('#age')).toContainText('21,000');
+      await dem.screenshot({path:'data/screenshots/globe-deglacial-21ka.png'});
+      // Back to the whole series: the stops return and the slider moves again.
+      await dem.locator('#window').selectOption('');
+      await dem.waitForURL((url) => !url.searchParams.has('window'));
+      await expect(demGlobe).toHaveAttribute('aria-busy', 'false', {timeout: 15000});
+      await expect(dem.locator('#sampling')).toHaveCount(1);
+      await expect(dem.locator('#sealevel')).toBeEnabled();
+      console.log('Time window passed');
+    }
   }
   expect(errors).toEqual([]);
   console.log('Rotation, zoom, playback, rapid switching, mobile layout and failed-load recovery passed');

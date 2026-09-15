@@ -738,6 +738,57 @@ class PaleodemTests(TestCase):
         self.assertEqual(self.client.get('/globe/ice-low/paleodem-3000/24.png').status_code, 404)
         self.assertFalse(self.client.get('/').context['ice_available'])
 
+    def test_the_time_window_steps_through_the_deglacial_slices(self):
+        for item in globe_module.series_items('paleodem2018'):
+            self.build(item)
+        present = globe_module.catalogue('paleodem2018')['maps'][-1]
+        # Without slices there is no window to offer, and asking for one gives the series.
+        response = self.client.get('/', {'masks': 'paleodem2018', 'window': 'deglacial'})
+        self.assertIsNone(response.context['window'])
+        self.assertEqual(len(response.context['frames']), 112)
+        self.assertNotContains(response, 'id="window"')
+        globe_module.ice_path(present).write_bytes(b'png')
+        lows = [{'age_ka': ka, 'level_m': level, 'lowers': lowers, 'volume': 30.0, 'areas': [0.3, 0.0]}
+                for ka, level, lowers in [(1, 0.0, False), (2, -5.0, True), (3, -5.0, False)]]
+        Path(self.dem.name, 'ice-sources.json').write_text(json.dumps(
+            {'grids': {present['id']: 'natural-earth'},
+             'sheets': {present['id']: {'volume': 26.0, 'areas': [0.3, 0.0], 'range_m': [-130, 60]}},
+             'lows': {present['id']: lows}}))
+        for low in lows:
+            globe_module.ice_low_path(present, low['age_ka']).write_bytes(b'png')
+        response = self.client.get('/', {'masks': 'paleodem2018'})
+        self.assertIsNone(response.context['window'])
+        self.assertIsNone(response.context['sampling']['window'])
+        self.assertContains(response, 'id="window"')
+        self.assertContains(response, 'id="sampling"')
+        # The what-if keeps only the slices that lower the sea.
+        self.assertEqual([low['age_ka'] for low in response.context['frames'][-1]['ice_lows']], [2])
+        response = self.client.get('/', {'masks': 'paleodem2018', 'window': 'deglacial'})
+        self.assertEqual(response.context['window'], 'deglacial')
+        self.assertEqual(response.context['sampling']['window'], 'deglacial')
+        self.assertNotContains(response, 'id="sampling"')
+        self.assertContains(response, '<option value="deglacial" selected>')
+        frames = response.context['frames']
+        self.assertEqual([frame['deglacial']['age_ka'] for frame in frames], [3, 2, 1, 0])
+        self.assertEqual([frame['age'] for frame in frames], [0.003, 0.002, 0.001, 0])
+        self.assertEqual(frames[0]['deglacial'],
+                         {'age_ka': 3, 'level_m': -5.0, 'url': f"/globe/ice-low/{present['id']}/3.png"})
+        self.assertEqual(frames[-1]['deglacial'], {'age_ka': 0, 'level_m': 0.0, 'url': None})
+        self.assertEqual([frame['label'] for frame in frames], ['홀로세', '홀로세', '홀로세', '현재'])
+        # The age sets the sea level, so no frame carries a sheet for the slider to range over.
+        self.assertTrue(all(frame['ice_sheet'] is None and frame['ice_lows'] is None for frame in frames))
+        # Nor a temperature: the present's 5 Myr map says nothing about a glacial maximum.
+        self.assertTrue(all(frame['temp'] is None and frame['mean_c'] is None for frame in frames))
+        self.assertTrue(all(frame['field'] == f"/globe/fields/{present['id']}.png" for frame in frames))
+        # One stop per frame and nothing older: the plate models' deep stops belong to the series.
+        self.assertEqual(response.context['stops'],
+                         [[0, 1, 0.0, 0.003], [1, 2, 0.0, 0.002], [2, 3, 0.0, 0.001], [3, 3, 0.0, 0]])
+        english = self.client.get('/', {'masks': 'paleodem2018', 'window': 'deglacial'}, HTTP_ACCEPT_LANGUAGE='en')
+        self.assertNotRegex(english.content.decode(), '[가-힣]')
+        # Only the elevation series has a window, and only the listed one.
+        self.assertIsNone(self.client.get('/', {'window': 'deglacial'}).context['window'])
+        self.assertIsNone(self.client.get('/', {'masks': 'paleodem2018', 'window': 'nope'}).context['window'])
+
     def test_grids_borrow_the_pieces_of_the_nearest_atlas_map(self):
         def report(name):
             return json.dumps({'pieces': [{'names': [{'name': name, 'lon': 1.0, 'lat': 2.0}]}]})

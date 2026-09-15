@@ -255,17 +255,20 @@ its volume to the 0.8; the page cuts at the level whose enclosed area matches, s
 ice is gone once the offset has melted the stop's whole volume, +59 m today and +73 m
 at 300 Ma, and grows by the same law below. That growth is even, from the drawn edge,
 and real sheets grow from centres, so the present, the one stop with a dated
-deglaciation, carries it as lowstand slices: one field per thousand years from 6 to 24
-ka, `<id>-ice-low-<ka>.png`, served at `/globe/ice-low/<id>/<ka>.png` and on the frame
-as `ice_lows`, youngest first, each with the sea level of its age. The margins are the
+deglaciation, carries it as lowstand slices: one field per thousand years from 1 to 25
+ka, `<id>-ice-low-<ka>.png`, served at `/globe/ice-low/<id>/<ka>.png`; the frame
+carries those that lower the sea as `ice_lows`, youngest first, each with the sea level
+of its age. The margins are the
 optimal North American isochrones of NADI-1 (Dalton et al. 2023, CC BY 4.0) and the
 most-credible Eurasian time slices of DATED-1 (Hughes et al. 2016, CC BY 3.0), both
 pinned in `sources/ice.json`, laid over today's ice, so Antarctica, Greenland, Iceland
 and the mountain glaciers keep their present extent; DATED-1 ends at 10 ka, after which
 Eurasia is ice-free. A slice's level is the Spratt & Lisiecki stack at its age, taken as
-the running minimum back from the present so the levels fall with age, and a slice that
-lowers nothing further is dropped, 20 and 25 ka among them; 24 ka is the deepest at
-−130 m, the anchor's glacial maximum. The page finds the two slices bracketing the
+the running minimum back from the present so the levels fall with age. A slice that
+lowers nothing further, 1–5, 20 and 25 ka, is written with `lowers: false` and left out
+of `ice_lows`, since a level that holds has no single age to mix toward; the time window
+below still steps through it. 24 ka is the deepest at −130 m, the anchor's glacial
+maximum. The page finds the two slices bracketing the
 offset, the frame's own field standing at 0 m, and mixes their distance fields; the
 intervals are a thousand years, so the linear mix stays close, and the Laurentide
 retreats toward Hudson Bay and parts from the Cordilleran as the sea rises, as the
@@ -290,6 +293,23 @@ page sets them on the slider at every stop and holds the applied offset inside t
 the stage carry the state for tests. The atlas prelude has no
 heights and takes no offset. With the default 8-bit textures the height is in 59 m steps, so a
 fixed offset moves the coast in those steps; build with `--bits 12` for 3.7 m.
+
+### Time window: the last 25,000 years
+
+The sea-level slider is a what-if: it does not say when. `?window=deglacial`, the "time
+range" choice beside the timeline, replaces the elevation series' stops with the last
+deglaciation, one stop per thousand years from 25 ka to the present (plan jikhanjung P01).
+Every frame is the 0 Ma grid, so the terrain is today's and nothing is interpolated between
+grids; the server sends it once per slice as `deglacial` `{age_ka, level_m, url}`, with no
+`ice_sheet` and no `ice_lows`, and no deep stops. The page binds the slice as the frame's
+lowstand (the present's own mask keeps the shelves and stands alone at 0 ka), applies the
+slice's level as the offset, and locks the slider and the curve box to it; the sea strip
+draws the held levels on a lowstand scale and the temperature strip is left out, as a
+5 Myr curve has one value here. The ice is a published reconstruction at every stop, the
+level the stack's running minimum, and the crust is not depressed under the ice, which
+the note says. `data-ice-age` on the stage is the age shown. The window is only offered
+where the slices have been built, and any other value, or another series, gets the whole
+timeline.
 
 ## Ice
 
