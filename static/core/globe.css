@@ -243,3 +243,12 @@ summary{cursor:pointer;color:#c9dce2}
 .mantle-overlay-panel input[type=checkbox] { width: auto; flex: none; }
 #mantle-overlay-status { font-size: .8rem; }
 .mantle-overlay-caption { position: absolute; top: 42px; left: 18px; max-width: calc(100% - 36px); margin: 0; padding: 5px 9px; border-radius: 5px; background: #102630e6; color: #c9ece4; font-size: .74rem; pointer-events: none; }
+
+/* CRUST colours mirror the linear shader ramp, encoded for an sRGB CSS display. */
+.crust-legend { margin: .6rem 0; }
+.crust-legend > div { height: 12px; border-radius: 3px; background: linear-gradient(90deg, #2c6199, #efc765 50%, #fffbcf); }
+.crust-legend figcaption { display: flex; justify-content: space-between; font-size: .8rem; }
+#crust-section-controls { margin: .6rem 0; border: 1px solid var(--border, #526077); border-radius: 5px; }
+#crust-section-controls:disabled { opacity: .55; }
+#crust-readout { font-variant-numeric: tabular-nums; }
+.crust-caption { top: 80px; }

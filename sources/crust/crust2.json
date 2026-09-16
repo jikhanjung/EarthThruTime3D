@@ -1,0 +1,16 @@
+{
+  "id": "crust2-earthbyte",
+  "url": "https://www.earthbyte.org/webdav/ftp/earthbyte/GPlates/GPlates2.3_GeoData/Rasters/Crustal_Thickness.zip",
+  "bytes": 83928224,
+  "sha256": "0375cf41ea79d007ffe3452825131de69a438ff1ef1101c9faca5eb3c1299933",
+  "member": "Crustal_Thickness/Crustal_Thickness/Crustal_Thickness.nc",
+  "license_member": "Crustal_Thickness/License.txt",
+  "license": "CC-BY-4.0",
+  "citation": "Laske, G., Masters, G., and Reif, C. (2000), CRUST 2.0: A new global crustal model at 2×2 degrees, IGPP, UC San Diego. EarthByte GPlates 2.3 raster distribution.",
+  "model_resolution_deg": 2,
+  "age_ma": 0,
+  "units": "km",
+  "units_evidence": "Bundled Crustal_Thickness_Legend.png explicitly labels Thickness (km), 0–80.",
+  "datum": "Layer inclusion and reference elevation are not specified in the distributed z variable. Render only a labelled thickness-equivalent shell below the display surface; do not infer physical Moho elevation.",
+  "verified_date": "2026-09-16"
+}

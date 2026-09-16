@@ -266,3 +266,14 @@ OPT1 pins the simulation ZIP, not the mutable Zenodo API JSON: its download/view
 statistics change independently of the model. The record URL, retrieval date and
 license value remain in the manifest as evidence; an optional local `record.json`
 is not required to build. The ZIP size and SHA-256 checks remain mandatory.
+
+## Present-day crustal thickness
+
+`crust/crust2.json` pins the EarthByte GPlates 2.3 distribution of **CRUST 2.0**:
+Laske, G., Masters, G., and Reif, C. (2000), *CRUST 2.0: A new global crustal
+model at 2×2 degrees*, IGPP, UC San Diego. The downloaded package includes a
+CC BY 4.0 `License.txt`, the numerical NetCDF and a legend labelled Thickness (km).
+The 2-arc-minute file is resampled from the 2-degree model. Our 1-degree display
+grid adds no scientific resolution. Water/ice inclusion and elevation datum are
+not specified in this derivative: the cutaway is a thickness-equivalent display
+shell, not physical Moho elevation. See [crust display](../docs/crust.md).

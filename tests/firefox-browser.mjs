@@ -86,6 +86,19 @@ try {
 
   await send('browsingContext.navigate', {context, url: new URL('/?masks=paleodem2018', base).href, wait: 'complete'});
   const loaded = await until(context, 'the globe', shown);
+  if (process.env.FIREFOX_CRUST === '1') {
+    await evaluate(context, `document.getElementById('crust-enabled').click()`);
+    await until(context, 'crust data', state => state.crust === 'ready');
+    await evaluate(context, `document.getElementById('crust-cutaway').click(); document.getElementById('crust-scale').value='5'; document.getElementById('crust-scale').dispatchEvent(new Event('input')); document.getElementById('crust-focus').click()`);
+    await until(context, 'crust section', state => state.crustSection === 'true');
+    await screenshot(context, 'firefox-crust.png');
+    for (const age of [20, 0]) {
+      await evaluate(context, `(() => {const stops=JSON.parse(document.getElementById('globe-stops').textContent);const slider=document.getElementById('timeline');slider.value=stops.findIndex(s=>s[3]===${age});slider.dispatchEvent(new Event('input'));})()`);
+      await until(context, 'crust age switch', state => state.busy === 'false' && state.crust === (age === 0 ? 'ready' : 'unavailable'));
+    }
+    await evaluate(context, `document.getElementById('crust-enabled').click()`);
+    console.log('Firefox: crust colour, section, 5× and 20→0 Ma passed');
+  }
   assert.equal(loaded.rivers, 'true', 'rivers are on by default');
   const frames = JSON.parse(await evaluate(context, `document.getElementById('globe-frames').textContent`));
   const slices = frames.find(frame => frame.id === loaded.frame)?.rivers_ice?.length || 0;

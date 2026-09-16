@@ -1,0 +1,90 @@
+import {chromium, expect as baseExpect} from '@playwright/test';
+const expect = baseExpect.configure({timeout: 30000});
+
+const browser = await chromium.launch({headless: true, args: ['--enable-unsafe-swiftshader']});
+const base = process.env.VIEWER_URL || 'http://127.0.0.1:8150/';
+try {
+  const page = await browser.newPage({viewport: {width: 1400, height: 1000}, reducedMotion: 'reduce'});
+  const errors = [], requests = [];
+  page.on('pageerror', e => errors.push(e.message));
+  page.on('console', m => { if (m.type() === 'error' && /THREE|Shader|WebGL/.test(m.text())) errors.push(m.text()); });
+  page.on('request', r => { if (r.url().includes('/crust/assets/')) requests.push(r.url()); });
+  await page.goto(new URL('/?masks=paleodem2018', base).href);
+  const globe = page.locator('#globe');
+  await expect(globe).toHaveAttribute('aria-busy', 'false');
+  expect(requests.length).toBe(0);
+  await page.locator('#crust-enabled').check();
+  await expect(globe).toHaveAttribute('data-crust', 'ready');
+  expect(requests.length).toBe(1);
+  await expect(globe).toHaveAttribute('data-crust-colour', 'true');
+  await page.locator('#crust-cutaway').check();
+  await page.selectOption('#crust-scale', '5');
+  await page.locator('#crust-focus').click();
+  await expect(globe).toHaveAttribute('data-crust-section', 'true');
+  await page.screenshot({path: 'test-results/crust-cutaway.png'});
+  for (const latitude of ['90', '-90', '10']) await page.locator('#crust-latitude').fill(latitude);
+  await page.locator('#crust-longitude').fill('180');
+  await page.locator('#crust-longitude').fill('80');
+  await page.locator('#crust-cutaway').uncheck();
+  const box = await globe.boundingBox();
+  await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+  await expect(page.locator('#crust-readout')).toContainText('km');
+  const stops = JSON.parse(await page.locator('#globe-stops').textContent());
+  const at = age => String(stops.findIndex(s => s[3] === age));
+  for (const age of [20, 0, 40, 0]) {
+    await page.locator('#timeline').fill(at(age));
+    await expect(globe).toHaveAttribute('aria-busy', 'false');
+    await expect(globe).toHaveAttribute('data-crust', age === 0 ? 'ready' : 'unavailable');
+    await expect(globe).toHaveAttribute('data-crust-colour', String(age === 0));
+  }
+  await page.selectOption('#projection', 'equirect');
+  await expect(globe).toHaveAttribute('data-crust-section', 'false');
+  await expect(page.locator('#crust-scale')).toBeDisabled();
+  await expect(globe).toHaveAttribute('data-crust-colour', 'true');
+  await page.selectOption('#projection', 'mollweide');
+  await page.selectOption('#projection', 'globe');
+  await page.locator('#mantle-overlay').check();
+  await expect(globe).toHaveAttribute('data-mantle-overlay', 'ready', {timeout: 30000});
+  await page.selectOption('#mantle-age', '0');
+  await expect(globe).toHaveAttribute('data-mantle-age', '0', {timeout: 30000});
+  await page.locator('#mantle-cutaway').check();
+  await expect(globe).toHaveAttribute('data-crust-section', 'true');
+  await expect(page.locator('#crust-own-cut')).toBeHidden();
+  await page.screenshot({path: 'test-results/crust-mantle.png'});
+  expect(requests.length).toBe(1);
+  await page.setViewportSize({width: 390, height: 844});
+  await page.screenshot({path: 'test-results/crust-mobile.png'});
+  expect(errors).toEqual([]);
+  await page.close();
+
+  // A failed or stale request must never remove the globe or restore a past-age overlay.
+  const failure = await browser.newPage();
+  await failure.route('**/crust/assets/**', r => r.fulfill({status: 503}));
+  await failure.goto(new URL('/?masks=paleodem2018', base).href);
+  await expect(failure.locator('#globe')).toHaveAttribute('aria-busy', 'false');
+  await failure.locator('#crust-enabled').check();
+  await expect(failure.locator('#globe')).toHaveAttribute('data-crust', 'error');
+  await failure.unroute('**/crust/assets/**');
+  await failure.locator('#crust-retry').click();
+  await expect(failure.locator('#globe')).toHaveAttribute('data-crust', 'ready');
+  await failure.close();
+  const late = await browser.newPage();
+  let release;
+  const gate = new Promise(resolve => { release = resolve; });
+  let downloads = 0;
+  await late.route('**/crust/assets/**', async route => { downloads++; await gate; await route.continue(); });
+  await late.goto(new URL('/?masks=paleodem2018', base).href);
+  await expect(late.locator('#globe')).toHaveAttribute('aria-busy', 'false');
+  await late.locator('#crust-enabled').check();
+  await late.locator('#timeline').fill(at(20));
+  await expect(late.locator('#globe')).toHaveAttribute('data-crust', 'unavailable');
+  release();
+  await late.waitForResponse(r => r.url().includes('/crust/assets/'));
+  await expect(late.locator('#globe')).toHaveAttribute('data-crust-colour', 'false');
+  await late.locator('#timeline').fill(at(0));
+  await expect(late.locator('#globe')).toHaveAttribute('data-crust', 'ready');
+  expect(downloads).toBe(1);
+  console.log('Crust: loading, retry, cache, age gating, projections, pole cuts, mantle sharing and mobile passed.');
+} finally {
+  await browser.close();
+}

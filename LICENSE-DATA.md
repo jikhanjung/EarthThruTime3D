@@ -13,6 +13,9 @@ The files this project computes from CC BY sources are released under
   Meer et al. 2022, Spratt & Lisiecki 2016, Natural Earth, Dalton et al. 2023,
   Hughes et al. 2016, Gowan et al. 2021 and the PALEOMAP rotation model);
 - the packed coastlines (from Kocsis & Scotese 2021);
+- the present-day CRUST 2.0 thickness display grid (Laske, Masters & Reif 2000,
+  EarthByte GPlates 2.3 distribution, whose bundled License.txt states CC BY 4.0;
+  see `docs/crust.md` for resampling and the reference-shell limitation);
 - the experimental mantle surface meshes (from Müller et al. 2022 OPT1 supplementary
   data v3.0; see `docs/geodynamics.md` for attribution and transformations);
 - the India–Asia section bundle (OPT1 surface intersections, craton outlines and

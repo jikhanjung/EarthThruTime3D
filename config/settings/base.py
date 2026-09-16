@@ -140,6 +140,8 @@ PALEOCOASTLINES_DERIVED_DIR = Path(os.environ.get(
     'PALEOCOASTLINES_DERIVED_DIR', BASE_DIR / 'data' / 'derived' / 'paleocoastlines'))
 MANTLE_DERIVED_DIR = Path(os.environ.get(
     'MANTLE_DERIVED_DIR', BASE_DIR / 'data' / 'derived' / 'mantle' / 'muller2022-opt1'))
+CRUST_DERIVED_DIR = Path(os.environ.get(
+    'CRUST_DERIVED_DIR', PALEODEM_DERIVED_DIR.parent / 'crust'))
 INDIA_ASIA_DERIVED_DIR = Path(os.environ.get(
     'INDIA_ASIA_DERIVED_DIR', BASE_DIR / 'data' / 'derived' / 'india-asia'))
 

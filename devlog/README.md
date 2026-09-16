@@ -22,6 +22,7 @@ wwolf는 001부터 셉니다. 그 전의 001–045는 링크와 본문 속 번�
 
 ## 계획
 
+- [jikhanjung P07 — CRUST 2.0으로 현재 지구의 지각 두께 표시](20260916_jikhanjung_P07_crust2_visualization.md)
 - [jikhanjung P06 — v0.11–v0.12 맨틀 통합 리뷰 후속 수정](20260915_jikhanjung_P06_mantle_integration_review_fixes.md)
 - [jikhanjung P05 — 맨틀 근사 중첩부터 단면·시간 통합까지](20260915_jikhanjung_P05_globe_mantle_approximate_overlay.md)
 - [jikhanjung P04 — 메인 globe에 맨틀과 인도–아시아 단면 통합](20260915_jikhanjung_P04_globe_mantle_section_integration.md)
@@ -30,6 +31,8 @@ wwolf는 001부터 셉니다. 그 전의 001–045는 링크와 본문 속 번�
 - [jikhanjung P01 — 시간 범위 선택: 최근 2.5만 년](20260915_jikhanjung_P01_deglacial_time_window.md)
 
 ## 작업 기록
+
+- [jikhanjung 091 — CRUST 2.0 현재 지각 표시](20260916_jikhanjung_091_crust2_visualization.md)
 
 - [jikhanjung 089 — v0.15.1 맨틀 JS 모듈 분리 릴리스](20260916_jikhanjung_089_release_0151.md)
 - [jikhanjung 088 — 맨틀 JS 정리와 화면·렌더링 모듈 분리](20260916_jikhanjung_088_mantle_js_modules.md)
@@ -180,6 +183,9 @@ v0.15.1에서는 맨틀 중첩 제어와 렌더링을 분리하고 모듈 캐시
 운영 절차와 남은 점검 항목은 [운영 문서](../docs/operations.md)가 기준입니다.
 
 ## 남은 것
+
+CRUST 2.0 현재 지각 색상·두께 기준 구면층은 P07·091에서 구현했다(운영 배포 전).
+물·얼음과 기준 고도를 확정한 실제 모호면이나 과거 지각 변형 계산은 포함하지 않는다.
 
 - **지각 변형:** 현재의 판 회전 기반 근사 보간을 개선하고, 충돌·단축·지각 두께·융기를
   명시적으로 다루는 모델이 필요합니다. 히말라야 생성과 맨틀 대류 솔버는 아직 없습니다.

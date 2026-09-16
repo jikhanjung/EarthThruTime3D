@@ -80,6 +80,31 @@ def pack_experiments(staging, files):
                           'sha256': record['sha256'], 'dataset': relative})
 
 
+def pack_crust(staging, files):
+    """Only the small verified derivative ships, never the 84 MB source archive."""
+    source = BASE_DIR / 'data/derived/crust'
+    catalogue = source / 'catalogue.json'
+    document = json.loads(catalogue.read_text())
+    pinned = json.loads((BASE_DIR / 'sources/crust/crust2.json').read_text())
+    if (document['schema_version'] != 1 or document['source'] != pinned['id']
+            or document['source_sha256'] != pinned['sha256']
+            or (document['width'], document['height'], document['unit_km'], document['missing']) != (360, 180, .01, 65535)
+            or document['asset']['bytes'] != 129600):
+        raise ValueError('Invalid crust bundle')
+    asset = document['asset']
+    if asset['file'] != f"crust2-{asset['sha256'][:16]}.bin" or asset['gzip']['file'] != asset['file'] + '.gz':
+        raise ValueError('Invalid crust asset name')
+    records = [{'file': 'catalogue.json', 'bytes': catalogue.stat().st_size,
+                'sha256': digest(catalogue)}, asset, asset['gzip']]
+    for record in records:
+        path = verified_experiment_path(source, record)
+        target = staging / 'crust' / record['file']
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(path, target)
+        files.append({'path': 'crust/' + record['file'], 'bytes': record['bytes'],
+                      'sha256': record['sha256'], 'dataset': 'crust2-earthbyte'})
+
+
 def validate_river_texture(path):
     """Reject old grayscale fields before publishing a bundle for the RGB shader."""
     with path.open("rb") as handle:
@@ -256,6 +281,7 @@ def main():
                           "sha256": digest(target), "dataset": model})
 
     pack_experiments(staging, files)
+    pack_crust(staging, files)
     manifest = {"schema_version": 2, "version": version, "files": files,
                 "contains_source_maps": False,
                 "note": ("Derived land fields and piece reports produced by "

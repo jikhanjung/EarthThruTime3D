@@ -877,11 +877,22 @@ def globe(request):
         frames, plan, deepest = windowed, {"interval_ma": None, "steps": 1}, None
     plan["window"] = window
     from core.mantle import globe_overlay
+    from core.crust import globe_config as crust_config
     stops = timeline(frames, plan, deepest)
     overlay = (globe_overlay() if source in ("paleoatlas2016", "paleodem2018")
                and not window and all(any(abs(stop[3] - age) < 1e-8 for stop in stops) for age in (80, 60, 40, 20, 0)) else None)
     return render(request, "core/home.html",
                   {"frames": frames, "viewer_enabled": enabled(), "mantle_overlay": overlay,
+                   "crust": crust_config(),
+                   "crust_strings": {
+                       "caption": _("CRUST 2.0 · 현재 지각 · 구면 기준 두께 ×{scale}"),
+                       "ready": _("CRUST 2.0 · 현재 지구 · 원모델 2° · 위치를 클릭하면 두께를 표시합니다."),
+                       "loading": _("지각 두께를 불러오는 중…"),
+                       "unavailable": _("현재 지구 자료 — 이 연대에는 제공되지 않음"),
+                       "error": _("지각 자료를 불러오지 못했습니다. 다시 시도해 주세요."),
+                       "missing": _("이 위치에는 지각 두께 값이 없습니다."),
+                       "value": _("경도 {lon}° · 위도 {lat}° · 약 {km} km (표시용 격자)"),
+                   },
                    "stops": stops, "sampling": plan,
                    "window": window, "window_options": WINDOW_OPTIONS if windowed else None,
                    "sampling_choice": sampling_choice(plan)[0],
