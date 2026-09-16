@@ -821,6 +821,14 @@ Neither flag grants data-use rights. See `sources/README.md`, `LICENSE-DATA.md` 
   go to gitignored `data/screenshots/`.
 - `VIEWER_URL=http://127.0.0.1:8153/ node tests/river-browser.mjs`: river PNG, shader,
   toggle, grid-spacing explanation, mobile layout and both languages (requires a built 0 Ma river field).
+- `VIEWER_URL=http://127.0.0.1:8153/ node tests/firefox-browser.mjs`: the globe in desktop
+  Firefox through WebDriver BiDi, no Playwright browser needed: the globe reaches a frame
+  with rivers on, the sea at −60 m brackets the ice-river slices when they are built, the
+  deglacial window at 20 ka shows `data-river-ice` 20.0 and `data-ice-age` 20, and no
+  console error or failed request. `FIREFOX_BIN` names the binary (default the macOS
+  app; on Linux the `firefox` on the path); it runs headless with a throwaway profile where WebGL2 is available,
+  and only its own process is killed afterwards. See the Linux fallback below. Screenshots go to
+  gitignored `test-results/`.
 - `.venv/bin/python tests/rivers_check.py` with `requirements-processing.txt`
   installed: the river routing (see Rivers), the ice surface included.
 - `.venv/bin/python tests/segmentation_check.py` with `requirements-processing.txt`
@@ -832,3 +840,9 @@ Neither flag grants data-use rights. See `sources/README.md`, `LICENSE-DATA.md` 
   Run each with `.venv/bin/python` and `requirements-processing.txt` installed; these
   are separate from the Django suite. A passing web test alone does not validate the
   scientific accuracy of the source reconstructions or interpolated surfaces.
+
+Firefox defaults to the macOS application on macOS and `firefox` on PATH elsewhere;
+`FIREFOX_BIN` overrides it. If Linux headless WebGL2 is unavailable, use a display
+(or `xvfb-run -a`) with `FIREFOX_HEADLESS=0`; software rendering can use
+`LIBGL_ALWAYS_SOFTWARE=1`. Startup is bounded to 30 seconds, BiDi commands to 10 seconds.
+Failures print collected browser errors and clean up the process/profile started by the test.
