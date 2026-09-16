@@ -31,6 +31,8 @@ wwolf는 001부터 셉니다. 그 전의 001–045는 링크와 본문 속 번�
 
 ## 작업 기록
 
+- [jikhanjung 080 — 맨틀 중첩 기본값: 절개 끄기·불투명도 70%](20260916_jikhanjung_080_mantle_overlay_defaults.md)
+
 - [jikhanjung 079 — v0.14.0 PaleoMIST 빙하 하천 릴리스](20260916_jikhanjung_079_release_0140.md)
 
 - [jikhanjung 078 — OPT1 출력 시간 간격과 재계산 가능성 조사](20260916_jikhanjung_078_mantle_output_resolution_research.md)
