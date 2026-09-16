@@ -5,13 +5,14 @@ host. Configuration and procedure live in `deploy/README.md` and `deploy/deploy.
 Builds happen on the development host; the server only loads the image and swaps.
 The shared guides are referenced privately through `.guides`; they are not copied.
 
-Current release: **v0.15.1**, deployed 2026-09-16. Mantle overlay controls and Three.js
-scene resources are separated; versioned module imports prevent cached older APIs from
-mixing with the new entry point. The runtime bundle's 1,077 files (445,529,387 bytes)
-are identical to v0.15.0. Mantle defaults remain cutaway off and surface opacity at 70%.
-Image/data hashes, the verified DB snapshot and public Firefox checks, including an
-update in a browser context that had loaded v0.15.0, are recorded in
-[devlog 089](../devlog/20260916_jikhanjung_089_release_0151.md).
+Current release: **v0.16.0**, deployed 2026-09-16. CRUST 2.0 provides a present-day
+thickness colour map and an explanatory cutaway shell, available only at 0 Ma.
+The shell does not establish physical Moho depth or reconstruct past crust.
+The runtime bundle contains 1,080 files (445,725,507 bytes): the previous 1,077
+files are unchanged and three crust files are added. Mantle defaults remain
+cutaway off and surface opacity at 70%. Image/data hashes, the verified DB
+snapshot and public browser checks are recorded in
+[devlog 092](../devlog/20260916_jikhanjung_092_release_0160.md).
 Browser transfer measurements and the ice-river data generation are recorded in
 [devlog 079](../devlog/20260916_jikhanjung_079_release_0140.md).
 
