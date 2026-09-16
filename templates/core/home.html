@@ -26,11 +26,11 @@
         <label for="mantle-age">{% trans "맨틀 원본 시점" %}</label>
         <select id="mantle-age"><option value="80">80 Ma</option><option value="60">60 Ma</option><option value="40">40 Ma</option><option value="20">20 Ma</option><option value="0">0 Ma</option></select>
         <p class="model-note">{% trans "시간 조절기는 다섯 원본 시점으로 맞춥니다. 메시 사이를 보간하지 않습니다." %}</p>
-        <label><input type="checkbox" id="mantle-cutaway" checked autocomplete="off"> {% trans "인도–아시아 지표 절개" %}</label>
+        <label><input type="checkbox" id="mantle-cutaway" autocomplete="off"> {% trans "인도–아시아 지표 절개" %}</label>
         <label for="mantle-longitude">{% trans "절개 중심 경도" %} <output id="mantle-longitude-value">80°</output></label><input id="mantle-longitude" type="range" min="-180" max="180" step="1" value="80">
         <label for="mantle-latitude">{% trans "절개 중심 위도" %} <output id="mantle-latitude-value">10°</output></label><input id="mantle-latitude" type="range" min="-90" max="90" step="1" value="10">
         <label for="mantle-radius">{% trans "절개 각반경" %} <output id="mantle-radius-value">45°</output></label><input id="mantle-radius" type="range" min="10" max="90" step="1" value="45">
-        <label for="mantle-opacity">{% trans "지표 불투명도" %} <output id="mantle-opacity-value">100%</output></label><input id="mantle-opacity" type="range" min="0" max="100" step="5" value="100">
+        <label for="mantle-opacity">{% trans "지표 불투명도" %} <output id="mantle-opacity-value">70%</output></label><input id="mantle-opacity" type="range" min="0" max="100" step="5" value="70">
         <p class="model-note">{% trans "전 지구 맨틀과 핵 기준 구를 표시합니다. 절개 이동은 고정 A–A′ 단면을 바꾸지 않습니다." %}</p>
         <button id="mantle-focus" type="button">{% trans "절개 중심으로 이동" %}</button>
         <label><input type="checkbox" id="mantle-section" checked> {% trans "A–A′ 단면선 표시" %}</label>

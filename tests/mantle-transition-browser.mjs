@@ -18,7 +18,7 @@ try {
     await expect(globe).toHaveAttribute('data-mantle-age',String(age));
   };
   await page.locator('#mantle-overlay').check();await ready(80);console.log('Initial overlay ready');
-  await page.locator('#mantle-cutaway').focus();await page.keyboard.press('Space');
+  await page.locator('#mantle-cutaway').uncheck();
   await page.locator('#mantle-opacity').fill('35');
   for(const [button,from,to,index] of [['newer',80,60,'47'],['older',60,80,'46']]) {
     let releaseMesh,releaseSurface;
