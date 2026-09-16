@@ -6,11 +6,16 @@ Run it with `.venv/bin/python tests/rivers_check.py`.
 """
 import sys
 import unittest
+from tempfile import TemporaryDirectory
+from PIL import Image
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
 import numpy as np  # noqa: E402
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from deploy.pack_data import validate_river_texture
+from migrate_river_rgb import migrate_plain_fields
 
 from build_rivers import (CONE_RADIUS, CONE_SLOPE, LAKE_M, RIVER_KM2, cell_geometry, directions, fill_sinks,  # noqa: E402
                           ice_lakes, ice_surface, river_field, route, sea_at)
@@ -162,6 +167,36 @@ class RoutingTests(unittest.TestCase):
         self.assertGreater(depth[pit].max(), LAKE_M, 'the grid\'s own pit still pools in the slice')
         self.assertLess(added[pit].max(), 1e-6, 'but it is not a lake the ice made')
         self.assertGreater(added[40:44, 60:64].min(), 100.0, 'the new depression is')
+
+
+class RiverBundleTests(unittest.TestCase):
+    def test_migration_preserves_red_zeros_other_channels_and_skips_ice(self):
+        with TemporaryDirectory() as folder:
+            root = Path(folder)
+            image = Image.new('L', (2048,1024), 177)
+            plain = root/'paleodem-0000-rivers.png'
+            ice = root/'paleodem-0000-rivers-ice-20000.png'
+            image.save(plain); image.save(ice)
+            ice_bytes = ice.read_bytes()
+            self.assertEqual(migrate_plain_fields(root), 1)
+            with Image.open(plain) as result:
+                self.assertEqual(result.getchannel('R').tobytes(), image.tobytes())
+                self.assertEqual(result.getchannel('G').getextrema(), (0,0))
+                self.assertEqual(result.getchannel('B').getextrema(), (0,0))
+            self.assertEqual(ice.read_bytes(), ice_bytes)
+            self.assertEqual(migrate_plain_fields(root), 0)
+
+    def test_old_or_wrong_sized_fields_cannot_enter_rgb_bundle(self):
+        with TemporaryDirectory() as folder:
+            path = Path(folder)/'paleodem-0000-rivers.png'
+            for mode, size in [('L', (2048,1024)), ('RGBA', (2048,1024)), ('RGB', (1024,512))]:
+                Image.new(mode,size).save(path)
+                with self.assertRaisesRegex(ValueError, '8-bit RGB'):
+                    validate_river_texture(path)
+            Image.new('RGB',(2048,1024)).save(path)
+            validate_river_texture(path)
+            path.write_bytes(b'not a PNG')
+            with self.assertRaises(ValueError): validate_river_texture(path)
 
 
 if __name__ == "__main__":

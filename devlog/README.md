@@ -31,6 +31,10 @@ wwolf는 001부터 셉니다. 그 전의 001–045는 링크와 본문 속 번�
 
 ## 작업 기록
 
+- [jikhanjung 086 — v0.15.0 호수·자료 검증·Firefox 릴리스](20260916_jikhanjung_086_release_0150.md)
+
+- [jikhanjung 085 — 호수 RGB 전환의 캐시와 자료 형식 보완](20260916_jikhanjung_085_lake_rgb_release_checks.md)
+
 - [wwolf 010 — 호수 깊이를 두 번째 채널로: 넘치기 전에 고이는 물](20260915_wwolf_010_lake_depth.md)
 - [jikhanjung 084 — Firefox BiDi 검사 실패 처리와 Linux 실행](20260916_jikhanjung_084_firefox_bidi_review_fixes.md)
 

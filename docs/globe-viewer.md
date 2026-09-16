@@ -22,7 +22,7 @@ Hangul, which is how a missing translation shows up.
 ## Mask sources
 
 The globe offers three surface datasets in `core.globe.MASK_SOURCES`: two segmented
-land-mask series and one elevation series. This document describes v0.14.0 (2026-09-16).
+land-mask series and one elevation series. This document describes v0.15.0 (2026-09-16).
 
 - `paleoatlas2016`, the default: 90 maps from the PALEOMAP PaleoAtlas for GPlates
   (Scotese 2016), 750 Ma to present, segmented by `scripts/segment_paleoatlas.py`. They
@@ -560,7 +560,7 @@ drains between steps as the slider moves. The plain and lowstand fields carry a 
 green channel. Their pits are the grid's own closures, and painting them showed the
 every-basin-spills assumption as lakes the size of countries: not only Chad, Tarim
 and Eyre but the Congo cuvette, Sichuan and the Pannonian plain, whose gorge outlets
-the grid closes; subtracting the bare grid's pooling from the ice slices is what keeps
+the grid closes; comparing each pool with the bare grid is what keeps
 Tarim, the Congo or the Pannonian plain from appearing as a lake at −60 m and
 vanishing at 0 m. Every field is RGB
 because a one-channel PNG decodes grey in all three channels and its rivers would read
@@ -872,3 +872,12 @@ Firefox defaults to the macOS application on macOS and `firefox` on PATH elsewhe
 (or `xvfb-run -a`) with `FIREFOX_HEADLESS=0`; software rendering can use
 `LIBGL_ALWAYS_SOFTWARE=1`. Startup is bounded to 30 seconds, BiDi commands to 10 seconds.
 Failures print collected browser errors and clean up the process/profile started by the test.
+
+River/lake texture URLs include `?format=river-lake-rgb-v1` so browsers cannot reuse
+cached legacy grayscale PNGs with the RGB shader. The packer rejects non-RGB,
+non-8-bit or non-2048×1024 river PNG headers before publishing a release bundle.
+For existing plain/lowstand fields, run `.venv/bin/python scripts/migrate_river_rgb.py`:
+it preserves red exactly and adds zero green/blue channels, and is safe to repeat.
+Then regenerate the ice fields with `.venv/bin/python scripts/build_rivers.py --ice`.
+The 50% pool-footprint rule is a heuristic; displayed pools are calculated candidates,
+not observed lakes or validated historical reconstructions.

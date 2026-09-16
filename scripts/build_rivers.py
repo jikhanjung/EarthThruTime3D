@@ -24,9 +24,9 @@ few metres already show. The plain fields carry none of it: their pits are the g
 own closures, the gorge-closed Congo, Sichuan and Pannonian basins as much as Chad,
 Tarim and Eyre, and painting them would show the every-basin-spills assumption as lakes
 the size of countries. The ice slices carry only the pooling the ice and the crust's
-deformation add, the depth at each cell less what the bare grid pools at the same sea
-level, so Agassiz and the Baltic Ice Lake show and Tarim does not, at any slider
-position. Blue is 0. Every field is RGB so the shader can read the green of any of
+deformation create: pools with at least half their footprint already pooling on the
+bare grid are excluded. This overlap threshold is a display heuristic, not a validated
+lake reconstruction. Blue is 0. Every field is RGB so the shader can read the green of any of
 them; a one-channel PNG would decode grey and its rivers would read as lakes.
 
 A grid whose sea-level slider reaches below its datum (the ice sidecar's `range_m`, written
@@ -300,7 +300,7 @@ def ice_lakes(depth, z, level):
     land = z > level
     bare = np.where(land, fill_sinks(z, land) - z, 0.0) > 0.0
     pools, count = ndimage.label(depth > 0.0)
-    # ponytail: a pool is the grid's own when the bare grid pools over half of it or more;
+    # Heuristic: a pool is the grid's own when the bare grid pools over half of it or more;
     # a finer rule would compare each pool's spill level in the two surfaces.
     own = ndimage.mean(bare, pools, np.arange(1, count + 1)) >= 0.5 if count else np.zeros(0, bool)
     return np.where(np.concatenate([[False], own])[pools], 0.0, depth)
