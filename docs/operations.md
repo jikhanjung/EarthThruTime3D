@@ -5,13 +5,13 @@ host. Configuration and procedure live in `deploy/README.md` and `deploy/deploy.
 Builds happen on the development host; the server only loads the image and swaps.
 The shared guides are referenced privately through `.guides`; they are not copied.
 
-Current release: **v0.15.0**, deployed 2026-09-16. River fields now carry computed
-ice-lake depth in a separate RGB channel. All 150 river textures were converted or
-rebuilt; the runtime bundle contains 1,077 files (445,529,387 bytes). Firefox checks
-and pinned OPT1 source verification were also corrected. Mantle defaults remain
-cutaway off and surface opacity at 70%. Image/data hashes, the verified DB snapshot
-and public Firefox checks are recorded in
-[devlog 086](../devlog/20260916_jikhanjung_086_release_0150.md).
+Current release: **v0.15.1**, deployed 2026-09-16. Mantle overlay controls and Three.js
+scene resources are separated; versioned module imports prevent cached older APIs from
+mixing with the new entry point. The runtime bundle's 1,077 files (445,529,387 bytes)
+are identical to v0.15.0. Mantle defaults remain cutaway off and surface opacity at 70%.
+Image/data hashes, the verified DB snapshot and public Firefox checks, including an
+update in a browser context that had loaded v0.15.0, are recorded in
+[devlog 089](../devlog/20260916_jikhanjung_089_release_0151.md).
 Browser transfer measurements and the ice-river data generation are recorded in
 [devlog 079](../devlog/20260916_jikhanjung_079_release_0140.md).
 
