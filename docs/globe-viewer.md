@@ -840,3 +840,9 @@ Neither flag grants data-use rights. See `sources/README.md`, `LICENSE-DATA.md` 
   Run each with `.venv/bin/python` and `requirements-processing.txt` installed; these
   are separate from the Django suite. A passing web test alone does not validate the
   scientific accuracy of the source reconstructions or interpolated surfaces.
+
+Firefox defaults to the macOS application on macOS and `firefox` on PATH elsewhere;
+`FIREFOX_BIN` overrides it. If Linux headless WebGL2 is unavailable, use a display
+(or `xvfb-run -a`) with `FIREFOX_HEADLESS=0`; software rendering can use
+`LIBGL_ALWAYS_SOFTWARE=1`. Startup is bounded to 30 seconds, BiDi commands to 10 seconds.
+Failures print collected browser errors and clean up the process/profile started by the test.

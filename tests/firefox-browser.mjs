@@ -1,6 +1,6 @@
 // The globe in desktop Firefox, driven through WebDriver BiDi rather than Playwright (whose
 // bundled Firefox is not always installable). The binary named by FIREFOX_BIN (default the
-// macOS app) runs headless with a throwaway profile, so no X display is needed. Checks: the
+// macOS app on macOS, otherwise firefox on PATH) runs headless with a throwaway profile, so no X display is needed. Checks: the
 // globe reaches a frame with rivers on, the sea at -60 m brackets the ice-river slices when
 // they are built, the deglacial window at 20 ka shows that slice and ice age, and no console
 // error or failed request occurred. Screenshots go to gitignored test-results/.
@@ -11,46 +11,32 @@ import {mkdirSync, mkdtempSync, rmSync, writeFileSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 
+import {bidiClient} from './firefox-bidi.mjs';
+
 const base = process.env.VIEWER_URL || 'http://127.0.0.1:8153/';
-const binary = process.env.FIREFOX_BIN || '/Applications/Firefox.app/Contents/MacOS/firefox';
+const binary = process.env.FIREFOX_BIN || (process.platform === 'darwin'
+  ? '/Applications/Firefox.app/Contents/MacOS/firefox' : 'firefox');
 const port = Number(process.env.FIREFOX_PORT || 9333);
 const profile = mkdtempSync(join(tmpdir(), 'firefox-browser-'));
-const firefox = spawn(binary, ['--headless', '--no-remote', '--profile', profile,
-  '--remote-debugging-port', String(port), '--remote-allow-origins', `ws://127.0.0.1:${port}`,
-  '--window-size=1280,900', 'about:blank'], {stdio: ['ignore', 'pipe', 'pipe']});
-let said = '';
-firefox.stdout.on('data', chunk => {said += chunk;});
-firefox.stderr.on('data', chunk => {said += chunk;});
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
-
-let socket = null;
-for (let attempt = 0; attempt < 60 && !socket; attempt++) {
-  await sleep(500);
-  socket = await new Promise(resolve => {
+let firefox, client, said = '', launchError = null, exited = false;
+let send, events = [];
+async function connect() {
+  return new Promise(resolve => {
     const candidate = new WebSocket(`ws://127.0.0.1:${port}/session`);
-    candidate.onopen = () => resolve(candidate);
-    candidate.onerror = () => resolve(null);
+    let finished = false;
+    const finish = value => {
+      if (finished) return;
+      finished = true; clearTimeout(timer);
+      if (!value) candidate.close();
+      resolve(value);
+    };
+    const timer = setTimeout(() => finish(null), 1000);
+    candidate.onopen = () => finish(candidate);
+    candidate.onerror = () => finish(null);
+    candidate.onclose = () => finish(null);
   });
 }
-if (!socket) {
-  firefox.kill();
-  rmSync(profile, {recursive: true, force: true});
-  throw new Error(`Firefox did not open port ${port}: ${said.slice(0, 500)}`);
-}
-
-let counter = 0;
-const pending = new Map();
-const events = [];
-socket.onmessage = message => {
-  const data = JSON.parse(message.data);
-  if (data.id && pending.has(data.id)) {pending.get(data.id)(data); pending.delete(data.id);}
-  else if (data.method) events.push(data);
-};
-const send = (method, params = {}) => new Promise(resolve => {
-  const id = ++counter;
-  pending.set(id, resolve);
-  socket.send(JSON.stringify({id, method, params}));
-});
 const evaluate = async (context, expression) => {
   const reply = await send('script.evaluate', {expression, target: {context}, awaitPromise: true, resultOwnership: 'none'});
   if (reply.result?.type === 'exception') throw new Error(reply.result.exceptionDetails?.text || 'page script failed');
@@ -74,6 +60,25 @@ const screenshot = async (context, name) => {
 };
 
 try {
+  firefox = spawn(binary, [...(process.env.FIREFOX_HEADLESS === '0' ? [] : ['--headless']),
+    '--no-remote', '--profile', profile, '--remote-debugging-port', String(port),
+    '--remote-allow-origins', `ws://127.0.0.1:${port}`, '--window-size=1280,900', 'about:blank'],
+    {stdio: ['ignore', 'pipe', 'pipe']});
+  firefox.on('error', error => {launchError = error;});
+  firefox.on('exit', () => {exited = true;});
+  firefox.stdout.on('data', chunk => {said += chunk;});
+  firefox.stderr.on('data', chunk => {said += chunk;});
+  let socket = null;
+  const deadline = Date.now() + 30000;
+  while (!socket && Date.now() < deadline) {
+    await sleep(250);
+    if (launchError) throw new Error(`Cannot start Firefox (${binary}): ${launchError.message}. Set FIREFOX_BIN.`);
+    if (exited) throw new Error(`Firefox exited before BiDi connected: ${said.slice(-1000)}`);
+    socket = await connect();
+  }
+  if (!socket) throw new Error(`Firefox did not open port ${port}: ${said.slice(-1000)}`);
+  client = bidiClient(socket);
+  ({send, events} = client);
   const session = await send('session.new', {capabilities: {}});
   console.log('Firefox', session.result.capabilities.browserVersion);
   await send('session.subscribe', {events: ['log.entryAdded', 'network.responseCompleted', 'network.fetchError']});
@@ -111,8 +116,21 @@ try {
   assert.deepEqual(failed, [], 'failed requests');
   console.log(`-60 m: river-low ${lowered.riverLow}, river-ice ${lowered.riverIce || '(no slices)'}; 20 ka: river-ice ${glacial.riverIce || '(no slices)'}, ice-age ${glacial.iceAge}`);
   console.log(`Firefox: globe, rivers, -60 m${slices ? ' ice bracket' : ' lowstand'}, deglacial 20 ka, console and network passed`);
+} catch (error) {
+  for (const event of events.filter(e => e.method === 'log.entryAdded' && e.params.level === 'error'
+      || e.method === 'network.fetchError')) console.error(JSON.stringify(event));
+  console.error(error.message);
+  process.exitCode = 1;
 } finally {
-  socket.close();
-  firefox.kill();  // this process only, never other Firefox windows
-  rmSync(profile, {recursive: true, force: true});
+  client?.close();
+  if (firefox && !launchError && !exited) {
+    firefox.kill(); // only the process we started
+    const deadline = Date.now() + 2000;
+    while (!exited && Date.now() < deadline) await sleep(50);
+    if (!exited) {
+      const closed = new Promise(resolve => firefox.once('exit', resolve));
+      firefox.kill('SIGKILL'); await closed;
+    }
+  }
+  rmSync(profile, {recursive: true, force: true, maxRetries: 3});
 }

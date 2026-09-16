@@ -31,6 +31,8 @@ wwolf는 001부터 셉니다. 그 전의 001–045는 링크와 본문 속 번�
 
 ## 작업 기록
 
+- [jikhanjung 084 — Firefox BiDi 검사 실패 처리와 Linux 실행](20260916_jikhanjung_084_firefox_bidi_review_fixes.md)
+
 - [wwolf 009 — Firefox 검사를 저장소에: WebDriver BiDi로 데스크톱 Firefox 구동](20260915_wwolf_009_firefox_check.md)
 - [jikhanjung 082 — Firefox·호수 PR과 Zenodo 검증 이슈 검토](20260916_jikhanjung_082_firefox_lakes_source_review.md)
 
