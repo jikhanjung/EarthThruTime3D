@@ -178,6 +178,21 @@ verified archive. A folder without that receipt must be checked against the arch
 rivers over it (docs/globe-viewer.md "Rivers"). The ice layer itself still draws NADI-1
 and DATED-1 (`ice.json`).
 
+## Today's rivers and lakes
+
+`present-water.json` pins two sources the present grid's river fields are routed with
+(docs/globe-viewer.md "Rivers", "Today's rivers and lakes"): Natural Earth's 10 m
+rivers and lake centrelines (version 5.0.0, public domain; 1,473 features with a size
+rank; the regional supplements are not used, so every continent is drawn to one
+standard) and HydroLAKES v1.0 (Messager et al. 2016, CC BY 4.0; 1,427,688 lake polygons
+of 10 ha and more with their mean depth, the Caspian included). `fetch_paleodem.py
+--manifest sources/present-water.json` fetches both; HydroLAKES's 820 MB archive is
+extracted (the shapefile and its documentation) and deleted, with the same receipt as
+PaleoMIST's. `scripts/present_water.py` rasterises them onto the present grid's
+texture. HydroRIVERS was considered and dropped: it is distributed under WWF's
+HydroSHEDS licence agreement, which requires an end-user licence for derivative works,
+not under CC BY as HydroLAKES is.
+
 ## Attribution and use
 
 The site's [license information](http://www.scotese.com/license.htm) permits credited

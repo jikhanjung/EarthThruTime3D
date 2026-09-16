@@ -1,0 +1,31 @@
+{
+  "title": "Today's rivers and lakes: Natural Earth 10 m river centrelines and HydroLAKES, the present grid's own drainage and its lakes with their mean depths",
+  "retrieved": "2026-09-16",
+  "note": "Two archives. Natural Earth 10 m rivers and lake centrelines (version 5.0.0): 1,473 features in WGS84 longitude/latitude with a size rank (scalerank, 1 the largest rivers to 12) and a class (River, River (Intermittent), Lake Centerline, Canal); the regional supplements are not used, so every continent is drawn to the same standard. HydroLAKES v1.0: 1,427,688 lake polygons of 10 ha and more with the mean depth (Depth_avg, m, volume over area) and the surface elevation; the Caspian included. scripts/present_water.py rasterises the rivers (canals left out) as lines carrying their size, the cells where a river dead-ends, and the lakes of 100 km2 or more onto the present grid's texture, cached as paleodem-0000-present-water.npz; scripts/build_rivers.py cuts the present grid's routing surface along the rivers, deeper the larger, takes a dead end where the grid pools as a sink, and paints the lakes. Only the shapefile members of HydroLAKES are extracted and its 820 MB archive is deleted afterwards; its technical documentation PDF is in the archive. HydroRIVERS was tried and dropped: its licence is the WWF HydroSHEDS agreement, not CC BY.",
+  "assets": [
+    {
+      "role": "rivers",
+      "path": "data/sources/rivers/ne_10m_rivers_lake_centerlines.zip",
+      "url": "https://naciscdn.org/naturalearth/10m/physical/ne_10m_rivers_lake_centerlines.zip",
+      "bytes": 2079507,
+      "sha256": "ded71b01870855ccfe19b51f2ec14c9bb48fae23c0e9f3c11974d426433b5c38",
+      "unzip": "ne_rivers",
+      "layer": "ne_10m_rivers_lake_centerlines",
+      "license": "Public domain (Natural Earth terms of use)",
+      "cite": "Natural Earth, 10 m rivers and lake centerlines, version 5.0.0, naturalearthdata.com"
+    },
+    {
+      "role": "lakes",
+      "path": "data/sources/lakes/HydroLAKES_polys_v10_shp.zip",
+      "url": "https://data.hydrosheds.org/file/hydrolakes/HydroLAKES_polys_v10_shp.zip",
+      "bytes": 820295132,
+      "sha256": "9ef63498569dd7ccd0b8d8852da026e009a75f42d293f00e483f3b9fcfe8e1f9",
+      "unzip": "hydrolakes",
+      "layer": "HydroLAKES_polys_v10_shp/HydroLAKES_polys_v10",
+      "members": ["HydroLAKES_polys_v10_shp/HydroLAKES_polys_v10.shp", "HydroLAKES_polys_v10_shp/HydroLAKES_polys_v10.shx", "HydroLAKES_polys_v10_shp/HydroLAKES_polys_v10.dbf", "HydroLAKES_polys_v10_shp/HydroLAKES_polys_v10.prj", "HydroLAKES_TechDoc_v10.pdf"],
+      "discard": true,
+      "license": "Creative Commons Attribution 4.0 International (HydroLAKES Technical Documentation v1.0, section 4.1, in the archive: 'The HydroLAKES database (version 1.a) is licensed under a Creative Commons Attribution 4.0 International License')",
+      "cite": "Messager, M. L., Lehner, B., Grill, G., Nedeva, I. & Schmitt, O. (2016). Estimating the volume and age of water stored in global lakes using a geo-statistical approach. Nature Communications 7, 13603. https://doi.org/10.1038/ncomms13603. Data: https://www.hydrosheds.org"
+    }
+  ]
+}

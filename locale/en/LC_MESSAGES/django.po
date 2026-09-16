@@ -1184,6 +1184,12 @@ msgstr "Rivers"
 msgid "위의 PaleoDEM 격자 위로 물을 흘려 이 프로젝트가 계산한 잠재 배수망입니다. 발표된 복원이 아닙니다."
 msgstr "Potential drainage computed by this project by routing water over the PaleoDEM grids above; not a published reconstruction."
 
+msgid "현재 격자는 오늘의 강줄기와 호수를 따릅니다"
+msgstr "The present grid follows today's rivers and lakes"
+
+msgid "하천·호수 중심선"
+msgstr "rivers and lake centerlines"
+
 msgid "하천 표시 중입니다. 이 선은 관측이나 발표된 복원이 아니라, 각 시점의 PaleoDEM 격자 위로 물을 흘려 이 프로젝트가 계산한 잠재 배수망입니다. 격자를 2048×1024로 다시 표본화한 뒤 웅덩이를 넘치는 높이까지 메우고, 각 칸의 물을 여덟 이웃 중 가장 가파른 쪽으로 보내 상류 면적을 더했습니다. 상류 면적이 1만 km²를 넘는 칸을 선으로 그리며, 면적이 클수록 굵습니다. 비는 고르게 내리고 증발은 없다고 두었으므로 유량이 아니라 유역 면적이고, 격자가 매끈해 한 칸보다 좁은 협곡은 막혀 있어 콩고·쓰촨 분지처럼 협곡으로 빠져나가는 분지도 차드·타림처럼 실제로 막힌 분지도 모두 넘쳐 흐릅니다. 시점 사이는 두 시점의 선을 섞은 것입니다. 해수면 슬라이더를 내리면 그 시점의 가장 낮은 해수면에서 다시 흘린 장을 섞어 넣어, 드러난 대륙붕 위로도 강이 이어집니다."
 msgstr "Rivers are shown. These lines are neither observations nor a published reconstruction: they are potential drainage this project computed by routing water over each stop's PaleoDEM grid. The grid is resampled to 2048 × 1024, every pit is filled to the level at which it spills, and each cell sends its water to the steepest of its eight neighbours, summing the area upstream. Cells draining more than 10,000 km² are drawn, thicker the larger the area. Rain is taken as even and evaporation as nil, so this is drained area, not discharge; and the grids are smooth, so gorges narrower than a cell are closed and basins that drain through one (the Congo, Sichuan) spill over just as basins closed for real (Chad, Tarim) do. Between stops the two networks are mixed. Lowering the sea-level slider mixes in a field routed again with the sea at the stop's lowest level, so the rivers run on across the exposed shelf."
 
@@ -1198,6 +1204,9 @@ msgstr "The river overlay is potential drainage this project computed by routing
 
 msgid "빙기 하천 장에서는 얼음과 지각 침강을 반영한 계산 웅덩이를 호수로 표시합니다(계산 깊이 약 2.5 m부터). 같은 위치의 절반 이상이 얼음 없는 격자에서도 웅덩이이면 제외하는 근사 규칙이며, 실제 호수의 관측이나 검증된 복원은 아닙니다."
 msgstr "The glacial river fields show computed pools with ice and crustal depression included (from about 2.5 m of computed depth). An approximate rule excludes a pool if at least half its footprint also pools in the bare grid. These are not observations or validated lake reconstructions."
+
+msgid "현재 격자에서는 오늘의 강줄기(Natural Earth)를 따라 물을 흘려 협곡이 한 칸보다 좁아 격자가 막아 놓은 곳(철문 협곡의 도나우강)도 제대로 빠져나가고, 오늘의 호수(HydroLAKES)를 평균 깊이로 칠합니다. 카스피해는 해수면 슬라이더와 무관하게 호수로 남습니다. 다른 시점의 격자는 자료가 없어 위의 가정대로 모든 분지가 넘쳐 흐릅니다."
+msgstr "On the present grid the water is routed along today's rivers (Natural Earth), so it leaves basins the grid closes because their gorge is narrower than a cell (the Danube at the Iron Gates), and today's lakes (HydroLAKES) are painted at their mean depth; the Caspian stays a lake whatever the sea-level slider says. The other grids have no such data, so every basin spills over as described above."
 
 msgid "원자료의 격자 간격과 복원 정확도는 다릅니다. 2048×1024 계산 격자는 적도에서 약 20 km 간격이며, 개별 계곡·협곡이나 실제 고대 하천 경로를 검증하지 않습니다."
 msgstr "Grid spacing is not reconstruction accuracy. The 2048×1024 calculation grid spans about 20 km per cell at the equator; it does not validate individual valleys, gorges, or actual ancient river courses."
