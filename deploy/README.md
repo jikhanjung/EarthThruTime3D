@@ -1,12 +1,12 @@
 # EarthThruTime3D Docker 배포
 
-이미지: **`honestjung/earththrutime3d:v0.15.0`**, 플랫폼 `linux/amd64`.
+이미지: **`honestjung/earththrutime3d:v0.15.1`**, 플랫폼 `linux/amd64`.
 `../hanyang3d/deploy`의 Gunicorn·버전 이미지·Compose·상태 확인 구성을 참고했고,
 데이터베이스가 있는 서비스이므로 백업과 복구 단계를 더했다.
 
-2026-09-16 v0.15.0 운영 배포 완료. 이미지 ID:
-`sha256:bfbeddf5264f18887f01d19261b39f1988aef2be0a6b8414236ff95800c41571`.
-배포·백업·공개 화면 검증 결과는 [릴리스 기록](../devlog/20260916_jikhanjung_086_release_0150.md)에 있다.
+2026-09-16 v0.15.1 운영 배포 완료. 이미지 ID:
+`sha256:6297c5b30ac6092889163fc11ea73e4ea89b58713691ce65386ee06ef1dc25c6`.
+배포·백업·공개 화면 검증 결과는 [릴리스 기록](../devlog/20260916_jikhanjung_089_release_0151.md)에 있다.
 
 ## 운영 주소
 
@@ -54,7 +54,7 @@ CC BY 자료의 파생물과 원본 조건이 확정되지 않은 마스크를 �
   - 판 모델별 회전·대륙 JSON, 있는 모델에 한해 추가 해안선 JSON.
   - OPT1 맨틀 51시점과 인도–아시아 5시점 단면·3D 지표, 각 카탈로그 및 gzip 표현.
     실험 데이터는 누락·해시 불일치·시점 누락 시 패킹을 거부한다.
-  경로·크기·SHA-256을 `manifest.json`에 기록한다. v0.15.0 릴리스에는 고도 시리즈와
+  경로·크기·SHA-256을 `manifest.json`에 기록한다. v0.15.1 릴리스에는 고도 시리즈와
   빙하 마스크 57장, 저수위 조각 25장, 12비트 0 Ma 고도 텍스처가 포함됐다. 정확한 파일 목록은 릴리스 묶음의 매니페스트를 따른다.
 - 컨테이너: Gunicorn, UID/GID `10001`, 읽기 전용 루트, 쓰기 가능한 곳은 DB 볼륨과 `/tmp`뿐.
 - 시작 순서: 설정 검사 → `migrate` → 묶음 해시 검증 → Gunicorn. 버전이 어긋난 묶음으로는 뜨지 않는다.
@@ -67,8 +67,8 @@ CC BY 자료의 파생물과 원본 조건이 확정되지 않은 마스크를 �
 
 | 동작 | 명령 |
 |---|---|
-| preflight·build | `bash deploy/build.sh v0.15.0` (개발 호스트) |
-| deploy | `bash /srv/earththrutime3d/deploy.sh v0.15.0` |
+| preflight·build | `bash deploy/build.sh v0.15.1` (개발 호스트) |
+| deploy | `bash /srv/earththrutime3d/deploy.sh v0.15.1` |
 | backup | `bash /srv/earththrutime3d/backup.sh` |
 | smoke | `bash /srv/earththrutime3d/smoke.sh` |
 | rollback | `bash /srv/earththrutime3d/deploy.sh <이전 버전>` |
@@ -86,10 +86,10 @@ Compose `.env`의 기존 설정은 유지하고 이미지·자료 버전만 갱�
 생성 파일(Git 제외):
 
 ```text
-dist/earththrutime3d-image-v0.15.0.tar.gz
-dist/earththrutime3d-data-v0.15.0.tar.gz
-dist/earththrutime3d-host-v0.15.0.tar.gz
-dist/SHA256SUMS-v0.15.0
+dist/earththrutime3d-image-v0.15.1.tar.gz
+dist/earththrutime3d-data-v0.15.1.tar.gz
+dist/earththrutime3d-host-v0.15.1.tar.gz
+dist/SHA256SUMS-v0.15.1
 ```
 
 ## dolfinid 최초 설치
@@ -102,25 +102,25 @@ Compose 5.5.1. 기존 서비스와 분리해 `/srv/earththrutime3d`, **`127.0.0.
 
 ```bash
 ssh dolfinid 'mkdir -p ~/earththrutime3d-release'
-scp dist/earththrutime3d-*-v0.15.0.tar.gz dist/SHA256SUMS-v0.15.0 dolfinid:~/earththrutime3d-release/
+scp dist/earththrutime3d-*-v0.15.1.tar.gz dist/SHA256SUMS-v0.15.1 dolfinid:~/earththrutime3d-release/
 ```
 
 서버에서:
 
 ```bash
 cd ~/earththrutime3d-release
-sha256sum -c SHA256SUMS-v0.15.0
-docker load -i earththrutime3d-image-v0.15.0.tar.gz
+sha256sum -c SHA256SUMS-v0.15.1
+docker load -i earththrutime3d-image-v0.15.1.tar.gz
 sudo install -d -o "$(id -un)" -g "$(id -gn)" /srv/earththrutime3d
-tar -xzf earththrutime3d-host-v0.15.0.tar.gz -C /srv/earththrutime3d
-mkdir -p /srv/earththrutime3d/data/v0.15.0 /srv/earththrutime3d/db \
+tar -xzf earththrutime3d-host-v0.15.1.tar.gz -C /srv/earththrutime3d
+mkdir -p /srv/earththrutime3d/data/v0.15.1 /srv/earththrutime3d/db \
          /srv/earththrutime3d/backups /srv/earththrutime3d/acme
-tar -xzf earththrutime3d-data-v0.15.0.tar.gz -C /srv/earththrutime3d/data/v0.15.0
+tar -xzf earththrutime3d-data-v0.15.1.tar.gz -C /srv/earththrutime3d/data/v0.15.1
 cd /srv/earththrutime3d
 cp .env.django.example .env.django && chmod 600 .env.django
 # SECRET_KEY를 충분히 긴 무작위 값으로 바꾼다. 값은 출력하지 않는다.
 sudo chown -R 10001:10001 db backups   # 컨테이너가 쓰는 유일한 경로
-bash deploy.sh v0.15.0
+bash deploy.sh v0.15.1
 ```
 
 Nginx는 ACME 검증을 위해 HTTP 전용 설정을 먼저 올리고, 인증서를 받은 뒤 전체 설정으로 바꾼다.
