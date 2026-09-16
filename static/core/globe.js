@@ -3,7 +3,8 @@ import { OrbitControls } from '../vendor/three/OrbitControls.js';
 import { placeEquirectangular, placeMollweide, reproject } from './projection.js';
 import { RotationModel, turn } from './rotation.js';
 import { densifySegments } from './surface-lines.js';
-import { createMantleOverlay, CUT_UNIFORMS, CUT_SURFACE } from './mantle-overlay.js';
+import { createMantleOverlay } from './mantle-overlay.js';
+import { createMantleScene, CUT_UNIFORMS, CUT_SURFACE } from './mantle-scene.js';
 let mantleOverlay = null;
 
 const $ = (id) => document.getElementById(id);
@@ -1878,6 +1879,67 @@ function resetView() {
   controls.maxDistance = globe ? 5 : FLAT_DISTANCE * 2.2;
   controls.update();
 }
+// The overlay owns its controls; this bridge owns access to the shared globe.
+function mantleBridge(config) {
+  return {
+    getCamera: tiltedView,
+    setPlaybackEnabled: enabled => {
+      $('play').disabled = !enabled;
+    },
+    collapseInfoOnMobile: () => {
+      if (!matchMedia('(max-width:899px)').matches) return;
+      $('inspector').classList.add('closed');
+      $('info-toggle').setAttribute('aria-expanded', 'false');
+      $('info-toggle').focus();
+    },
+    snapTimeline: age => {
+      $('timeline').value = stops.findIndex(entry => Math.abs(entry[3] - age) < 1e-8);
+      $('era').value = selected;
+    },
+    focus: centre => {
+      earth.rotation.set(0, 0, 0);
+      camera.position.copy(centre).multiplyScalar(3.2);
+      controls.target.set(0, 0, 0);
+      controls.update();
+    },
+    capture: () => ({
+      stop, projection, rotation: earth.quaternion.clone(), camera: camera.position.clone(),
+      target: controls.target.clone(), spinning, meridian, tiltAngle, tiltHeading,
+    }),
+    enter: async (age, first, transition) => {
+      const target = stops.findIndex(entry => Math.abs(entry[3] - age) < 1e-8);
+      if (target < 0) throw new Error('80 Ma unavailable in this timeline');
+      setPlaying(false);
+      setProjection('globe', false);
+      $('projection').value = 'globe';
+      spinning = false;
+      controls.autoRotate = false;
+      $('rotate').setAttribute('aria-pressed', 'false');
+      if (first) {
+        earth.rotation.set(0, 0, 0);
+        camera.position.copy(onSphere(config.cutaway.longitude, config.cutaway.latitude, 3.2));
+        controls.target.set(0, 0, 0);
+        controls.update();
+      }
+      if (!await selectStop(target, true, true, transition)) throw new Error('Surface unavailable');
+    },
+    restore: previous => {
+      setProjection(previous.projection, false);
+      $('projection').value = previous.projection;
+      setMeridian(previous.meridian);
+      setTilt(previous.tiltAngle, previous.tiltHeading);
+      earth.quaternion.copy(previous.rotation);
+      camera.position.copy(previous.camera);
+      controls.target.copy(previous.target);
+      spinning = previous.spinning;
+      controls.autoRotate = spinning && projection === 'globe';
+      $('rotate').setAttribute('aria-pressed', String(spinning));
+      controls.update();
+      selectStop(previous.stop, true);
+    },
+  };
+}
+
 function init() {
   scene = new THREE.Scene();
   // The near plane has to sit well inside the closest zoom, or the surface is clipped.
@@ -1905,35 +1967,12 @@ function init() {
   scene.add(earth);
   resetView();
   const mantleConfig = JSON.parse($('globe-mantle-overlay')?.textContent ?? 'null');
-  mantleOverlay = createMantleOverlay({config: mantleConfig, earth, uniforms, stage, surfaceMaterial:surfaceMesh.material,
-    getCamera: tiltedView,
-    snapTimeline: age => {
-      $('timeline').value = stops.findIndex(entry => Math.abs(entry[3] - age) < 1e-8);
-      $('era').value = selected;
-    },
-    focus: centre => {earth.rotation.set(0,0,0);camera.position.copy(centre).multiplyScalar(3.2);controls.target.set(0,0,0);controls.update();},
-    capture: () => ({stop, projection, rotation:earth.quaternion.clone(), camera:camera.position.clone(),
-      target:controls.target.clone(), spinning, meridian, tiltAngle, tiltHeading}),
-    enter: async (age, first, transition) => {
-      const target = stops.findIndex(entry=>Math.abs(entry[3]-age)<1e-8);
-      if (target < 0) throw new Error('80 Ma unavailable in this timeline');
-      setPlaying(false);
-      setProjection('globe',false);$('projection').value='globe';
-      spinning=false;controls.autoRotate=false;$('rotate').setAttribute('aria-pressed','false');
-      if (first) {
-        earth.rotation.set(0,0,0);
-        camera.position.copy(onSphere(mantleConfig.cutaway.longitude,mantleConfig.cutaway.latitude,3.2));
-        controls.target.set(0,0,0);controls.update();
-      }
-      if (!await selectStop(target,true,true,transition)) throw new Error('Surface unavailable');
-    },
-    restore: previous => {
-      setProjection(previous.projection,false);$('projection').value=previous.projection;
-      setMeridian(previous.meridian);setTilt(previous.tiltAngle,previous.tiltHeading);
-      earth.quaternion.copy(previous.rotation);camera.position.copy(previous.camera);controls.target.copy(previous.target);
-      spinning=previous.spinning;controls.autoRotate=spinning&&projection==='globe';
-      $('rotate').setAttribute('aria-pressed',String(spinning));controls.update();selectStop(previous.stop,true);
-    }});
+  mantleOverlay = createMantleOverlay({
+    config: mantleConfig,
+    stage,
+    scene: createMantleScene({ earth, uniforms, surfaceMaterial: surfaceMesh.material }),
+    globe: mantleBridge(mantleConfig),
+  });
   const observer = new ResizeObserver(fitCamera);
   observer.observe(stage);
   // The control panel changes height with the layers on show, which moves the framing.

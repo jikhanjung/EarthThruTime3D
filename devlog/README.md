@@ -31,6 +31,9 @@ wwolf는 001부터 셉니다. 그 전의 001–045는 링크와 본문 속 번�
 
 ## 작업 기록
 
+- [jikhanjung 089 — v0.15.1 맨틀 JS 모듈 분리 릴리스](20260916_jikhanjung_089_release_0151.md)
+- [jikhanjung 088 — 맨틀 JS 정리와 화면·렌더링 모듈 분리](20260916_jikhanjung_088_mantle_js_modules.md)
+
 - [jikhanjung 087 — 배포 후 P06 재검토와 기록 점검](20260916_jikhanjung_087_p06_deployed_review.md)
 
 - [jikhanjung 086 — v0.15.0 호수·자료 검증·Firefox 릴리스](20260916_jikhanjung_086_release_0150.md)
