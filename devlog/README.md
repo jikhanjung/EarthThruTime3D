@@ -31,6 +31,8 @@ wwolf는 001부터 셉니다. 그 전의 001–045는 링크와 본문 속 번�
 
 ## 작업 기록
 
+- [jikhanjung 090 — 현재 수계 PR #56 검토와 병합 보류](20260916_jikhanjung_090_present_water_pr_review.md)
+
 - [jikhanjung 089 — v0.15.1 맨틀 JS 모듈 분리 릴리스](20260916_jikhanjung_089_release_0151.md)
 - [jikhanjung 088 — 맨틀 JS 정리와 화면·렌더링 모듈 분리](20260916_jikhanjung_088_mantle_js_modules.md)
 
