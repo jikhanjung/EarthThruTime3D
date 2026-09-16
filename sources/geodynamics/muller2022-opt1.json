@@ -11,7 +11,7 @@
   "license": {
     "id": "CC-BY-4.0",
     "url": "https://creativecommons.org/licenses/by/4.0/",
-    "evidence": "Pinned Zenodo API metadata.license.id = cc-by-4.0."
+    "evidence": "Zenodo record 6622194 API (https://zenodo.org/api/records/6622194), retrieved 2026-09-16: metadata.license.id = cc-by-4.0, metadata.version = 3.0. The mutable API response is evidence, not a pinned build input."
   },
   "assets": [
     {
@@ -21,13 +21,6 @@
       "bytes": 205811467,
       "sha256": "8e6d64a5910bc6fc1f335a135b4e53d0be5a51f8b38a772f82376cf905482f67",
       "publisher_checksum": "md5:5d232569cec8a5973e8ac8571cd69d0e"
-    },
-    {
-      "role": "metadata",
-      "url": "https://zenodo.org/api/records/6622194",
-      "path": "data/sources/geodynamics/muller2022-opt1/record.json",
-      "bytes": 12936,
-      "sha256": "f7e0a280c03007cc9f4eaeddf87ad7f36f267f8c11ab9f7d95debb2e06d230d9"
     }
   ],
   "reference_frame": "OPT1 optimised mantle; retain accompanying reconstruction geometry",
