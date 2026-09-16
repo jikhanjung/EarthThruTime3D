@@ -11,6 +11,7 @@ CC BY with a citation requirement, and ships whole.
 import hashlib
 import json
 import shutil
+import struct
 import sys
 import tarfile
 from pathlib import Path
@@ -77,6 +78,18 @@ def pack_experiments(staging, files):
             shutil.copy2(path, target)
             files.append({'path': f'{relative}/{name}', 'bytes': record['bytes'],
                           'sha256': record['sha256'], 'dataset': relative})
+
+
+def validate_river_texture(path):
+    """Reject old grayscale fields before publishing a bundle for the RGB shader."""
+    with path.open("rb") as handle:
+        header = handle.read(33)
+    if len(header) == 33 and header[:16] == b"\x89PNG\r\n\x1a\n\x00\x00\x00\x0dIHDR":
+        width, height, depth, colour, compression, filtering, interlace = struct.unpack(
+            ">IIBBBBB", header[16:29])
+        if (width, height, depth, colour, compression, filtering) == (2048, 1024, 8, 2, 0, 0) and interlace in (0, 1):
+            return
+    raise ValueError(f"River field must be 2048x1024 8-bit RGB: {path}. Rebuild or migrate old river fields.")
 
 
 def pack_elevation(dem, dem_source, staging, files):
@@ -147,6 +160,8 @@ def pack_elevation(dem, dem_source, staging, files):
         for rivers in [dem_source / f"{item['id']}-{suffix}" for suffix in ("rivers.png", "rivers-low.png", "rivers-ice.json")] \
                 + sorted(dem_source.glob(f"{item['id']}-rivers-ice-*.png")):
             if rivers.exists():
+                if rivers.suffix == '.png':
+                    validate_river_texture(rivers)
                 shutil.copy2(rivers, staging / "paleodem" / rivers.name)
                 files.append({"path": f"paleodem/{rivers.name}", "bytes": (staging / "paleodem" / rivers.name).stat().st_size,
                               "sha256": digest(staging / "paleodem" / rivers.name), "map_id": item["id"]})

@@ -12,12 +12,22 @@ basin closed by a gorge narrower than a cell (the Congo, Sichuan, the Pannonian 
 from one closed for real (Chad, Tarim, Eyre). Salles et al. (2023) routed the same grids
 the same way; their maps are the comparison, not a source, most being CC BY-NC-SA.
 
-The texture, `<id>-rivers.png`, is one channel: at each texel the largest, over the
-river cells within CONE_RADIUS, of that cell's size less CONE_SLOPE per texel of
-distance, where size is log10 of the drained area over CLASS_KM2 scaled 0..1. The page
-draws where the field passes a cut, so a line's width follows its river's size, its edge
-is crisp at any zoom, and a mix of two grids' fields is a plausible in-between, as the
-coastline's distance field is. A river cell drains at least RIVER_KM2.
+The texture, `<id>-rivers.png`, is RGB. Red is the river field: at each texel the
+largest, over the river cells within CONE_RADIUS, of that cell's size less CONE_SLOPE
+per texel of distance, where size is log10 of the drained area over CLASS_KM2 scaled
+0..1. The page draws where the field passes a cut, so a line's width follows its river's
+size, its edge is crisp at any zoom, and a mix of two grids' fields is a plausible
+in-between, as the coastline's distance field is. A river cell drains at least
+RIVER_KM2. Green is the lake: the depth of water pooled before it spills (the filled
+surface less the routing surface), on a square-root scale that saturates at LAKE_M, so a
+few metres already show. The plain fields carry none of it: their pits are the grid's
+own closures, the gorge-closed Congo, Sichuan and Pannonian basins as much as Chad,
+Tarim and Eyre, and painting them would show the every-basin-spills assumption as lakes
+the size of countries. The ice slices carry only the pooling the ice and the crust's
+deformation create: pools with at least half their footprint already pooling on the
+bare grid are excluded. This overlap threshold is a display heuristic, not a validated
+lake reconstruction. Blue is 0. Every field is RGB so the shader can read the green of any of
+them; a one-channel PNG would decode grey and its rivers would read as lakes.
 
 A grid whose sea-level slider reaches below its datum (the ice sidecar's `range_m`, written
 by scripts/build_ice.py) is routed a second time with the sea at that lowest level, land
@@ -67,6 +77,7 @@ RIVER_KM2 = 1e3           # the smallest drained area that makes a cell a river
 CLASS_KM2 = (1e3, 1e7)    # size: log10 of the drained area over this span, 0..1
 CONE_RADIUS = 4           # texels a river cell's cone reaches
 CONE_SLOPE = 0.35         # size the cone loses per texel; a size-1 river is 2 texels wide either side at the 0.25 cut
+LAKE_M = 250.0            # the pooled depth that saturates the green channel; square root below, so 2.5 m is 0.1
 OFFSETS = [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)]
 
 
@@ -157,8 +168,9 @@ def drained_area(surface, land, down, wave_of):
     return np.asarray(total).reshape(surface.shape)
 
 
-def river_field(drained, land):
-    """The texture: each river cell's size, spread as a cone over its neighbours."""
+def river_field(drained, land, depth):
+    """The texture: red each river cell's size spread as a cone over its neighbours, green
+    the depth of water pooled before it spills on a square-root scale to LAKE_M, blue 0."""
     low, high = np.log10(CLASS_KM2)
     size = np.clip((np.log10(np.maximum(drained, 1.0)) - low) / (high - low), 0.0, 1.0)
     size = np.where(land & (drained >= RIVER_KM2), size, 0.0)
@@ -170,7 +182,8 @@ def river_field(drained, land):
                 # Longitude wraps; north and south edges are not neighbours.
                 spread = shifted(size, dr, dc) - CONE_SLOPE * reach
                 np.maximum(field, spread, out=field, where=rows_ok(size.shape, dr))
-    return np.round(field * 255).astype(np.uint8)
+    lake = np.where(land, np.sqrt(np.clip(depth / LAKE_M, 0.0, 1.0)), 0.0)
+    return np.round(np.dstack([field, lake, np.zeros_like(field)]) * 255).astype(np.uint8)
 
 
 def lowest_levels(out):
@@ -258,8 +271,9 @@ def ice_slices(out, directory, catalogue, width, oldest):
         surface = ice_surface(z, base0, thickness0, thickness, deformation)
         ice, level = thickness > 0, levels[age]
         land = ~sea_at(surface, level, z)
-        drained = route(surface, land)
-        Image.fromarray(river_field(drained, land & ~ice), "L").save(out / f"{item['id']}-rivers-ice-{int(round(age * 1000))}.png")
+        drained, depth = route(surface, land)
+        Image.fromarray(river_field(drained, land & ~ice, ice_lakes(depth, z, level)), "RGB").save(
+            out / f"{item['id']}-rivers-ice-{int(round(age * 1000))}.png")
         slices.append({"age_ka": age, "level_m": level, "lowers": level < lowest})
         lowest = min(lowest, level)
         print(f"{item['id']}  {age:4g} ka  sea {level:+.0f} m  ice {ice.mean():.1%} of the map  largest basin "
@@ -275,11 +289,29 @@ def ice_slices(out, directory, catalogue, width, oldest):
         "source": "https://doi.org/10.1594/PANGAEA.905800", "slices": slices}, indent=1))
 
 
+def ice_lakes(depth, z, level):
+    """The lakes the ice makes: each pool of a slice kept whole, or dropped whole, by whether
+    the bare grid pools over the same ground at the same sea level. A basin the grid closes
+    on its own (Tarim, the Congo, the Pannonian plain) pools in both, so it is no lake here
+    any more than in the plain field, however the deformation tilts it; one the ice dams or
+    the crust's deformation opens (Agassiz, the Baltic Ice Lake) pools only here. Subtracting
+    depths instead leaves the tilt as a lake wherever the deformation varies across a closed
+    basin."""
+    land = z > level
+    bare = np.where(land, fill_sinks(z, land) - z, 0.0) > 0.0
+    pools, count = ndimage.label(depth > 0.0)
+    # Heuristic: a pool is the grid's own when the bare grid pools over half of it or more;
+    # a finer rule would compare each pool's spill level in the two surfaces.
+    own = ndimage.mean(bare, pools, np.arange(1, count + 1)) >= 0.5 if count else np.zeros(0, bool)
+    return np.where(np.concatenate([[False], own])[pools], 0.0, depth)
+
+
 def route(z, land):
-    """The area in km2 draining through each cell of a grid at the texture's resolution."""
+    """The area in km2 draining through each cell of a grid at the texture's resolution, and
+    the depth in metres of the water pooled in each cell before it spills (the fill)."""
     surface = fill_sinks(z, land)
     down, wave_of = directions(surface, land)
-    return drained_area(surface, land, down, wave_of)
+    return drained_area(surface, land, down, wave_of), surface - z
 
 
 def main():
@@ -314,8 +346,8 @@ def main():
             levels.append((lows[item["id"]], "rivers-low"))
         for level, suffix in levels:
             land = z > level
-            drained = route(z, land)
-            Image.fromarray(river_field(drained, land), "L").save(args.out / f"{item['id']}-{suffix}.png")
+            drained, _ = route(z, land)   # the grid's own pits are not lakes: a zero green channel
+            Image.fromarray(river_field(drained, land, np.zeros_like(z)), "RGB").save(args.out / f"{item['id']}-{suffix}.png")
             largest = drained[land].max() / 1e6 if land.any() else 0.0
             print(f"{item['id']}  {item['age_ma']} Ma  sea {level:+.0f} m  largest basin {largest:.2f} Mkm2  "
                   f"river cells {(land & (drained >= RIVER_KM2)).sum() / max(land.sum(), 1):.1%} of land  {time.time() - started:.0f}s")

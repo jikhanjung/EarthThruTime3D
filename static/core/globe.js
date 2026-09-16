@@ -1171,6 +1171,8 @@ function globeMaterial() {
       uniform vec2 riverLowT;
       // The river field's cut: drained area above 10,000 km2, a quarter of its 10^3..10^7 span.
       const float RIVER_CUT = 0.25;
+      // The lake channel's cut: pooled depth on a square-root scale to 250 m, so 0.1 is 2.5 m.
+      const float LAKE_CUT = 0.1;
       uniform float blend;
       uniform int mode;
       uniform float blank;
@@ -1301,12 +1303,17 @@ function globeMaterial() {
           // fields mix like the coastline's distance, and a missing side weighs nothing.
           // A raised sea covers them; a lowered one mixes in the field routed with the sea at
           // the slider's lowest level, so the rivers run on across the exposed shelf.
+          // Red is the river field, green the depth of water pooled in a pit before it spills:
+          // a lake, painted under the river line where the mixed depth passes its cut.
           if ((riverWeight.x + riverWeight.y) > 0.0) {
-            float flowA = mix(texture2D(riverA, uvA).r, texture2D(riverLow0, uvA).r, riverLowT.x) * riverWeight.x;
-            float flowB = mix(texture2D(riverB, uvB).r, texture2D(riverLow1, uvB).r, riverLowT.y) * riverWeight.y;
-            float flow = mix(flowA, flowB, blend);
-            float softFlow = fwidth(flow) + 0.02;
-            float river = smoothstep(RIVER_CUT - softFlow, RIVER_CUT + softFlow, flow) * landness;
+            vec2 fieldA = mix(texture2D(riverA, uvA).rg, texture2D(riverLow0, uvA).rg, riverLowT.x) * riverWeight.x;
+            vec2 fieldB = mix(texture2D(riverB, uvB).rg, texture2D(riverLow1, uvB).rg, riverLowT.y) * riverWeight.y;
+            vec2 field = mix(fieldA, fieldB, blend);
+            float softLake = fwidth(field.y) + 0.02;
+            float lake = smoothstep(LAKE_CUT - softLake, LAKE_CUT + softLake, field.y) * landness;
+            colour = mix(colour, decode(vec3(0.16, 0.42, 0.78)), 0.75 * lake);
+            float softFlow = fwidth(field.x) + 0.02;
+            float river = smoothstep(RIVER_CUT - softFlow, RIVER_CUT + softFlow, field.x) * landness;
             colour = mix(colour, decode(vec3(0.16, 0.42, 0.78)), 0.85 * river);
           }
         } else {

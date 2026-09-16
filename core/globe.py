@@ -239,6 +239,11 @@ def temperature_path(item):
     return derived_path(item, "temp.png")
 
 
+def river_url(view, args):
+    # RGB river/lake fields are incompatible with cached grayscale fields from v0.14.
+    return reverse(view, args=args) + "?format=river-lake-rgb-v1"
+
+
 def rivers_path(item):
     """Potential drainage routed over the grid by scripts/build_rivers.py, one field per grid."""
     return derived_path(item, "rivers.png")
@@ -257,7 +262,7 @@ def rivers_low_of(kinds, item):
     level = sheet["range_m"][0] if sheet and sheet.get("range_m") else 0
     if level >= 0 or not rivers_low_path(item).exists():
         return None
-    return {"url": reverse("globe-rivers-low", args=[item["id"]]), "level_m": level}
+    return {"url": river_url("globe-rivers-low", [item["id"]]), "level_m": level}
 
 
 def rivers_ice_path(item, years):
@@ -288,7 +293,7 @@ def rivers_ice_of(item):
             years = int(round(age * 1000))
             if rivers_ice_path(item, years).exists():
                 slices.append({"age_ka": age, "level_m": level,
-                               "url": reverse("globe-rivers-ice", args=[item["id"], years])})
+                               "url": river_url("globe-rivers-ice", [item["id"], years])})
         return slices or None
     except (OSError, ValueError, KeyError, TypeError, AttributeError):
         logging.getLogger(__name__).warning("Unavailable ice river sidecar: %s", path, exc_info=True)
@@ -844,7 +849,7 @@ def globe(request):
                                          for low in what_if_lows(kinds, item)
                                          if ice_low_path(item, low["age_ka"]).exists()] if iced else None),
                            # Potential drainage routed over the grid itself; only where built.
-                           "rivers": (reverse("globe-rivers", args=[item["id"]])
+                           "rivers": (river_url("globe-rivers", [item["id"]])
                                       if source == "paleodem2018" and rivers_path(item).exists() else None),
                            # The shelf's rivers at the slider's lowest level, mixed in as the sea drops.
                            "rivers_low": (rivers_low_of(kinds, item)

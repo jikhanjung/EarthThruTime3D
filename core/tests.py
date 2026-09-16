@@ -688,11 +688,11 @@ class PaleodemTests(TestCase):
         self.assertFalse(response.context['rivers_available'])
         self.assertNotContains(response, 'id="rivers"')
         present = globe_module.catalogue('paleodem2018')['maps'][-1]
-        self.assertEqual(self.client.get(f"/globe/rivers/{present['id']}.png").status_code, 404)
+        self.assertEqual(self.client.get(f"/globe/rivers/{present['id']}.png?format=river-lake-rgb-v1").status_code, 404)
         globe_module.rivers_path(present).write_bytes(b'png')
         response = self.client.get('/', {'masks': 'paleodem2018'})
         frames = {frame['id']: frame for frame in response.context['frames']}
-        self.assertEqual(frames[present['id']]['rivers'], f"/globe/rivers/{present['id']}.png")
+        self.assertEqual(frames[present['id']]['rivers'], f"/globe/rivers/{present['id']}.png?format=river-lake-rgb-v1")
         self.assertIsNone(frames['paleodem-0050']['rivers'])
         self.assertTrue(response.context['rivers_available'])
         self.assertContains(response, 'id="rivers"')
@@ -712,7 +712,7 @@ class PaleodemTests(TestCase):
         globe_module.ice_path(present).write_bytes(b'png')
         frames = {frame['id']: frame for frame in self.client.get('/', {'masks': 'paleodem2018'}).context['frames']}
         self.assertEqual(frames[present['id']]['rivers_low'],
-                         {'url': f"/globe/rivers-low/{present['id']}.png", 'level_m': -130})
+                         {'url': f"/globe/rivers-low/{present['id']}.png?format=river-lake-rgb-v1", 'level_m': -130})
         self.assertEqual(self.client.get(f"/globe/rivers-low/{present['id']}.png").status_code, 200)
         # The fields routed over the ice ride along from their sidecar: only the steps that
         # lower the sea below every younger step's, and only where the file exists.
@@ -725,8 +725,8 @@ class PaleodemTests(TestCase):
             globe_module.rivers_ice_path(present, years).write_bytes(b'png')
         frames = {frame['id']: frame for frame in self.client.get('/', {'masks': 'paleodem2018'}).context['frames']}
         self.assertEqual(frames[present['id']]['rivers_ice'],
-                         [{'age_ka': 12.5, 'level_m': -57.1, 'url': f"/globe/rivers-ice/{present['id']}/12500.png"},
-                          {'age_ka': 20, 'level_m': -117.0, 'url': f"/globe/rivers-ice/{present['id']}/20000.png"}])
+                         [{'age_ka': 12.5, 'level_m': -57.1, 'url': f"/globe/rivers-ice/{present['id']}/12500.png?format=river-lake-rgb-v1"},
+                          {'age_ka': 20, 'level_m': -117.0, 'url': f"/globe/rivers-ice/{present['id']}/20000.png?format=river-lake-rgb-v1"}])
         self.assertIsNone(frames['paleodem-0050']['rivers_ice'])
         self.assertEqual(self.client.get(f"/globe/rivers-ice/{present['id']}/12500.png").status_code, 200)
         self.assertEqual(self.client.get(f"/globe/rivers-ice/{present['id']}/15000.png").status_code, 404)
