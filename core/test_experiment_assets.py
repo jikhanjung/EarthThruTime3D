@@ -1,8 +1,12 @@
+import json
+import re
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from unittest.mock import patch
 
 from django.test import SimpleTestCase
+
+from config.version import VERSION
 
 
 
@@ -41,3 +45,10 @@ class OptionalDataTests(SimpleTestCase):
         self.assertIn('data-src="/collision/"', html)
         self.assertLess(html.index('type="importmap"'), html.index('type="module"'))
 
+
+    def test_mantle_module_contracts_share_the_release_cache_version(self):
+        html = self.client.get('/').content.decode()
+        imports = json.loads(re.search(r'<script type="importmap">(.*?)</script>', html).group(1))['imports']
+        for name in ('mantle-overlay', 'mantle-scene'):
+            path = f'/static/core/{name}.js'
+            self.assertEqual(imports[path], f'{path}?v={VERSION}')
