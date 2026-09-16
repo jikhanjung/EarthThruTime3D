@@ -441,7 +441,8 @@ south edge. Rebuild river textures made before this boundary fix before a releas
 
 
 `scripts/build_rivers.py` routes water over every grid of the elevation series and writes
-`<id>-rivers.png` beside the fields, 2048 × 1024, one channel. `/globe/rivers/<id>.png`
+`<id>-rivers.png` beside the fields, 2048 × 1024, RGB: red the river field, green the
+lakes (below), blue 0. `/globe/rivers/<id>.png`
 serves it and a frame carries `rivers` only where the file exists; the `#rivers` toggle
 hides the lines without unloading the fields, `#river-note` says what they are, and
 `data-rivers` on the stage says whether any are drawn.
@@ -515,9 +516,11 @@ thickness alone; and the grid plus thickness and deformation, which was kept, be
 the depression at the margins is what makes the proglacial lakes and the Champlain Sea.
 A depression the deformation opens inland without reaching the ocean (the Great Slave
 lowland at 12.5 ka, the southern North Sea between the joined British and Scandinavian
-sheets at 20 ka) is land, a lake that fills to its spill, while a basin the grid itself
-holds below the datum, the Caspian, stays sea as in every other field; that rule is
-what sends the Elbe and Weser west through the Dover Strait. Water is routed over the
+sheets at 20 ka) is land, a lake that fills to its spill, while a basin the grid itself holds below the
+datum stays sea as in every other field; that rule is what sends the Elbe and Weser
+west through the Dover Strait. The Caspian is not such a basin: the grid holds its
+surface at exactly 0 m, not its floor, so below the datum the page shows it as land
+and the routing crosses it, on every field alike. Water is routed over the
 ice as terrain, so a sheet's whole surface drains to its margin, but only cells off the
 ice are drawn. Checks: at 20 ka the Channel River drains 2.65 Mkm² through the Strait
 (the literature figure is about 2.5 Mkm², the Rhine, Thames, Meuse, Seine and the
@@ -541,11 +544,34 @@ level (20 ka shows the 20 ka field) and an older stop of the 130 ka window the s
 the same sea level, the analogue the ice layer already draws there. Grids without
 slices keep the 0 m and lowstand fields.
 
+**Lakes.** Filling the pits is the first step of the routing, and the fill is where
+water pools before it spills. The ice slices carry it in their green channel as the
+pooling the ice adds: the slice's pooled depth (filled surface less the routing
+surface, ice and deformation included) for each pool the bare grid does not hold at
+the same sea level (`ice_lakes`: a pool is dropped whole when the bare grid pools over
+half of its ground or more, since subtracting depths would leave the deformation's tilt
+across a closed basin as a lake), in metres on a square-root scale that saturates at
+250 m (`LAKE_M`), so that 2.5 m is already 0.1, a shallow pool shows and Agassiz
+saturates; only cells off the ice carry it. The shader paints a lake
+where the mixed green passes 0.1 (`LAKE_CUT`, 2.5 m), over land after the sea-level
+cut, under the river line and the ice, and the two fields' greens mix like their reds
+through the same lowstand and ice-slice weights, so a lake dammed by ice fills and
+drains between steps as the slider moves. The plain and lowstand fields carry a zero
+green channel. Their pits are the grid's own closures, and painting them showed the
+every-basin-spills assumption as lakes the size of countries: not only Chad, Tarim
+and Eyre but the Congo cuvette, Sichuan and the Pannonian plain, whose gorge outlets
+the grid closes; subtracting the bare grid's pooling from the ice slices is what keeps
+Tarim, the Congo or the Pannonian plain from appearing as a lake at −60 m and
+vanishing at 0 m. Every field is RGB
+because a one-channel PNG decodes grey in all three channels and its rivers would read
+as lakes, so fields built before this change must be rebuilt (or their green zeroed).
+
 `tests/rivers_check.py` covers the routing: every drop of an island with a pit reaches
 the sea, an island across the antimeridian drains as one, a lowered sea routes over the
 exposed shelf, the field is a cone the size of its river, a depression pressed open
-inland is a lake and not the sea, and the ice surface strips today's ice only where
-the grid holds it.
+inland is a lake and not the sea, the ice surface strips today's ice only where the
+grid holds it, and the lake channel is the pooled depth on its square-root scale, RGB,
+nothing under the ice or at sea.
 
 ## Mapping pipeline
 

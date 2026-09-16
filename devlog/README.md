@@ -31,6 +31,7 @@ wwolf는 001부터 셉니다. 그 전의 001–045는 링크와 본문 속 번�
 
 ## 작업 기록
 
+- [wwolf 010 — 호수 깊이를 두 번째 채널로: 넘치기 전에 고이는 물](20260915_wwolf_010_lake_depth.md)
 - [jikhanjung 079 — v0.14.0 PaleoMIST 빙하 하천 릴리스](20260916_jikhanjung_079_release_0140.md)
 
 - [jikhanjung 078 — OPT1 출력 시간 간격과 재계산 가능성 조사](20260916_jikhanjung_078_mantle_output_resolution_research.md)

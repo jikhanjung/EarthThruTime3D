@@ -1196,5 +1196,8 @@ msgstr "Glacial ice"
 msgid "하천 겹쳐 보기는 각 격자 위로 물을 흘려 이 프로젝트가 계산한 잠재 배수망입니다. 웅덩이를 넘치는 높이까지 메우고 각 칸의 물을 가장 가파른 이웃으로 보내 상류 면적을 더한 것으로, 비는 고르게 내리고 증발은 없다고 두었습니다. 발표된 복원이 아니며, 격자가 매끈해 한 칸보다 좁은 협곡은 막혀 있으므로 모든 분지가 넘쳐 흐릅니다."
 msgstr "The river overlay is potential drainage this project computed by routing water over each grid: pits filled to the level at which they spill, each cell's water sent to the steepest neighbour, the area upstream summed, rain taken as even and evaporation as nil. It is not a published reconstruction, and since the grids are smooth and close any gorge narrower than a cell, every basin spills over."
 
+msgid "빙하기의 얼음 위로 흘린 장에서는 얼음이 막거나 지각 침강이 새로 판 웅덩이에 고이는 물, 곧 얼음이 없을 때보다 더 고이는 만큼을 호수로 칠합니다(깊이 2.5 m부터). 격자 자체가 막아 놓은 분지(차드·타림, 그리고 협곡이 한 칸보다 좁아 막힌 콩고·쓰촨)는 호수로 그리지 않고 위의 가정대로 넘쳐 흐릅니다."
+msgstr "In the fields routed over the glacial ice, water pooling in a basin the ice dams or the crust's depression opens, that is the pooling beyond what the bare grid holds, is painted as a lake from 2.5 m deep. Basins the grid closes on its own (Chad and Tarim, and the Congo and Sichuan, whose gorges are narrower than a cell) are not drawn as lakes; they spill over as described above."
+
 msgid "원자료의 격자 간격과 복원 정확도는 다릅니다. 2048×1024 계산 격자는 적도에서 약 20 km 간격이며, 개별 계곡·협곡이나 실제 고대 하천 경로를 검증하지 않습니다."
 msgstr "Grid spacing is not reconstruction accuracy. The 2048×1024 calculation grid spans about 20 km per cell at the equator; it does not validate individual valleys, gorges, or actual ancient river courses."
