@@ -32,3 +32,13 @@ P06 배포 후 재검토에 이어 사용자가 JS 정리·모듈 분리, PR 병
 - 버전 반영 후 make check·Django 77개·JS 6개 파일 및 git diff --check 재확인 통과.
 
 배포 결과는 [089](20260916_jikhanjung_089_release_0151.md)에 기록한다.
+
+## 배포 전 캐시 호환성 보완
+
+#55 병합 후 이미지 생성 단계에서 기존 WhiteNoise의 1시간 캐시 정책을 다시 확인했다.
+엔트리 `globe.js`만 버전이 바뀌고 중첩 모듈은 같은 URL이면, 방문자 캐시에 남은 옛 API와
+새 호출부가 섞일 수 있다. 첫 준비 이미지는 배포하지 않았다.
+홈 import map의 `mantle-overlay.js`·`mantle-scene.js`에 릴리스 버전을 붙이고,
+두 모듈이 같은 앱 버전으로 매핑되는지 회귀 검사를 추가했다. 기존 브랜치는 유지한다.
+`make check`, Django 78개, JS 6개 파일, 최종 import map을 사용하는 Firefox의 기본값·
+Younger/Older·해제 복원 검사가 통과했다.
