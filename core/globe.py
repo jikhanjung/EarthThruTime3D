@@ -1,5 +1,6 @@
 """Local reference globe catalogue; all asset paths come from the pinned manifest."""
 import json
+import logging
 import math
 from functools import lru_cache
 from pathlib import Path
@@ -272,11 +273,26 @@ def rivers_ice_of(item):
     path = derived_path(item, "rivers-ice.json")
     if not path.exists():
         return None
-    slices = [{"age_ka": step["age_ka"], "level_m": step["level_m"],
-               "url": reverse("globe-rivers-ice", args=[item["id"], int(round(step["age_ka"] * 1000))])}
-              for step in json.loads(path.read_text()).get("slices", [])
-              if step.get("lowers") and rivers_ice_path(item, int(round(step["age_ka"] * 1000))).exists()]
-    return slices or None
+    try:
+        steps = json.loads(path.read_text())["slices"]
+        slices, previous_age, previous_level = [], 0, 0
+        for step in steps:
+            if not step.get("lowers"):
+                continue
+            age, level = step["age_ka"], step["level_m"]
+            if (not isinstance(age, (int, float)) or not isinstance(level, (int, float))
+                    or not math.isfinite(age) or not math.isfinite(level)
+                    or not previous_age < age <= 80 or not level < previous_level):
+                raise ValueError("Ice river slices must increase in age and decrease in sea level")
+            previous_age, previous_level = age, level
+            years = int(round(age * 1000))
+            if rivers_ice_path(item, years).exists():
+                slices.append({"age_ka": age, "level_m": level,
+                               "url": reverse("globe-rivers-ice", args=[item["id"], years])})
+        return slices or None
+    except (OSError, ValueError, KeyError, TypeError, AttributeError):
+        logging.getLogger(__name__).warning("Unavailable ice river sidecar: %s", path, exc_info=True)
+        return None
 
 
 def sealevel_curve():

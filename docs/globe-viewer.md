@@ -495,7 +495,7 @@ thickness, the crust's glacial isostatic deformation from SELEN and the resultin
 paleo-topography, 80 ka to the present every 2,500 years, as global 0.25° and 1° NetCDF
 grids. Only the two global grids are extracted from the 3.5 GB archive (`members` in
 the manifest) and the archive is deleted afterwards (`discard`); `fetch_paleodem.py
---manifest sources/paleomist.json` then accepts the extracted folder in its place.
+--manifest sources/paleomist.json` then verifies every extracted file against a SHA-256/size receipt tied to the verified archive. Existing folders without that receipt require the archive again.
 `scripts/build_rivers.py --ice` writes `paleodem-0000-rivers-ice-<years>.png` for
 each step to 25 ka (`--ice-to 80` for all of them) and a sidecar
 `paleodem-0000-rivers-ice.json` with each step's age, sea level and whether it lowers

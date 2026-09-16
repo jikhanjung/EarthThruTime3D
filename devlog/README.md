@@ -31,6 +31,8 @@ wwolf는 001부터 셉니다. 그 전의 001–045는 링크와 본문 속 번�
 
 ## 작업 기록
 
+- [jikhanjung 077 — PaleoMIST 하천 PR 검토와 무결성 보완](20260916_jikhanjung_077_ice_rivers_review.md)
+
 - [jikhanjung 076 — 연대 전환 중 지각·맨틀 화면 유지](20260916_jikhanjung_076_mantle_age_transition.md)
 
 - [jikhanjung 075 — v0.13.0 하천·맨틀 리뷰 수정 릴리스](20260916_jikhanjung_075_release_0130.md)
