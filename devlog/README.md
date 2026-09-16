@@ -31,6 +31,8 @@ wwolf는 001부터 셉니다. 그 전의 001–045는 링크와 본문 속 번�
 
 ## 작업 기록
 
+- [jikhanjung 078 — OPT1 출력 시간 간격과 재계산 가능성 조사](20260916_jikhanjung_078_mantle_output_resolution_research.md)
+
 - [jikhanjung 077 — PaleoMIST 하천 PR 검토와 무결성 보완](20260916_jikhanjung_077_ice_rivers_review.md)
 
 - [jikhanjung 076 — 연대 전환 중 지각·맨틀 화면 유지](20260916_jikhanjung_076_mantle_age_transition.md)
