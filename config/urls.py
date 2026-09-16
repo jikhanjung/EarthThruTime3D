@@ -5,7 +5,7 @@ from core.views import healthz, language
 from core.access import gate
 from core.mantle import mantle, mantle_asset
 from core.collision import collision, collision_data
-from core.globe import ice_mask, ice_low, river_field, river_low_field, temperature_map, coastline_file, globe, land_field, plate_file, source_map
+from core.globe import ice_mask, ice_low, river_field, river_ice_field, river_low_field, temperature_map, coastline_file, globe, land_field, plate_file, source_map
 
 urlpatterns = [
     path('collision/', collision, name='collision'),
@@ -20,6 +20,7 @@ urlpatterns = [
     path('globe/ice-low/<slug:map_id>/<int:age>.png', ice_low, name='globe-ice-low'),
     path('globe/rivers/<slug:map_id>.png', river_field, name='globe-rivers'),
     path('globe/rivers-low/<slug:map_id>.png', river_low_field, name='globe-rivers-low'),
+    path('globe/rivers-ice/<slug:map_id>/<int:years>.png', river_ice_field, name='globe-rivers-ice'),
     path('globe/coastlines/<int:age>.json', coastline_file, name='globe-coastline'),
     path('plates/<slug:model>/<slug:layer>.json', plate_file, name='plate-file'),
     path('access/', gate, name='access-gate'),

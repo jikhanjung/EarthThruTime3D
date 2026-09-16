@@ -205,14 +205,32 @@ function loadIce(frame) {
   return frame.ice ? loadData(`${frame.id}:ice`, frame.ice) : Promise.resolve(null);
 }
 // A river field exists for every grid of the elevation series once built. A frame
-// without one contributes no rivers, so the network fades out across the gap.
-function loadRivers(frame) {
-  return frame.rivers ? loadData(`${frame.id}:rivers`, frame.rivers) : Promise.resolve(null);
+// without one contributes no rivers, so the network fades out across the gap. Which of a
+// frame's fields show at a sea-level offset, and how far between them: a frame with
+// fields routed over the ice of the last glacial cycle (`rivers_ice`, youngest first, each
+// at its age's level) shows the two bracketing the offset, its own field standing at 0 m
+// and the deepest holding below it; otherwise its own field toward the one routed with the
+// sea at the slider's lowest level (`rivers_low`, the shelf's rivers) by the offset's share
+// of that level. Each side is {key, url} for the cache, or null.
+function riverChoice(frame, offset) {
+  const own = frame?.rivers ? { key: `${frame.id}:rivers`, url: frame.rivers } : null;
+  const slices = frame?.rivers_ice || [];
+  if (own && slices.length && offset < 0) {
+    let index = slices.findIndex(slice => slice.level_m <= offset);
+    if (index < 0) index = slices.length - 1;
+    const upper = index ? slices[index - 1] : { level_m: 0, age_ka: 0 };
+    const lower = slices[index];
+    const t = Math.min(1, (offset - upper.level_m) / (lower.level_m - upper.level_m));
+    return { base: index ? { key: `${frame.id}:rivers-ice:${upper.age_ka}`, url: upper.url } : own,
+             low: { key: `${frame.id}:rivers-ice:${lower.age_ka}`, url: lower.url },
+             t, age: upper.age_ka + (lower.age_ka - upper.age_ka) * t };
+  }
+  const low = frame?.rivers_low;
+  return { base: own, low: low ? { key: `${frame.id}:rivers-low`, url: low.url } : null,
+           t: low && offset < 0 ? Math.min(1, offset / low.level_m) : 0, age: null };
 }
-// A grid whose slider reaches below the datum also carries the rivers routed with the sea
-// at that lowest level, the shelf's rivers, mixed in as the slider goes down.
-function loadRiversLow(frame) {
-  return frame.rivers_low ? loadData(`${frame.id}:rivers-low`, frame.rivers_low.url) : Promise.resolve(null);
+function loadRiverField(choice) {
+  return choice ? loadData(choice.key, choice.url) : Promise.resolve(null);
 }
 // A frame with a dated deglaciation carries lowstand slices, youngest first, each with
 // the sea level of its age; index -1 is the frame's own field, the slice at 0 m.
@@ -401,6 +419,7 @@ async function selectStop(value, manual = false, overlayManaged = false, transit
       uniforms.blend.value = 0;
       applyIce(null, null);
       applyRivers(null, null, null, null, [0, 0]);
+      stage.dataset.riverIce = '';
       showIceKind(place);
       uniforms.iceCut.value.set(0.5, 0.5);
       uniforms.iceLowMix.value.set(0, 0);
@@ -417,14 +436,16 @@ async function selectStop(value, manual = false, overlayManaged = false, transit
       // One stop carries slices today, the present; a side without them loads nothing.
       const sliced = stateA.low ? 'from' : stateB.low ? 'to' : null;
       const low = sliced ? (sliced === 'from' ? stateA : stateB).low : null;
+      const riversA = riverChoice(place.from, seaOffset);
+      const riversB = riverChoice(place.to, seaOffset);
       const [first, second, warmA, warmB, iceA, iceB, low0, low1, riverA, riverB, riverLowA, riverLowB, preparedOverlay] = await Promise.all([
         loadSurface(place.from), loadSurface(place.to),
         heated ? loadTemperature(place.from) : null, heated ? loadTemperature(place.to) : null,
         fielded ? loadIce(place.from) : null, fielded ? loadIce(place.to) : null,
         !fielded ? null : dated ? loadDeglacial(place.from) : low ? loadIceLow(place[sliced], low.from) : null,
         !fielded ? null : dated ? loadDeglacial(place.to) : low ? loadIceLow(place[sliced], low.to) : null,
-        fielded ? loadRivers(place.from) : null, fielded ? loadRivers(place.to) : null,
-        fielded ? loadRiversLow(place.from) : null, fielded ? loadRiversLow(place.to) : null,
+        fielded ? loadRiverField(riversA.base) : null, fielded ? loadRiverField(riversB.base) : null,
+        fielded ? loadRiverField(riversA.low) : null, fielded ? loadRiverField(riversB.low) : null,
         transition?.prepare(),
         // Prepare line data too; committing the surface must not wait on another fetch.
         transition && showPlates() && !locked() ? loadPlateModel() : null,
@@ -437,7 +458,10 @@ async function selectStop(value, manual = false, overlayManaged = false, transit
       uniforms.tempA.value = warmA;
       uniforms.tempB.value = warmB;
       applyIce(iceA, iceB);
-      applyRivers(riverA, riverB, riverLowA, riverLowB, [riverLowT(place.from, seaOffset), riverLowT(place.to, seaOffset)]);
+      applyRivers(riverA, riverB, riverLowA, riverLowB, [riversA.t, riversB.t]);
+      // The age of the ice the rivers run off, where they do: each side's own, mixed by the blend.
+      const iced = [riversA, riversB].filter(choice => choice.age != null);
+      stage.dataset.riverIce = iced.length ? (iced.length === 1 ? iced[0].age : riversA.age + (riversB.age - riversA.age) * place.blend).toFixed(1) : '';
       showIceKind(place);
       if (dated) {
         // Each side's slice replaces its own red, the shelves stay from the present's mask,
@@ -538,12 +562,8 @@ function showIceKind(place) {
 // Rivers over the surface, under the ice. The fields stay bound while hidden so a toggle
 // needs no reload; a missing field on one side weighs nothing, so the network fades
 // across that gap.
-// How far a frame's rivers stand toward its lowstand field: 0 at the datum, 1 at the
-// slider's lowest level, where the shelf's rivers were routed; a raised sea needs none.
-function riverLowT(frame, offset) {
-  const low = frame?.rivers_low;
-  return low && offset < 0 ? Math.min(1, offset / low.level_m) : 0;
-}
+// `lowT` is how far each side stands from its base field toward its low one (see
+// riverChoice); `data-river-low` on the stage is the larger of the two.
 function applyRivers(riverA, riverB, lowA, lowB, lowT) {
   const shown = riversVisible && Boolean(riverA || riverB);
   uniforms.riverA.value = riverA;

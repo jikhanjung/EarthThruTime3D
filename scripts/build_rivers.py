@@ -25,6 +25,18 @@ being everything above it, and the result written as `<id>-rivers-low.png`: the 
 the exposed shelf, which the page mixes in as the slider goes down. Pass --lows to write
 only those.
 
+The present grid is routed a third way, over the ice of the last glacial cycle, one field
+per 2,500-year step of PaleoMIST 1.0 (Gowan et al. 2021, sources/paleomist.json): today's
+ice is taken off the grid where the grid holds it (Greenland's surface; Antarctica is
+already bed), the crust is pressed down by the step's glacial isostatic deformation, the
+step's grounded ice is laid on top, the sea is set at the level the page gives that age,
+and the water is routed over that surface, ice included, so meltwater runs off the sheets
+along their margins and a lake dammed by ice fills to its spill and drains over it. Only
+cells off the ice are drawn. The result is `<id>-rivers-ice-<years>.png`, named by the
+step's age in years, with a sidecar `<id>-rivers-ice.json` listing each step's age, sea
+level and whether it lowers the sea below every younger step's; the page mixes the two
+steps bracketing its sea level. Pass --ice to write these.
+
 The grids are interpretive surfaces. Their sampling interval is not a measure of
 reconstruction accuracy; these lines are potential drainage paths, not known channels.
 """
@@ -34,6 +46,7 @@ import sys
 import time
 from pathlib import Path
 
+import netCDF4
 import numpy as np
 from PIL import Image
 from scipy import ndimage
@@ -41,7 +54,13 @@ from skimage.morphology import reconstruction
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
+sys.path.insert(0, str(ROOT / "scripts"))
 from scripts.build_paleodem import CATALOGUE, default_source, elevation, locate, resample  # noqa: E402
+from build_ice import stack  # noqa: E402
+
+PALEOMIST = ROOT / "sources/paleomist.json"
+ICE_STEP_KA = 2.5         # PaleoMIST's interval
+DATED_KA = 25             # the ice sidecar holds the page's level per thousand years to here
 
 EARTH_RADIUS_KM = 6371.0
 RIVER_KM2 = 1e3           # the smallest drained area that makes a cell a river
@@ -163,6 +182,99 @@ def lowest_levels(out):
     return {grid: sheet["range_m"][0] for grid, sheet in sheets.items() if sheet.get("range_m", [0])[0] < 0}
 
 
+def paleomist_grid():
+    manifest = json.loads(PALEOMIST.read_text())
+    asset = manifest["assets"][0]
+    return netCDF4.Dataset((ROOT / asset["path"]).parent / asset["unzip"] / manifest["grid"])
+
+
+def paleomist_step(data, age_ka, width):
+    """One PaleoMIST step on the texture grid, in metres: the bed, the grounded ice thickness
+    and the crust's deformation, which is the SELEN sea-level change relative to the land
+    less its mean over today's ocean, so the eustatic part, which the page's own level
+    supplies, is left out and only the glacial isostatic part remains, positive where the
+    crust is pressed down."""
+    ages = -np.asarray(data.variables["time"][:]) / 1000.0
+    index = int(np.argmin(np.abs(ages - age_ka)))
+    if abs(ages[index] - age_ka) > 1e-6:
+        raise SystemExit(f"PaleoMIST has no step at {age_ka} ka; its steps are every {ICE_STEP_KA} kyr to {ages.max():g}")
+    latitude = np.asarray(data.variables["lat"][:])
+    north_first = latitude[0] > 0
+    field = lambda name, at: np.nan_to_num(np.asarray(data.variables[name][at], dtype=np.float64))  # noqa: E731
+    on_texture = lambda z: resample(z if north_first else z[::-1], width)  # noqa: E731
+    ocean = field("base_topography", ages.argmin()) < 0
+    weights = np.cos(np.radians(latitude))[:, None] * ocean
+    change = field("sea_level", index)
+    eustatic = (change * weights).sum() / weights.sum()
+    return (on_texture(field("base_topography", index)), np.maximum(on_texture(field("ice_thickness", index)), 0.0),
+            on_texture(change - eustatic))
+
+
+def ice_surface(z, base0, thickness0, thickness, deformation):
+    """The routing surface at a step: the grid with today's ice taken off where the grid
+    holds it (as much of the present thickness as the grid stands above the present bed),
+    the crust pressed down by the deformation, and the step's ice on top."""
+    return z - np.clip(z - base0, 0.0, thickness0) - deformation + thickness
+
+
+def sea_at(surface, level, z):
+    """The sea over a deformed surface: what the surface puts at or below the level and
+    connects to the world ocean, across the antimeridian, plus whatever the grid itself
+    held at or below the level (the Caspian and the other basins the grid keeps below its
+    datum, sea as they always were). A depression the deformation opens inland is land: a
+    lake that fills to its spill."""
+    below = surface <= level
+    labels, _ = ndimage.label(wrap(below))
+    world = np.bincount(labels.ravel())[1:].argmax() + 1
+    return below & (unwrap(labels == world) | (z <= level))
+
+
+def step_levels(out, ages):
+    """Each step's sea level, the page's own for that age: the ice sidecar's held level to
+    DATED_KA, the stack's value beyond, a half step the mean of its two neighbours."""
+    path = out / "ice-sources.json"
+    if not path.exists():
+        raise SystemExit(f"{path} is needed for the page's levels; run scripts/build_ice.py first")
+    held = {low["age_ka"]: low["level_m"] for low in json.loads(path.read_text())["lows"]["paleodem-0000"]}
+    levels = stack()
+    at = lambda age: held[age] if age <= DATED_KA else levels[age]  # noqa: E731
+    return {age: at(int(age)) if age == int(age) else (at(int(age)) + at(int(age) + 1)) / 2 for age in ages}
+
+
+def ice_slices(out, directory, catalogue, width, oldest):
+    """The present grid routed over PaleoMIST's ice, one field per step to `oldest` ka."""
+    item = next(item for item in catalogue["maps"] if item["age_ma"] == 0)
+    z = resample(elevation(locate(directory, item)), width)
+    data = paleomist_grid()
+    base0, thickness0, _ = paleomist_step(data, 0.0, width)
+    ages = [ICE_STEP_KA * k for k in range(1, int(round(oldest / ICE_STEP_KA)) + 1)]
+    levels = step_levels(out, ages)
+    for stale in out.glob(f"{item['id']}-rivers-ice-*.png"):
+        stale.unlink()
+    slices, lowest = [], 0.0
+    for age in ages:
+        started = time.time()
+        _, thickness, deformation = paleomist_step(data, age, width)
+        surface = ice_surface(z, base0, thickness0, thickness, deformation)
+        ice, level = thickness > 0, levels[age]
+        land = ~sea_at(surface, level, z)
+        drained = route(surface, land)
+        Image.fromarray(river_field(drained, land & ~ice), "L").save(out / f"{item['id']}-rivers-ice-{int(round(age * 1000))}.png")
+        slices.append({"age_ka": age, "level_m": level, "lowers": level < lowest})
+        lowest = min(lowest, level)
+        print(f"{item['id']}  {age:4g} ka  sea {level:+.0f} m  ice {ice.mean():.1%} of the map  largest basin "
+              f"{drained[land].max() / 1e6:.2f} Mkm2  {time.time() - started:.0f}s")
+    (out / f"{item['id']}-rivers-ice.json").write_text(json.dumps({
+        "method": ("The present grid routed over the ice of PaleoMIST 1.0 (Gowan et al. 2021) at each step: "
+                   "today's ice taken off the grid where it holds it, the crust pressed down by the step's "
+                   "glacial isostatic deformation, the step's grounded ice laid on top, the sea at the level "
+                   "the page gives that age (the ice sidecar's held level to 25 ka, the Spratt & Lisiecki "
+                   "stack beyond, half steps the mean of their neighbours), and only cells off the ice drawn. "
+                   "`lowers` marks a step whose level is below every younger step's, the ones the page can "
+                   "bracket by level."),
+        "source": "https://doi.org/10.1594/PANGAEA.905800", "slices": slices}, indent=1))
+
+
 def route(z, land):
     """The area in km2 draining through each cell of a grid at the texture's resolution."""
     surface = fill_sinks(z, land)
@@ -177,11 +289,18 @@ def main():
     parser.add_argument("--width", type=int, default=2048, choices=(1024, 2048, 4096),
                         help="texture width; the served fields are 2048")
     parser.add_argument("--lows", action="store_true", help="write only the lowstand fields")
+    parser.add_argument("--ice", action="store_true",
+                        help="write only the present grid's fields routed over PaleoMIST's ice, one per 2,500-year step")
+    parser.add_argument("--ice-to", type=float, default=float(DATED_KA), metavar="KA",
+                        help="the oldest step --ice writes; PaleoMIST reaches 80 (default %(default)s)")
     parser.add_argument("ids", nargs="*", help="slice ids to build; default all")
     args = parser.parse_args()
     catalogue = json.loads(CATALOGUE.read_text())
     directory = args.source or default_source(catalogue)
     args.out.mkdir(parents=True, exist_ok=True)
+    if args.ice:
+        ice_slices(args.out, directory, catalogue, args.width, args.ice_to)
+        return
     lows = lowest_levels(args.out)
     for item in catalogue["maps"]:
         if args.ids and item["id"] not in args.ids:

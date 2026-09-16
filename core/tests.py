@@ -714,6 +714,23 @@ class PaleodemTests(TestCase):
         self.assertEqual(frames[present['id']]['rivers_low'],
                          {'url': f"/globe/rivers-low/{present['id']}.png", 'level_m': -130})
         self.assertEqual(self.client.get(f"/globe/rivers-low/{present['id']}.png").status_code, 200)
+        # The fields routed over the ice ride along from their sidecar: only the steps that
+        # lower the sea below every younger step's, and only where the file exists.
+        self.assertIsNone(frames[present['id']]['rivers_ice'])
+        self.assertEqual(self.client.get(f"/globe/rivers-ice/{present['id']}/12500.png").status_code, 404)
+        Path(self.dem.name, f"{present['id']}-rivers-ice.json").write_text(json.dumps(
+            {'slices': [{'age_ka': 2.5, 'level_m': 0.0, 'lowers': False}, {'age_ka': 12.5, 'level_m': -57.1, 'lowers': True},
+                        {'age_ka': 15, 'level_m': -86.1, 'lowers': True}, {'age_ka': 20, 'level_m': -117.0, 'lowers': True}]}))
+        for years in (2500, 12500, 20000):
+            globe_module.rivers_ice_path(present, years).write_bytes(b'png')
+        frames = {frame['id']: frame for frame in self.client.get('/', {'masks': 'paleodem2018'}).context['frames']}
+        self.assertEqual(frames[present['id']]['rivers_ice'],
+                         [{'age_ka': 12.5, 'level_m': -57.1, 'url': f"/globe/rivers-ice/{present['id']}/12500.png"},
+                          {'age_ka': 20, 'level_m': -117.0, 'url': f"/globe/rivers-ice/{present['id']}/20000.png"}])
+        self.assertIsNone(frames['paleodem-0050']['rivers_ice'])
+        self.assertEqual(self.client.get(f"/globe/rivers-ice/{present['id']}/12500.png").status_code, 200)
+        self.assertEqual(self.client.get(f"/globe/rivers-ice/{present['id']}/15000.png").status_code, 404)
+        self.assertEqual(self.client.get('/globe/rivers-ice/paleodem-0050/12500.png').status_code, 404)
 
     def test_ice_mask_is_offered_only_where_built(self):
         for item in globe_module.series_items('paleodem2018'):

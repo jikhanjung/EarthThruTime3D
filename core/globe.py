@@ -1,5 +1,6 @@
 """Local reference globe catalogue; all asset paths come from the pinned manifest."""
 import json
+import logging
 import math
 from functools import lru_cache
 from pathlib import Path
@@ -257,6 +258,41 @@ def rivers_low_of(kinds, item):
     if level >= 0 or not rivers_low_path(item).exists():
         return None
     return {"url": reverse("globe-rivers-low", args=[item["id"]]), "level_m": level}
+
+
+def rivers_ice_path(item, years):
+    """The grid's rivers routed over the ice of one PaleoMIST step, named by its age in years."""
+    return derived_path(item, f"rivers-ice-{years}.png")
+
+
+def rivers_ice_of(item):
+    """The river fields routed over the ice, youngest first, each with the sea level it was
+    routed at, from the sidecar scripts/build_rivers.py --ice writes: only the steps whose
+    level is below every younger step's, so the page can bracket its level between two,
+    and only where the file exists. None where there are none."""
+    path = derived_path(item, "rivers-ice.json")
+    if not path.exists():
+        return None
+    try:
+        steps = json.loads(path.read_text())["slices"]
+        slices, previous_age, previous_level = [], 0, 0
+        for step in steps:
+            if not step.get("lowers"):
+                continue
+            age, level = step["age_ka"], step["level_m"]
+            if (not isinstance(age, (int, float)) or not isinstance(level, (int, float))
+                    or not math.isfinite(age) or not math.isfinite(level)
+                    or not previous_age < age <= 80 or not level < previous_level):
+                raise ValueError("Ice river slices must increase in age and decrease in sea level")
+            previous_age, previous_level = age, level
+            years = int(round(age * 1000))
+            if rivers_ice_path(item, years).exists():
+                slices.append({"age_ka": age, "level_m": level,
+                               "url": reverse("globe-rivers-ice", args=[item["id"], years])})
+        return slices or None
+    except (OSError, ValueError, KeyError, TypeError, AttributeError):
+        logging.getLogger(__name__).warning("Unavailable ice river sidecar: %s", path, exc_info=True)
+        return None
 
 
 def sealevel_curve():
@@ -813,6 +849,11 @@ def globe(request):
                            # The shelf's rivers at the slider's lowest level, mixed in as the sea drops.
                            "rivers_low": (rivers_low_of(kinds, item)
                                           if source == "paleodem2018" and rivers_path(item).exists() else None),
+                           # The rivers routed over the ice of the last glacial cycle, one field per
+                           # PaleoMIST step with its sea level; the page brackets its level between
+                           # two, in the what-if and in the time windows alike.
+                           "rivers_ice": (rivers_ice_of(item)
+                                          if source == "paleodem2018" and rivers_path(item).exists() else None),
                            "field": (reverse("globe-field", args=[item["id"]])
                                      if field_path(item).exists() else None),
                            "names": landmass_names(pieces_by_frame[item["id"]]),
@@ -867,6 +908,7 @@ def globe(request):
                    "sealevel_available": bool(sea["long"]),
                    "ice_available": any(frame.get("ice") for frame in frames),
                    "rivers_available": any(frame.get("rivers") for frame in frames),
+                   "rivers_ice_available": any(frame.get("rivers_ice") for frame in frames),
                    "fields_available": any(frame["field"] for frame in frames)})
 
 
@@ -945,6 +987,22 @@ def river_low_field(request, map_id):
         file = rivers_low_path(item).open("rb")
     except FileNotFoundError:
         raise Http404("Lowstand river field not generated") from None
+    response = FileResponse(file, content_type="image/png")
+    response["Cache-Control"] = "private, max-age=3600"
+    return response
+
+
+@require_safe
+def river_ice_field(request, map_id, years):
+    if not enabled():
+        raise Http404
+    item = find_map(map_id)
+    if item is None:
+        raise Http404
+    try:
+        file = rivers_ice_path(item, years).open("rb")
+    except FileNotFoundError:
+        raise Http404("Ice river field not generated") from None
     response = FileResponse(file, content_type="image/png")
     response["Cache-Control"] = "private, max-age=3600"
     return response

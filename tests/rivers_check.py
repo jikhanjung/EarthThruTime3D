@@ -12,7 +12,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
 import numpy as np  # noqa: E402
 
-from build_rivers import CONE_RADIUS, CONE_SLOPE, RIVER_KM2, cell_geometry, directions, fill_sinks, river_field, route  # noqa: E402
+from build_rivers import (CONE_RADIUS, CONE_SLOPE, RIVER_KM2, cell_geometry, directions, fill_sinks, ice_surface,  # noqa: E402
+                          river_field, route, sea_at)
 
 HEIGHT, WIDTH = 64, 128
 
@@ -84,6 +85,36 @@ class RoutingTests(unittest.TestCase):
         low = route(z, z > -130)
         self.assertTrue((low[shelf] > 0).all(), 'every shelf cell drains something')
         self.assertGreater(low.max(), route(z, z > 0).max(), 'the island drains more land at the lowstand')
+
+    def test_a_depression_the_ice_presses_open_inland_is_a_lake_not_the_sea(self):
+        z = island()
+        pressed = z.copy()
+        pressed[40:44, 60:64] -= 1200.0     # the crust pushed below the sea inland, as under a sheet's margin
+        sea = sea_at(pressed, 0.0, z)
+        self.assertTrue((~sea[40:44, 60:64]).all(), 'no connection to the ocean, so land')
+        self.assertTrue((sea == (z <= 0)).all(), 'the sea is otherwise the grid\'s own')
+        pressed[32:44, 60:64] -= 1200.0     # now a channel joins it to the ocean... unless the island is in the way
+        pressed[0:20, :] -= 5000.0          # the north pushed under: touches the ocean, so it is sea
+        self.assertTrue(sea_at(pressed, 0.0, z)[0:20].all())
+        # a basin the grid itself holds below the datum stays sea, connected or not
+        z[10:12, 10:12] = -50.0
+        self.assertTrue(sea_at(z, 0.0, z)[10:12, 10:12].all())
+        # and the routing treats the lake as land that drains: its water reaches the coast
+        land = ~sea_at(pressed, 0.0, z)
+        drained = route(pressed, land)
+        self.assertTrue((drained[40:44, 60:64] > 0).all())
+
+    def test_the_ice_surface_strips_todays_ice_where_the_grid_holds_it(self):
+        z = np.array([[3300.0, -2360.0, 500.0]])        # Greenland's surface, Antarctica's bed, bare rock
+        base0 = np.array([[-88.0, -1759.0, 500.0]])
+        thick0 = np.array([[3221.0, 3516.0, 0.0]])
+        now = ice_surface(z, base0, thick0, thick0, np.zeros_like(z))
+        self.assertAlmostEqual(now[0, 0], 3300.0)                 # the surface the grid already holds
+        self.assertAlmostEqual(now[0, 1], -2360.0 + 3516.0)       # the bed with the ice on top
+        self.assertAlmostEqual(now[0, 2], 500.0)
+        then = ice_surface(z, base0, thick0, np.array([[3500.0, 3516.0, 1000.0]]), np.array([[0.0, 0.0, 200.0]]))
+        self.assertAlmostEqual(then[0, 0], 3300.0 - 3221.0 + 3500.0)
+        self.assertAlmostEqual(then[0, 2], 500.0 - 200.0 + 1000.0)  # pressed down, ice on top
 
     def test_the_field_is_a_cone_the_size_of_its_river(self):
         land = np.ones((HEIGHT, WIDTH), bool)

@@ -676,10 +676,24 @@ try {
     await expect(demGlobe).toHaveAttribute('data-river-low', '1.00');
     await dem.locator('#sealevel').fill('-60');
     await dem.locator('#sealevel').dispatchEvent('input');
-    await expect(demGlobe).toHaveAttribute('data-river-low', '0.46');
+    // With the fields routed over the ice built, the present brackets −60 m between the two
+    // steps around it and names the age; without them it is the share of the −130 m field.
+    const presentFrame = (await dem.locator('#globe-frames').textContent().then(JSON.parse)).find(frame => frame.age === 0);
+    const iceSlices = presentFrame.rivers_ice || [];
+    if (iceSlices.length) {
+      const index = iceSlices.findIndex(slice => slice.level_m <= -60);
+      const upper = index ? iceSlices[index - 1] : {level_m: 0};
+      const share = (-60 - upper.level_m) / (iceSlices[index].level_m - upper.level_m);
+      await expect(demGlobe).toHaveAttribute('data-river-low', share.toFixed(2));
+      await expect(demGlobe).not.toHaveAttribute('data-river-ice', '');
+    } else {
+      await expect(demGlobe).toHaveAttribute('data-river-low', '0.46');
+      await expect(demGlobe).toHaveAttribute('data-river-ice', '');
+    }
     await dem.locator('#sealevel').fill('0');
     await dem.locator('#sealevel').dispatchEvent('input');
     await expect(demGlobe).toHaveAttribute('data-river-low', '0.00');
+    await expect(demGlobe).toHaveAttribute('data-river-ice', '');
     // Past ice: the 300 Ma grid carries the sheet the atlas paints there, the 200 Ma grid none.
     await dem.locator('#era').selectOption(String(demFrames.findIndex(frame => frame.id === 'paleodem-3000')));
     // A freshly built texture's first load can take longer than the default wait.

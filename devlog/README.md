@@ -31,6 +31,10 @@ wwolf는 001부터 셉니다. 그 전의 001–045는 링크와 본문 속 번�
 
 ## 작업 기록
 
+- [jikhanjung 078 — OPT1 출력 시간 간격과 재계산 가능성 조사](20260916_jikhanjung_078_mantle_output_resolution_research.md)
+
+- [jikhanjung 077 — PaleoMIST 하천 PR 검토와 무결성 보완](20260916_jikhanjung_077_ice_rivers_review.md)
+
 - [jikhanjung 076 — 연대 전환 중 지각·맨틀 화면 유지](20260916_jikhanjung_076_mantle_age_transition.md)
 
 - [jikhanjung 075 — v0.13.0 하천·맨틀 리뷰 수정 릴리스](20260916_jikhanjung_075_release_0130.md)
@@ -39,6 +43,7 @@ wwolf는 001부터 셉니다. 그 전의 001–045는 링크와 본문 속 번�
 
 - [jikhanjung 073 — 하천 PR 검토와 위도 경계 수정](20260916_jikhanjung_073_river_review_fixes.md)
 
+- [wwolf 008 — 빙하기의 얼음 위로 흘린 하천: PaleoMIST 1.0](20260915_wwolf_008_ice_rivers.md)
 - [wwolf 007 — 하천 층: 격자 위로 물을 흘린 잠재 배수망](20260915_wwolf_007_river_layer.md)
 - [jikhanjung 072 — v0.12.0 맨틀 통합 릴리스](20260915_jikhanjung_072_release_0120.md)
 - [jikhanjung 071 — 전 지구 맨틀·핵 표시와 시간·단면 연결](20260915_jikhanjung_071_globe_mantle_time_section.md)
