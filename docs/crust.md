@@ -19,6 +19,8 @@ cell-centred grid samples the already resampled derivative without an additional
 averaging kernel; colours use nearest cells, and surface geometry interpolates
 between its vertices. Quantization is 0.01 km for storage, not a precision claim.
 Point readouts round to whole km and use the same cell as the colour map.
+The derivative contains 1,448 missing cells (including the sampled south-polar
+location); these stay missing, shown grey in the map and omitted from the shell.
 
 The package does **not** establish the water/ice inclusion and vertical datum of
 its z variable. The mesh therefore draws a **thickness-equivalent reference shell**

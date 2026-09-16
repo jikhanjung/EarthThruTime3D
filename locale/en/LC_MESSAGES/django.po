@@ -1249,3 +1249,6 @@ msgstr "Longitude {lon}° · latitude {lat}° · about {km} km (display grid)"
 
 msgid "CRUST 2.0 · 현재 지각 · 구면 기준 두께 ×{scale}"
 msgstr "CRUST 2.0 · present-day crust · reference-shell thickness ×{scale}"
+
+msgid "회색: 자료 없음"
+msgstr "Grey: no data"
