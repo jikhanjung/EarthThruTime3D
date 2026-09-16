@@ -5,13 +5,13 @@ host. Configuration and procedure live in `deploy/README.md` and `deploy/deploy.
 Builds happen on the development host; the server only loads the image and swaps.
 The shared guides are referenced privately through `.guides`; they are not copied.
 
-Current release: **v0.13.0**, deployed 2026-09-16. The release adds potential river
-fields (109 standard and 31 lowstand), fixes browser import-map initialization,
-and includes the P06 mantle recovery and asset-serving fixes. Younger/Older retains
-the visible surface and mantle until both next-age datasets are ready. The runtime
-continues to include all 51 OPT1 mantle frames and five India–Asia section frames.
-Image/data hashes, the verified DB snapshot and public Firefox/Chromium checks are
-recorded in [devlog 075](../devlog/20260916_jikhanjung_075_release_0130.md).
+Current release: **v0.14.0**, deployed 2026-09-16. The release adds ten PaleoMIST
+ice-river fields (2.5–25 ka) and verified extraction receipts, and tolerates invalid
+optional river metadata. The runtime retains the 109 standard and 31 lowstand river
+fields, 51 OPT1 mantle frames and five India–Asia section frames from v0.13.0.
+Image/data hashes, the verified DB snapshot, public Firefox checks and browser
+transfer measurements are recorded in
+[devlog 079](../devlog/20260916_jikhanjung_079_release_0140.md).
 
 ## Adopted now
 
