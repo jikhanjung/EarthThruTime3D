@@ -261,3 +261,8 @@ the numbers.
 Not yet collected: the Scotese 2021 PaleoDEM update and the Straume et al. 2020
 Cenozoic palaeobathymetry. Their Zenodo records returned 504 on 2026-09-13, so neither
 licence nor contents has been checked.
+
+OPT1 pins the simulation ZIP, not the mutable Zenodo API JSON: its download/view
+statistics change independently of the model. The record URL, retrieval date and
+license value remain in the manifest as evidence; an optional local `record.json`
+is not required to build. The ZIP size and SHA-256 checks remain mandatory.

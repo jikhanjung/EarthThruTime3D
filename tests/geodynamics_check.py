@@ -1,5 +1,9 @@
 """Offline synthetic checks for VTK decoding and topology; needs processing requirements."""
 import base64
+import hashlib
+import json
+from tempfile import TemporaryDirectory
+from unittest.mock import patch
 from pathlib import Path
 import struct
 import sys
@@ -11,7 +15,7 @@ import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
 from build_mantle import array, read_piece
-from geodynamics import gpml_summary
+from geodynamics import gpml_summary, source
 
 
 def node(name, values, dtype, vtk_type):
@@ -73,6 +77,31 @@ class VTKTests(unittest.TestCase):
         summary = gpml_summary(data)
         self.assertEqual(summary['feature_types'], {'TopologicalNetwork': 1})
         self.assertEqual(len(summary['networks']), 1)
+
+
+class SourceIntegrityTests(unittest.TestCase):
+    def test_mutable_record_is_optional_but_archive_integrity_is_required(self):
+        manifest = json.loads((Path(__file__).resolve().parents[1] /
+                               'sources/geodynamics/muller2022-opt1.json').read_text())
+        with TemporaryDirectory() as folder:
+            root = Path(folder)
+            pinned = root/'sources/geodynamics/muller2022-opt1.json'
+            pinned.parent.mkdir(parents=True)
+            for asset in manifest['assets']:
+                path = root/asset['path']
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_bytes(b'verified source')
+                asset.update(bytes=path.stat().st_size, sha256=hashlib.sha256(path.read_bytes()).hexdigest())
+            pinned.write_text(json.dumps(manifest))
+            record = root/'data/sources/geodynamics/muller2022-opt1/record.json'
+            with patch('geodynamics.ROOT', root), patch('geodynamics.SOURCES', root/'data/sources'):
+                _, archive = source('muller2022-opt1')
+                self.assertFalse(record.exists())
+                record.write_text('{"stats":{"views":100000}}')
+                source('muller2022-opt1')
+                archive.write_bytes(b'corrupted bytes')
+                with self.assertRaises(ValueError):
+                    source('muller2022-opt1')
 
 
 if __name__ == '__main__':

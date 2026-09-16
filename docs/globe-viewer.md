@@ -826,8 +826,8 @@ Neither flag grants data-use rights. See `sources/README.md`, `LICENSE-DATA.md` 
   with rivers on, the sea at −60 m brackets the ice-river slices when they are built, the
   deglacial window at 20 ka shows `data-river-ice` 20.0 and `data-ice-age` 20, and no
   console error or failed request. `FIREFOX_BIN` names the binary (default the macOS
-  app; on Linux the `firefox` on the path); it runs headless with a throwaway profile, so
-  no Xvfb is needed, and only its own process is killed afterwards. Screenshots go to
+  app; on Linux the `firefox` on the path); it runs headless with a throwaway profile where WebGL2 is available,
+  and only its own process is killed afterwards. See the Linux fallback below. Screenshots go to
   gitignored `test-results/`.
 - `.venv/bin/python tests/rivers_check.py` with `requirements-processing.txt`
   installed: the river routing (see Rivers), the ice surface included.
