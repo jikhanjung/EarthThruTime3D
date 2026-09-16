@@ -32,6 +32,7 @@ wwolf는 001부터 셉니다. 그 전의 001–045는 링크와 본문 속 번�
 
 ## 작업 기록
 
+- [jikhanjung 093 — OPT1 GPU 재현 계획 1차 검토](20260917_jikhanjung_093_opt1_gpu_roadmap_review.md)
 - [jikhanjung 092 — v0.16.0 CRUST 2.0 지각 표시 릴리스](20260916_jikhanjung_092_release_0160.md)
 - [jikhanjung 091 — CRUST 2.0 현재 지각 표시](20260916_jikhanjung_091_crust2_visualization.md)
 
