@@ -22,6 +22,7 @@ wwolf는 001부터 셉니다. 그 전의 001–045는 링크와 본문 속 번�
 
 ## 계획
 
+- [jikhanjung P07 — CRUST 2.0으로 현재 지구의 지각 두께 표시](20260916_jikhanjung_P07_crust2_visualization.md)
 - [jikhanjung P06 — v0.11–v0.12 맨틀 통합 리뷰 후속 수정](20260915_jikhanjung_P06_mantle_integration_review_fixes.md)
 - [jikhanjung P05 — 맨틀 근사 중첩부터 단면·시간 통합까지](20260915_jikhanjung_P05_globe_mantle_approximate_overlay.md)
 - [jikhanjung P04 — 메인 globe에 맨틀과 인도–아시아 단면 통합](20260915_jikhanjung_P04_globe_mantle_section_integration.md)
@@ -30,6 +31,8 @@ wwolf는 001부터 셉니다. 그 전의 001–045는 링크와 본문 속 번�
 - [jikhanjung P01 — 시간 범위 선택: 최근 2.5만 년](20260915_jikhanjung_P01_deglacial_time_window.md)
 
 ## 작업 기록
+
+- [jikhanjung 091 — CRUST 2.0 현재 지각 표시](20260916_jikhanjung_091_crust2_visualization.md)
 
 - [jikhanjung 089 — v0.15.1 맨틀 JS 모듈 분리 릴리스](20260916_jikhanjung_089_release_0151.md)
 - [jikhanjung 088 — 맨틀 JS 정리와 화면·렌더링 모듈 분리](20260916_jikhanjung_088_mantle_js_modules.md)

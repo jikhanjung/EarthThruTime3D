@@ -11,6 +11,7 @@
     <div id="globe" tabindex="0" role="img" aria-label="{% trans '고지리 지구본. 마우스 또는 방향키로 회전, 휠이나 더하기 빼기 키로 확대 축소.' %}"></div>
     <div class="globe-caption"><span class="live-dot"></span><span id="globe-age">{% trans "현재" %}</span></div>
     <p id="mantle-overlay-caption" class="mantle-overlay-caption" hidden></p>
+    <p id="crust-caption" class="mantle-overlay-caption crust-caption" hidden></p>
     <div id="status" role="status" aria-live="polite">{% trans "지구본을 준비하고 있습니다…" %}</div>
     <button id="retry" class="retry" hidden>{% trans "다시 불러오기" %}</button>
     <p class="gesture" id="gesture">{% trans "드래그로 회전 · 스크롤 / 핀치로 확대" %}</p>
@@ -18,6 +19,34 @@
   </section>
   <aside class="inspector" id="inspector" aria-label="{% trans '선택한 시대 정보' %}">
     <button type="button" data-collision-open aria-controls="collision-dialog" aria-expanded="false">{% trans "인도–아시아 A–A′ 단면" %}</button>
+    {% if crust %}
+    <fieldset class="mantle-overlay-panel" id="crust-panel">
+      <legend>{% trans "지각 · 현재 지구" %}</legend>
+      <label><input id="crust-enabled" type="checkbox" autocomplete="off"> {% trans "지각 두께" %}</label>
+      <div id="crust-options" hidden>
+        <p id="crust-status" role="status" aria-live="polite"></p>
+        <label><input id="crust-colour" type="checkbox" checked autocomplete="off"> {% trans "두께 색상 지도" %}</label>
+        <figure id="crust-legend" class="crust-legend" hidden><div></div><figcaption><span>0</span><span>40</span><span>80 km</span></figcaption></figure>
+        <fieldset id="crust-section-controls">
+          <legend>{% trans "지구본 지각 단면" %}</legend>
+          <div id="crust-own-cut">
+            <label><input id="crust-cutaway" type="checkbox" autocomplete="off"> {% trans "지각 절개" %}</label>
+            <label for="crust-longitude">{% trans "절개 중심 경도" %} <output id="crust-longitude-value">80°</output></label><input id="crust-longitude" type="range" min="-180" max="180" value="80">
+            <label for="crust-latitude">{% trans "절개 중심 위도" %} <output id="crust-latitude-value">10°</output></label><input id="crust-latitude" type="range" min="-90" max="90" value="10">
+            <label for="crust-radius">{% trans "절개 각반경" %} <output id="crust-radius-value">45°</output></label><input id="crust-radius" type="range" min="10" max="90" value="45">
+            <button id="crust-focus" type="button">{% trans "절개 중심으로 이동" %}</button>
+          </div>
+          <p id="crust-shared-cut" hidden>{% trans "맨틀의 절개 위치와 반경을 함께 사용합니다." %}</p>
+          <label for="crust-scale">{% trans "지각 두께 배율" %}</label><select id="crust-scale" autocomplete="off"><option value="1">1×</option><option value="5">5×</option></select>
+        </fieldset>
+        <p id="crust-scale-note" hidden>{% trans "지각 두께를 5배로 강조한 표시입니다." %}</p>
+        <p class="model-note">{% trans "단면은 표시 지표 아래로 자료의 두께만큼 그린 구면 기준 지각층입니다. 물·얼음과 지표 고도 기준이 확정된 실제 모호면 깊이는 아닙니다. 원모델은 2°이며 표시 격자는 정확도를 높이지 않습니다." %}</p>
+        <p id="crust-readout" role="status" aria-live="polite"></p>
+        <button id="crust-retry" type="button" hidden>{% trans "다시 불러오기" %}</button>
+        <p class="model-note"><a href="https://www.earthbyte.org/webdav/ftp/earthbyte/GPlates/GPlates2.3_GeoData/Rasters/Crustal_Thickness.zip">CRUST 2.0 · Laske, Masters &amp; Reif (2000)</a><br>EarthByte · CC BY 4.0 · {% trans "현재 지구 두께의 표시용 재표본화" %}</p>
+      </div>
+    </fieldset>
+    {% endif %}
     {% if mantle_overlay %}
     <fieldset class="mantle-overlay-panel" id="mantle-overlay-panel">
       <legend>{% trans "지구 내부 · 80 Ma–현재" %}</legend>
@@ -131,6 +160,8 @@
 {{ sealevel|json_script:'globe-sealevel' }}
 {{ strings|json_script:'globe-strings' }}
 {{ mantle_overlay|json_script:'globe-mantle-overlay' }}
+{{ crust|json_script:'globe-crust' }}
+{{ crust_strings|json_script:'crust-strings' }}
 {% else %}<section class="notice"><h2>{% trans "고지리 지구본" %}</h2><p>{% trans "이 실행 환경에서는 연구용 지도 뷰어가 활성화되지 않았습니다." %}</p></section>{% endif %}
 {% endblock %}
 {% block scripts %}{% if viewer_enabled %}
@@ -138,7 +169,7 @@
 {% endif %}{% endblock %}
 {% block dialog_head %}{% if viewer_enabled %}<link rel="stylesheet" href="{% static 'core/collision-dialog.css' %}?v={{ version }}">{% endif %}{% endblock %}
 {% block viewer_scripts %}{% if viewer_enabled %}
-<script type="importmap">{"imports":{"three":"{% static 'vendor/three/three.module.js' %}","{% static 'core/projection.js' %}":"{% static 'core/projection.js' %}?v={{ version }}","{% static 'core/mantle-overlay.js' %}":"{% static 'core/mantle-overlay.js' %}?v={{ version }}","{% static 'core/mantle-scene.js' %}":"{% static 'core/mantle-scene.js' %}?v={{ version }}"}}</script>
+<script type="importmap">{"imports":{"three":"{% static 'vendor/three/three.module.js' %}","{% static 'core/projection.js' %}":"{% static 'core/projection.js' %}?v={{ version }}","{% static 'core/mantle-overlay.js' %}":"{% static 'core/mantle-overlay.js' %}?v={{ version }}","{% static 'core/mantle-scene.js' %}":"{% static 'core/mantle-scene.js' %}?v={{ version }}","{% static 'core/crust.js' %}":"{% static 'core/crust.js' %}?v={{ version }}"}}</script>
 {% include 'includes/collision-dialog.html' %}
 <script type="module" src="{% static 'core/collision-dialog.js' %}?v={{ version }}"></script>
 {% endif %}{% endblock %}

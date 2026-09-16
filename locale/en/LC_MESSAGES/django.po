@@ -1201,3 +1201,51 @@ msgstr "The glacial river fields show computed pools with ice and crustal depres
 
 msgid "원자료의 격자 간격과 복원 정확도는 다릅니다. 2048×1024 계산 격자는 적도에서 약 20 km 간격이며, 개별 계곡·협곡이나 실제 고대 하천 경로를 검증하지 않습니다."
 msgstr "Grid spacing is not reconstruction accuracy. The 2048×1024 calculation grid spans about 20 km per cell at the equator; it does not validate individual valleys, gorges, or actual ancient river courses."
+
+msgid "지각 · 현재 지구"
+msgstr "Crust · present day"
+
+msgid "두께 색상 지도"
+msgstr "Thickness colour map"
+
+msgid "지구본 지각 단면"
+msgstr "Crust section on the globe"
+
+msgid "지각 절개"
+msgstr "Crust cutaway"
+
+msgid "맨틀의 절개 위치와 반경을 함께 사용합니다."
+msgstr "Uses the mantle cutaway position and radius."
+
+msgid "지각 두께 배율"
+msgstr "Crust thickness scale"
+
+msgid "지각 두께를 5배로 강조한 표시입니다."
+msgstr "Crust thickness is exaggerated 5×."
+
+msgid "단면은 표시 지표 아래로 자료의 두께만큼 그린 구면 기준 지각층입니다. 물·얼음과 지표 고도 기준이 확정된 실제 모호면 깊이는 아닙니다. 원모델은 2°이며 표시 격자는 정확도를 높이지 않습니다."
+msgstr "The section draws a thickness-equivalent shell below the displayed surface. It is not physical Moho depth with established water, ice and elevation datums. The source model is 2°; the display grid adds no accuracy."
+
+msgid "현재 지구 두께의 표시용 재표본화"
+msgstr "Present-day thickness, resampled for display"
+
+msgid "CRUST 2.0 · 현재 지구 · 원모델 2° · 위치를 클릭하면 두께를 표시합니다."
+msgstr "CRUST 2.0 · present day · 2° source model · Click a location for thickness."
+
+msgid "지각 두께를 불러오는 중…"
+msgstr "Loading crustal thickness…"
+
+msgid "현재 지구 자료 — 이 연대에는 제공되지 않음"
+msgstr "Present-day data — unavailable at this age"
+
+msgid "지각 자료를 불러오지 못했습니다. 다시 시도해 주세요."
+msgstr "Could not load crust data. Please retry."
+
+msgid "이 위치에는 지각 두께 값이 없습니다."
+msgstr "No crustal thickness value at this location."
+
+msgid "경도 {lon}° · 위도 {lat}° · 약 {km} km (표시용 격자)"
+msgstr "Longitude {lon}° · latitude {lat}° · about {km} km (display grid)"
+
+msgid "CRUST 2.0 · 현재 지각 · 구면 기준 두께 ×{scale}"
+msgstr "CRUST 2.0 · present-day crust · reference-shell thickness ×{scale}"

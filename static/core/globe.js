@@ -5,7 +5,9 @@ import { RotationModel, turn } from './rotation.js';
 import { densifySegments } from './surface-lines.js';
 import { createMantleOverlay } from './mantle-overlay.js';
 import { createMantleScene, CUT_UNIFORMS, CUT_SURFACE } from './mantle-scene.js';
+import { createCrust, CRUST_GLSL } from './crust.js';
 let mantleOverlay = null;
+let crust = null;
 
 const $ = (id) => document.getElementById(id);
 const frames = JSON.parse($('globe-frames').textContent);
@@ -501,6 +503,7 @@ async function selectStop(value, manual = false, overlayManaged = false, transit
     commitOverlay?.();
     $('globe-age').textContent = nextLabel;
     lastPlace = place;
+    crust?.frame(place.age);
     // Names go on any surface without lettering of its own: the mask, and on the
     // elevation series the relief and the temperature; a photographed map has its own.
     showNames(place, !place.mapless && (masked || relief || heated));
@@ -534,6 +537,7 @@ async function selectStop(value, manual = false, overlayManaged = false, transit
       if (plateLayer) plateLayer.visible = false;
       if (coastlineLayer) coastlineLayer.visible = false;
       stage.dataset.surface = 'unavailable';
+      crust?.frame(null);
     }
     status.classList.remove('loaded');
     status.textContent = masked
@@ -1077,7 +1081,7 @@ function terrainLineMaterial(colour, opacity) {
       uniform float opacity;
       void main() {
         ${CUT_SURFACE}
-        if ((mantleCutaway > 0.5 || mantleSurfaceOpacity < 1.0) && dot(vCutPosition, mantleCamera - vCutPosition) < 0.0) discard;
+        if ((mantleCutaway > 0.5 || crustCutaway > 0.5 || mantleSurfaceOpacity < 1.0) && dot(vCutPosition, mantleCamera - vCutPosition) < 0.0) discard;
         gl_FragColor = vec4(colour, opacity * mantleSurfaceOpacity);
         #include <colorspace_fragment>
       }`,
@@ -1087,6 +1091,9 @@ function globeMaterial() {
   const linear = (rgb) => new THREE.Color().setRGB(
     rgb[0] / 255, rgb[1] / 255, rgb[2] / 255, THREE.SRGBColorSpace);
   uniforms = {
+    crustMap: { value: null }, crustColour: { value: 0 }, crustScale: { value: 1 },
+    crustCutaway: { value: 0 }, crustCutCentre: { value: new THREE.Vector3(1, 0, 0) },
+    crustCutCos: { value: 1 },
     mantleCutaway: { value: 0 }, mantleCutCentre: { value: new THREE.Vector3(1,0,0) },
     mantleSurfaceOpacity: { value: 1 }, surfaceLineLift: { value: .00085 },
     mantleCutCos: { value: 1 }, mantleCamera: { value: new THREE.Vector3() },
@@ -1151,6 +1158,7 @@ function globeMaterial() {
       }`,
     fragmentShader: `
       ${CUT_UNIFORMS}
+      ${CRUST_GLSL}
       uniform float mantleSurfaceOpacity;
       uniform sampler2D surfaceA;
       uniform sampler2D surfaceB;
@@ -1344,6 +1352,10 @@ function globeMaterial() {
           float shelf = smoothstep(0.3, 0.7, ice.y) * (1.0 - grounded);
           colour = mix(colour, decode(vec3(0.96, 0.97, 0.98)), 0.9 * grounded);
           colour = mix(colour, decode(vec3(0.85, 0.92, 0.97)), 0.65 * shelf);
+        }
+        if (crustColour > 0.5) {
+          float km = crustKm(surfaceUv);
+          colour = km < 0.0 ? vec3(0.3) : crustTint(km);
         }
         // Limb shading gives the sphere volume without reading height from colour. A
         // flat sheet has no limb, so it is left alone.
@@ -1566,7 +1578,7 @@ function updateNameVisibility() {
       facing = THREE.MathUtils.clamp((position.normalize().dot(toCamera) - 0.12) / 0.18, 0, 1);
     }
     sprite.material.opacity = facing * (sprite.userData.fade ?? 1) * uniforms.mantleSurfaceOpacity.value;
-    sprite.visible = sprite.material.opacity > 0.02 && !mantleOverlay?.cutsPoint(sprite.position);
+    sprite.visible = sprite.material.opacity > 0.02 && !mantleOverlay?.cutsPoint(sprite.position) && !crust?.cutsPoint(sprite.position);
   }
 }
 function plateEntry() {
@@ -1973,6 +1985,13 @@ function init() {
     scene: createMantleScene({ earth, uniforms, surfaceMaterial: surfaceMesh.material }),
     globe: mantleBridge(mantleConfig),
   });
+  crust = createCrust({
+    config: JSON.parse($('globe-crust')?.textContent ?? 'null'),
+    earth, uniforms, surface: surfaceMesh, stage, camera: tiltedView,
+    lift: { uniforms: LIFT_UNIFORMS_GLSL, travel: TRAVEL_GLSL, metres: METRES_GLSL, lift: LIFT_GLSL },
+    cut: { uniforms: CUT_UNIFORMS, surface: CUT_SURFACE },
+  });
+  document.addEventListener('crust-focus', event => mantleBridge(mantleConfig).focus(event.detail));
   const observer = new ResizeObserver(fitCamera);
   observer.observe(stage);
   // The control panel changes height with the layers on show, which moves the framing.
@@ -1983,11 +2002,12 @@ function init() {
     previous = time;
     if (document.hidden) return;
     followZoom();
+    crust?.sync();
     controls.update(delta);
     if (spinning && projection !== 'globe' && !reducedMotion) setMeridian(meridian + delta * 12);
     updateNameVisibility();
     const view = tiltedView();
-    if (uniforms.mantleCutaway.value > .5 || uniforms.mantleSurfaceOpacity.value < 1) {
+    if (uniforms.mantleCutaway.value > .5 || uniforms.crustCutaway.value > .5 || uniforms.mantleSurfaceOpacity.value < 1) {
       earth.updateWorldMatrix(true,false);
       uniforms.mantleCamera.value.copy(view.position);
       earth.worldToLocal(uniforms.mantleCamera.value);

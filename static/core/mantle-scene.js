@@ -17,9 +17,14 @@ export const CUT_UNIFORMS = `
   uniform float mantleCutaway;
   uniform vec3 mantleCutCentre;
   uniform float mantleCutCos;
+  uniform float crustCutaway;
+  uniform vec3 crustCutCentre;
+  uniform float crustCutCos;
   varying vec3 vCutPosition;`;
 export const CUT_SURFACE = `
-  if (mantleCutaway > 0.5 && dot(normalize(vCutPosition), mantleCutCentre) > mantleCutCos) discard;`;
+  if (mantleCutaway > 0.5) {
+    if (dot(normalize(vCutPosition), mantleCutCentre) > mantleCutCos) discard;
+  } else if (crustCutaway > 0.5 && dot(normalize(vCutPosition), crustCutCentre) > crustCutCos) discard;`;
 
 export function sectionPath(rotation) {
   const matrix = overlayMatrix(rotation);

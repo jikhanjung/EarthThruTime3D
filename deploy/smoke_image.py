@@ -153,6 +153,9 @@ def main():
             for layer in mantle['frames'][-1]['layers'].values():
                 fetch('/mantle/assets/'+layer['file'])
             fetch('/static/core/collision-surface.js')
+            crust = json.loads((runtime/'crust/catalogue.json').read_text())
+            fetch('/crust/assets/' + crust['asset']['file'])
+            fetch('/static/core/crust.js')
             fetch("/about/")
             print(f"Smoke passed: {version}, {report['fields']['expected']} land fields, "
                   f"five plate models, {shapes} shapes in the last, "
