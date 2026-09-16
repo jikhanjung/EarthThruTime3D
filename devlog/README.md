@@ -32,6 +32,12 @@ wwolf는 001부터 셉니다. 그 전의 001–045는 링크와 본문 속 번�
 ## 작업 기록
 
 - [wwolf 009 — Firefox 검사를 저장소에: WebDriver BiDi로 데스크톱 Firefox 구동](20260915_wwolf_009_firefox_check.md)
+- [jikhanjung 082 — Firefox·호수 PR과 Zenodo 검증 이슈 검토](20260916_jikhanjung_082_firefox_lakes_source_review.md)
+
+- [jikhanjung 081 — v0.14.1 맨틀 표시 기본값 배포](20260916_jikhanjung_081_release_0141.md)
+
+- [jikhanjung 080 — 맨틀 중첩 기본값: 절개 끄기·불투명도 70%](20260916_jikhanjung_080_mantle_overlay_defaults.md)
+
 - [jikhanjung 079 — v0.14.0 PaleoMIST 빙하 하천 릴리스](20260916_jikhanjung_079_release_0140.md)
 
 - [jikhanjung 078 — OPT1 출력 시간 간격과 재계산 가능성 조사](20260916_jikhanjung_078_mantle_output_resolution_research.md)
