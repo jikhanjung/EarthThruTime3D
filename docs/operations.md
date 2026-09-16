@@ -5,11 +5,13 @@ host. Configuration and procedure live in `deploy/README.md` and `deploy/deploy.
 Builds happen on the development host; the server only loads the image and swaps.
 The shared guides are referenced privately through `.guides`; they are not copied.
 
-Current release: **v0.14.1**, deployed 2026-09-16. Approximate mantle overlay now
-starts with India–Asia surface cutaway off and surface opacity at 70%.
-The 1,077 derived files are unchanged from v0.14.0. Image/data hashes, the verified
-DB snapshot and public Firefox default-value checks are recorded in
-[devlog 081](../devlog/20260916_jikhanjung_081_release_0141.md).
+Current release: **v0.15.0**, deployed 2026-09-16. River fields now carry computed
+ice-lake depth in a separate RGB channel. All 150 river textures were converted or
+rebuilt; the runtime bundle contains 1,077 files (445,529,387 bytes). Firefox checks
+and pinned OPT1 source verification were also corrected. Mantle defaults remain
+cutaway off and surface opacity at 70%. Image/data hashes, the verified DB snapshot
+and public Firefox checks are recorded in
+[devlog 086](../devlog/20260916_jikhanjung_086_release_0150.md).
 Browser transfer measurements and the ice-river data generation are recorded in
 [devlog 079](../devlog/20260916_jikhanjung_079_release_0140.md).
 
