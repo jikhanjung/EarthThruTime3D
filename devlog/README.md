@@ -32,6 +32,8 @@ wwolf는 001부터 셉니다. 그 전의 001–045는 링크와 본문 속 번�
 
 ## 작업 기록
 
+- [jikhanjung 096 — v0.18.0 지구 내부 공통 절개 릴리스](20260917_jikhanjung_096_release_0180.md)
+
 - [jikhanjung 095 — 지각·맨틀 공통 패널과 위도·경도 절개](20260917_jikhanjung_095_shared_interior_cutaway.md)
 - [jikhanjung 094 — v0.17.0 현재 하천·호수 자료 릴리스](20260917_jikhanjung_094_release_0170.md)
 - [jikhanjung 093 — OPT1 GPU 재현 계획 1차 검토](20260917_jikhanjung_093_opt1_gpu_roadmap_review.md)
