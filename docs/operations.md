@@ -5,14 +5,15 @@ host. Configuration and procedure live in `deploy/README.md` and `deploy/deploy.
 Builds happen on the development host; the server only loads the image and swaps.
 The shared guides are referenced privately through `.guides`; they are not copied.
 
-Current release: **v0.16.0**, deployed 2026-09-16. CRUST 2.0 provides a present-day
-thickness colour map and an explanatory cutaway shell, available only at 0 Ma.
-The shell does not establish physical Moho depth or reconstruct past crust.
-The runtime bundle contains 1,080 files (445,725,507 bytes): the previous 1,077
-files are unchanged and three crust files are added. Mantle defaults remain
-cutaway off and surface opacity at 70%. Image/data hashes, the verified DB
-snapshot and public browser checks are recorded in
-[devlog 092](../devlog/20260916_jikhanjung_092_release_0160.md).
+Current release: **v0.17.0**, deployed 2026-09-17. Present-day river routing uses
+Natural Earth centrelines and HydroLAKES lake polygons, preserving lake islands.
+The two present river textures and ten 2.5–25 ka ice-river textures were rebuilt
+from verified sources. The runtime bundle has 1,080 files (445,775,830 bytes);
+only these 12 PNGs differ from v0.16.0. No 26–80 ka expansion is deployed.
+Present-day lakes outside glacial ice remain an approximation for past lake outlines.
+CRUST 2.0 remains available at 0 Ma. Mantle defaults remain cutaway off and
+surface opacity at 70%. Image/data hashes, DB backup and public verification are in
+[devlog 094](../devlog/20260917_jikhanjung_094_release_0170.md).
 Browser transfer measurements and the ice-river data generation are recorded in
 [devlog 079](../devlog/20260916_jikhanjung_079_release_0140.md).
 
