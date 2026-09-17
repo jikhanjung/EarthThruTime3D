@@ -78,11 +78,10 @@ export function createCrust({ config, earth, uniforms, surface, stage, camera, l
       fragmentShader: `
         ${cut.uniforms}
         uniform float mantleSurfaceOpacity;
-        uniform vec3 mantleCamera;
         varying float vThickness;
         void main() {
           ${isWall ? '' : cut.surface}
-          if (vThickness < 0.0 || dot(vCutPosition, mantleCamera - vCutPosition) < 0.0) discard;
+          if (vThickness < 0.0) discard;
           gl_FragColor = vec4(${isWall ? 'vec3(0.55, 0.29, 0.105)' : 'vec3(0.24, 0.12, 0.045)'}, mantleSurfaceOpacity);
           #include <colorspace_fragment>
         }`,
@@ -93,8 +92,10 @@ export function createCrust({ config, earth, uniforms, surface, stage, camera, l
     group = new THREE.Group();
     bottom = new THREE.Mesh(new THREE.SphereGeometry(1, 360, 180), makeMaterial(false));
     bottom.frustumCulled = false;
+    bottom.renderOrder = -2;
     wall = new THREE.Mesh(new THREE.BufferGeometry(), makeMaterial(true));
     wall.frustumCulled = false;
+    wall.renderOrder = -1;
     group.add(bottom, wall);
     group.visible = false;
     earth.add(group);
@@ -151,7 +152,9 @@ export function createCrust({ config, earth, uniforms, surface, stage, camera, l
             mesh.material.transparent = transparent;
             mesh.material.needsUpdate = true;
           }
-          mesh.material.depthWrite = !transparent;
+          // Draw the inner shell before the exterior even in the transparent queue.
+          // Keep depth for the cut wall: its far side must not paint over the near side.
+          mesh.material.depthWrite = uniforms.mantleSurfaceOpacity.value > 0;
         }
       }
     }

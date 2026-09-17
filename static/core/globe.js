@@ -972,7 +972,7 @@ function setProjection(name, refresh = true) {
   grid = createGrid();
   earth.add(grid);
   controls.enableRotate = globe;
-  controls.enablePan = !globe;
+  controls.enablePan = true;
   // A flat sheet zooms toward the pointer, so a close look lands where the reader points.
   controls.zoomToCursor = !globe;
   // One switch for turning: the camera orbits the globe, while a sheet turns its centre
@@ -1085,7 +1085,7 @@ function terrainLineMaterial(colour, opacity) {
       uniform float opacity;
       void main() {
         ${CUT_SURFACE}
-        if ((mantleCutaway > 0.5 || crustCutaway > 0.5 || mantleSurfaceOpacity < 1.0) && dot(vCutPosition, mantleCamera - vCutPosition) < 0.0) discard;
+        if (mantleCutaway < 0.5 && crustCutaway < 0.5 && mantleSurfaceOpacity < 1.0 && dot(vCutPosition, mantleCamera - vCutPosition) < 0.0) discard;
         gl_FragColor = vec4(colour, opacity * mantleSurfaceOpacity);
         #include <colorspace_fragment>
       }`,
@@ -1382,7 +1382,9 @@ const RELIEF_TILT = Math.PI * 50 / 180;
 const TILT_MAX = Math.PI * 80 / 180;
 let tiltAngle = RELIEF_TILT;
 let tiltHeading = 0;
-function setTilt(angle, heading) {
+let manualTilt = false;
+function setTilt(angle, heading, manual = true) {
+  manualTilt = manual;
   tiltAngle = THREE.MathUtils.clamp(angle, 0, TILT_MAX);
   tiltHeading = heading;
   stage.dataset.tilt = THREE.MathUtils.radToDeg(tiltAngle).toFixed(0);
@@ -1409,23 +1411,24 @@ function updateRelief(factor) {
   stage.dataset.lineLift = uniforms.surfaceLineLift.value.toFixed(7);
   if ((was > 0) !== (strength > 0)) {
     if ($('relief-note')) $('relief-note').hidden = strength === 0;
-    // Tilting is a gesture of its own while the terrain stands, so the hint says so.
-    $('gesture').textContent = strength > 0 ? L.gestureTerrain : L.gestureGlobe;
+    // Navigation is available for every globe, independently of terrain relief.
+    $('gesture').textContent = projection === 'globe' ? L.gestureGlobe : L.gestureSheet;
   }
 }
 // The controls move `camera`; what is drawn is that view turned about the ground beneath
-// it by the relief's tilt, so the tilt never feeds back into the controls.
+// it by a shared view tilt, so the tilt never feeds back into the controls.
 let viewCamera = null;
 const tiltAxis = new THREE.Vector3();
 const tiltTurn = new THREE.Quaternion();
 function tiltedView() {
-  const tilt = tiltAngle * uniforms.relief.value;
+  const tilt = tiltAngle * (manualTilt ? 1 : 1 - THREE.MathUtils.smoothstep(zoomFactor(), 0.12, 0.3));
   if (tilt <= 0 || projection !== 'globe') return camera;
   viewCamera ??= new THREE.PerspectiveCamera();
   viewCamera.copy(camera);
-  const ground = camera.position.clone().normalize();
+  const normal = camera.position.clone().sub(controls.target).normalize();
+  const ground = normal.clone().add(controls.target);
   // The tilt axis is the screen's horizontal, turned about the ground by the heading.
-  tiltAxis.set(1, 0, 0).applyQuaternion(camera.quaternion).applyAxisAngle(ground, -tiltHeading);
+  tiltAxis.set(1, 0, 0).applyQuaternion(camera.quaternion).applyAxisAngle(normal, -tiltHeading);
   tiltTurn.setFromAxisAngle(tiltAxis, tilt);
   viewCamera.position.sub(ground).applyQuaternion(tiltTurn).add(ground);
   viewCamera.quaternion.premultiply(tiltTurn);
@@ -1888,7 +1891,7 @@ function resetView() {
   camera.position.set(0, globe ? 0.18 : 0, globe ? 3.45 : FLAT_DISTANCE);
   controls.target.set(0, 0, 0);
   setMeridian(0);
-  setTilt(RELIEF_TILT, 0);
+  setTilt(RELIEF_TILT, 0, false);
   // Close enough to read a coastline: 0.06 above the unit sphere, or a twelfth of a sheet.
   controls.minDistance = globe ? 1.06 : FLAT_DISTANCE * 0.08;
   controls.maxDistance = globe ? 5 : FLAT_DISTANCE * 2.2;
@@ -1920,7 +1923,7 @@ function mantleBridge(config) {
     },
     capture: () => ({
       stop, projection, rotation: earth.quaternion.clone(), camera: camera.position.clone(),
-      target: controls.target.clone(), spinning, meridian, tiltAngle, tiltHeading,
+      target: controls.target.clone(), spinning, meridian, tiltAngle, tiltHeading, manualTilt,
     }),
     enter: async (age, first, transition) => {
       const target = stops.findIndex(entry => Math.abs(entry[3] - age) < 1e-8);
@@ -1937,7 +1940,7 @@ function mantleBridge(config) {
       setProjection(previous.projection, false);
       $('projection').value = previous.projection;
       setMeridian(previous.meridian);
-      setTilt(previous.tiltAngle, previous.tiltHeading);
+      setTilt(previous.tiltAngle, previous.tiltHeading, previous.manualTilt);
       earth.quaternion.copy(previous.rotation);
       camera.position.copy(previous.camera);
       controls.target.copy(previous.target);
@@ -1960,8 +1963,8 @@ function init() {
   stage.appendChild(renderer.domElement);
   controls = new OrbitControls(camera, renderer.domElement);
   controls.enableDamping = !reducedMotion;
-  controls.enablePan = false;
-  // The middle button is the terrain tilt's; the wheel already dollies.
+  controls.enablePan = true;
+  // The middle button tilts the view; the wheel already dollies.
   controls.mouseButtons.MIDDLE = null;
 
   controls.autoRotateSpeed = 0.55;
@@ -2009,7 +2012,17 @@ function init() {
     if (document.hidden) return;
     followZoom();
     crust?.sync();
+    // A cut shell must be visible from inside as well as outside. Let depth testing
+    // hide occluded faces; camera-facing hemisphere tests erase the far cut wall.
+    const cutOpen = uniforms.mantleCutaway.value > .5 || uniforms.crustCutaway.value > .5;
+    const side = cutOpen ? THREE.DoubleSide : THREE.FrontSide;
+    if (surfaceMesh.material.side !== side) {
+      surfaceMesh.material.side = side;
+      surfaceMesh.material.needsUpdate = true;
+    }
+    stage.dataset.interiorBackfaces = String(cutOpen);
     controls.update(delta);
+    stage.dataset.pan = controls.target.toArray().map(v => v.toFixed(4)).join(',');
     if (spinning && projection !== 'globe' && !reducedMotion) setMeridian(meridian + delta * 12);
     updateNameVisibility();
     const view = tiltedView();
@@ -2063,11 +2076,12 @@ function init() {
   // On a sheet a left drag turns the centre meridian, as a drag spins the globe.
   // OrbitControls keeps the right button for panning and the wheel or a pinch for zoom.
   let dragging = null;
-  // While the terrain stands, a middle (wheel) drag or a shift drag tilts the view: up
+  // On every globe, a middle (wheel) drag or a shift drag tilts the view: up
   // and down for the angle, sideways for the heading. OrbitControls uses the middle
   // button for dolly, which the wheel already does, so it is taken from it here.
   let tilting = null;
-  // On a touch screen two fingers tilt the standing terrain: moved together up or down for
+  let panning = null;
+  // On a touch screen two fingers tilt the globe: moved together up or down for
   // the angle, twisted for the heading. The gesture is told from a pinch once the fingers
   // have moved 12 px: if their spread changed less than half as much as their midpoint
   // moved, it is a tilt, and the controls stand aside until a finger lifts.
@@ -2079,6 +2093,23 @@ function init() {
     const [a, b] = [...touches.values()];
     return { y: (a.y + b.y) / 2, d: Math.hypot(b.x - a.x, b.y - a.y), a: Math.atan2(b.y - a.y, b.x - a.x) };
   };
+  // Capture custom gestures before OrbitControls sees Shift or the middle button.
+  renderer.domElement.addEventListener('pointerdown', (event) => {
+    if (projection !== 'globe' || event.pointerType === 'touch') return;
+    const tilt = event.button === 1 || (event.button === 0 && event.shiftKey);
+    const pan = event.button === 2 || (event.button === 0 && (event.ctrlKey || event.metaKey));
+    if (!tilt && !pan) return;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    controls.enabled = false;
+    renderer.domElement.setPointerCapture(event.pointerId);
+    const start = { id: event.pointerId, x: event.clientX, y: event.clientY };
+    if (tilt) {
+      // Start at the angle currently drawn, without a jump at distant zoom levels.
+      if (!manualTilt) setTilt(tiltAngle * (1 - THREE.MathUtils.smoothstep(zoomFactor(), .12, .3)), tiltHeading);
+      tilting = start;
+    } else panning = start;
+  }, { capture: true });
   renderer.domElement.addEventListener('pointerdown', (event) => {
     if (event.pointerType === 'touch') {
       touches.set(event.pointerId, { x: event.clientX, y: event.clientY });
@@ -2088,13 +2119,7 @@ function init() {
       dragging = null;  // a second finger means a pinch, not a turn
       return;
     }
-    if (projection === 'globe') {
-      if (uniforms.relief.value > 0 && (event.button === 1 || (event.button === 0 && event.shiftKey))) {
-        event.preventDefault();
-        tilting = { id: event.pointerId, x: event.clientX, y: event.clientY };
-      }
-      return;
-    }
+    if (projection === 'globe') return;
     if (event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey) return;
     dragging = { id: event.pointerId, x: event.clientX };
   });
@@ -2103,10 +2128,11 @@ function init() {
       const before = twoFingers();
       touches.set(event.pointerId, { x: event.clientX, y: event.clientY });
       const after = twoFingers();
-      if (before && after && touchStart && projection === 'globe' && uniforms.relief.value > 0) {
+      if (before && after && touchStart && projection === 'globe') {
         const moved = Math.abs(after.y - touchStart.y);
         if (!touchTilt && moved > 12 && Math.abs(after.d - touchStart.d) < moved * 0.5) {
           touchTilt = true;
+          if (!manualTilt) setTilt(tiltAngle * (1 - THREE.MathUtils.smoothstep(zoomFactor(), .12, .3)), tiltHeading);
           controls.enabled = false;
         }
         if (touchTilt) {
@@ -2114,6 +2140,19 @@ function init() {
           setTilt(tiltAngle - (after.y - before.y) * 0.005, tiltHeading + twist);
         }
       }
+    }
+    if (panning && event.pointerId === panning.id) {
+      const view = tiltedView();
+      const distance = camera.position.distanceTo(controls.target);
+      const scale = 2 * Math.max(.06, distance - 1) * Math.tan(THREE.MathUtils.degToRad(view.fov) / 2) / renderer.domElement.clientHeight;
+      const delta = new THREE.Vector3().setFromMatrixColumn(view.matrixWorld, 0)
+        .multiplyScalar(-(event.clientX - panning.x) * scale)
+        .addScaledVector(new THREE.Vector3().setFromMatrixColumn(view.matrixWorld, 1), (event.clientY - panning.y) * scale);
+      camera.position.add(delta);
+      controls.target.add(delta);
+      panning.x = event.clientX;
+      panning.y = event.clientY;
+      return;
     }
     if (tilting && event.pointerId === tilting.id) {
       // Dragging up leans further toward the horizon, as in the usual map applications.
@@ -2133,7 +2172,12 @@ function init() {
   for (const type of ['pointerup', 'pointercancel']) {
     window.addEventListener(type, (event) => {
       if (dragging && event.pointerId === dragging.id) dragging = null;
-      if (tilting && event.pointerId === tilting.id) tilting = null;
+      if (tilting?.id === event.pointerId || panning?.id === event.pointerId) {
+        tilting = null;
+        panning = null;
+        controls.enabled = true;
+        if (renderer.domElement.hasPointerCapture(event.pointerId)) renderer.domElement.releasePointerCapture(event.pointerId);
+      }
       if (touches.delete(event.pointerId) && touches.size < 2) {
         touchStart = null;
         if (touchTilt) {
