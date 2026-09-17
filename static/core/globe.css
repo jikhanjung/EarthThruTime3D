@@ -252,3 +252,8 @@ summary{cursor:pointer;color:#c9dce2}
 #crust-section-controls:disabled { opacity: .55; }
 #crust-readout { font-variant-numeric: tabular-nums; }
 .crust-caption { top: 80px; }
+
+#interior-section-controls { margin: .7rem 0; padding: .65rem; border: 1px solid var(--border, #526077); border-radius: 5px; }
+#interior-section-controls:disabled { opacity: .55; }
+#interior-section-controls input[type=range] { width: 100%; }
+#interior-panel > h2 { margin-top: 0; font-size: 1rem; }

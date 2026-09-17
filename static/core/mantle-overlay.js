@@ -6,7 +6,7 @@ export function closestFrame(frames, age) {
 
 // Coordinates the selected age and its controls. Rendering belongs to scene;
 // shared timeline, camera and page controls are accessed through the globe bridge.
-export function createMantleOverlay({ config, stage, scene, globe }) {
+export function createMantleOverlay({ config, stage, scene, globe, interior }) {
   if (!config || !$('mantle-overlay')) return null;
   const toggle = $('mantle-overlay');
   const options = $('mantle-overlay-options');
@@ -44,7 +44,7 @@ export function createMantleOverlay({ config, stage, scene, globe }) {
     const rendered = scene.update({
       active,
       opacity: Number($('mantle-opacity').value) / 100,
-      cutaway: $('mantle-cutaway').checked,
+      cutaway: interior.read().enabled,
       layers: {
         slabs: $('overlay-slabs').checked,
         piles: $('overlay-piles').checked,
@@ -57,14 +57,7 @@ export function createMantleOverlay({ config, stage, scene, globe }) {
   }
 
   function cutPosition() {
-    scene.setCutaway({
-      longitude: Number($('mantle-longitude').value),
-      latitude: Number($('mantle-latitude').value),
-      radius: Number($('mantle-radius').value),
-    });
-    for (const id of ['longitude', 'latitude', 'radius']) {
-      $(`mantle-${id}-value`).textContent = $(`mantle-${id}`).value + '°';
-    }
+    scene.setCutaway(interior.read());
     $('mantle-opacity-value').textContent = $('mantle-opacity').value + '%';
     visibility();
   }
@@ -79,6 +72,7 @@ export function createMantleOverlay({ config, stage, scene, globe }) {
     scene.clear();
     toggle.checked = false;
     options.hidden = true;
+    $('mantle-overlay-panel').hidden = true;
     retry.hidden = true;
     caption.hidden = true;
     globe.setPlaybackEnabled(true);
@@ -186,15 +180,15 @@ export function createMantleOverlay({ config, stage, scene, globe }) {
     saved = globe.capture();
     active = true;
     globe.setPlaybackEnabled(false);
-    frame = config.frames[0];
+    frame = closestFrame(config.frames, globe.currentAge());
     options.hidden = false;
+    $('mantle-overlay-panel').hidden = false;
     cutPosition();
     load(true);
   });
   retry.addEventListener('click', () => load());
   $('mantle-age').addEventListener('change', () => requestAge(Number($('mantle-age').value)));
   for (const id of [
-    'mantle-cutaway',
     'overlay-slabs',
     'overlay-piles',
     'overlay-core',
@@ -202,10 +196,8 @@ export function createMantleOverlay({ config, stage, scene, globe }) {
   ]) {
     $(id).addEventListener('change', visibility);
   }
-  for (const id of ['longitude', 'latitude', 'radius', 'opacity']) {
-    $(`mantle-${id}`).addEventListener('input', cutPosition);
-  }
-  $('mantle-focus').addEventListener('click', () => globe.focus(scene.focusPoint()));
+  $('mantle-opacity').addEventListener('input', cutPosition);
+  interior.subscribe(cutPosition);
   document.addEventListener('globe-section-age', (event) => {
     if (active && config.frames.some((entry) => entry.age_ma === event.detail.age)) {
       requestAge(event.detail.age);

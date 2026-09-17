@@ -1,10 +1,20 @@
 # Present-day CRUST 2.0 display
 
 The main viewer provides a present-day crust thickness colour map, point readouts
-and a cutaway shell. Enable **Crustal thickness** at 0 Ma. The independent cutaway
-works without the mantle overlay; when the mantle cutaway is on, both use its
-centre and radius. Thickness scale is 1× by default, with an explicitly labelled
-5× illustration. Planar projections show the colour map only.
+and a cutaway shell. In **Earth interior**, enable **Crustal thickness** at 0 Ma.
+Crust and mantle can be enabled independently and use the same **Surface cutaway**:
+south/north latitude and west/east longitude. West greater than east crosses the
+date line; -180 to 180 covers all longitudes; equal longitudes leave the surface
+uncut. The shell walls follow the parallels and meridians without a wall at the
+longitude seam for a full band. India–Asia is a location preset (35°E–125°E,
+35°S–55°N), separate from the fixed scientific A–A′ section.
+
+Enabling the mantle at 0 Ma keeps the crust visible and preserves the camera.
+Elsewhere the mantle selects the nearest available 80/60/40/20/0 Ma frame.
+Crust remains present-day only; selecting an older mantle age hides it and returning
+to 0 Ma restores it. Shared cut settings survive either layer being switched off.
+Thickness scale is 1× by default, with an explicitly labelled 5× illustration.
+Planar projections show the colour map only and disable the shared cut controls.
 
 ## Scientific meaning
 

@@ -1,3 +1,4 @@
+import { containsPoint, longitudeSpan, INDIA_ASIA, CUT_REGION_GLSL } from './interior-cutaway.js';
 import * as THREE from 'three';
 
 // Earth-local coordinates: geographic xyz → (x,z,-y); no depth exaggeration.
@@ -15,16 +16,11 @@ export function overlayMatrix(rotation) {
 // Shared local-space cut: climate/ice live in the surface shader, lines share it.
 export const CUT_UNIFORMS = `
   uniform float mantleCutaway;
-  uniform vec3 mantleCutCentre;
-  uniform float mantleCutCos;
   uniform float crustCutaway;
-  uniform vec3 crustCutCentre;
-  uniform float crustCutCos;
-  varying vec3 vCutPosition;`;
+  varying vec3 vCutPosition;
+  ${CUT_REGION_GLSL}`;
 export const CUT_SURFACE = `
-  if (mantleCutaway > 0.5) {
-    if (dot(normalize(vCutPosition), mantleCutCentre) > mantleCutCos) discard;
-  } else if (crustCutaway > 0.5 && dot(normalize(vCutPosition), crustCutCentre) > crustCutCos) discard;`;
+  if ((mantleCutaway > 0.5 || crustCutaway > 0.5) && inInteriorCut(vCutPosition)) discard;`;
 
 export function sectionPath(rotation) {
   const matrix = overlayMatrix(rotation);
@@ -132,7 +128,6 @@ function sectionTrace(rotation) {
 export function createMantleScene({ earth, uniforms, surfaceMaterial }) {
   let displayed = null;
   let trace = null;
-  const centre = new THREE.Vector3();
   const raycaster = new THREE.Raycaster();
   raycaster.params.Line.threshold = 0.02;
 
@@ -182,7 +177,7 @@ export function createMantleScene({ earth, uniforms, surfaceMaterial }) {
       surfaceMaterial.needsUpdate = true;
     }
     surfaceMaterial.depthWrite = surfaceOpacity === 1;
-    uniforms.mantleCutaway.value = visible && cutaway ? 1 : 0;
+    uniforms.mantleCutaway.value = visible && cutaway && uniforms.interiorBounds.value.y > 0 ? 1 : 0;
     if (displayed) {
       displayed.visible = visible;
       for (const name of ['slabs', 'piles', 'core']) {
@@ -193,12 +188,10 @@ export function createMantleScene({ earth, uniforms, surfaceMaterial }) {
     return { opacity: surfaceOpacity, cutaway: uniforms.mantleCutaway.value === 1 };
   }
 
-  function setCutaway({ longitude, latitude, radius }) {
-    const lon = (longitude * Math.PI) / 180;
-    const lat = (latitude * Math.PI) / 180;
-    centre.set(Math.cos(lat) * Math.cos(lon), Math.sin(lat), -Math.cos(lat) * Math.sin(lon));
-    uniforms.mantleCutCentre.value.copy(centre);
-    uniforms.mantleCutCos.value = Math.cos((radius * Math.PI) / 180);
+  let cutBounds = { ...INDIA_ASIA };
+  function setCutaway(bounds) {
+    cutBounds = bounds;
+    uniforms.interiorBounds.value.set(bounds.west, longitudeSpan(bounds), bounds.south, bounds.north);
   }
 
   function sectionHit(x, y, box, camera) {
@@ -220,9 +213,8 @@ export function createMantleScene({ earth, uniforms, surfaceMaterial }) {
     clear,
     setCutaway,
     sectionHit,
-    focusPoint: () => centre.clone(),
     cutsPoint: (point) =>
       uniforms.mantleCutaway.value > 0.5 &&
-      point.clone().normalize().dot(centre) > uniforms.mantleCutCos.value,
+      containsPoint(point, cutBounds),
   };
 }

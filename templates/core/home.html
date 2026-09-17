@@ -18,25 +18,36 @@
     <button id="info-toggle" class="info-toggle" aria-controls="inspector" aria-expanded="true">{% trans "정보" %}</button>
   </section>
   <aside class="inspector" id="inspector" aria-label="{% trans '선택한 시대 정보' %}">
-    <button type="button" data-collision-open aria-controls="collision-dialog" aria-expanded="false">{% trans "인도–아시아 A–A′ 단면" %}</button>
-    {% if crust %}
-    <fieldset class="mantle-overlay-panel" id="crust-panel">
-      <legend>{% trans "지각 · 현재 지구" %}</legend>
+    {% if crust or mantle_overlay %}
+    <section id="interior-panel" class="mantle-overlay-panel" aria-labelledby="interior-title">
+      <h2 id="interior-title">{% trans "지구 내부" %}</h2>
+      {% if crust %}
       <label><input id="crust-enabled" type="checkbox" autocomplete="off"> {% trans "지각 두께" %}</label>
+      {% endif %}
+      {% if mantle_overlay %}
+      <label><input type="checkbox" id="mantle-overlay" autocomplete="off"> {% trans "맨틀 근사 중첩" %}</label>
+      {% endif %}
+      <fieldset id="interior-section-controls">
+        <legend>{% trans "공통 지표 절개" %}</legend>
+        <label><input id="interior-cutaway" type="checkbox" autocomplete="off"> {% trans "지표 절개" %}</label>
+        <label for="interior-south">{% trans "남쪽 위도" %} <output id="interior-south-value">-35°</output></label><input id="interior-south" type="range" min="-90" max="89" value="-35">
+        <label for="interior-north">{% trans "북쪽 위도" %} <output id="interior-north-value">55°</output></label><input id="interior-north" type="range" min="-89" max="90" value="55">
+        <label for="interior-west">{% trans "서쪽 경도" %} <output id="interior-west-value">35°</output></label><input id="interior-west" type="range" min="-180" max="180" value="35">
+        <label for="interior-east">{% trans "동쪽 경도" %} <output id="interior-east-value">125°</output></label><input id="interior-east" type="range" min="-180" max="180" value="125">
+        <p class="model-note">{% trans "서쪽 경도가 동쪽 경도보다 크면 날짜변경선을 가로지릅니다. 두 경도가 같으면 절개하지 않습니다." %}</p>
+        <button id="interior-india-asia" type="button">{% trans "인도–아시아 위치 프리셋" %}</button>
+        <button id="interior-focus" type="button">{% trans "절개 중심으로 이동" %}</button>
+      </fieldset>
+      <p class="model-note">{% trans "지각과 맨틀은 같은 절개 위치를 사용합니다. CRUST 2.0은 현재(0 Ma)에서만 표시됩니다." %}</p>
+    {% if crust %}
+    <fieldset class="mantle-overlay-panel" id="crust-panel" hidden>
+      <legend>{% trans "지각 · 현재 지구" %}</legend>
       <div id="crust-options" hidden>
         <p id="crust-status" role="status" aria-live="polite"></p>
         <label><input id="crust-colour" type="checkbox" checked autocomplete="off"> {% trans "두께 색상 지도" %}</label>
         <figure id="crust-legend" class="crust-legend" hidden><div></div><figcaption><span>0</span><span>40</span><span>80 km</span></figcaption><small>{% trans "회색: 자료 없음" %}</small></figure>
         <fieldset id="crust-section-controls">
           <legend>{% trans "지구본 지각 단면" %}</legend>
-          <div id="crust-own-cut">
-            <label><input id="crust-cutaway" type="checkbox" autocomplete="off"> {% trans "지각 절개" %}</label>
-            <label for="crust-longitude">{% trans "절개 중심 경도" %} <output id="crust-longitude-value">80°</output></label><input id="crust-longitude" type="range" min="-180" max="180" value="80">
-            <label for="crust-latitude">{% trans "절개 중심 위도" %} <output id="crust-latitude-value">10°</output></label><input id="crust-latitude" type="range" min="-90" max="90" value="10">
-            <label for="crust-radius">{% trans "절개 각반경" %} <output id="crust-radius-value">45°</output></label><input id="crust-radius" type="range" min="10" max="90" value="45">
-            <button id="crust-focus" type="button">{% trans "절개 중심으로 이동" %}</button>
-          </div>
-          <p id="crust-shared-cut" hidden>{% trans "맨틀의 절개 위치와 반경을 함께 사용합니다." %}</p>
           <label for="crust-scale">{% trans "지각 두께 배율" %}</label><select id="crust-scale" autocomplete="off"><option value="1">1×</option><option value="5">5×</option></select>
         </fieldset>
         <p id="crust-scale-note" hidden>{% trans "지각 두께를 5배로 강조한 표시입니다." %}</p>
@@ -48,23 +59,19 @@
     </fieldset>
     {% endif %}
     {% if mantle_overlay %}
-    <fieldset class="mantle-overlay-panel" id="mantle-overlay-panel">
-      <legend>{% trans "지구 내부 · 80 Ma–현재" %}</legend>
-      <label><input type="checkbox" id="mantle-overlay" autocomplete="off"> {% trans "맨틀 근사 중첩" %}</label>
+    <fieldset class="mantle-overlay-panel" id="mantle-overlay-panel" hidden>
+      <legend>{% trans "맨틀 · 80 Ma–현재" %}</legend>
       <div id="mantle-overlay-options" hidden>
         <label for="mantle-age">{% trans "맨틀 원본 시점" %}</label>
         <select id="mantle-age"><option value="80">80 Ma</option><option value="60">60 Ma</option><option value="40">40 Ma</option><option value="20">20 Ma</option><option value="0">0 Ma</option></select>
         <p class="model-note">{% trans "시간 조절기는 다섯 원본 시점으로 맞춥니다. 메시 사이를 보간하지 않습니다." %}</p>
-        <label><input type="checkbox" id="mantle-cutaway" autocomplete="off"> {% trans "인도–아시아 지표 절개" %}</label>
-        <label for="mantle-longitude">{% trans "절개 중심 경도" %} <output id="mantle-longitude-value">80°</output></label><input id="mantle-longitude" type="range" min="-180" max="180" step="1" value="80">
-        <label for="mantle-latitude">{% trans "절개 중심 위도" %} <output id="mantle-latitude-value">10°</output></label><input id="mantle-latitude" type="range" min="-90" max="90" step="1" value="10">
-        <label for="mantle-radius">{% trans "절개 각반경" %} <output id="mantle-radius-value">45°</output></label><input id="mantle-radius" type="range" min="10" max="90" step="1" value="45">
         <label for="mantle-opacity">{% trans "지표 불투명도" %} <output id="mantle-opacity-value">70%</output></label><input id="mantle-opacity" type="range" min="0" max="100" step="5" value="70">
         <p class="model-note">{% trans "전 지구 맨틀과 핵 기준 구를 표시합니다. 절개 이동은 고정 A–A′ 단면을 바꾸지 않습니다." %}</p>
-        <button id="mantle-focus" type="button">{% trans "절개 중심으로 이동" %}</button>
+        <details id="interior-india-asia-section"><summary>{% trans "인도–아시아 A–A′ 단면" %}</summary>
         <label><input type="checkbox" id="mantle-section" checked> {% trans "A–A′ 단면선 표시" %}</label>
         <button id="mantle-section-open" type="button" data-collision-open>{% trans "연결된 A–A′ 단면 열기" %}</button>
         <p id="mantle-residual" class="model-note"></p>
+        </details>
         <label><input type="checkbox" id="overlay-slabs" checked autocomplete="off"> {% trans "섭입 잔재 표면 (파랑)" %}</label>
         <label><input type="checkbox" id="overlay-piles" checked autocomplete="off"> {% trans "심부 구조 표면 (주황)" %}</label>
         <label><input type="checkbox" id="overlay-core" checked> {% trans "핵 경계 기준 구 (회색)" %}</label>
@@ -77,6 +84,9 @@
       </div>
     </fieldset>
     {% endif %}
+    </section>
+    {% endif %}
+    <button type="button" data-collision-open aria-controls="collision-dialog" aria-expanded="false">{% trans "인도–아시아 A–A′ 단면" %}</button>
     <p class="eyebrow">SELECTED TIME</p><h2 id="period">{% trans "현재" %}</h2><p id="age" class="age">0 <span>Ma</span></p><p id="source-title">Modern World</p>{% if temperature_available %}<p id="mean-temp" class="mean-temp"></p><figure id="temp-legend" class="temp-legend" aria-label="{% trans '기온 색 범례' %}" hidden><div class="temp-bar"><span id="temp-today" class="temp-mark today"><span>{% trans "현재" %}</span></span><span id="temp-now" class="temp-mark now" hidden></span></div><figcaption><span>−30 °C</span><span>0</span><span>20</span><span>40 °C</span></figcaption></figure>{% endif %}{% if sealevel_available %}<p id="sea-level" class="mean-temp"></p>{% endif %}
 {% if mask.relief %}    <label for="shading">{% trans "지형 음영" %}</label><select id="shading" autocomplete="off"><option value="0">{% trans "음영 없음" %}</option><option value="1" selected>{% trans "실제 기복" %}</option><option value="5">{% trans "기복 ×5" %}</option><option value="20">{% trans "기복 ×20" %}</option></select>
 {% endif %}{% if sealevel_available %}    <label for="sealevel">{% trans "해수면" %} <span id="sealevel-value" class="sealevel-value">+0 m</span></label><input id="sealevel" type="range" min="-150" max="150" step="10" value="0" list="sealevel-marks" autocomplete="off"><datalist id="sealevel-marks"></datalist><p id="sealevel-notes" class="sealevel-notes" hidden></p><label class="check-toggle"><input type="checkbox" id="sealevel-curve" autocomplete="off"> {% trans "곡선 편차 적용" %}</label>
@@ -169,7 +179,7 @@
 {% endif %}{% endblock %}
 {% block dialog_head %}{% if viewer_enabled %}<link rel="stylesheet" href="{% static 'core/collision-dialog.css' %}?v={{ version }}">{% endif %}{% endblock %}
 {% block viewer_scripts %}{% if viewer_enabled %}
-<script type="importmap">{"imports":{"three":"{% static 'vendor/three/three.module.js' %}","{% static 'core/projection.js' %}":"{% static 'core/projection.js' %}?v={{ version }}","{% static 'core/mantle-overlay.js' %}":"{% static 'core/mantle-overlay.js' %}?v={{ version }}","{% static 'core/mantle-scene.js' %}":"{% static 'core/mantle-scene.js' %}?v={{ version }}","{% static 'core/crust.js' %}":"{% static 'core/crust.js' %}?v={{ version }}"}}</script>
+<script type="importmap">{"imports":{"three":"{% static 'vendor/three/three.module.js' %}","{% static 'core/projection.js' %}":"{% static 'core/projection.js' %}?v={{ version }}","{% static 'core/mantle-overlay.js' %}":"{% static 'core/mantle-overlay.js' %}?v={{ version }}","{% static 'core/mantle-scene.js' %}":"{% static 'core/mantle-scene.js' %}?v={{ version }}","{% static 'core/interior-cutaway.js' %}":"{% static 'core/interior-cutaway.js' %}?v={{ version }}","{% static 'core/interior-controls.js' %}":"{% static 'core/interior-controls.js' %}?v={{ version }}","{% static 'core/crust.js' %}":"{% static 'core/crust.js' %}?v={{ version }}"}}</script>
 {% include 'includes/collision-dialog.html' %}
 <script type="module" src="{% static 'core/collision-dialog.js' %}?v={{ version }}"></script>
 {% endif %}{% endblock %}
