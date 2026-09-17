@@ -1,3 +1,4 @@
+import { cutBoundary, containsPoint, longitudeSpan } from './interior-cutaway.js';
 import * as THREE from 'three';
 
 export const CRUST_GLSL = `
@@ -40,20 +41,7 @@ export function shellRadius(displayRadius, km, scale) {
   return displayRadius - km * scale / 6371;
 }
 
-export function cutRing(centre, cosine, segments = 720) {
-  const c = centre.clone().normalize();
-  const axis = Math.abs(c.y) < 0.9 ? new THREE.Vector3(0, 1, 0) : new THREE.Vector3(1, 0, 0);
-  const u = new THREE.Vector3().crossVectors(c, axis).normalize();
-  const v = new THREE.Vector3().crossVectors(c, u).normalize();
-  const sine = Math.sqrt(Math.max(0, 1 - cosine * cosine));
-  return Array.from({ length: segments + 1 }, (_, i) => {
-    const a = i * Math.PI * 2 / segments;
-    return c.clone().multiplyScalar(cosine)
-      .addScaledVector(u, sine * Math.cos(a)).addScaledVector(v, sine * Math.sin(a));
-  });
-}
-
-export function createCrust({ config, earth, uniforms, surface, stage, camera, lift, cut }) {
+export function createCrust({ config, earth, uniforms, surface, stage, camera, lift, cut, interior }) {
   const $ = id => document.getElementById(id);
   if (!config || !$('crust-enabled')) return null;
   const toggle = $('crust-enabled'), colour = $('crust-colour'), status = $('crust-status');
@@ -63,7 +51,6 @@ export function createCrust({ config, earth, uniforms, surface, stage, camera, l
   let lastState = '';
   const raycaster = new THREE.Raycaster();
   const point = new THREE.Vector3();
-  const center = new THREE.Vector3();
   let down = null;
 
   function makeMaterial(isWall) {
@@ -113,19 +100,24 @@ export function createCrust({ config, earth, uniforms, surface, stage, camera, l
     earth.add(group);
   }
 
-  function updateWall(c, cosine) {
-    const key = [...c.toArray(), cosine].join(',');
+  function updateWall(bounds) {
+    const key = JSON.stringify(bounds);
     if (key === ringKey) return;
     ringKey = key;
-    const ring = cutRing(c, cosine), positions = [], depth = [], indices = [];
-    ring.forEach((p, i) => {
-      positions.push(...p.toArray(), ...p.toArray());
-      depth.push(0, 1);
-      if (i < ring.length - 1) {
-        const j = i * 2;
-        indices.push(j, j + 1, j + 2, j + 1, j + 3, j + 2);
-      }
-    });
+    const positions = [], depth = [], indices = [];
+    for (const ring of cutBoundary(bounds)) {
+      const offset = depth.length;
+      ring.forEach(([longitude, latitude], i) => {
+        const lon = longitude * Math.PI / 180, lat = latitude * Math.PI / 180;
+        const xyz = [Math.cos(lat) * Math.cos(lon), Math.sin(lat), -Math.cos(lat) * Math.sin(lon)];
+        positions.push(...xyz, ...xyz);
+        depth.push(0, 1);
+        if (i < ring.length - 1) {
+          const j = offset + i * 2;
+          indices.push(j, j + 1, j + 2, j + 1, j + 3, j + 2);
+        }
+      });
+    }
     const geometry = new THREE.BufferGeometry();
     geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
     geometry.setAttribute('crustDepth', new THREE.Float32BufferAttribute(depth, 1));
@@ -135,27 +127,24 @@ export function createCrust({ config, earth, uniforms, surface, stage, camera, l
   }
 
   function sync() {
-    const key = [age, Boolean(data), failed, ...['crust-enabled', 'crust-colour', 'crust-cutaway'].map(id => $(id).checked),
-      ...['crust-scale', 'crust-longitude', 'crust-latitude', 'crust-radius'].map(id => $(id).value),
+    const section = interior.read();
+    const key = [JSON.stringify(section), age, Boolean(data), failed, ...['crust-enabled', 'crust-colour'].map(id => $(id).checked),
+      ...['crust-scale'].map(id => $(id).value),
       uniforms.projection.value, uniforms.mode.value, uniforms.mantleCutaway.value,
-      ...uniforms.mantleCutCentre.value.toArray(), uniforms.mantleCutCos.value, uniforms.mantleSurfaceOpacity.value].join('|');
+      uniforms.mantleSurfaceOpacity.value].join('|');
     if (key === lastState) return;
     lastState = key;
     const active = toggle.checked && data !== null && age === 0;
     const globe = uniforms.projection.value === 0;
     uniforms.crustColour.value = active && colour.checked ? 1 : 0;
-    uniforms.crustCutaway.value = active && globe && $('crust-cutaway').checked ? 1 : 0;
+    uniforms.crustCutaway.value = active && globe && section.enabled && longitudeSpan(section) > 0 ? 1 : 0;
     uniforms.crustScale.value = Number($('crust-scale').value);
-    const lon = Number($('crust-longitude').value) * Math.PI / 180;
-    const lat = Number($('crust-latitude').value) * Math.PI / 180;
-    uniforms.crustCutCentre.value.set(Math.cos(lat) * Math.cos(lon), Math.sin(lat), -Math.cos(lat) * Math.sin(lon));
-    uniforms.crustCutCos.value = Math.cos(Number($('crust-radius').value) * Math.PI / 180);
+    uniforms.interiorBounds.value.set(section.west, longitudeSpan(section), section.south, section.north);
     const mantleCut = uniforms.mantleCutaway.value > 0.5;
     if (group) {
       group.visible = active && globe && (mantleCut || uniforms.crustCutaway.value > 0.5);
       if (group.visible) {
-        updateWall(mantleCut ? uniforms.mantleCutCentre.value : uniforms.crustCutCentre.value,
-          mantleCut ? uniforms.mantleCutCos.value : uniforms.crustCutCos.value);
+        updateWall(section);
         for (const mesh of [bottom, wall]) {
           const transparent = uniforms.mantleSurfaceOpacity.value < 1;
           if (mesh.material.transparent !== transparent) {
@@ -167,14 +156,12 @@ export function createCrust({ config, earth, uniforms, surface, stage, camera, l
       }
     }
     $('crust-options').hidden = !toggle.checked;
+    $('crust-panel').hidden = !toggle.checked;
     $('crust-legend').hidden = !(active && colour.checked);
     $('crust-section-controls').disabled = !globe;
-    $('crust-own-cut').hidden = mantleCut;
-    $('crust-shared-cut').hidden = !mantleCut;
     $('crust-scale-note').hidden = !(active && uniforms.crustScale.value !== 1 && globe);
     $('crust-caption').hidden = !group?.visible;
     $('crust-caption').textContent = strings.caption.replace('{scale}', String(uniforms.crustScale.value));
-    for (const name of ['longitude', 'latitude', 'radius']) $('crust-' + name + '-value').textContent = $('crust-' + name).value + '°';
     $('crust-retry').hidden = !failed;
     const state = !toggle.checked ? 'off' : age !== 0 ? 'unavailable' : failed ? 'error' : data ? 'ready' : 'loading';
     if (stage.dataset.crust !== state) {
@@ -223,11 +210,9 @@ export function createCrust({ config, earth, uniforms, surface, stage, camera, l
 
   toggle.addEventListener('change', () => { sync(); if (toggle.checked && age === 0) load(); });
   $('crust-retry').addEventListener('click', load);
-  for (const id of ['crust-colour', 'crust-cutaway', 'crust-scale', 'crust-longitude', 'crust-latitude', 'crust-radius']) $(id).addEventListener('input', sync);
+  for (const id of ['crust-colour', 'crust-scale']) $(id).addEventListener('input', sync);
   for (const id of ['temperature', 'surface']) $(id)?.addEventListener('click', () => { colour.checked = false; sync(); });
-  $('crust-focus').addEventListener('click', () => {
-    document.dispatchEvent(new CustomEvent('crust-focus', { detail: uniforms.crustCutCentre.value.clone() }));
-  });
+  interior.subscribe(sync);
   stage.addEventListener('pointerdown', e => { down = [e.clientX, e.clientY]; });
   stage.addEventListener('pointerup', e => {
     if (!data || !toggle.checked || age !== 0 || !down || Math.hypot(e.clientX - down[0], e.clientY - down[1]) > 5) return;
@@ -238,9 +223,7 @@ export function createCrust({ config, earth, uniforms, surface, stage, camera, l
     let lon, lat;
     if (uniforms.projection.value === 0) {
       point.copy(hit.point); earth.worldToLocal(point); point.normalize();
-      center.copy(uniforms.mantleCutaway.value > .5 ? uniforms.mantleCutCentre.value : uniforms.crustCutCentre.value);
-      const cosine = uniforms.mantleCutaway.value > .5 ? uniforms.mantleCutCos.value : uniforms.crustCutCos.value;
-      if ((uniforms.mantleCutaway.value > .5 || uniforms.crustCutaway.value > .5) && point.dot(center) > cosine) return;
+      if ((uniforms.mantleCutaway.value > .5 || uniforms.crustCutaway.value > .5) && containsPoint(point, interior.read())) return;
       lon = Math.atan2(-point.z, point.x) * 180 / Math.PI;
       lat = Math.asin(point.y) * 180 / Math.PI;
     } else if (uniforms.projection.value === 1) {
@@ -260,6 +243,6 @@ export function createCrust({ config, earth, uniforms, surface, stage, camera, l
   return {
     frame(value) { age = value; lastState = ''; sync(); if (toggle.checked && age === 0 && !data && !failed) load(); },
     sync,
-    cutsPoint: p => uniforms.mantleCutaway.value <= .5 && uniforms.crustCutaway.value > .5 && p.clone().normalize().dot(uniforms.crustCutCentre.value) > uniforms.crustCutCos.value,
+    cutsPoint: p => uniforms.mantleCutaway.value <= .5 && uniforms.crustCutaway.value > .5 && containsPoint(p, interior.read()),
   };
 }

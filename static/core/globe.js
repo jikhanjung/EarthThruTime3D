@@ -1,3 +1,4 @@
+import { cutCentre } from './interior-cutaway.js';
 import * as THREE from 'three';
 import { OrbitControls } from '../vendor/three/OrbitControls.js';
 import { placeEquirectangular, placeMollweide, reproject } from './projection.js';
@@ -6,6 +7,8 @@ import { densifySegments } from './surface-lines.js';
 import { createMantleOverlay } from './mantle-overlay.js';
 import { createMantleScene, CUT_UNIFORMS, CUT_SURFACE } from './mantle-scene.js';
 import { createCrust, CRUST_GLSL } from './crust.js';
+import { createInteriorControls } from './interior-controls.js';
+let interior = null;
 let mantleOverlay = null;
 let crust = null;
 
@@ -955,6 +958,7 @@ function setProjection(name, refresh = true) {
   if (!PROJECTIONS[name] || name === projection) return;
   mantleOverlay?.onProjection(name);
   projection = name;
+  interior?.onProjection(name);
   const globe = projection === 'globe';
   uniforms.projection.value = PROJECTIONS[projection].code;
   surfaceMesh.geometry.dispose();
@@ -1092,11 +1096,10 @@ function globeMaterial() {
     rgb[0] / 255, rgb[1] / 255, rgb[2] / 255, THREE.SRGBColorSpace);
   uniforms = {
     crustMap: { value: null }, crustColour: { value: 0 }, crustScale: { value: 1 },
-    crustCutaway: { value: 0 }, crustCutCentre: { value: new THREE.Vector3(1, 0, 0) },
-    crustCutCos: { value: 1 },
-    mantleCutaway: { value: 0 }, mantleCutCentre: { value: new THREE.Vector3(1,0,0) },
+    crustCutaway: { value: 0 }, mantleCutaway: { value: 0 },
+    interiorBounds: { value: new THREE.Vector4(35, 90, -35, 55) },
     mantleSurfaceOpacity: { value: 1 }, surfaceLineLift: { value: .00085 },
-    mantleCutCos: { value: 1 }, mantleCamera: { value: new THREE.Vector3() },
+    mantleCamera: { value: new THREE.Vector3() },
     surfaceA: { value: null }, surfaceB: { value: null },
     tempA: { value: null }, tempB: { value: null },
     iceA: { value: null }, iceB: { value: null },
@@ -1894,6 +1897,7 @@ function resetView() {
 // The overlay owns its controls; this bridge owns access to the shared globe.
 function mantleBridge(config) {
   return {
+    currentAge: () => stopAt(stop).age,
     getCamera: tiltedView,
     setPlaybackEnabled: enabled => {
       $('play').disabled = !enabled;
@@ -1927,12 +1931,6 @@ function mantleBridge(config) {
       spinning = false;
       controls.autoRotate = false;
       $('rotate').setAttribute('aria-pressed', 'false');
-      if (first) {
-        earth.rotation.set(0, 0, 0);
-        camera.position.copy(onSphere(config.cutaway.longitude, config.cutaway.latitude, 3.2));
-        controls.target.set(0, 0, 0);
-        controls.update();
-      }
       if (!await selectStop(target, true, true, transition)) throw new Error('Surface unavailable');
     },
     restore: previous => {
@@ -1979,19 +1977,27 @@ function init() {
   scene.add(earth);
   resetView();
   const mantleConfig = JSON.parse($('globe-mantle-overlay')?.textContent ?? 'null');
+  interior = createInteriorControls({
+    focus: bounds => {
+      const { longitude, latitude } = cutCentre(bounds);
+      mantleBridge(mantleConfig).focus(onSphere(longitude, latitude, 1));
+    },
+  });
+  interior?.onProjection(projection);
   mantleOverlay = createMantleOverlay({
+    interior,
     config: mantleConfig,
     stage,
     scene: createMantleScene({ earth, uniforms, surfaceMaterial: surfaceMesh.material }),
     globe: mantleBridge(mantleConfig),
   });
   crust = createCrust({
+    interior,
     config: JSON.parse($('globe-crust')?.textContent ?? 'null'),
     earth, uniforms, surface: surfaceMesh, stage, camera: tiltedView,
     lift: { uniforms: LIFT_UNIFORMS_GLSL, travel: TRAVEL_GLSL, metres: METRES_GLSL, lift: LIFT_GLSL },
     cut: { uniforms: CUT_UNIFORMS, surface: CUT_SURFACE },
   });
-  document.addEventListener('crust-focus', event => mantleBridge(mantleConfig).focus(event.detail));
   const observer = new ResizeObserver(fitCamera);
   observer.observe(stage);
   // The control panel changes height with the layers on show, which moves the framing.

@@ -89,7 +89,7 @@ try {
   if (process.env.FIREFOX_CRUST === '1') {
     await evaluate(context, `document.getElementById('crust-enabled').click()`);
     await until(context, 'crust data', state => state.crust === 'ready');
-    await evaluate(context, `document.getElementById('crust-cutaway').click(); document.getElementById('crust-scale').value='5'; document.getElementById('crust-scale').dispatchEvent(new Event('input')); document.getElementById('crust-focus').click()`);
+    await evaluate(context, `document.getElementById('interior-cutaway').click(); document.getElementById('crust-scale').value='5'; document.getElementById('crust-scale').dispatchEvent(new Event('input')); document.getElementById('interior-focus').click()`);
     await until(context, 'crust section', state => state.crustSection === 'true');
     await screenshot(context, 'firefox-crust.png');
     for (const age of [20, 0]) {

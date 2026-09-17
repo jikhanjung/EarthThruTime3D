@@ -12,17 +12,17 @@ try {
  const ready=async age=>{await expect(globe).toHaveAttribute('data-mantle-overlay','ready',{timeout:30000});await expect(globe).toHaveAttribute('data-mantle-age',String(age));};
  await expect(globe).toHaveAttribute('aria-busy','false');expect(requests).toEqual([]);
  const initial=await page.locator('#timeline').inputValue();
- await page.selectOption('#projection','equirect');await toggle.check();await ready(80);
- expect(requests.length).toBe(2);
+ await page.selectOption('#projection','equirect');await toggle.check();await ready(0);await page.selectOption('#mantle-age','80');await ready(80);
+ expect(requests.length).toBe(4);
  await expect(page.locator('#overlay-core')).toBeChecked();
  await page.locator('#info-toggle').click();
  await page.screenshot({path:'test-results/mantle-global-core.png',fullPage:true});
  await page.locator('#info-toggle').click();
  await page.locator('#overlay-core').uncheck();await page.locator('#overlay-core').check();
  const before=requests.length;
- await page.locator('#mantle-longitude').fill('25');await page.locator('#mantle-latitude').fill('-15');await page.locator('#mantle-radius').fill('30');
+ await page.locator('#interior-west').fill('25');await page.locator('#interior-south').fill('-15');await page.locator('#interior-east').fill('30');
  await page.locator('#mantle-opacity').fill('35');await expect(globe).toHaveAttribute('data-mantle-opacity','0.35');
- await page.locator('#mantle-cutaway').uncheck();await page.locator('#overlay-piles').uncheck();await page.locator('#overlay-piles').check();
+ await page.locator('#interior-cutaway').uncheck();await page.locator('#overlay-piles').uncheck();await page.locator('#overlay-piles').check();
  expect(requests.length).toBe(before);
  await page.locator('#info-toggle').click();
  await page.screenshot({path:'test-results/mantle-transparent.png',fullPage:true});
@@ -39,6 +39,7 @@ try {
  await ready(40);
  await page.waitForTimeout(300);
  expect(requests.length).toBe(sameFrameRequests);
+ await page.locator('#interior-india-asia-section summary').click();
  await page.locator('#mantle-section-open').click();
  const popup=page.frameLocator('#collision-dialog iframe');
  await expect(popup.locator('body')).toHaveAttribute('data-age','40',{timeout:30000});
@@ -59,7 +60,7 @@ try {
  await expect.poll(()=>page.locator('#collision-dialog iframe').evaluate(el=>el.contentDocument?.URL),{timeout:30000}).toBe('about:blank');
  console.log('Linked section, recovery, document unload and main age synchronization passed');
  await toggle.uncheck();await expect(page.locator('#timeline')).toHaveValue(initial);await expect(globe).toHaveAttribute('data-projection','equirect');
- await toggle.check();await ready(80);
+ await toggle.check();await ready(0);
  // Failed selected frame hides the old geometry, recovers without stale age.
  await page.route('**/mantle/assets/slabs-47-*',r=>r.fulfill({status:503}));
  await page.selectOption('#mantle-age','60');await expect(globe).toHaveAttribute('data-mantle-overlay','error');await expect(globe).toHaveAttribute('data-mantle-cutaway','false');
@@ -82,6 +83,8 @@ try {
  await failedSurface.goto(new URL('/?masks=paleodem2018',base).href);
  await expect(failedSurface.locator('#globe')).toHaveAttribute('aria-busy','false');
  await failedSurface.locator('#mantle-overlay').check();
+ await expect(failedSurface.locator('#globe')).toHaveAttribute('data-mantle-overlay','ready');
+ await failedSurface.selectOption('#mantle-age','80');
  await expect(failedSurface.locator('#globe')).toHaveAttribute('data-mantle-overlay','error');
  await expect(failedSurface.locator('#globe')).toHaveAttribute('data-surface','unavailable');
  await expect(failedSurface.locator('#status')).toBeVisible();

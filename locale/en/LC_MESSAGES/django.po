@@ -1261,3 +1261,36 @@ msgstr "CRUST 2.0 · present-day crust · reference-shell thickness ×{scale}"
 
 msgid "회색: 자료 없음"
 msgstr "Grey: no data"
+
+msgid "지구 내부"
+msgstr "Earth interior"
+
+msgid "공통 지표 절개"
+msgstr "Shared surface cutaway"
+
+msgid "지표 절개"
+msgstr "Surface cutaway"
+
+msgid "인도–아시아 위치 프리셋"
+msgstr "India–Asia location preset"
+
+msgid "지각과 맨틀은 같은 절개 위치를 사용합니다. CRUST 2.0은 현재(0 Ma)에서만 표시됩니다."
+msgstr "Crust and mantle share the same cutaway. CRUST 2.0 is shown only at the present (0 Ma)."
+
+msgid "맨틀 · 80 Ma–현재"
+msgstr "Mantle · 80 Ma–present"
+
+msgid "남쪽 위도"
+msgstr "South latitude"
+
+msgid "북쪽 위도"
+msgstr "North latitude"
+
+msgid "서쪽 경도"
+msgstr "West longitude"
+
+msgid "동쪽 경도"
+msgstr "East longitude"
+
+msgid "서쪽 경도가 동쪽 경도보다 크면 날짜변경선을 가로지릅니다. 두 경도가 같으면 절개하지 않습니다."
+msgstr "A west longitude greater than east crosses the date line. Equal longitudes leave the surface uncut."
