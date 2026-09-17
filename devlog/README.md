@@ -35,6 +35,8 @@ wwolf는 001부터 셉니다. 그 전의 001–045는 링크와 본문 속 번�
 - [jikhanjung 093 — OPT1 GPU 재현 계획 1차 검토](20260917_jikhanjung_093_opt1_gpu_roadmap_review.md)
 - [jikhanjung 092 — v0.16.0 CRUST 2.0 지각 표시 릴리스](20260916_jikhanjung_092_release_0160.md)
 - [jikhanjung 091 — CRUST 2.0 현재 지각 표시](20260916_jikhanjung_091_crust2_visualization.md)
+- [wwolf 012 — PR #56 검토 후속: 경로 탐색·호수의 섬·캐시 키](20260916_wwolf_012_present_water_review_fixes.md)
+- [wwolf 011 — 현재 격자는 오늘의 강과 호수를 따른다: Natural Earth와 HydroLAKES](20260916_wwolf_011_present_water.md)
 
 - [jikhanjung 089 — v0.15.1 맨틀 JS 모듈 분리 릴리스](20260916_jikhanjung_089_release_0151.md)
 - [jikhanjung 088 — 맨틀 JS 정리와 화면·렌더링 모듈 분리](20260916_jikhanjung_088_mantle_js_modules.md)

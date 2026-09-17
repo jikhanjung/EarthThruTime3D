@@ -544,6 +544,50 @@ level (20 ka shows the 20 ka field) and an older stop of the 130 ka window the s
 the same sea level, the analogue the ice layer already draws there. Grids without
 slices keep the 0 m and lowstand fields.
 
+**Today's rivers and lakes.** The 20 km grid closes every gorge narrower than a cell,
+so routed on the grid alone the Danube filled the Pannonian basin to 383 m and left it
+north through the Moravian Gate into the Oder, its delta receiving 0.23 Mkm² instead of
+about 0.8, and inside the filled basin the drawn lines were the fill's outlet paths, not
+the river. Where today's rivers are known they need not be guessed. `sources/present-
+water.json` pins Natural Earth's 10 m river and lake centrelines (public domain, 1,473
+features with a size rank) and HydroLAKES (Messager et al. 2016, CC BY 4.0, 1.4 million
+lakes with their mean depth), and `scripts/present_water.py` rasterises them onto the
+present grid's texture, cached as `paleodem-0000-present-water.npz`: the rivers as
+one-texel lines carrying a size (1 at rank 1, the Amazon, Nile, Mississippi and Yangtze,
+down to 0 at rank 12; canals left out; lake centrelines kept so a river stays continuous
+through the lakes it crosses), and the lakes of 100 km² or more with their mean depth.
+Two corrections make the lines fit for routing: where two rivers touch anywhere but at
+the lower end of one of them they pass each other across a divide (the Guaporé and the
+Paraguay at the Pantanal, the Red and the Minnesota at the Traverse Gap), and the
+smaller is broken at the contact, or the two trenches below would join and one basin
+drain through the other's mouth (the Amazon left through the Plata); and a line whose
+lower end stops short, of the river it joins or of the grid's sea (Natural Earth ends
+the Amazon at the estuary head, 250 km from the grid's coast), is carried on along the
+lowest path. For the present grid only, `scripts/build_rivers.py` then cuts the routing
+surface along the lines, 50 m deep at the smallest rank and 2,000 m at rank 1 (a
+headwater trench shallow enough never to reach a main stem's pool), takes the water out
+of the grid where a line meets the sea and in the lakes the grid holds at or below its
+datum (the Caspian, the Dead Sea) at every sea level, fills the pits that remain and
+routes as before; the drawn field is still the drained area, the lines only guide it.
+Checks on the present grid: the Danube's delta 0.81 Mkm² (0.61 through the Iron Gates,
+0.01 through the Moravian Gate), the Amazon 5.7, the Congo 3.9 (3.8 at Kinshasa), the
+Nile 3.3, the Plata 3.3, the Mississippi 3.2, the Yangtze 2.0, the Volga 1.3 ending in
+the Caspian at 0, −20 and −130 m alike. Which other basins are closed today (Chad,
+Balkhash, the Great Salt Lake) the data cannot say: a test on the lines closed the Great
+Lakes and the Volga's reservoirs as well, so those basins keep the routing's own rule
+and spill. HydroRIVERS was tried first and dropped: its licence is WWF's HydroSHEDS
+agreement, which requires an end-user licence for derivative works, not CC BY like
+HydroLAKES's own. The older grids have no such data and keep the routing's assumptions;
+the ice slices inherit the present grid's lines where there is no ice. A lake's islands
+(the shapefile's inner rings) stay dry where they cover a texel's centre; drawn like the
+water, every texel touched, HydroLAKES's 80,000 islets would have emptied half the lake
+texels. The cache is keyed by the grid, the pinned
+sources and the rules, and rebuilt from sources verified against the manifest, the
+kept archive hashed and the extracted folder checked against its receipt, when any of
+them differs; a cache without that key, or of another shape or type, is not used. The
+production series carries the present fields and the ten ice slices to 25 ka; the
+slices to 80 ka exist only where `--ice-to 80` builds them.
+
 **Lakes.** Filling the pits is the first step of the routing, and the fill is where
 water pools before it spills. The ice slices carry it in their green channel as the
 pooling the ice adds: the slice's pooled depth (filled surface less the routing
@@ -556,13 +600,17 @@ saturates; only cells off the ice carry it. The shader paints a lake
 where the mixed green passes 0.1 (`LAKE_CUT`, 2.5 m), over land after the sea-level
 cut, under the river line and the ice, and the two fields' greens mix like their reds
 through the same lowstand and ice-slice weights, so a lake dammed by ice fills and
-drains between steps as the slider moves. The plain and lowstand fields carry a zero
-green channel. Their pits are the grid's own closures, and painting them showed the
-every-basin-spills assumption as lakes the size of countries: not only Chad, Tarim
-and Eyre but the Congo cuvette, Sichuan and the Pannonian plain, whose gorge outlets
-the grid closes; comparing each pool with the bare grid is what keeps
+drains between steps as the slider moves. The plain and lowstand fields of every grid but the
+present carry a zero green channel. Their pits are the grid's own closures, and painting
+them showed the every-basin-spills assumption as lakes the size of countries: not only
+Chad, Tarim and Eyre but the Congo cuvette, Sichuan and the Pannonian plain, whose
+gorge outlets the grid closes; comparing each pool with the bare grid is what keeps
 Tarim, the Congo or the Pannonian plain from appearing as a lake at −60 m and
-vanishing at 0 m. Every field is RGB
+vanishing at 0 m. The present grid's fields and the ice slices carry today's lakes from
+HydroLAKES instead, each at its mean depth and at least 3 m so a shallow one still
+passes the cut (Chad at 1.5 m), off the ice: the Caspian, the Great Lakes, Baikal and
+Victoria, which the grid draws as flat land, and the Caspian at every slider position,
+since its level does not follow the ocean's. Every field is RGB
 because a one-channel PNG decodes grey in all three channels and its rivers would read
 as lakes, so fields built before this change must be rebuilt (or their green zeroed).
 
@@ -857,6 +905,9 @@ Neither flag grants data-use rights. See `sources/README.md`, `LICENSE-DATA.md` 
   gitignored `test-results/`.
 - `.venv/bin/python tests/rivers_check.py` with `requirements-processing.txt`
   installed: the river routing (see Rivers), the ice surface included.
+- `.venv/bin/python tests/present_water_check.py` with `requirements-processing.txt`
+  installed: the rules that turn Natural Earth's river lines into the present grid's
+  routing guide (a line carried on to the sea, a junction kept, a divide contact broken).
 - `.venv/bin/python tests/segmentation_check.py` with `requirements-processing.txt`
   installed: the inverse projection against the viewer's forward mapping, the inset
   ellipse mask and the colour conversion. Kept out of the Django suite because the web

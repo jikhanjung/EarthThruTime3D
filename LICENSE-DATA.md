@@ -11,7 +11,8 @@ The files this project computes from CC BY sources are released under
 - the elevation, temperature, ice and potential-drainage textures, the sea-level curves and the motion
   fields of the elevation series (from Scotese & Wright 2018, Scotese 2021, van der
   Meer et al. 2022, Spratt & Lisiecki 2016, Natural Earth, Dalton et al. 2023,
-  Hughes et al. 2016, Gowan et al. 2021 and the PALEOMAP rotation model);
+  Hughes et al. 2016, Gowan et al. 2021, Messager et al. 2016 (HydroLAKES) and the
+  PALEOMAP rotation model);
 - the packed coastlines (from Kocsis & Scotese 2021);
 - the present-day CRUST 2.0 thickness display grid (Laske, Masters & Reif 2000,
   EarthByte GPlates 2.3 distribution, whose bundled License.txt states CC BY 4.0;

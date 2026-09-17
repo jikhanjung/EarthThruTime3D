@@ -67,6 +67,7 @@ sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / "scripts"))
 from scripts.build_paleodem import CATALOGUE, default_source, elevation, locate, resample  # noqa: E402
 from build_ice import stack  # noqa: E402
+import present_water  # noqa: E402
 
 PALEOMIST = ROOT / "sources/paleomist.json"
 ICE_STEP_KA = 2.5         # PaleoMIST's interval
@@ -78,6 +79,10 @@ CLASS_KM2 = (1e3, 1e7)    # size: log10 of the drained area over this span, 0..1
 CONE_RADIUS = 4           # texels a river cell's cone reaches
 CONE_SLOPE = 0.35         # size the cone loses per texel; a size-1 river is 2 texels wide either side at the 0.25 cut
 LAKE_M = 250.0            # the pooled depth that saturates the green channel; square root below, so 2.5 m is 0.1
+BURN_M = (50.0, 2000.0)   # the cut along today's rivers on the present grid: this deep for the smallest rank and
+                          # for rank 1, linear in between, so a small river's trench never reaches a main stem's
+                          # pool and two networks touching at a divide do not join
+LAKE_FLOOR_M = 3.0        # a mapped lake shows at least this deep, so a shallow one (Chad, the Aral) is not lost to the cut
 OFFSETS = [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)]
 
 
@@ -254,10 +259,30 @@ def step_levels(out, ages):
     return {age: at(int(age)) if age == int(age) else (at(int(age)) + at(int(age) + 1)) / 2 for age in ages}
 
 
+def today_outlets(today, land):
+    """Where a river of today leaves the grid: every cell of its line that touches the sea.
+    The routing takes the water out there, at the bottom of the river's cut, so each river
+    drains down its own trench to its own mouth; a trench with no such cell would fill to
+    the sea's level and join every other trench it touches at a divide, and the Amazon
+    left through the Plata. A river ending inland keeps the routing's own rule: its basin
+    fills and spills."""
+    return (today["burn"] > 0.0) & ndimage.binary_dilation(~land, structure=np.ones((3, 3), bool)) & land
+
+
+def today_lakes(today, land):
+    """The green channel's share from HydroLAKES: each mapped lake at its mean depth, at
+    least LAKE_FLOOR_M so the shallow ones still show, on land only."""
+    if today is None:
+        return np.zeros(land.shape)
+    mapped = today["lakes"] > 0.0
+    return np.where(land & mapped, np.maximum(today["lakes"], LAKE_FLOOR_M), 0.0)
+
+
 def ice_slices(out, directory, catalogue, width, oldest):
     """The present grid routed over PaleoMIST's ice, one field per step to `oldest` ka."""
     item = next(item for item in catalogue["maps"] if item["age_ma"] == 0)
     z = resample(elevation(locate(directory, item)), width)
+    today = present_water.load(out, z)
     data = paleomist_grid()
     base0, thickness0, _ = paleomist_step(data, 0.0, width)
     ages = [ICE_STEP_KA * k for k in range(1, int(round(oldest / ICE_STEP_KA)) + 1)]
@@ -271,8 +296,11 @@ def ice_slices(out, directory, catalogue, width, oldest):
         surface = ice_surface(z, base0, thickness0, thickness, deformation)
         ice, level = thickness > 0, levels[age]
         land = ~sea_at(surface, level, z)
-        drained, depth = route(surface, land)
-        Image.fromarray(river_field(drained, land & ~ice, ice_lakes(depth, z, level)), "RGB").save(
+        # Today's rivers and sinks only where there is no ice; the sheet's own surface drains.
+        bare = None if today is None else {"burn": np.where(ice, 0.0, today["burn"]), "lakes": today["lakes"], "closed": today["closed"] & ~ice}
+        drained, depth = route(surface, land, bare)
+        lakes = np.maximum(ice_lakes(depth, z, level, today), today_lakes(today, land & ~ice))
+        Image.fromarray(river_field(drained, land & ~ice, lakes), "RGB").save(
             out / f"{item['id']}-rivers-ice-{int(round(age * 1000))}.png")
         slices.append({"age_ka": age, "level_m": level, "lowers": level < lowest})
         lowest = min(lowest, level)
@@ -289,16 +317,16 @@ def ice_slices(out, directory, catalogue, width, oldest):
         "source": "https://doi.org/10.1594/PANGAEA.905800", "slices": slices}, indent=1))
 
 
-def ice_lakes(depth, z, level):
+def ice_lakes(depth, z, level, today=None):
     """The lakes the ice makes: each pool of a slice kept whole, or dropped whole, by whether
     the bare grid pools over the same ground at the same sea level. A basin the grid closes
     on its own (Tarim, the Congo, the Pannonian plain) pools in both, so it is no lake here
     any more than in the plain field, however the deformation tilts it; one the ice dams or
     the crust's deformation opens (Agassiz, the Baltic Ice Lake) pools only here. Subtracting
     depths instead leaves the tilt as a lake wherever the deformation varies across a closed
-    basin."""
+    basin. The bare grid is routed as the present field is, along today's rivers."""
     land = z > level
-    bare = np.where(land, fill_sinks(z, land) - z, 0.0) > 0.0
+    bare = route(z, land, today)[1] > 0.0
     pools, count = ndimage.label(depth > 0.0)
     # Heuristic: a pool is the grid's own when the bare grid pools over half of it or more;
     # a finer rule would compare each pool's spill level in the two surfaces.
@@ -306,12 +334,23 @@ def ice_lakes(depth, z, level):
     return np.where(np.concatenate([[False], own])[pools], 0.0, depth)
 
 
-def route(z, land):
+def route(z, land, today=None):
     """The area in km2 draining through each cell of a grid at the texture's resolution, and
-    the depth in metres of the water pooled in each cell before it spills (the fill)."""
-    surface = fill_sinks(z, land)
+    the depth in metres of the water pooled in each cell before it spills (the fill). On
+    the present grid `today` holds the present-water rasters: the routing surface is cut
+    down along today's rivers, BURN_M deep by size, so the water follows them through the
+    gorges the grid closes (the Danube at the Iron Gates), and each river leaves the grid
+    where its line meets the sea. A basin closed today still fills and spills: which
+    rivers end in a sink is not in the data used here. The pooled depth is measured against the grid
+    itself, so the cut is never a lake."""
+    if today is not None:
+        land = land & ~today_outlets(today, land) & ~today["closed"]
+        cut = np.where(today["burn"] > 0.0, BURN_M[0] + (BURN_M[1] - BURN_M[0]) * today["burn"], 0.0)
+        surface = fill_sinks(z - cut, land)
+    else:
+        surface = fill_sinks(z, land)
     down, wave_of = directions(surface, land)
-    return drained_area(surface, land, down, wave_of), surface - z
+    return drained_area(surface, land, down, wave_of), np.maximum(surface - z, 0.0)
 
 
 def main():
@@ -341,13 +380,14 @@ def main():
             continue
         started = time.time()
         z = resample(elevation(locate(directory, item)), args.width)
+        today = present_water.load(args.out, z) if item["age_ma"] == 0 else None
         levels = [] if args.lows else [(0.0, "rivers")]
         if item["id"] in lows:
             levels.append((lows[item["id"]], "rivers-low"))
         for level, suffix in levels:
             land = z > level
-            drained, _ = route(z, land)   # the grid's own pits are not lakes: a zero green channel
-            Image.fromarray(river_field(drained, land, np.zeros_like(z)), "RGB").save(args.out / f"{item['id']}-{suffix}.png")
+            drained, _ = route(z, land, today)   # the grid's own pits are not lakes; today's mapped lakes are
+            Image.fromarray(river_field(drained, land, today_lakes(today, land)), "RGB").save(args.out / f"{item['id']}-{suffix}.png")
             largest = drained[land].max() / 1e6 if land.any() else 0.0
             print(f"{item['id']}  {item['age_ma']} Ma  sea {level:+.0f} m  largest basin {largest:.2f} Mkm2  "
                   f"river cells {(land & (drained >= RIVER_KM2)).sum() / max(land.sum(), 1):.1%} of land  {time.time() - started:.0f}s")
