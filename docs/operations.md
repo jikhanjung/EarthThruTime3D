@@ -5,15 +5,17 @@ host. Configuration and procedure live in `deploy/README.md` and `deploy/deploy.
 Builds happen on the development host; the server only loads the image and swaps.
 The shared guides are referenced privately through `.guides`; they are not copied.
 
-Current release: **v0.17.0**, deployed 2026-09-17. Present-day river routing uses
-Natural Earth centrelines and HydroLAKES lake polygons, preserving lake islands.
-The two present river textures and ten 2.5–25 ka ice-river textures were rebuilt
-from verified sources. The runtime bundle has 1,080 files (445,775,830 bytes);
-only these 12 PNGs differ from v0.16.0. No 26–80 ka expansion is deployed.
-Present-day lakes outside glacial ice remain an approximation for past lake outlines.
-CRUST 2.0 remains available at 0 Ma. Mantle defaults remain cutaway off and
-surface opacity at 70%. Image/data hashes, DB backup and public verification are in
-[devlog 094](../devlog/20260917_jikhanjung_094_release_0170.md).
+Current release: **v0.18.0**, deployed 2026-09-17. CRUST 2.0 and mantle overlay
+share the Earth interior panel and latitude/longitude cutaway bounds, including
+antimeridian crossing and an India–Asia preset. Cutaway defaults to off and surface
+opacity remains 70%. CRUST 2.0 remains available only at 0 Ma; mantle activation
+preserves the current camera and selects the nearest available source age.
+The runtime bundle has 1,080 files (445,775,830 bytes), identical in content to
+v0.17.0. Present-day Natural Earth/HydroLAKES rivers and lakes and the ten 2.5–25 ka
+ice-river textures remain deployed; no 26–80 ka expansion is included. Past lake
+outlines outside ice and the crust/mantle alignment remain approximations.
+Image/data hashes, DB backup and public verification are in
+[devlog 096](../devlog/20260917_jikhanjung_096_release_0180.md).
 Browser transfer measurements and the ice-river data generation are recorded in
 [devlog 079](../devlog/20260916_jikhanjung_079_release_0140.md).
 
