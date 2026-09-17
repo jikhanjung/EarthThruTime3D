@@ -78,3 +78,11 @@ FIREFOX_CRUST=1 VIEWER_URL=http://127.0.0.1:8151/ node tests/firefox-browser.mjs
 
 On Linux installations without headless WebGL2, use `FIREFOX_HEADLESS=0` under
 Xvfb and set `FIREFOX_BIN` to an available Firefox executable.
+
+## 절개 안쪽과 조작
+
+절개에서는 반대편 지표와 지각 안쪽도 그리며 카메라 방향에 따른 반구 제거를 하지 않는다.
+지각 안쪽→절개 벽→지표 순서를 명시하여 100%에서 99% 불투명도로 바뀔 때
+내부 갈색 면이 지표를 덮지 않게 한다. 투명 지각도 깊이를 기록하여 반대편 면의 덧칠을 막는다.
+오른쪽 드래그는 이동, 휠/핀치는 확대, 휠 클릭 또는 Shift 드래그는 기울이기다.
+이 조작은 고도 표시 여부와 관계없이 모든 지구본에서 같다.

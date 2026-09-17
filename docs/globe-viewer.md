@@ -154,21 +154,23 @@ moving continent carries its mountains and a lowered sea raises the shelf it unc
 The sea stays flat at its level. Real proportions would leave Everest at 0.14% of the
 radius, invisible, so heights are exaggerated 25 times (`RELIEF_SCALE`; 10 left the
 Tibetan plateau and the Andes barely above the horizon), and the inspector's relief note
-says so. The camera the controls move always looks at the centre of the sphere, from
-where lifted ground cannot be seen, so the drawn view is that camera turned about the
-ground beneath it by 50° (`RELIEF_TILT`) by default; the controls never see the tilt. While
-the terrain stands, a middle (wheel) drag or a shift drag changes the tilt (up and down, to 80°)
-and turns its heading (sideways); `setTilt` keeps both, the stage reports them as
-`data-tilt` and `data-heading` in degrees, the gesture hint says so, and reset returns
-to the default. On a touch screen two fingers
-do the same: moved together up or down for the tilt, twisted for the heading. The gesture
-is told from a pinch once the fingers have moved 12 px, if their spread changed less than
-half as much as their midpoint moved; the controls are disabled until a finger lifts.
+says so. Globe navigation is independent of the selected surface and interior layers:
+left drag rotates, right drag (or Ctrl/Meta + left drag) pans in the rendered camera's
+screen plane, the wheel/pinch zooms, and middle drag or Shift + left drag tilts and
+turns the heading. These controls also work on the atlas and with relief disabled.
+A manual tilt starts from the angle currently drawn, without jumping; reset restores
+zero pan, the original distance and the default 50° close-up tilt. `data-pan`,
+`data-tilt` and `data-heading` expose navigation state for browser regression checks.
+Touch two-finger vertical movement tilts, twisting changes its heading and pinching
+zooms. Once a tilt is recognized (12 px movement with less than half as much spread
+change), OrbitControls pauses until a finger lifts.
 
-Lift and tilt fade in together from a zoom factor of 0.3 to 0.12, and the sphere is
-512 × 256 segments only while they are on. Flat sheets, the mask surface, the atlas
-prelude without heights and mapless stops stay flat. The toolbar's 3D terrain button
-switches it off; `data-relief` on the stage reports the strength from 0 to 1. The plate
+Automatic close-up tilt fades in from zoom factor 0.3 to 0.12 for every globe.
+Terrain lift uses the same zoom interval, but only elevation data is displaced.
+The 3D terrain button controls displacement, not navigation. Manual tilt is independent
+of zoom. Detailed sphere geometry is used at close zoom; flat projections retain
+sheet navigation. `data-relief` reports terrain displacement strength from 0 to 1.
+The plate
 boundaries, the fossil coastlines and the graticule are drawn with a line material that
 applies the same lift (`terrainLineMaterial`, sharing the surface's uniform objects), so
 they ride the mountains rather than being buried under them; a line recovers its

@@ -32,6 +32,8 @@ wwolf는 001부터 셉니다. 그 전의 001–045는 링크와 본문 속 번�
 
 ## 작업 기록
 
+- [jikhanjung 097 — 절개 뒷면·지구본 조작·불투명도 색 변화 수정](20260917_jikhanjung_097_interior_navigation_backfaces.md)
+
 - [jikhanjung 096 — v0.18.0 지구 내부 공통 절개 릴리스](20260917_jikhanjung_096_release_0180.md)
 
 - [jikhanjung 095 — 지각·맨틀 공통 패널과 위도·경도 절개](20260917_jikhanjung_095_shared_interior_cutaway.md)
