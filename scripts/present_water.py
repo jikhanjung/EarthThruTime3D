@@ -19,8 +19,11 @@ HydroRIVERS was tried first and dropped: its licence is WWF's HydroSHEDS agreeme
 (an end-user licence and a fixed attribution for derivative works), not CC BY like
 HydroLAKES's own.
 """
+import hashlib
+import io
 import json
 import sys
+import zipfile
 from pathlib import Path
 
 import numpy as np
@@ -36,19 +39,35 @@ LAKE_KM2 = 100.0     # a lake rasterised from this area; a texel is about 400 km
 RIVER_KINDS = ("River", "River (Intermittent)", "Lake Centerline")   # not canals
 EXTEND_CELLS = 20    # how far (texels, 400 km) a line ending short of the grid's sea is carried on to it
 BRIDGE_CELLS = 3     # how far (texels, 60 km) a line ending short of the river it joins is carried on to it
+RULES = 2            # the rasterisation rules' version, part of the cache key: bump it when they change
 
 
-def layers():
-    manifest = json.loads(MANIFEST.read_text())
-    return {asset["role"]: ROOT / Path(asset["path"]).parent / asset["unzip"] / asset["layer"]
-            for asset in manifest["assets"]}
+def readers(manifest):
+    """A shapefile reader per source role, from inputs verified against the manifest: an
+    archive that is kept is hashed and read directly, one discarded after extraction
+    (HydroLAKES) is read from the folder the fetcher's receipt binds to it, its files
+    hashed. FileNotFoundError or ValueError when a source is not fetched or differs."""
+    from fetch_paleodem import verify, verify_extracted
+    found = {}
+    for asset in manifest["assets"]:
+        archive = ROOT / asset["path"]
+        if asset.get("discard"):
+            folder = archive.parent / asset["unzip"]
+            verify_extracted(folder, asset)
+            found[asset["role"]] = shapefile.Reader(str(folder / asset["layer"]), encodingErrors="replace")
+        else:
+            verify(archive, asset)
+            with zipfile.ZipFile(archive) as opened:
+                parts = {ext: io.BytesIO(opened.read(f"{asset['layer']}.{ext}")) for ext in ("shp", "shx", "dbf")}
+            found[asset["role"]] = shapefile.Reader(**parts, encodingErrors="replace")
+    return found
 
 
 def to_texel(lon, lat, width, height):
     return (lon + 180.0) / 360.0 * width, (90.0 - lat) / 180.0 * height
 
 
-def rivers(path, width, height, z):
+def rivers(reader, width, height, z):
     """The rivers as one-texel lines carrying a size, 1 for Natural Earth's rank 1 (the
     Amazon, Nile, Mississippi, Yangtze) down to 0 at rank 12, the larger river where two
     cross. Lake centrelines keep a river continuous through the lakes it flows through.
@@ -61,7 +80,6 @@ def rivers(path, width, height, z):
     stops short of the grid's sea, at an estuary head the map draws as sea and the grid
     as land (the Amazon 250 km from its mouth), is carried on to the sea along the lowest
     path within EXTEND_CELLS, so its trench has an outlet."""
-    reader = shapefile.Reader(str(path), encodingErrors="replace")
     features = []   # (size, line, river): the river is the name, or the record where it has none
     for number, (record, shape) in enumerate(zip(reader.iterRecords(fields=["scalerank", "featurecla", "name"]), reader.iterShapes())):
         if record["featurecla"] not in RIVER_KINDS:
@@ -134,22 +152,26 @@ def rivers(path, width, height, z):
 
 
 def lowest_path(z, target, start, limit):
-    """The path from `start` to the nearest `target` cell within `limit` steps whose
-    highest ground is lowest (Dijkstra on the running maximum), or None."""
+    """The path from `start` to a `target` cell within `limit` steps whose highest ground
+    is lowest, the shortest of those (Dijkstra on the running maximum, then the steps), or
+    None. The state is the cell and the steps taken to it: keyed by the cell alone, a long
+    low route that reached a cell first discarded a shorter, slightly higher one, and when
+    its own moves ran out a connection inside the limit was lost. The states grow with
+    the limit times the cells within it, small at the limits used here."""
     import heapq
     height, width = z.shape
-    best = {start: z[start]}
+    best = {(start, 0): z[start]}
     before = {}
     queue = [(z[start], 0, start)]
     while queue:
         top, steps, cell = heapq.heappop(queue)
-        if top > best.get(cell, np.inf):
+        if top > best.get((cell, steps), np.inf):
             continue
         if target[cell]:
             path = []
-            while cell != start:
+            while steps:
                 path.append(cell)
-                cell = before[cell]
+                cell, steps = before[(cell, steps)]
             return [p for p in path if not target[p]]
         if steps == limit:
             continue
@@ -159,36 +181,63 @@ def lowest_path(z, target, start, limit):
                 if not 0 <= r < height:
                     continue
                 reach = max(top, z[r, c])
-                if reach < best.get((r, c), np.inf):
-                    best[(r, c)] = reach
-                    before[(r, c)] = cell
+                if reach < best.get(((r, c), steps + 1), np.inf):
+                    best[((r, c), steps + 1)] = reach
+                    before[((r, c), steps + 1)] = (cell, steps)
                     heapq.heappush(queue, (reach, steps + 1, (r, c)))
     return None
 
 
-def lakes(path, width, height, z):
+def is_hole(ring):
+    """A ring running counter-clockwise in longitude and latitude: a shapefile's inner ring,
+    an island in the lake, where its outer rings run clockwise."""
+    x, y = np.asarray(ring, float).T
+    return float(np.dot(x, np.roll(y, -1)) - np.dot(np.roll(x, -1), y)) > 0.0
+
+
+def clear_island(inside, ring, scale=8):
+    """Clear from the lake mask the texels whose centres the island's ring (in texel
+    coordinates) covers. PIL fills every pixel a polygon touches, so drawn at the texel
+    size an islet would take its whole texel, and HydroLAKES has 80,000 islands, over a
+    thousand each in Huron and the Caspian: drawn `scale` times finer and sampled at the
+    texel centres, an island takes the texels it mostly covers and an islet none."""
+    height, width = inside.shape
+    xy = np.asarray(ring, float)
+    c0, r0 = np.maximum(np.floor(xy.min(0)).astype(int), 0)
+    c1, r1 = np.minimum(np.floor(xy.max(0)).astype(int) + 1, (width, height))
+    if c1 <= c0 or r1 <= r0:
+        return
+    fine = Image.new("1", ((c1 - c0) * scale, (r1 - r0) * scale), 0)
+    ImageDraw.Draw(fine).polygon([((x - c0) * scale, (y - r0) * scale) for x, y in xy], fill=1)
+    inside[r0:r1, c0:c1] &= ~np.asarray(fine, bool)[scale // 2::scale, scale // 2::scale]
+
+
+def lakes(reader, width, height, z):
     """Each lake of LAKE_KM2 or more filled with its mean depth in metres, a texel holding the
-    deepest lake covering it; and the texels of the lakes the grid itself holds at or below
-    its datum (the Caspian, the Dead Sea, Kara-Bogaz-Gol), where the routing takes the
-    water out of the grid at every sea level, so the Volga still ends in the Caspian when
-    the slider stands below 0 m instead of crossing its floor to the Manych. Which other
-    lakes are closed (Chad, Balkhash, the Great Salt Lake) the data here cannot say: a
-    test on the river lines also closed the Great Lakes and the Volga's reservoirs, so
-    those basins keep the routing's own rule and spill."""
+    deepest lake covering it, its islands left dry; and the texels of the lakes the grid
+    itself holds at or below its datum (the Caspian, the Dead Sea, Kara-Bogaz-Gol), where
+    the routing takes the water out of the grid at every sea level, so the Volga still ends
+    in the Caspian when the slider stands below 0 m instead of crossing its floor to the
+    Manych. Which other lakes are closed (Chad, Balkhash, the Great Salt Lake) the data
+    here cannot say: a test on the river lines also closed the Great Lakes and the Volga's
+    reservoirs, so those basins keep the routing's own rule and spill."""
     depth = np.zeros((height, width), np.float32)
     closed = np.zeros((height, width), bool)
-    reader = shapefile.Reader(str(path), encodingErrors="replace")
     for record, shape in zip(reader.iterRecords(fields=["Lake_area", "Depth_avg"]), reader.iterShapes()):
         if record["Lake_area"] < LAKE_KM2:
             continue
         mask = Image.new("1", (width, height), 0)
         draw = ImageDraw.Draw(mask)
         parts = list(shape.parts) + [len(shape.points)]
-        for start, end in zip(parts, parts[1:]):
-            ring = [to_texel(lon, lat, width, height) for lon, lat in shape.points[start:end]]
-            if len(ring) >= 3:
-                draw.polygon(ring, fill=1)
-        inside = np.asarray(mask, bool)
+        rings = [(is_hole(shape.points[start:end]), [to_texel(lon, lat, width, height) for lon, lat in shape.points[start:end]])
+                 for start, end in zip(parts, parts[1:]) if end - start >= 3]
+        for hole, ring in rings:
+            if not hole:
+                draw.polygon(ring, fill=1)      # the water: every texel an outer ring touches
+        inside = np.array(mask, bool)   # a copy: the islands and the fallback below write into it
+        for hole, ring in rings:
+            if hole:
+                clear_island(inside, ring)
         if not inside.any():   # smaller than a texel: the texel of its first vertex
             x, y = to_texel(*shape.points[0], width, height)
             inside[min(int(y), height - 1), int(x) % width] = True
@@ -197,25 +246,50 @@ def lakes(path, width, height, z):
     return depth, closed
 
 
+ARRAYS = {"burn": np.float32, "lakes": np.float32, "closed": np.bool_}   # the cache's rasters and their types
+
+
+def cache_key(z, manifest):
+    """What the rasters depend on: the elevation they are cut against and tested for the
+    datum, the pinned sources, and the rules that turn them into rasters."""
+    digest = hashlib.sha256(np.ascontiguousarray(z).tobytes())
+    digest.update(str(z.dtype).encode())
+    digest.update(json.dumps(manifest, sort_keys=True).encode())
+    digest.update(json.dumps([RULES, LAKE_KM2, RIVER_KINDS, EXTEND_CELLS, BRIDGE_CELLS]).encode())
+    return digest.hexdigest()
+
+
 def load(out, z):
     """The cached rasters for the present grid `z` (the texture-sized elevation), built
-    from the sources on first use; None when the sources are not fetched, so the builder
-    can route the present grid unaided."""
+    from the verified sources on first use; None when the sources are not fetched or do
+    not match the manifest, so the builder can route the present grid unaided. A cache is
+    used only when its key, cache_key(), is this grid's, this manifest's and these rules',
+    and every array has its shape and type; another grid's or an unreadable one is
+    rebuilt, or, without the sources, refused."""
     height, width = z.shape
     cache = out / "paleodem-0000-present-water.npz"
-    if cache.exists():
-        data = np.load(cache)
-        if data["burn"].shape == (height, width) and "closed" in data:
-            return {key: data[key] for key in ("burn", "lakes", "closed")}
     try:
-        paths = layers()
+        manifest = json.loads(MANIFEST.read_text())
     except FileNotFoundError:
         return None
-    if not all(Path(str(path) + ".shp").exists() for path in paths.values()):
+    key = cache_key(z, manifest)
+    if cache.exists():
+        try:
+            with np.load(cache) as data:
+                if (str(data["key"]) == key and all(
+                        data[name].shape == (height, width) and data[name].dtype == dtype for name, dtype in ARRAYS.items())):
+                    return {name: data[name] for name in ARRAYS}
+            print(f"   {cache.name} is another grid's, source's or rule's: not used")
+        except (OSError, ValueError, KeyError, zipfile.BadZipFile) as error:
+            print(f"   {cache.name} unreadable ({error}): not used")
+    try:
+        sources = readers(manifest)
+    except (FileNotFoundError, ValueError) as error:
+        print(f"   present-water sources not fetched or not verified ({error}); the present grid is routed unaided")
         return None
-    burn = rivers(paths["rivers"], width, height, z)
-    depth, closed = lakes(paths["lakes"], width, height, z)
-    np.savez_compressed(cache, burn=burn, lakes=depth, closed=closed)
+    burn = rivers(sources["rivers"], width, height, z)
+    depth, closed = lakes(sources["lakes"], width, height, z)
+    np.savez_compressed(cache, key=key, burn=burn, lakes=depth, closed=closed)
     return {"burn": burn, "lakes": depth, "closed": closed}
 
 

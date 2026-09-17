@@ -578,7 +578,15 @@ Lakes and the Volga's reservoirs as well, so those basins keep the routing's own
 and spill. HydroRIVERS was tried first and dropped: its licence is WWF's HydroSHEDS
 agreement, which requires an end-user licence for derivative works, not CC BY like
 HydroLAKES's own. The older grids have no such data and keep the routing's assumptions;
-the ice slices inherit the present grid's lines where there is no ice.
+the ice slices inherit the present grid's lines where there is no ice. A lake's islands
+(the shapefile's inner rings) stay dry where they cover a texel's centre; drawn like the
+water, every texel touched, HydroLAKES's 80,000 islets would have emptied half the lake
+texels. The cache is keyed by the grid, the pinned
+sources and the rules, and rebuilt from sources verified against the manifest, the
+kept archive hashed and the extracted folder checked against its receipt, when any of
+them differs; a cache without that key, or of another shape or type, is not used. The
+production series carries the present fields and the ten ice slices to 25 ka; the
+slices to 80 ka exist only where `--ice-to 80` builds them.
 
 **Lakes.** Filling the pits is the first step of the routing, and the fill is where
 water pools before it spills. The ice slices carry it in their green channel as the
