@@ -32,6 +32,8 @@ wwolf는 001부터 셉니다. 그 전의 001–045는 링크와 본문 속 번�
 
 ## 작업 기록
 
+- [jikhanjung 099 — dolfinid의 오래된 배포 파일 정리](20260918_jikhanjung_099_dolfinid_release_cleanup.md)
+
 - [jikhanjung 098 — v0.18.1 절개 뒷면·지구본 조작 수정 릴리스](20260918_jikhanjung_098_release_0181.md)
 
 - [jikhanjung 097 — 절개 뒷면·지구본 조작·불투명도 색 변화 수정](20260917_jikhanjung_097_interior_navigation_backfaces.md)
