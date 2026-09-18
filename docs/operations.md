@@ -21,6 +21,12 @@ Image/data hashes, DB backup and public verification are in
 Browser transfer measurements and the ice-river data generation are recorded in
 [devlog 079](../devlog/20260916_jikhanjung_079_release_0140.md).
 
+On 2026-09-18, old project releases were pruned with `KEEP=2`: v0.18.1 and
+v0.18.0 remain available. Eleven old releases were removed, reclaiming 8,099 MiB;
+the host had 16.4 GiB free (72% used) immediately afterwards. No database, backups,
+secrets or other projects were pruned. See
+[devlog 099](../devlog/20260918_jikhanjung_099_dolfinid_release_cleanup.md).
+
 ## Adopted now
 
 - Django 5.2 dependencies pinned; separate development and production settings.
