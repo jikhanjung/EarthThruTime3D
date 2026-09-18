@@ -32,6 +32,8 @@ wwolf는 001부터 셉니다. 그 전의 001–045는 링크와 본문 속 번�
 
 ## 작업 기록
 
+- [wwolf 013 — 시간 범위의 모형 기후: 자료 검토, 사하라 측정, 식생·강수 화면](20260918_wwolf_013_quaternary_climate.md)
+
 - [jikhanjung 102 — v0.19.0 13만 년 창의 PaleoMIST 빙상·하천 릴리스](20260918_jikhanjung_102_release_0190.md)
 
 - [jikhanjung 101 — 13만 년 창의 26–80 ka 빙상을 PaleoMIST로](20260918_jikhanjung_101_paleomist_window_ice.md)

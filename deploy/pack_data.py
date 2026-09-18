@@ -190,6 +190,12 @@ def pack_elevation(dem, dem_source, staging, files):
                 shutil.copy2(rivers, staging / "paleodem" / rivers.name)
                 files.append({"path": f"paleodem/{rivers.name}", "bytes": (staging / "paleodem" / rivers.name).stat().st_size,
                               "sha256": digest(staging / "paleodem" / rivers.name), "map_id": item["id"]})
+    # Modelled plant cover and rainfall for the time windows, the present grid once per thousand
+    # years (Krapp et al. 2021, CC BY 4.0), by scripts/build_climate.py; optional like the rivers.
+    for climate in sorted(dem_source.glob("paleodem-0000-climate-*.png")):
+        shutil.copy2(climate, staging / "paleodem" / climate.name)
+        files.append({"path": f"paleodem/{climate.name}", "bytes": (staging / "paleodem" / climate.name).stat().st_size,
+                      "sha256": digest(staging / "paleodem" / climate.name), "map_id": "paleodem-0000"})
     # Where each mask came from, written by the same script; optional like the masks.
     kinds = dem_source / "ice-sources.json"
     if kinds.exists():

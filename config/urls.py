@@ -6,7 +6,7 @@ from core.access import gate
 from core.mantle import mantle, mantle_asset
 from core.crust import crust_asset
 from core.collision import collision, collision_data
-from core.globe import ice_mask, ice_low, river_field, river_ice_field, river_low_field, temperature_map, coastline_file, globe, land_field, plate_file, source_map
+from core.globe import climate_map, ice_mask, ice_low, river_field, river_ice_field, river_low_field, temperature_map, coastline_file, globe, land_field, plate_file, source_map
 
 urlpatterns = [
     path('collision/', collision, name='collision'),
@@ -18,6 +18,7 @@ urlpatterns = [
     path('globe/maps/<slug:map_id>.jpg', source_map, name='globe-map'),
     path('globe/fields/<slug:map_id>.png', land_field, name='globe-field'),
     path('globe/temps/<slug:map_id>.png', temperature_map, name='globe-temperature'),
+    path('globe/climate/<slug:map_id>/<int:age>.png', climate_map, name='globe-climate'),
     path('globe/ice/<slug:map_id>.png', ice_mask, name='globe-ice'),
     path('globe/ice-low/<slug:map_id>/<int:age>.png', ice_low, name='globe-ice-low'),
     path('globe/rivers/<slug:map_id>.png', river_field, name='globe-rivers'),

@@ -1,0 +1,23 @@
+{
+  "title": "Terrestrial climate, bioclimate and vegetation for the last 800,000 years",
+  "authors": "Krapp, M., Beyer, R. M., Edmundson, S. L., Valdes, P. J., & Manica, A. (2021)",
+  "record": "https://osf.io/8n43x/",
+  "license": "CC BY 4.0",
+  "cite": [
+    "Krapp, M., Beyer, R. M., Edmundson, S. L., Valdes, P. J., & Manica, A. (2021). A statistics-based reconstruction of high-resolution global terrestrial climate for the last 800,000 years. Scientific Data, 8, 228. https://doi.org/10.1038/s41597-021-01009-3"
+  ],
+  "retrieved": "2026-09-18",
+  "note": "OSF project 8n43x, licence field 'CC-By Attribution 4.0 International'. 0.5 degree, land only on each age's own coast, one slice per 1000 years, time in years (negative before present), latitude south first. biome4output_800ka.nc: BIOME4 codes 1-28 (28 is land ice), sea -2147483648, with NPP and LAI. bio12_800ka.nc: annual precipitation in mm; known_issues.md says to read 15000 as missing (ice sheets and masked lakes). A statistical emulator of HadCM3 snapshots, not a simulation; its Sahara stays desert through the African Humid Period, measured in devlog wwolf 013 against Beyer et al. 2020 (figshare 12293345, CC BY 4.0), which is not used by the build.",
+  "directory": "data/sources/climate/krapp2021",
+  "assets": [
+    {"path": "data/sources/climate/krapp2021/known_issues.md",
+     "url": "https://osf.io/download/c6hwb/",
+     "bytes": 662, "sha256": "b6f6488bf6511274d5d8a6a69226a7215f2a5682b6128f7e363f22c146b525a3"},
+    {"path": "data/sources/climate/krapp2021/biome4output_800ka.nc",
+     "url": "https://osf.io/download/cf5zp/",
+     "bytes": 258437709, "sha256": "6690fa535114b148c89cece05457a787fd5163cbcce7cbb4b1b09da528e70d74"},
+    {"path": "data/sources/climate/krapp2021/bio12_800ka.nc",
+     "url": "https://osf.io/download/kg9v6/",
+     "bytes": 191035068, "sha256": "7b33257332c9f9f73c5edcb313ce47ce445be935fd66b7fc594bcee42bfcbe2c"}
+  ]
+}

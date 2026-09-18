@@ -1303,3 +1303,54 @@ msgstr "A west longitude greater than east crosses the date line. Equal longitud
 
 msgid "드래그로 회전 · 오른쪽 드래그로 이동 · 휠 클릭 / Shift 드래그로 기울이기 · 스크롤 / 핀치로 확대"
 msgstr "Drag to rotate · right-drag to pan · middle / Shift-drag to tilt · scroll / pinch to zoom"
+
+msgid "모형 식생"
+msgstr "Modelled vegetation"
+
+msgid "모형 식생 지구본"
+msgstr "modelled vegetation globe"
+
+msgid "모형 강수"
+msgstr "Modelled rainfall"
+
+msgid "모형 강수 지구본"
+msgstr "modelled rainfall globe"
+
+msgid "{period} 기후 모형 지도를 불러오는 중…"
+msgstr "Loading the {period} climate model map…"
+
+msgid "모형 식생 범례"
+msgstr "Modelled vegetation legend"
+
+msgid "모형 연 강수량 색 범례"
+msgstr "Modelled annual rainfall colour legend"
+
+msgid "사막·나지"
+msgstr "desert, barren"
+
+msgid "건조 관목지"
+msgstr "dry shrubland"
+
+msgid "초원"
+msgstr "grassland"
+
+msgid "사바나·소림"
+msgstr "savanna, woodland"
+
+msgid "숲"
+msgstr "forest"
+
+msgid "툰드라"
+msgstr "tundra"
+
+msgid "모형의 빙상"
+msgstr "the model's ice"
+
+msgid "모형 기후"
+msgstr "Modelled climate"
+
+msgid "모형 기후 표시 중입니다. <a href=\"https://doi.org/10.1038/s41597-021-01009-3\" target=\"_blank\" rel=\"noopener\">Krapp et al. (2021)</a>의 0.5° 자료(CC BY 4.0)로, 식생은 BIOME4 생물군계를 식피가 늘어나는 순서로 묶은 것이고 강수는 연 강수량입니다. 복원이 아니라 모형입니다: 기후 모델 HadCM3의 결과를 통계로 이어 천 년마다 낸 값이며, 칸은 원자료의 0.5° 칸 그대로입니다. 이 모형은 아프리카 습윤기(약 1만 1천~5천 년 전)의 ‘녹색 사하라’를 재현하지 못합니다. 사하라는 어느 시점에서나 사막으로 남고, 식생과 먼지의 되먹임이 없는 모델이 공통으로 보이는 한계입니다(<a href=\"https://doi.org/10.1126/sciadv.1601503\" target=\"_blank\" rel=\"noopener\">Tierney et al. 2017</a>). 해안선은 현재 지형과 그 나이의 해수면에서 나와 모형의 해안과 다르므로, 모형에서 바다였던 칸은 가장 가까운 육지의 값으로 채웠습니다. 모형의 빙상은 모형 자체의 마스크여서 이 페이지의 빙하와 윤곽이 다릅니다."
+msgstr "Showing a modelled climate: the 0.5° data of <a href=\"https://doi.org/10.1038/s41597-021-01009-3\" target=\"_blank\" rel=\"noopener\">Krapp et al. (2021)</a> (CC BY 4.0). Vegetation is the BIOME4 biome folded into an order of increasing plant cover; rainfall is the year's total. A model, not a reconstruction: output of the HadCM3 climate model joined by statistics into one value per thousand years, drawn in the source's own 0.5° cells. It does not reproduce the ‘Green Sahara’ of the African Humid Period (about 11,000–5,000 years ago). The Sahara stays desert at every stop, a limit shared by models without vegetation and dust feedbacks (<a href=\"https://doi.org/10.1126/sciadv.1601503\" target=\"_blank\" rel=\"noopener\">Tierney et al. 2017</a>). The coast here comes from today's terrain and the age's sea level, not the model's, so cells the model has as sea take the nearest land's values. The model's ice is its own mask and differs in outline from this page's ice."
+
+msgid "최근 2.5만 년과 13만 년 시간 범위의 ‘모형 식생’과 ‘모형 강수’ 화면은 이 0.5° 자료에서 옵니다. 기후 모델 HadCM3의 결과를 통계로 이어 천 년마다 낸 모형이며 복원이 아닙니다. 식생은 자료의 BIOME4 생물군계를 식피가 늘어나는 순서로 묶은 것입니다. 이 모형은 아프리카 습윤기의 ‘녹색 사하라’를 재현하지 못합니다. 북위 18~30°, 서경 10°~동경 32° 구역의 연 강수량은 현재 25 mm, 1만 1천 년 전에도 54 mm에 그치고 80만 년 내내 83 mm를 넘지 않습니다."
+msgstr "The ‘modelled vegetation’ and ‘modelled rainfall’ views of the 25,000 and 130,000 year windows come from this 0.5° set: output of the HadCM3 climate model joined by statistics into one value per thousand years, a model and not a reconstruction. Vegetation is the set's BIOME4 biomes folded into an order of increasing plant cover. It does not reproduce the ‘Green Sahara’ of the African Humid Period: over 18–30°N, 10°W–32°E annual rainfall is 25 mm today, only 54 mm 11,000 years ago, and never passes 83 mm in 800,000 years."
