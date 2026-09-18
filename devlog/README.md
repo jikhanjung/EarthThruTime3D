@@ -32,6 +32,8 @@ wwolf는 001부터 셉니다. 그 전의 001–045는 링크와 본문 속 번�
 
 ## 작업 기록
 
+- [jikhanjung 101 — 13만 년 창의 26–80 ka 빙상을 PaleoMIST로](20260918_jikhanjung_101_paleomist_window_ice.md)
+
 - [jikhanjung 100 — 빙기 창 확장(#59) 검토: PaleoMIST 26–80 ka 빙상과 지각 침강](20260918_jikhanjung_100_glacial_window_paleomist_review.md)
 
 - [jikhanjung 099 — dolfinid의 오래된 배포 파일 정리](20260918_jikhanjung_099_dolfinid_release_cleanup.md)

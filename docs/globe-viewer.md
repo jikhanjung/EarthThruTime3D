@@ -324,14 +324,19 @@ timeline.
 `?window=lastcycle` reaches 130 ka instead, one glacial cycle (plan jikhanjung P02): the
 end of the previous glacial, the last interglacial, the growth to the maximum and the
 retreat, 131 stops. Up to 25 ka the frames are the dated slices as above (`ice_kind`
-`dated`). Older, no open reconstruction exists, so a frame keeps the present's `ice_sheet`
-and `ice_lows` and carries the stack's own level for its age, not the running minimum, as
-the cycle rises and falls; the page takes the what-if path at that level, which mixes the
+`dated`). From 26 to 80 ka the slice is PaleoMIST 1.0's modelled ice (`ice_kind`
+`reconstructed`, `data-ice-kind` `reconstructed`, "modelled ice" in the caption, and a
+note; see Ice, "PaleoMIST's ice"), through the same path, at the stack's own level for
+the age, not the running minimum, as the cycle rises and falls. Older, no open
+reconstruction exists, so a frame keeps the present's `ice_sheet` and `ice_lows` and
+carries the stack's level; the page takes the what-if path at that level, which mixes the
 two slices of the retreat that bracket it (`ice_kind` `analogue`, `data-ice-kind`
 `analogue`, "assumed ice" in the caption, and a note). That borrows the retreat's shape at
 the same sea level and ignores that sheets grow and melt in different shapes. The stack is
 a principal component of many records and peaks at +0.4 m at 121 ka, not the last
-interglacial's +6 to 9 m, which the note says too. So that a hundred metres of sea level
+interglacial's +6 to 9 m, which the note says too. The window's strip also draws
+PaleoMIST's own sea level, dashed, where the sidecar carries it (`sealevel.model`), so
+the gap between the modelled ice and the drawn coast is on the strip (see below). So that a hundred metres of sea level
 moves the coast visibly, the present grid's texture is 12-bit whatever `--bits` says
 (`build_paleodem.py`, 3.7 m steps, about 1.2 MB more); the other grids stay 8-bit.
 
@@ -408,13 +413,29 @@ draws nothing for the Early Cretaceous dropstone localities or the Miocene mount
 tidewater glaciers of Alaska, Iceland and Kamchatka. The compilation has nothing before
 the Devonian, so the Ordovician sheets go unchecked.
 
-The ice the rivers of the glacial stops run off is not this layer's: it is PaleoMIST 1.0
-(see Rivers, "Over the ice"), a reconstruction with thickness and a depressed crust,
-which the ice layer does not draw; it keeps NADI-1 and DATED-1 to 25 ka and the
-same-sea-level analogue beyond. PaleoMIST could replace the analogue at 26–80 ka with
-reconstructed margins and supply the crustal depression the 130 ka window lacks; that
-proposal, and the caveat that PaleoMIST's own sea level at 26–80 ka sits well above the
-stack's (a minimal MIS 3 reconstruction), is on issue #30.
+**PaleoMIST's ice.** The ice the rivers of the glacial stops run off is PaleoMIST 1.0
+(see Rivers, "Over the ice"), a reconstruction with thickness and a depressed crust. The
+ice layer keeps NADI-1 and DATED-1 to 25 ka, and from 26 to 80 ka draws PaleoMIST's
+grounded ice instead of the same-sea-level analogue (issue #59, review jikhanjung 100):
+`build_ice.py` reads `ice_thickness > 0` at each 2,500-year step, lays it over today's
+ice and keeps it only within 3° of any ice the dated margins ever added over today's, so
+Antarctica, Patagonia and the mountain ranges stay at their present extent as in the
+dated slices and nothing appears at 26 ka that vanishes at 25, then writes one slice
+per thousand years, `paleodem-0000-ice-low-<ka>.png` for 26 to 80, the two steps
+bracketing the age mixed as distance fields. The sidecar marks them `source` `paleomist`
+and `lowers` false, each at the stack's own level for the age, so the window shows them
+and the sea-level what-if, which brackets by level, never does. The margins are the
+model's, blockier than the mapped ones (0.25°) and differing from NADI-1 and DATED-1 by
+up to a few hundred kilometres at 25/26 ka. North America follows the minimal MIS 3
+scenario, in which Hudson Bay opens around 40 ka; the maximal `a1` scenario is in the
+archive but not extracted. The reconstruction's own sea level, the mean of its
+`sea_level` change over today's ocean, sits well above the stack's at MIS 3 (40 ka:
+−28 m against −83; 30 ka: −60 against −102; 60 ka: −79 against −78, where they agree),
+and even at 25 ka (−97 against the held −130), so switching the window's level to it
+would put a 44 m step at 25/26 ka; the window keeps the stack, the note says the two
+disagree, and the strip draws PaleoMIST's curve dashed (`model_levels` in the sidecar,
+`sealevel.model` on the page) so the disagreement is visible rather than stated. The
+crustal depression is still not drawn; that is the remaining part of #59.
 
 Tibet and the Himalaya carry no sheet at any stop, and that is what the evidence says.
 The atlas paints the plateau white as high ground, which the 45° rule drops, and at the
@@ -499,8 +520,8 @@ paleo-topography, 80 ka to the present every 2,500 years, as global 0.25° and 1
 grids. Only the two global grids are extracted from the 3.5 GB archive (`members` in
 the manifest) and the archive is deleted afterwards (`discard`); `fetch_paleodem.py
 --manifest sources/paleomist.json` then verifies every extracted file against a SHA-256/size receipt tied to the verified archive. Existing folders without that receipt require the archive again.
-`scripts/build_rivers.py --ice` writes `paleodem-0000-rivers-ice-<years>.png` for
-each step to 25 ka (`--ice-to 80` for all of them) and a sidecar
+`scripts/build_rivers.py --ice --ice-to 80` writes `paleodem-0000-rivers-ice-<years>.png`
+for every step (the default reaches 25 ka; the 130 ka window needs them all) and a sidecar
 `paleodem-0000-rivers-ice.json` with each step's age, sea level and whether it lowers
 the sea below every younger step's.
 
@@ -540,11 +561,13 @@ slices and a lowered sea, the two bracketing the offset, the frame's own field s
 at 0 m and the deepest holding below it, and mixes them by the offset's share of the
 gap through the same `riverLow0/1` and `riverLowT` uniforms the shelf fields use, so
 the shader is unchanged; `data-river-low` is that share and `data-river-ice` the
-interpolated age of the ice. The time windows inherit the list with the present frame,
-and their stops set the offset to the age's level, so a dated stop shows the step at its
-level (20 ka shows the 20 ka field) and an older stop of the 130 ka window the step at
-the same sea level, the analogue the ice layer already draws there. Grids without
-slices keep the 0 m and lowstand fields.
+interpolated age of the ice. The time windows carry every step instead, the ones that
+do not lower the sea included (`rivers_ice_steps`), and their stops pick by age: the two
+steps bracketing the stop's age, mixed by the age's share of the gap, whatever their
+levels do, so 20 ka shows the 20 ka field and 40 ka the 40 ka field routed over the
+ice the layer draws there. Older than the last step, past 80 ka in the 130 ka window,
+the level path takes over among the steps that lower the sea, the analogue the ice layer
+draws there. Grids without slices keep the 0 m and lowstand fields.
 
 **Today's rivers and lakes.** The 20 km grid closes every gorge narrower than a cell,
 so routed on the grid alone the Danube filled the Pannonian basin to 383 m and left it

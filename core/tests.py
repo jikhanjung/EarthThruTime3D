@@ -731,6 +731,26 @@ class PaleodemTests(TestCase):
         self.assertEqual(self.client.get(f"/globe/rivers-ice/{present['id']}/12500.png").status_code, 200)
         self.assertEqual(self.client.get(f"/globe/rivers-ice/{present['id']}/15000.png").status_code, 404)
         self.assertEqual(self.client.get('/globe/rivers-ice/paleodem-0050/12500.png').status_code, 404)
+        # A time window's stops pick their step by age, so every existing step goes, the
+        # ones that do not lower the sea included; a slice marked as lowering that does not
+        # spoils the what-if list only.
+        lows = [{'age_ka': 1, 'level_m': 0.0, 'lowers': False, 'volume': 26.0, 'areas': [0.3, 0.0]}]
+        Path(self.dem.name, 'ice-sources.json').write_text(json.dumps(
+            {'grids': {present['id']: 'natural-earth'},
+             'sheets': {present['id']: {'volume': 26.0, 'areas': [0.3, 0.0], 'range_m': [-130, 60]}},
+             'lows': {present['id']: lows}}))
+        globe_module.ice_low_path(present, 1).write_bytes(b'png')
+        frames = self.client.get('/', {'masks': 'paleodem2018', 'window': 'deglacial'}).context['frames']
+        self.assertEqual([(step['age_ka'], step['level_m']) for step in frames[0]['rivers_ice']],
+                         [(2.5, 0.0), (12.5, -57.1), (20, -117.0)])
+        self.assertTrue(all(frame['rivers_ice'] == frames[0]['rivers_ice'] for frame in frames))
+        Path(self.dem.name, f"{present['id']}-rivers-ice.json").write_text(json.dumps(
+            {'slices': [{'age_ka': 2.5, 'level_m': 0.0, 'lowers': False}, {'age_ka': 12.5, 'level_m': -57.1, 'lowers': True},
+                        {'age_ka': 20, 'level_m': -17.0, 'lowers': True}]}))
+        frames = {frame['id']: frame for frame in self.client.get('/', {'masks': 'paleodem2018'}).context['frames']}
+        self.assertIsNone(frames[present['id']]['rivers_ice'])
+        frames = self.client.get('/', {'masks': 'paleodem2018', 'window': 'deglacial'}).context['frames']
+        self.assertEqual([step['age_ka'] for step in frames[0]['rivers_ice']], [2.5, 12.5, 20])
 
     def test_ice_mask_is_offered_only_where_built(self):
         for item in globe_module.series_items('paleodem2018'):
@@ -847,11 +867,13 @@ class PaleodemTests(TestCase):
         present = globe_module.catalogue('paleodem2018')['maps'][-1]
         globe_module.ice_path(present).write_bytes(b'png')
         lows = [{'age_ka': 1, 'level_m': 0.0, 'lowers': False, 'volume': 26.0, 'areas': [0.3, 0.0]},
-                {'age_ka': 2, 'level_m': -5.0, 'lowers': True, 'volume': 28.0, 'areas': [0.3, 0.0]}]
+                {'age_ka': 2, 'level_m': -5.0, 'lowers': True, 'volume': 28.0, 'areas': [0.3, 0.0]},
+                # A PaleoMIST slice: modelled ice at the stack's own level, never lowering.
+                {'age_ka': 3, 'level_m': -60.0, 'lowers': False, 'source': 'paleomist', 'volume': 50.0, 'areas': [0.3, 0.0]}]
         Path(self.dem.name, 'ice-sources.json').write_text(json.dumps(
             {'grids': {present['id']: 'natural-earth'},
              'sheets': {present['id']: {'volume': 26.0, 'areas': [0.3, 0.0], 'range_m': [-130, 60]}},
-             'lows': {present['id']: lows}}))
+             'lows': {present['id']: lows}, 'model_levels': [[5.0, -1.0], [2.5, -20.0], [0.0, 0.0]]}))
         for low in lows:
             globe_module.ice_low_path(present, low['age_ka']).write_bytes(b'png')
         # The stack starts high and swings: past the slices its own level is used, not held.
@@ -864,17 +886,26 @@ class PaleodemTests(TestCase):
         frames = response.context['frames']
         self.assertEqual([(frame['deglacial']['age_ka'], frame['deglacial']['level_m'], frame['ice_kind'])
                           for frame in frames],
-                         [(4, 0.4, 'analogue'), (3, -60.0, 'analogue'), (2, -5.0, 'dated'), (1, 0.0, 'dated'),
+                         [(4, 0.4, 'analogue'), (3, -60.0, 'reconstructed'), (2, -5.0, 'dated'), (1, 0.0, 'dated'),
                           (0, 0.0, 'natural-earth')])
         # An analogue frame keeps the what-if slices and the sheet, which the page mixes at the
-        # stack's level; a dated frame has its slice and nothing to mix.
-        self.assertIsNone(frames[1]['deglacial']['url'])
-        self.assertEqual([low['age_ka'] for low in frames[1]['ice_lows']], [2])
-        self.assertEqual(frames[1]['ice_sheet']['volume'], 26.0)
+        # stack's level; a dated or reconstructed frame has its slice and nothing to mix.
+        self.assertIsNone(frames[0]['deglacial']['url'])
+        self.assertEqual([low['age_ka'] for low in frames[0]['ice_lows']], [2])
+        self.assertEqual(frames[0]['ice_sheet']['volume'], 26.0)
+        self.assertEqual(frames[1]['deglacial']['url'], f"/globe/ice-low/{present['id']}/3.png")
+        self.assertEqual(frames[1]['title'], 'PaleoMIST 1.0, 3 ka')
+        self.assertEqual(frames[1]['source'], globe_module.PALEOMIST_SOURCE)
+        self.assertIsNone(frames[1]['ice_lows'])
         self.assertEqual(frames[2]['deglacial']['url'], f"/globe/ice-low/{present['id']}/2.png")
+        self.assertEqual(frames[2]['title'], 'NADI-1 · DATED-1, 2 ka')
         self.assertIsNone(frames[2]['ice_lows'])
         self.assertTrue(all(frame['temp'] is None for frame in frames))
         self.assertEqual(len(response.context['stops']), 5)
+        # PaleoMIST's own level goes to the window's strip, and only there.
+        self.assertEqual(response.context['sealevel']['model'], [[5.0, -1.0], [2.5, -20.0], [0.0, 0.0]])
+        self.assertEqual(self.client.get('/', {'masks': 'paleodem2018'}).context['sealevel']['model'], [])
+        self.assertContains(response, 'id="ice-model-note"')
         english = self.client.get('/', {'masks': 'paleodem2018', 'window': 'lastcycle'}, HTTP_ACCEPT_LANGUAGE='en')
         self.assertNotRegex(english.content.decode(), '[가-힣]')
 

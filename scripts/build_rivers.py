@@ -56,7 +56,6 @@ import sys
 import time
 from pathlib import Path
 
-import netCDF4
 import numpy as np
 from PIL import Image
 from scipy import ndimage
@@ -67,10 +66,10 @@ sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / "scripts"))
 from scripts.build_paleodem import CATALOGUE, default_source, elevation, locate, resample  # noqa: E402
 from build_ice import stack  # noqa: E402
+import paleomist  # noqa: E402
 import present_water  # noqa: E402
 
-PALEOMIST = ROOT / "sources/paleomist.json"
-ICE_STEP_KA = 2.5         # PaleoMIST's interval
+ICE_STEP_KA = paleomist.STEP_KA   # PaleoMIST's interval
 DATED_KA = 25             # the ice sidecar holds the page's level per thousand years to here
 
 EARTH_RADIUS_KM = 6371.0
@@ -201,9 +200,7 @@ def lowest_levels(out):
 
 
 def paleomist_grid():
-    manifest = json.loads(PALEOMIST.read_text())
-    asset = manifest["assets"][0]
-    return netCDF4.Dataset((ROOT / asset["path"]).parent / asset["unzip"] / manifest["grid"])
+    return paleomist.grid()
 
 
 def paleomist_step(data, age_ka, width):
@@ -212,15 +209,12 @@ def paleomist_step(data, age_ka, width):
     less its mean over today's ocean, so the eustatic part, which the page's own level
     supplies, is left out and only the glacial isostatic part remains, positive where the
     crust is pressed down."""
-    ages = -np.asarray(data.variables["time"][:]) / 1000.0
-    index = int(np.argmin(np.abs(ages - age_ka)))
-    if abs(ages[index] - age_ka) > 1e-6:
-        raise SystemExit(f"PaleoMIST has no step at {age_ka} ka; its steps are every {ICE_STEP_KA} kyr to {ages.max():g}")
+    index = paleomist.step(data, age_ka)
     latitude = np.asarray(data.variables["lat"][:])
-    north_first = latitude[0] > 0
-    field = lambda name, at: np.nan_to_num(np.asarray(data.variables[name][at], dtype=np.float64))  # noqa: E731
-    on_texture = lambda z: resample(z if north_first else z[::-1], width)  # noqa: E731
-    ocean = field("base_topography", ages.argmin()) < 0
+    latitude = latitude if latitude[0] > 0 else latitude[::-1]
+    field = lambda name, at: paleomist.field(data, name, at)  # noqa: E731
+    on_texture = lambda z: paleomist.on_texture(z, width)  # noqa: E731
+    ocean = field("base_topography", paleomist.ages(data).argmin()) < 0
     weights = np.cos(np.radians(latitude))[:, None] * ocean
     change = field("sea_level", index)
     eustatic = (change * weights).sum() / weights.sum()

@@ -151,9 +151,12 @@ def ice_sources():
     natural-earth, atlas, or limit for a cap at a modelled ice latitude. Empty until built."""
     path = Path(settings.PALEODEM_DERIVED_DIR) / "ice-sources.json"
     if not path.exists():
-        return {"grids": {}, "sheets": {}, "lows": {}}
+        return {"grids": {}, "sheets": {}, "lows": {}, "model_levels": []}
     document = json.loads(path.read_text())
-    return {key: document.get(key, {}) for key in ("grids", "sheets", "lows")}
+    return {**{key: document.get(key, {}) for key in ("grids", "sheets", "lows")},
+            # PaleoMIST's own sea level per step, [age_ka, level_m] oldest first, for the
+            # window's strip to draw beside the stack's; empty before the model slices.
+            "model_levels": document.get("model_levels", [])}
 
 
 def lows_of(kinds, item):
@@ -177,6 +180,7 @@ WINDOW_OPTIONS = [("", gettext_lazy("전체 시대")), ("deglacial", gettext_laz
 HOLOCENE_KA = 11.7
 DEGLACIAL_SOURCE = "https://doi.org/10.5281/zenodo.8161764"
 STACK_SOURCE = "https://doi.org/10.5194/cp-12-1079-2016"
+PALEOMIST_SOURCE = "https://doi.org/10.1594/PANGAEA.905800"
 
 
 def time_window(request, source):
@@ -192,12 +196,14 @@ def window_frames(frames, kinds, stack, reach):
     Every frame is the 0 Ma grid, so the terrain is today's, and every one carries its age
     as `deglacial` {age_ka, level_m, url}. Where NADI-1 and DATED-1 give that age a slice
     the ice is the slice (`dated`), at the slice's level, the stack's running minimum; the
-    sheet and the what-if slices are dropped, as the age sets the sea level. Older than any
-    slice there is no reconstruction to show, so the frame keeps them and the page mixes the
-    slices at the stack's own level for that age (`analogue`): the retreat's shape at the
-    same sea level, an assumption the page names. No window frame has a temperature: the
-    present's 5 Myr map would read as the climate of a glacial maximum, which it says
-    nothing about.
+    sheet and the what-if slices are dropped, as the age sets the sea level. Where the slice
+    is PaleoMIST's modelled ice instead (`reconstructed`, 26 to 80 ka where built) the same
+    path shows it, at the stack's own level for the age, which PaleoMIST's own level
+    disagrees with; the page says so. Older than any slice there is no reconstruction to
+    show, so the frame keeps them and the page mixes the slices at the stack's own level for
+    that age (`analogue`): the retreat's shape at the same sea level, an assumption the page
+    names. No window frame has a temperature: the present's 5 Myr map would read as the
+    climate of a glacial maximum, which it says nothing about.
     """
     present = next((frame for frame in frames if frame["relief"] and frame["age"] == 0 and frame["ice"]), None)
     if present is None:
@@ -207,6 +213,11 @@ def window_frames(frames, kinds, stack, reach):
     if not slices:
         return None
     levels = {int(round(age)): level for age, level in stack}
+    # The window's stops pick their rivers by age, so every step goes, not only the ones
+    # that lower the sea; the page brackets the age between two and mixes them.
+    steps = rivers_ice_steps(item) if present.get("rivers") else None
+    present = dict(present, rivers_ice=([{key: step[key] for key in ("age_ka", "level_m", "url")}
+                                         for step in steps] if steps else None))
     window = []
     for age in range(reach, 0, -1):
         low = slices.get(age)
@@ -215,8 +226,11 @@ def window_frames(frames, kinds, stack, reach):
         shared = dict(age=age / 1000, temp=None, mean_c=None,
                       label=_("홀로세") if age < HOLOCENE_KA else _("플라이스토세"))
         if low is not None:
-            window.append(dict(present, **shared, ice_kind="dated", ice_sheet=None, ice_lows=None,
-                               title=f"NADI-1 · DATED-1, {age} ka", source=DEGLACIAL_SOURCE,
+            modelled = low.get("source") == "paleomist"
+            window.append(dict(present, **shared, ice_kind="reconstructed" if modelled else "dated",
+                               ice_sheet=None, ice_lows=None,
+                               title=f"PaleoMIST 1.0, {age} ka" if modelled else f"NADI-1 · DATED-1, {age} ka",
+                               source=PALEOMIST_SOURCE if modelled else DEGLACIAL_SOURCE,
                                deglacial={"age_ka": age, "level_m": low["level_m"],
                                           "url": reverse("globe-ice-low", args=[present["id"], age])}))
         else:
@@ -270,34 +284,48 @@ def rivers_ice_path(item, years):
     return derived_path(item, f"rivers-ice-{years}.png")
 
 
-def rivers_ice_of(item):
-    """The river fields routed over the ice, youngest first, each with the sea level it was
-    routed at, from the sidecar scripts/build_rivers.py --ice writes: only the steps whose
-    level is below every younger step's, so the page can bracket its level between two,
-    and only where the file exists. None where there are none."""
+def rivers_ice_steps(item):
+    """Every river field routed over the ice, youngest first, each with the sea level it was
+    routed at and whether that level is below every younger step's, from the sidecar
+    scripts/build_rivers.py --ice writes; only where the file exists. None where there are
+    none, or the sidecar is not in order."""
     path = derived_path(item, "rivers-ice.json")
     if not path.exists():
         return None
     try:
-        steps = json.loads(path.read_text())["slices"]
-        slices, previous_age, previous_level = [], 0, 0
-        for step in steps:
-            if not step.get("lowers"):
-                continue
+        steps, previous_age = [], 0
+        for step in json.loads(path.read_text())["slices"]:
             age, level = step["age_ka"], step["level_m"]
             if (not isinstance(age, (int, float)) or not isinstance(level, (int, float))
-                    or not math.isfinite(age) or not math.isfinite(level)
-                    or not previous_age < age <= 80 or not level < previous_level):
-                raise ValueError("Ice river slices must increase in age and decrease in sea level")
-            previous_age, previous_level = age, level
+                    or not math.isfinite(age) or not math.isfinite(level) or not previous_age < age <= 80):
+                raise ValueError("Ice river slices must increase in age")
+            previous_age = age
             years = int(round(age * 1000))
             if rivers_ice_path(item, years).exists():
-                slices.append({"age_ka": age, "level_m": level,
-                               "url": river_url("globe-rivers-ice", [item["id"], years])})
-        return slices or None
+                steps.append({"age_ka": age, "level_m": level, "lowers": bool(step.get("lowers")),
+                              "url": river_url("globe-rivers-ice", [item["id"], years])})
+        return steps or None
     except (OSError, ValueError, KeyError, TypeError, AttributeError):
         logging.getLogger(__name__).warning("Unavailable ice river sidecar: %s", path, exc_info=True)
         return None
+
+
+def rivers_ice_of(item):
+    """The steps the sea-level what-if can bracket by level: only those whose level is below
+    every younger step's, so the levels fall with age. None where there are none."""
+    steps = rivers_ice_steps(item)
+    if not steps:
+        return None
+    slices, previous_level = [], 0
+    for step in steps:
+        if not step["lowers"]:
+            continue
+        if not step["level_m"] < previous_level:
+            logging.getLogger(__name__).warning("Ice river slice at %s ka is marked as lowering but does not", step["age_ka"])
+            return None
+        previous_level = step["level_m"]
+        slices.append({key: step[key] for key in ("age_ka", "level_m", "url")})
+    return slices or None
 
 
 def sealevel_curve():
@@ -488,6 +516,7 @@ def viewer_strings():
         "oldestPast": _("{age} Ma · 과거"),
         "oldestWindow": _("{age} ka · 과거"),
         "analogueIce": _("가정 빙하"),
+        "reconstructedIce": _("모델 복원 빙상"),
         "webglFailed": _("3D 화면을 시작하지 못했습니다. WebGL을 지원하는 브라우저에서 하드웨어 가속을 확인해 주세요."),
         "proterozoic": _("원생대"),
     }
@@ -805,7 +834,7 @@ def globe(request):
     source = mask_source(request)
     climate = {"curve": [], "stops": {}}
     sea = {"long": [], "pleistocene": [], "stops": {}}
-    kinds = {"grids": {}, "sheets": {}, "lows": {}}
+    kinds = {"grids": {}, "sheets": {}, "lows": {}, "model_levels": []}
     if enabled():
         document = catalogue(source)
         if source == "paleodem2018":
@@ -920,7 +949,8 @@ def globe(request):
                    "coastlines": coastlines(source) if enabled() else None,
                    "temperature_curve": climate["curve"],
                    "temperature_available": any(frame.get("temp") for frame in frames),
-                   "sealevel": {"long": sea["long"], "pleistocene": sea["pleistocene"]},
+                   "sealevel": {"long": sea["long"], "pleistocene": sea["pleistocene"],
+                                "model": kinds["model_levels"] if window else []},
                    "sealevel_available": bool(sea["long"]),
                    "ice_available": any(frame.get("ice") for frame in frames),
                    "rivers_available": any(frame.get("rivers") for frame in frames),

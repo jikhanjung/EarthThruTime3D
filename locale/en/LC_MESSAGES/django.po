@@ -787,11 +787,17 @@ msgstr "Assumed ice: the retreat's shape at the same sea level"
 msgid "가정 빙하"
 msgstr "assumed ice"
 
+msgid "모델 복원 빙상"
+msgstr "modelled ice"
+
+msgid "이 시점의 빙상은 관측 윤곽이 아니라 모델 복원입니다. 26~80 ka는 <a href=\"https://doi.org/10.1038/s41467-021-21469-w\" target=\"_blank\" rel=\"noopener\">PaleoMIST 1.0</a>(Gowan et al. 2021, CC BY 4.0)이 2,500년 간격으로 복원한 접지 빙상을 두 시점 사이에서 섞은 것이며, NADI-1·DATED-1 윤곽이 닿았던 범위 안(북미·유라시아)에만 적용하고 그 밖은 현재 빙하입니다. 북미는 MIS 3에 허드슨만이 열리는 최소 시나리오입니다. 해수면은 <a href=\"https://doi.org/10.5194/cp-12-1079-2016\" target=\"_blank\" rel=\"noopener\">Spratt &amp; Lisiecki (2016)</a> 곡선 값 그대로인데, PaleoMIST 자체의 해수면(색띠의 점선)은 30~50 ka에 이보다 30~55 m 높습니다. 그려진 빙상과 해안선은 서로 다른 모델의 것이며, 그 차이는 두 자료의 불일치입니다."
+msgstr "The ice sheet at this stop is a model reconstruction, not a mapped margin. From 26 to 80 ka it is the grounded ice of <a href=\"https://doi.org/10.1038/s41467-021-21469-w\" target=\"_blank\" rel=\"noopener\">PaleoMIST 1.0</a> (Gowan et al. 2021, CC BY 4.0), reconstructed every 2,500 years and mixed between the two steps around the age, applied only where the NADI-1 and DATED-1 margins reached (North America and Eurasia); elsewhere the ice is today's. North America follows the minimal scenario, in which Hudson Bay opens during MIS 3. Sea level is the <a href=\"https://doi.org/10.5194/cp-12-1079-2016\" target=\"_blank\" rel=\"noopener\">Spratt &amp; Lisiecki (2016)</a> curve as it is, while PaleoMIST's own sea level (the dashed line on the strip) sits 30 to 55 m above it at 30 to 50 ka. The drawn ice and the drawn coast come from different models, and the gap between them is the disagreement of the two."
+
 msgid "해수면, 최근 13만 년"
 msgstr "Sea level, last 130,000 years"
 
-msgid "이 시점의 빙하는 복원이 아니라 가정입니다. 25 ka보다 오래된 빙상 윤곽은 공개된 자료가 없어, 그 나이의 해수면과 같은 해수면이었던 마지막 빙기 후퇴기의 조각 모양을 빌렸습니다. 빙상이 자랄 때와 녹을 때의 모양 차이는 반영하지 않았습니다. 해수면은 <a href=\"https://doi.org/10.5194/cp-12-1079-2016\" target=\"_blank\" rel=\"noopener\">Spratt &amp; Lisiecki (2016)</a> 곡선 값 그대로이며, 여러 기록의 주성분이라 마지막 간빙기(약 12만 5천 년 전)의 +6~9 m 고수위는 재현하지 않습니다."
-msgstr "The ice at this stop is an assumption, not a reconstruction. No open ice-sheet outlines exist older than 25 ka, so the shape is borrowed from the slices of the last deglaciation at the same sea level as this age. Ice sheets grow and melt in different shapes, which this ignores. Sea level is the <a href=\"https://doi.org/10.5194/cp-12-1079-2016\" target=\"_blank\" rel=\"noopener\">Spratt &amp; Lisiecki (2016)</a> curve as it is; being the principal component of many records, it does not reach the +6 to 9 m highstand of the last interglacial, about 125,000 years ago."
+msgid "이 시점의 빙하는 복원이 아니라 가정입니다. 이 나이의 빙상 윤곽은 공개된 자료가 없어, 그 나이의 해수면과 같은 해수면이었던 마지막 빙기 후퇴기의 조각 모양을 빌렸습니다. 빙상이 자랄 때와 녹을 때의 모양 차이는 반영하지 않았습니다. 해수면은 <a href=\"https://doi.org/10.5194/cp-12-1079-2016\" target=\"_blank\" rel=\"noopener\">Spratt &amp; Lisiecki (2016)</a> 곡선 값 그대로이며, 여러 기록의 주성분이라 마지막 간빙기(약 12만 5천 년 전)의 +6~9 m 고수위는 재현하지 않습니다."
+msgstr "The ice at this stop is an assumption, not a reconstruction. No open ice-sheet outline exists for this age, so the shape is borrowed from the slices of the last deglaciation at the same sea level as this age. Ice sheets grow and melt in different shapes, which this ignores. Sea level is the <a href=\"https://doi.org/10.5194/cp-12-1079-2016\" target=\"_blank\" rel=\"noopener\">Spratt &amp; Lisiecki (2016)</a> curve as it is; being the principal component of many records, it does not reach the +6 to 9 m highstand of the last interglacial, about 125,000 years ago."
 
 #: templates/core/mantle.html core/mantle.py
 msgid "맨틀 모형 실험"
