@@ -5,24 +5,22 @@ host. Configuration and procedure live in `deploy/README.md` and `deploy/deploy.
 Builds happen on the development host; the server only loads the image and swaps.
 The shared guides are referenced privately through `.guides`; they are not copied.
 
-Current release: **v0.18.1**, deployed 2026-09-18 (Asia/Seoul). Cutaways render
-the far-side crust and surface; transparent crust no longer paints over the exterior.
-All globe surfaces support pan, zoom and tilt independently of terrain relief.
-CRUST 2.0 and mantle overlay share the Earth interior panel and latitude/longitude cutaway bounds, including
-antimeridian crossing and an India–Asia preset. Cutaway defaults to off and surface
-opacity remains 70%. CRUST 2.0 remains available only at 0 Ma; mantle activation
-preserves the current camera and selects the nearest available source age.
-The runtime bundle has 1,080 files (445,775,830 bytes), identical in content to
-v0.18.0. Present-day Natural Earth/HydroLAKES rivers and lakes and the ten 2.5–25 ka
-ice-river textures remain deployed; no 26–80 ka expansion is included. Past lake
-outlines outside ice and the crust/mantle alignment remain approximations.
+Current release: **v0.19.0**, deployed 2026-09-18 (Asia/Seoul). The 130 ka time window
+draws PaleoMIST 1.0's modelled ice from 26 to 80 ka (issue #59, step b) in place of the
+same-sea-level analogue, within the reach of the NADI-1/DATED-1 margins; its stops pick
+the ice-routed river fields by age, so all 32 fields from 2.5 to 80 ka are deployed. Sea
+level stays the Spratt & Lisiecki stack and the window's strip draws PaleoMIST's own
+level beside it. The runtime bundle has 1,157 files (471,153,936 bytes): 77 files added
+to v0.18.1 (55 ice slices, 22 river fields), two sidecars changed, nothing removed or
+otherwise altered. Cutaways, pan/zoom/tilt, CRUST 2.0 and the mantle overlay are as in
+v0.18.1. The crustal depression under the ice is still not drawn (step c of #59).
 Image/data hashes, DB backup and public verification are in
-[devlog 098](../devlog/20260918_jikhanjung_098_release_0181.md).
+[devlog 102](../devlog/20260918_jikhanjung_102_release_0190.md).
 Browser transfer measurements and the ice-river data generation are recorded in
 [devlog 079](../devlog/20260916_jikhanjung_079_release_0140.md).
 
 On 2026-09-18, old project releases were pruned with `KEEP=2`: v0.18.1 and
-v0.18.0 remain available. Eleven old releases were removed, reclaiming 8,099 MiB;
+v0.18.0 remained available (v0.19.0 has since been added; v0.18.1 is the rollback). Eleven old releases were removed, reclaiming 8,099 MiB;
 the host had 16.4 GiB free (72% used) immediately afterwards. No database, backups,
 secrets or other projects were pruned. See
 [devlog 099](../devlog/20260918_jikhanjung_099_dolfinid_release_cleanup.md).
