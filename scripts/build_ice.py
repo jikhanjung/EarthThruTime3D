@@ -45,7 +45,17 @@ carries the sea level of its age from the Spratt & Lisiecki (2016) stack, taken 
 running minimum back from the present so the levels fall with age. Every thousand years
 is written for the time window, which steps through the ages; a slice that lowers
 nothing is marked so the sea-level what-if, which mixes the two slices bracketing the
-offset, skips it.
+offset, skips it. Older than the dated margins, 26 to MODEL_TO_KA, the slices come from
+PaleoMIST 1.0 (Gowan et al. 2021, sources/paleomist.json, where fetched): its grounded
+ice every 2,500 years, mixed between the two steps bracketing each thousand years, and
+only where the dated margins ever reached, MODEL_REACH_DEGREES around the ice NADI-1 and
+DATED-1 added over today's, so Antarctica, Patagonia and the mountain ranges keep their
+present extent as they do in the dated slices and nothing appears at 26 ka that vanishes
+at 25. Each carries the stack's own level for its age, not the running minimum, which the
+window shows and the what-if does not use (`lowers` is false: none is below 24 ka's).
+PaleoMIST is a minimal MIS 3 scenario whose own sea level sits well above the stack's
+(jikhanjung 100); its ocean-mean level per step goes beside the slices as `model_levels`
+so the page can draw the disagreement.
 
 Check: the glacial deposits Cao et al. (2018) compiled, tillites and diamictites since
 the Devonian, are rotated to each map's age with the PALEOMAP model and counted inside
@@ -73,6 +83,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from atlas_motions import MODEL, PackedModel, carry  # noqa: E402
 from build_sealevel import pleistocene  # noqa: E402
+import paleomist  # noqa: E402
 from segment_paleoatlas import cell_weights, ice, plate_raster  # noqa: E402
 
 MANIFEST = ROOT / "sources/ice.json"
@@ -86,6 +97,8 @@ TABLE_STEP = 8                               # the area table samples the field 
 HOLE_KM2 = 500_000.0                         # an enclosed gap smaller than this inside a sheet is filled
 EARTH_KM2 = 510.1e6
 SLICES_KA = range(1, 26)                     # the deglacial slices offered, one per thousand years
+MODEL_TO_KA = 80                             # the PaleoMIST slices, 26 ka to here, one per thousand years
+MODEL_REACH_DEGREES = 3.0                    # how far past the dated margins' footprint the model's ice is kept
 NADI = "nadi1/NADI-1 shapefiles Dalton et al. QSR/{age}ka_cal_OPTIMAL_NADI-1_Dalton_etal_QSR.shp"
 DATED = "dated1/DATED1 TimeSlices shp/TS{age}_mc.shp"   # from 25 to 10 ka; Eurasia is ice-free after
 WGS84_A, WGS84_E2 = 6378137.0, 2 / 298.257223563 - 1 / 298.257223563 ** 2
@@ -230,20 +243,82 @@ def deglacial(folders, grounded, levels, today, out):
     what-if can mix between, since a level that does not fall has no single age."""
     for stale in out.glob("paleodem-0000-ice-low*.png"):
         stale.unlink()
-    slices = []
+    slices, added = [], np.zeros(grounded.shape, bool)
     for age, level, lowers in held_levels(levels):
         mask = grounded > 0
         mask |= rasterise(folders["nadi1"].parent / NADI.format(age=age)) > 0
         dated = folders["dated1"].parent / DATED.format(age=age)
         if dated.exists():
             mask |= rasterise(dated, transform=polar_laea_inverse) > 0
+        added |= mask & ~(grounded > 0)
         field = distance_field(mask.astype(np.uint8) * 255)
         Image.fromarray(np.dstack([field, np.zeros_like(field), np.zeros_like(field)])).save(out / f"paleodem-0000-ice-low-{age}.png")
         slices.append({"age_ka": age, "level_m": level, "lowers": lowers,
                        "volume": today - level / SEA_PER_MKM3, "areas": area_table(field)})
         print(f"  {age:2d} ka  sea {level:7.1f} m{'' if lowers else ' (held)'}  ice {share(field >= 128):5.2f}% "
               f"of the globe -> paleodem-0000-ice-low-{age}.png")
-    return slices
+    return slices, added
+
+
+def model_footprint(added, width=WIDTH):
+    """Where the model's ice is kept: within MODEL_REACH_DEGREES of any ice the dated margins
+    added over today's, on the grid's own degree scale."""
+    return ndimage.distance_transform_edt(~added) * (360.0 / width) <= MODEL_REACH_DEGREES
+
+
+def model_fields(data, grounded, footprint, ages):
+    """PaleoMIST's grounded ice at each step, over today's ice and inside the footprint, as
+    a distance field: age -> field."""
+    fields = {}
+    for age in ages:
+        thick = paleomist.on_texture(paleomist.field(data, "ice_thickness", paleomist.step(data, age)), WIDTH) > 0
+        mask = (grounded > 0) | (thick & footprint)
+        fields[age] = distance_field(mask.astype(np.uint8) * 255)
+        print(f"  PaleoMIST {age:4g} ka  ice {share(thick):5.2f}% of the globe, {share(thick & ~footprint & ~(grounded > 0)):.2f}% "
+              f"beyond today's ice and the dated margins' reach dropped")
+    return fields
+
+
+def model_levels(data):
+    """PaleoMIST's own sea level per step, the mean of its `sea_level` change over today's
+    ocean, oldest first: the curve the window draws beside the stack's."""
+    latitude = np.asarray(data.variables["lat"][:])
+    latitude = latitude if latitude[0] > 0 else latitude[::-1]
+    steps = paleomist.ages(data)
+    ocean = paleomist.field(data, "base_topography", steps.argmin()) < 0
+    weights = np.cos(np.radians(latitude))[:, None] * ocean
+    return [[float(age) + 0.0, round(float((paleomist.field(data, "sea_level", index) * weights).sum() / weights.sum()), 1)]
+            for index, age in sorted(enumerate(steps), key=lambda pair: -pair[1])]
+
+
+def modelled(grounded, added, levels, today, out, youngest=SLICES_KA[-1], oldest=MODEL_TO_KA, data=None):
+    """The PaleoMIST slices, the age after `youngest` to `oldest`, one per thousand years,
+    each mixed from the two steps bracketing its age (the step itself where the age is
+    one). None, and a note, where the grid has not been fetched."""
+    if data is None:
+        if not paleomist.grid_path().exists():
+            print(f"no PaleoMIST grid at {paleomist.grid_path()}; slices past {youngest} ka not written")
+            return [], []
+        data = paleomist.grid()
+    step = paleomist.STEP_KA
+    ages = sorted({step * k for k in range(int((youngest + 1) // step), int(oldest / step) + 1)})
+    fields = model_fields(data, grounded, model_footprint(added), ages)
+    slices = []
+    for age in range(youngest + 1, oldest + 1):
+        below, above = step * (age // step), step * (age // step + 1)
+        if above > oldest and age != oldest:
+            break
+        if below == age:
+            field = fields[below]
+        else:
+            t = (age - below) / step
+            field = np.round(fields[below] * (1 - t) + fields[above] * t).astype(np.uint8)
+        Image.fromarray(np.dstack([field, np.zeros_like(field), np.zeros_like(field)])).save(out / f"paleodem-0000-ice-low-{age}.png")
+        slices.append({"age_ka": age, "level_m": levels[age], "lowers": False, "source": "paleomist",
+                       "volume": today - levels[age] / SEA_PER_MKM3, "areas": area_table(field)})
+        print(f"  {age:2d} ka  sea {levels[age]:7.1f} m (stack)  ice {share(field >= 128):5.2f}% "
+              f"of the globe -> paleodem-0000-ice-low-{age}.png")
+    return slices, model_levels(data)
 
 
 def nearest(maps, age):
@@ -360,7 +435,11 @@ def main():
     sheets = {"paleodem-0000": {"volume": today, "areas": area_table(field),
                                 "range_m": sea_range(0.0, today, intervals)}}
     print("deglacial slices over today's ice, NADI-1 and DATED-1 at the stack's sea level:")
-    lows = {"paleodem-0000": deglacial(folders, grounded, stack(), today, args.out)}
+    levels = stack()
+    dated, added = deglacial(folders, grounded, levels, today, args.out)
+    print(f"PaleoMIST slices over today's ice, {SLICES_KA[-1] + 1} to {MODEL_TO_KA} ka at the stack's own level:")
+    reconstructed, curve = modelled(grounded, added, levels, today, args.out)
+    lows = {"paleodem-0000": dated + reconstructed}
 
     atlas = json.loads(ATLAS.read_text())
     maps = atlas["maps"]
@@ -434,8 +513,13 @@ def main():
                         "each at its age's sea level from the Spratt & Lisiecki stack taken as the running "
                         "minimum back from the present. The time window steps through every slice; the sea-level "
                         "what-if uses only those whose `lowers` is true, mixes the two bracketing the offset "
-                        "and applies the area law below the deepest."),
-        "grids": sources, "sheets": sheets, "lows": lows}, indent=1))
+                        f"and applies the area law below the deepest. From {SLICES_KA[-1] + 1} to {MODEL_TO_KA} ka "
+                        "(`source` paleomist) the slice is PaleoMIST 1.0's grounded ice mixed between the two "
+                        "2,500-year steps bracketing the age, kept only within "
+                        f"{MODEL_REACH_DEGREES:g} degrees of the ice the dated margins ever added over today's, "
+                        "at the stack's own level for the age; a minimal MIS 3 scenario, whose own ocean-mean "
+                        "sea level per step is `model_levels` [age_ka, level_m], oldest first."),
+        "grids": sources, "sheets": sheets, "lows": lows, "model_levels": curve}, indent=1))
     print(f"{written} grids given the atlas's ice ({borrowed} borrowing a map at another age), "
           f"{capped} a cap at the paper's limit, {len(report)} maps read; "
           f"{len(points)} deposits in the check -> ice-check.json, ice-sources.json")

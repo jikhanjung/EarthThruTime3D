@@ -198,6 +198,7 @@ summary{cursor:pointer;color:#c9dce2}
 .sea-band { fill: rgba(120, 200, 190, 0.18); }
 .sea-base { stroke: rgba(200, 220, 225, 0.45); stroke-width: 1; vector-effect: non-scaling-stroke; }
 .sea-line { fill: none; stroke: #7fd6c9; stroke-width: 1.5; vector-effect: non-scaling-stroke; }
+.sea-model { fill: none; stroke: #e0b36a; stroke-width: 1; stroke-dasharray: 3 3; vector-effect: non-scaling-stroke; }
 .sea-grid { stroke: rgba(200, 220, 225, 0.14); stroke-width: 1; vector-effect: non-scaling-stroke; }
 .sea-ice { fill: rgba(120, 170, 235, 0.16); }
 .sea-whisker { stroke: #f4d06f; stroke-width: 3; vector-effect: non-scaling-stroke; stroke-linecap: round; }

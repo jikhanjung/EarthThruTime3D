@@ -175,8 +175,9 @@ thickness, isostatic deformation and paleo-topography every 2,500 years from 80 
 0.25° and 1°. The manifest's `members` limits the extraction and `discard` deletes the
 archive afterwards; `fetch_paleodem.py --manifest sources/paleomist.json` verifies every extracted file against the SHA-256/size receipt created from the
 verified archive. A folder without that receipt must be checked against the archive again. `scripts/build_rivers.py --ice` routes the present grid's
-rivers over it (docs/globe-viewer.md "Rivers"). The ice layer itself still draws NADI-1
-and DATED-1 (`ice.json`).
+rivers over it (docs/globe-viewer.md "Rivers"), and `scripts/build_ice.py` draws its
+grounded ice from 26 to 80 ka in the 130 ka window, within the reach of the NADI-1 and
+DATED-1 margins it draws to 25 ka (`ice.json`; docs/globe-viewer.md "Ice").
 
 ## Today's rivers and lakes
 

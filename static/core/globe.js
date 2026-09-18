@@ -214,21 +214,36 @@ function loadIce(frame) {
 // without one contributes no rivers, so the network fades out across the gap. Which of a
 // frame's fields show at a sea-level offset, and how far between them: a frame with
 // fields routed over the ice of the last glacial cycle (`rivers_ice`, youngest first, each
-// at its age's level) shows the two bracketing the offset, its own field standing at 0 m
-// and the deepest holding below it; otherwise its own field toward the one routed with the
-// sea at the slider's lowest level (`rivers_low`, the shelf's rivers) by the offset's share
-// of that level. Each side is {key, url} for the cache, or null.
+// at its age's level) shows, in a time window, the two bracketing the stop's age, and
+// otherwise the two bracketing the offset, its own field standing at 0 m and the deepest
+// holding below it; failing those its own field toward the one routed with the sea at the
+// slider's lowest level (`rivers_low`, the shelf's rivers) by the offset's share of that
+// level. Each side is {key, url} for the cache, or null.
 function riverChoice(frame, offset) {
   const own = frame?.rivers ? { key: `${frame.id}:rivers`, url: frame.rivers } : null;
   const slices = frame?.rivers_ice || [];
-  if (own && slices.length && offset < 0) {
-    let index = slices.findIndex(slice => slice.level_m <= offset);
-    if (index < 0) index = slices.length - 1;
-    const upper = index ? slices[index - 1] : { level_m: 0, age_ka: 0 };
+  const step = (slice) => ({ key: `${frame.id}:rivers-ice:${slice.age_ka}`, url: slice.url });
+  // A window's stop has an age: the two steps bracketing it, the frame's own field standing
+  // at 0 ka, mixed by the age's share of the gap, whatever their levels do. Older than any
+  // step (the analogue past 80 ka) the level path below takes over.
+  const age = frame?.deglacial?.age_ka;
+  if (own && slices.length && age > 0 && age <= slices[slices.length - 1].age_ka) {
+    const index = slices.findIndex(slice => slice.age_ka >= age);
+    const upper = index ? slices[index - 1] : { age_ka: 0 };
     const lower = slices[index];
+    const t = (age - upper.age_ka) / (lower.age_ka - upper.age_ka);
+    return { base: index ? step(upper) : own, low: step(lower), t, age };
+  }
+  // Only the steps whose level is below every younger step's can be bracketed by level.
+  const lowering = slices.filter((slice, index) => slice.level_m < 0
+    && slices.slice(0, index).every(younger => younger.level_m > slice.level_m));
+  if (own && lowering.length && offset < 0) {
+    let index = lowering.findIndex(slice => slice.level_m <= offset);
+    if (index < 0) index = lowering.length - 1;
+    const upper = index ? lowering[index - 1] : { level_m: 0, age_ka: 0 };
+    const lower = lowering[index];
     const t = Math.min(1, (offset - upper.level_m) / (lower.level_m - upper.level_m));
-    return { base: index ? { key: `${frame.id}:rivers-ice:${upper.age_ka}`, url: upper.url } : own,
-             low: { key: `${frame.id}:rivers-ice:${lower.age_ka}`, url: lower.url },
+    return { base: index ? step(upper) : own, low: step(lower),
              t, age: upper.age_ka + (lower.age_ka - upper.age_ka) * t };
   }
   const low = frame?.rivers_low;
@@ -379,7 +394,8 @@ async function selectStop(value, manual = false, overlayManaged = false, transit
   $('globe-age').textContent = [periodLabel(place), ageLabel(place),
     place.mapless ? null : (masked ? L.mask : relief ? L.relief : heated ? L.temperature : null),
     place.mapless ? L.noMap : (between ? L.interpolated : null),
-    !place.mapless && place.from.ice_kind === 'analogue' ? L.analogueIce : null].filter(Boolean).join(' / ');
+    !place.mapless && place.from.ice_kind === 'analogue' ? L.analogueIce : null,
+    !place.mapless && place.from.ice_kind === 'reconstructed' ? L.reconstructedIce : null].filter(Boolean).join(' / ');
   const nextLabel = $('globe-age').textContent;
   if (transition) $('globe-age').textContent = displayedLabel;
   // Older than any map there is no source to preview, and leaving the last one up
@@ -562,10 +578,14 @@ function showIceKind(place) {
   // In a time window, ice older than any dated slice is the retreat's shape borrowed at the
   // same sea level, an assumption rather than a reconstruction.
   const analogue = pair.some(frame => frame.ice && frame.ice_kind === 'analogue');
+  // Or PaleoMIST's modelled ice, a reconstruction constrained by a model rather than a
+  // drawn margin, whose own sea level is not the one the stop stands at.
+  const reconstructed = pair.some(frame => frame.ice && frame.ice_kind === 'reconstructed');
   const shown = stage.dataset.ice === 'true';
-  stage.dataset.iceKind = shown ? (limit ? 'limit' : analogue ? 'analogue' : 'drawn') : '';
+  stage.dataset.iceKind = shown ? (limit ? 'limit' : analogue ? 'analogue' : reconstructed ? 'reconstructed' : 'drawn') : '';
   if ($('ice-limit-note')) $('ice-limit-note').hidden = !(shown && limit);
   if ($('ice-analogue-note')) $('ice-analogue-note').hidden = !(shown && analogue);
+  if ($('ice-model-note')) $('ice-model-note').hidden = !(shown && reconstructed);
 }
 // Rivers over the surface, under the ice. The fields stay bound while hidden so a toggle
 // needs no reload; a missing field on one side weighs nothing, so the network fades
@@ -806,6 +826,16 @@ function drawWindowSeaStrip(svg) {
     children.push(make('line', { x1: 0, x2: n, y1: y(level).toFixed(1), y2: y(level).toFixed(1), class: 'sea-grid' }));
   }
   children.push(make('line', { x1: 0, x2: n, y1: y(0).toFixed(1), y2: y(0).toFixed(1), class: 'sea-base' }));
+  // PaleoMIST's own sea level where its ice is shown, dashed, so where the two curves part
+  // the disagreement between the drawn ice and the drawn coast is on the strip.
+  const oldest = frames[stops[0][0]].deglacial.age_ka;
+  const model = (seaLevel.model || []).filter(([age]) => age <= oldest);
+  if (model.length > 1) {
+    children.push(make('polyline', {
+      points: model.map(([age, level]) => `${(oldest - age + 0.5).toFixed(1)},${y(level).toFixed(1)}`).join(' '),
+      class: 'sea-model',
+    }));
+  }
   children.push(make('polyline', {
     points: stops.map(([from], index) => `${index + 0.5},${y(frames[from].deglacial.level_m).toFixed(1)}`).join(' '),
     class: 'sea-line',

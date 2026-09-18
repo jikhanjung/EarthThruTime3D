@@ -797,8 +797,9 @@ try {
       await expect(dem.locator('#sampling')).toHaveCount(1);
       await expect(dem.locator('#sealevel')).toBeEnabled();
       console.log('Time window passed');
-      // The last glacial cycle: dated slices to 25 ka, and before them the retreat's shape at
-      // the stack's own level, named as assumed ice.
+      // The last glacial cycle: dated slices to 25 ka, PaleoMIST's modelled ice to 80 ka
+      // where built, and before them the retreat's shape at the stack's own level, named as
+      // assumed ice.
       await dem.goto(new URL('?masks=paleodem2018&window=lastcycle', base).href);
       await expect(demGlobe).toHaveAttribute('aria-busy', 'false', {timeout: 15000});
       const cycleFrames = await dem.locator('#globe-frames').textContent().then(JSON.parse);
@@ -814,12 +815,29 @@ try {
       await expect(dem.locator('#ice-analogue-note')).toBeHidden();
       await dem.locator('#projection').selectOption('equirect');
       await dem.screenshot({path:'data/screenshots/globe-cycle-21ka.png'});
-      await at(70);
+      const modelled = cycleFrames.some(frame => frame.ice_kind === 'reconstructed');
+      await at(40);
+      if (modelled) {
+        // Modelled ice at the stack's level, the rivers the 40 ka field, and the strip
+        // carrying PaleoMIST's own curve beside the stack's.
+        await expect(demGlobe).toHaveAttribute('data-ice-kind', 'reconstructed');
+        await expect(dem.locator('#ice-model-note')).toBeVisible();
+        await expect(dem.locator('#ice-analogue-note')).toBeHidden();
+        await expect(demGlobe).toHaveAttribute('data-ice-low', '');
+        await expect(demGlobe).toHaveAttribute('data-river-ice', '40.0');
+        await expect(dem.locator('#sea-strip .sea-model')).toHaveCount(1);
+        await dem.screenshot({path:'data/screenshots/globe-cycle-40ka.png'});
+      } else {
+        await expect(demGlobe).toHaveAttribute('data-ice-kind', 'analogue');
+      }
+      await expect(demGlobe).toHaveAttribute('data-sealevel', String(Math.round(cycleFrames.find(frame => frame.deglacial.age_ka === 40).deglacial.level_m)));
+      await expect(dem.locator('#sealevel')).toBeDisabled();
+      await at(100);
       await expect(demGlobe).toHaveAttribute('data-ice-kind', 'analogue');
       await expect(dem.locator('#ice-analogue-note')).toBeVisible();
+      if (modelled) await expect(dem.locator('#ice-model-note')).toBeHidden();
       await expect(demGlobe).not.toHaveAttribute('data-ice-low', '');
-      await expect(demGlobe).toHaveAttribute('data-sealevel', String(Math.round(cycleFrames.find(frame => frame.deglacial.age_ka === 70).deglacial.level_m)));
-      await expect(dem.locator('#sealevel')).toBeDisabled();
+      await expect(demGlobe).toHaveAttribute('data-sealevel', String(Math.round(cycleFrames.find(frame => frame.deglacial.age_ka === 100).deglacial.level_m)));
       await at(121);
       await expect(demGlobe).toHaveAttribute('data-ice-low', '');
       await dem.screenshot({path:'data/screenshots/globe-cycle-121ka.png'});
