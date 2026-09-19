@@ -847,6 +847,27 @@ class PaleodemTests(TestCase):
                          {'age_ka': 3, 'level_m': -5.0, 'url': f"/globe/ice-low/{present['id']}/3.png"})
         self.assertEqual(frames[-1]['deglacial'], {'age_ka': 0, 'level_m': 0.0, 'url': None})
         self.assertEqual([frame['label'] for frame in frames], ['홀로세', '홀로세', '홀로세', '현재'])
+        # The modelled climate is optional, one texture per stop, and only a window has it.
+        self.assertFalse(response.context['climate_available'])
+        self.assertNotContains(response, 'id="vegetation"')
+        self.assertEqual(self.client.get(f"/globe/climate/{present['id']}/2.png").status_code, 404)
+        for age in (2, 0):
+            globe_module.climate_path(present, age).write_bytes(b'png')
+        response = self.client.get('/', {'masks': 'paleodem2018', 'window': 'deglacial'})
+        self.assertEqual([frame['climate'] for frame in response.context['frames']],
+                         [None, f"/globe/climate/{present['id']}/2.png", None, f"/globe/climate/{present['id']}/0.png"])
+        for control in ('id="vegetation"', 'id="rainfall"', 'id="veg-legend"', 'id="rain-legend"', 'id="climate-note"'):
+            self.assertContains(response, control)
+        self.assertEqual(self.client.get(f"/globe/climate/{present['id']}/2.png").status_code, 200)
+        self.assertEqual(self.client.get(f"/globe/climate/{present['id']}/3.png").status_code, 404)
+        self.assertEqual(self.client.get('/globe/climate/paleodem-9999/2.png').status_code, 404)
+        whole = self.client.get('/', {'masks': 'paleodem2018'})
+        self.assertFalse(whole.context['climate_available'])
+        self.assertNotContains(whole, 'id="vegetation"')
+        for age in (2, 0):
+            globe_module.climate_path(present, age).unlink()
+        response = self.client.get('/', {'masks': 'paleodem2018', 'window': 'deglacial'})
+        frames = response.context['frames']
         # The age sets the sea level, so no frame carries a sheet for the slider to range over.
         self.assertTrue(all(frame['ice_sheet'] is None and frame['ice_lows'] is None for frame in frames))
         # Nor a temperature: the present's 5 Myr map says nothing about a glacial maximum.

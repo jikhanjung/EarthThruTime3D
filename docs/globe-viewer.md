@@ -206,6 +206,50 @@ global mean is this project's own reduction of the published maps. PhanDA (Judd 
 2024), the current reference curve, is cited and not shipped: its repository carries no
 licence.
 
+## Modelled climate in the time windows
+
+The windows have no temperature (see "Time window" below): a 5 Myr map says nothing about
+a glacial maximum. What they can have is a climate model at their own step.
+`sources/quaternary-climate.json` pins Krapp et al. (2021), *A statistics-based
+reconstruction of high-resolution global terrestrial climate for the last 800,000 years*,
+OSF 8n43x, CC BY 4.0: 0.5°, land only, one slice per thousand years, which is the
+windows' stop, so no age is interpolated and the 130 ka window is covered to its end.
+`scripts/build_climate.py` writes `paleodem-0000-climate-<age>.png` for 0 to 130 ka,
+720 × 360, the source's own cells north first and never resampled: red is a plant cover
+class times 32, green the annual precipitation as sqrt(mm / 8000) × 255. The classes fold
+the source's BIOME4 biomes into an order of plant cover plus the two cold ones: desert and
+barren (21, 27), dry shrubland (13, 14), grassland (19, 20), savanna, woodland and
+parkland (12, 15–18), forest (1–11), tundra (22–26), land ice (28). They are the source's
+own model output, not a classification of ours. The source is land only on each age's own
+coast, and the page cuts the coast from today's heights and the age's sea level, a finer
+and different line, so sea cells take the nearest land cell's values; precipitation is
+missing under ice and over large lakes (15000 mm, the source's `known_issues.md`) and is
+filled the same way. 131 textures, 11 MB; `deploy/pack_data.py` packs them when built.
+
+Each window frame carries `climate`, the route `/globe/climate/<id>/<age>.png`, or null
+where unbuilt; the whole timeline never has it. Two toggles, 모형 식생 and 모형 강수,
+are surface modes 4 and 5 (`data-surface` `veg` and `rain`), exclusive with the relief and
+with each other. The textures ride the temperature sampler pair, as the two never show
+together and the fragment shader already binds thirteen of the sixteen a GPU must offer.
+They are sampled nearest, since a blend of two class numbers is a third class, so the
+globe shows the source's 0.5° cells as cells. Plant cover is one green hue from sand to
+dark green, with tundra violet and the model's ice near white; rainfall is one teal hue,
+light to dark along the cube root of the year's millimetres so a desert's tens of
+millimetres still show, teal because blue is the sea's and the rivers'. Both sets were
+run through a colour-blindness validator (devlog wwolf 013). The sea keeps its colour and
+the ice and rivers draw on top as ever. A legend under the readout shows while its mode does.
+
+It is a model, and a statistical emulator of HadCM3 snapshots at that, not a
+reconstruction, and the note says so. Its largest known failure is named on the page: it
+does not green the Sahara. Measured over 18–30°N, 10°W–32°E, annual rainfall goes from
+25 mm today to 54 mm at 11 ka and 78 mm at 125 ka and never passes 83 mm in 800 ka, and
+the box is never less than 88% desert, against a Green Sahara that reached 31°N from 11 to
+5 ka in the proxies (Tierney et al. 2017). Beyer et al. (2020), the same group's 120 ka
+set of downscaled snapshots, measures the same (61 mm at 8 ka, never under 89% desert) and
+is not used by the build. The run made to green it, Armstrong et al. (2023), is published
+without a licence on its data. The model's ice is its own mask (ICE-6G to 122 ka) and does
+not match the page's ice outlines.
+
 ## Sea level
 
 Each PaleoDEM is paleotopography and paleobathymetry with its own sea level as the
@@ -920,6 +964,12 @@ Neither flag grants data-use rights. See `sources/README.md`, `LICENSE-DATA.md` 
   go to gitignored `data/screenshots/`.
 - `VIEWER_URL=http://127.0.0.1:8153/ node tests/river-browser.mjs`: river PNG, shader,
   toggle, grid-spacing explanation, mobile layout and both languages (requires a built 0 Ma river field).
+- `VIEWER_URL=http://127.0.0.1:8153/ node tests/climate-browser.mjs`: the modelled climate in
+  both windows: the textures load, the two modes exclude each other and give the relief back,
+  legends and the Sahara note, stop to stop, mobile layout and both languages (requires
+  `scripts/build_climate.py` to have run). `BROWSER_CHANNEL=chrome` uses an installed Chrome.
+- `.venv/bin/python tests/climate_check.py` with `requirements-processing.txt` installed:
+  every BIOME4 code has a class, the sea fill crosses the date line, 15000 mm reads as missing.
 - `VIEWER_URL=http://127.0.0.1:8153/ node tests/firefox-browser.mjs`: the globe in desktop
   Firefox through WebDriver BiDi, no Playwright browser needed: the globe reaches a frame
   with rivers on, the sea at −60 m brackets the ice-river slices when they are built, the

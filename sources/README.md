@@ -194,6 +194,16 @@ texture. HydroRIVERS was considered and dropped: it is distributed under WWF's
 HydroSHEDS licence agreement, which requires an end-user licence for derivative works,
 not under CC BY as HydroLAKES is.
 
+`quaternary-climate.json` pins Krapp et al. (2021), OSF project 8n43x, whose licence
+field reads CC-By Attribution 4.0 International: the BIOME4 biome file (258 MB) and annual
+precipitation (191 MB) of an 800,000-year, 0.5°, thousand-year climate emulator, plus its
+`known_issues.md`. `scripts/build_climate.py` turns the last 130 ka into the time windows'
+modelled vegetation and rainfall (docs/globe-viewer.md "Modelled climate in the time
+windows"). Beyer et al. (2020, figshare 12293345, CC BY 4.0) was measured against it and is
+not pinned, as nothing is built from it. Not usable: Armstrong et al. (2023) and Valdes et
+al. (2021) on the Bristol BRIDGE pages state no licence; TraCE-21k-II states no terms;
+CHELSA-TraCE21k is 1 km every 100 years, terabytes for these textures.
+
 ## Attribution and use
 
 The site's [license information](http://www.scotese.com/license.htm) permits credited

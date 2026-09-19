@@ -78,6 +78,9 @@ const surfaceToggle = $('surface');
 // area-weighted mean of the Scotese 2021 maps. Empty until the climate build has run.
 const temperatureCurve = JSON.parse($('globe-temperature')?.textContent ?? '[]');
 const temperatureToggle = $('temperature');
+// Modelled plant cover and annual rainfall, one texture per stop of a time window
+// (Krapp et al. 2021); absent until scripts/build_climate.py has run.
+const climateToggles = [[$('vegetation'), 'veg'], [$('rainfall'), 'rain']];
 // Sea level: the long-term Phanerozoic curve as [age Ma, mean, min, max, ice Mkm3]
 // metres above present, oldest first (van der Meer et al. 2022), and the Late
 // Pleistocene stack as [age ka, metres] (Spratt & Lisiecki 2016). Each PaleoDEM already
@@ -204,6 +207,11 @@ function loadField(frame) {
 function loadTemperature(frame) {
   return loadData(`${frame.id}:temp`, frame.temp);
 }
+// A window's frames share one id, so the texture's own address is the key. It holds class
+// numbers, so its cells are drawn as the source's cells: a blend of two numbers is a third class.
+function loadClimate(frame) {
+  return loadData(`climate:${frame.climate}`, frame.climate, THREE.NearestFilter);
+}
 // Ice masks exist where ice was drawn: Natural Earth at the present, the atlas's white
 // elsewhere. A frame without one contributes no ice, so the overlay fades out across
 // the gap to it, which reads as retreat.
@@ -302,7 +310,7 @@ function iceState(frame, offset) {
   const t = (offset - upper.level_m) / (lows[index].level_m - upper.level_m);
   return { cut: 0.5, low: { from: index - 1, to: index, t, age: upper.age_ka + (lows[index].age_ka - upper.age_ka) * t } };
 }
-function loadData(key, url) {
+function loadData(key, url, filter = null) {
   // A field is data, not a picture: distance in red, height in green and blue.
   // Decoding it as an <img> lets the browser colour-manage the bytes on the way to
   // WebGL, which some engines do even when asked not to, and a shifted distance moves
@@ -324,6 +332,7 @@ function loadData(key, url) {
     const { data, width, height } = context.getImageData(0, 0, canvas.width, canvas.height);
     const texture = prepare(new THREE.DataTexture(data, width, height, THREE.RGBAFormat, THREE.UnsignedByteType));
     texture.flipY = true;   // row 0 of the field is north; the sphere's v runs south to north
+    if (filter) texture.minFilter = texture.magFilter = filter;
     texture.needsUpdate = true;   // a DataTexture uploads nothing until told to
     return texture;
   });
@@ -375,10 +384,15 @@ async function selectStop(value, manual = false, overlayManaged = false, transit
   const fielded = !place.mapless && Boolean(place.from.field) && Boolean(place.to.field);
   // Temperature needs a map on both sides; a stop without one shows its relief instead.
   const heated = surface === 'temp' && fielded && Boolean(place.from.temp) && Boolean(place.to.temp);
+  // Modelled climate likewise, and only a time window's stops have it. A window's stops
+  // never blend, so the stop's own texture is enough there; between stops both are needed.
+  const climated = (surface === 'veg' || surface === 'rain') && fielded
+    && Boolean(place.from.climate) && (place.blend === 0 || Boolean(place.to.climate));
+  const climateLabel = !climated ? null : surface === 'veg' ? L.vegetation : L.rainfall;
   // A stop needs heights on both sides to be drawn by height; the atlas prelude has none.
-  const relief = !heated && (surface === 'relief' || surface === 'temp') && fielded
+  const relief = !heated && !climated && ['relief', 'temp', 'veg', 'rain'].includes(surface) && fielded
     && Boolean(place.from.relief) && Boolean(place.to.relief);
-  const masked = !relief && !heated && fielded && (surface === 'mask' || !sourceMapsPublic);
+  const masked = !relief && !heated && !climated && fielded && (surface === 'mask' || !sourceMapsPublic);
   const anchor = place.mapless ? null : (place.blend > 0.5 ? place.to : place.from);
   $('era').value = selected;
   $('timeline').value = stop;
@@ -392,7 +406,7 @@ async function selectStop(value, manual = false, overlayManaged = false, transit
     ? L.olderThanMaps
     : (between ? `${place.from.title} → ${place.to.title}` : place.from.title);
   $('globe-age').textContent = [periodLabel(place), ageLabel(place),
-    place.mapless ? null : (masked ? L.mask : relief ? L.relief : heated ? L.temperature : null),
+    place.mapless ? null : (masked ? L.mask : relief ? L.relief : heated ? L.temperature : climateLabel),
     place.mapless ? L.noMap : (between ? L.interpolated : null),
     !place.mapless && place.from.ice_kind === 'analogue' ? L.analogueIce : null,
     !place.mapless && place.from.ice_kind === 'reconstructed' ? L.reconstructedIce : null].filter(Boolean).join(' / ');
@@ -420,6 +434,11 @@ async function selectStop(value, manual = false, overlayManaged = false, transit
   if (temperatureToggle) temperatureToggle.setAttribute('aria-pressed', String(heated));
   if ($('temp-note')) $('temp-note').hidden = !heated;
   if ($('temp-legend')) $('temp-legend').hidden = !heated;
+  for (const [toggle, mode] of climateToggles) {
+    toggle?.setAttribute('aria-pressed', String(climated && surface === mode));
+    if ($(`${mode}-legend`)) $(`${mode}-legend`).hidden = !(climated && surface === mode);
+  }
+  if ($('climate-note')) $('climate-note').hidden = !climated;
   showMeanTemperature(place);
   // Decided here, synchronously, so the readout and the shader agree at every stop.
   const seaOffset = seaLevelOffset(place, fielded);
@@ -429,7 +448,7 @@ async function selectStop(value, manual = false, overlayManaged = false, transit
   if ($('mapless-note')) $('mapless-note').hidden = !place.mapless;
   status.textContent = place.mapless
     ? fmt(L.loadingPlates, { age: ageLabel(place) })
-    : fmt(masked ? L.loadingMask : relief ? L.loadingRelief : heated ? L.loadingTemperature : L.loadingMap, { period: periodLabel(place) });
+    : fmt(masked ? L.loadingMask : relief ? L.loadingRelief : heated ? L.loadingTemperature : climated ? L.loadingClimate : L.loadingMap, { period: periodLabel(place) });
   status.hidden = false;
   status.classList.remove('loaded');
   $('retry').hidden = true;
@@ -462,7 +481,10 @@ async function selectStop(value, manual = false, overlayManaged = false, transit
       const riversB = riverChoice(place.to, seaOffset);
       const [first, second, warmA, warmB, iceA, iceB, low0, low1, riverA, riverB, riverLowA, riverLowB, preparedOverlay] = await Promise.all([
         loadSurface(place.from), loadSurface(place.to),
-        heated ? loadTemperature(place.from) : null, heated ? loadTemperature(place.to) : null,
+        // The climate textures ride the temperature pair, as the two never show together
+        // and the shader is three samplers short of the sixteen a GPU must offer.
+        heated ? loadTemperature(place.from) : climated ? loadClimate(place.from) : null,
+        heated ? loadTemperature(place.to) : climated && place.to.climate ? loadClimate(place.to) : null,
         fielded ? loadIce(place.from) : null, fielded ? loadIce(place.to) : null,
         !fielded ? null : dated ? loadDeglacial(place.from) : low ? loadIceLow(place[sliced], low.from) : null,
         !fielded ? null : dated ? loadDeglacial(place.to) : low ? loadIceLow(place[sliced], low.to) : null,
@@ -508,7 +530,7 @@ async function selectStop(value, manual = false, overlayManaged = false, transit
       uniforms.blend.value = place.blend;
       uniforms.blank.value = 0;
     }
-    uniforms.mode.value = heated ? 3 : relief ? 2 : masked ? 1 : 0;
+    uniforms.mode.value = heated ? 3 : climated ? (surface === 'veg' ? 4 : 5) : relief ? 2 : masked ? 1 : 0;
     if (!place.mapless) {
       uniforms.texel.value.set(1 / uniforms.surfaceA.value.image.width, 1 / uniforms.surfaceA.value.image.height);
       uniforms.vegetation.value = vegetationAt(place.age);
@@ -525,7 +547,7 @@ async function selectStop(value, manual = false, overlayManaged = false, transit
     crust?.frame(place.age);
     // Names go on any surface without lettering of its own: the mask, and on the
     // elevation series the relief and the temperature; a photographed map has its own.
-    showNames(place, !place.mapless && (masked || relief || heated));
+    showNames(place, !place.mapless && (masked || relief || heated || climated));
     await updatePlates(place, ticket);
     if (ticket !== request) return;
     await updateCoastlines(place, ticket);
@@ -533,15 +555,15 @@ async function selectStop(value, manual = false, overlayManaged = false, transit
     stage.dataset.frame = place.mapless ? 'none' : place.from.id;
     stage.dataset.blend = place.blend.toFixed(2);
     stage.dataset.mapless = String(place.mapless);
-    stage.dataset.surface = place.mapless ? 'none' : heated ? 'temp' : relief ? 'relief' : masked ? 'mask' : 'map';
+    stage.dataset.surface = place.mapless ? 'none' : heated ? 'temp' : climated ? surface : relief ? 'relief' : masked ? 'mask' : 'map';
     stage.setAttribute('aria-label', place.mapless
       ? fmt(L.maplessLabel, { age: ageLabel(place) })
       : fmt(L.globeLabel, { period: periodLabel(place), age: ageLabel(place),
-                            surface: masked ? L.maskGlobe : relief ? L.reliefGlobe : heated ? L.temperatureGlobe : L.globe, between: between ? L.betweenSuffix : '' }));
+                            surface: masked ? L.maskGlobe : relief ? L.reliefGlobe : heated ? L.temperatureGlobe : climated ? (surface === 'veg' ? L.vegetationGlobe : L.rainfallGlobe) : L.globe, between: between ? L.betweenSuffix : '' }));
     stage.setAttribute('aria-busy', 'false');
     status.textContent = place.mapless
       ? fmt(L.shownPlates, { age: ageLabel(place) })
-      : fmt(L.shownSurface, { period: periodLabel(place), surface: masked ? L.mask : relief ? L.relief : heated ? L.temperature : L.globe,
+      : fmt(L.shownSurface, { period: periodLabel(place), surface: masked ? L.mask : relief ? L.relief : heated ? L.temperature : climateLabel || L.globe,
                               between: between ? L.shownBetween : '' });
     status.classList.add('loaded');
     scheduleNext();
@@ -1264,6 +1286,29 @@ function globeMaterial() {
         vec3 hot = decode(vec3(0.72, 0.13, 0.11));
         return t < 0.43 ? mix(cold, mild, t / 0.43) : mix(mild, hot, (t - 0.43) / 0.57);
       }
+      // Modelled plant cover: an order of cover in one hue, sand to dark green, with tundra
+      // and land ice set apart. Checked as a set for colour-blind separation (devlog wwolf 013).
+      vec3 plantCover(float cover) {
+        if (cover < 0.5) return decode(vec3(0.863, 0.784, 0.604));   // desert and barren
+        if (cover < 1.5) return decode(vec3(0.361, 0.698, 0.361));   // dry shrubland
+        if (cover < 2.5) return decode(vec3(0.200, 0.561, 0.200));   // grassland
+        if (cover < 3.5) return decode(vec3(0.090, 0.420, 0.090));   // savanna and woodland
+        if (cover < 4.5) return decode(vec3(0.031, 0.259, 0.031));   // forest
+        if (cover < 5.5) return decode(vec3(0.690, 0.486, 0.776));   // tundra
+        return decode(vec3(0.957, 0.965, 0.973));                    // land ice
+      }
+      // One cell of a climate texture: red the cover class times 32, green the square root of
+      // annual precipitation over 8000 mm. Rain is one hue, light to dark, along the cube root,
+      // so a desert's tens of millimetres still show; teal, as blue is the sea's and the rivers'.
+      // The stops are mixed as encoded, which steps evenly to the eye and is what the legend's
+      // gradient does. Under the model's ice there is no rain to show.
+      vec3 climateColour(vec4 cell, int which) {
+        float cover = floor(cell.r * 255.0 / 32.0 + 0.5);
+        if (which == 4 || cover > 5.5) return plantCover(cover);
+        float t = pow(cell.g, 2.0 / 3.0);
+        vec3 mid = vec3(0.184, 0.620, 0.490);
+        return decode(t < 0.5 ? mix(vec3(0.890, 0.957, 0.925), mid, t / 0.5) : mix(mid, vec3(0.024, 0.251, 0.184), (t - 0.5) / 0.5));
+      }
       ${METRES_GLSL}
       // Shaded relief from the height gradient, lit from the upper left. Texel spacing
       // is converted to metres so a slope is a true slope before exaggeration.
@@ -1334,6 +1379,10 @@ function globeMaterial() {
             // The coastline as a dark line, so the continents stay readable under colour.
             float coast = 1.0 - smoothstep(0.0, 0.008, abs(distance));
             colour = thermal(celsius) * (1.0 - 0.55 * coast);
+          } else if (mode >= 4) {
+            // Land only, as the source is: the sea keeps its own colour.
+            vec3 climate = mix(climateColour(texture2D(tempA, uvA), mode), climateColour(texture2D(tempB, uvB), mode), blend);
+            colour = mix(ocean, climate, landness);
           } else if (mode == 2) {
             float latitude = (surfaceUv.y - 0.5) * 180.0;
             colour = hypsometric(metres, landness) * shade(uvA, uvB, latitude);
@@ -2246,6 +2295,12 @@ function init() {
   if (temperatureToggle) {
     temperatureToggle.addEventListener('click', () => {
       surface = surface === 'temp' ? 'relief' : 'temp';
+      selectStop(stop, true);
+    });
+  }
+  for (const [toggle, mode] of climateToggles) {
+    toggle?.addEventListener('click', () => {
+      surface = surface === mode ? 'relief' : mode;
       selectStop(stop, true);
     });
   }

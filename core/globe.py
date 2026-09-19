@@ -203,7 +203,9 @@ def window_frames(frames, kinds, stack, reach):
     show, so the frame keeps them and the page mixes the slices at the stack's own level for
     that age (`analogue`): the retreat's shape at the same sea level, an assumption the page
     names. No window frame has a temperature: the present's 5 Myr map would read as the
-    climate of a glacial maximum, which it says nothing about.
+    climate of a glacial maximum, which it says nothing about. What a frame can have is
+    `climate`, its own thousand years of Krapp et al. 2021: modelled plant cover and annual
+    precipitation, where scripts/build_climate.py has built it.
     """
     present = next((frame for frame in frames if frame["relief"] and frame["age"] == 0 and frame["ice"]), None)
     if present is None:
@@ -223,7 +225,7 @@ def window_frames(frames, kinds, stack, reach):
         low = slices.get(age)
         if low is None and age not in levels:
             continue
-        shared = dict(age=age / 1000, temp=None, mean_c=None,
+        shared = dict(age=age / 1000, temp=None, mean_c=None, climate=climate_url(item, age),
                       label=_("홀로세") if age < HOLOCENE_KA else _("플라이스토세"))
         if low is not None:
             modelled = low.get("source") == "paleomist"
@@ -238,6 +240,7 @@ def window_frames(frames, kinds, stack, reach):
                                title=str(_("가정 빙하: 해수면이 같았던 후퇴기의 모양")), source=STACK_SOURCE,
                                deglacial={"age_ka": age, "level_m": levels[age], "url": None}))
     window.append(dict(present, temp=None, mean_c=None, ice_sheet=None, ice_lows=None,
+                       climate=climate_url(item, 0),
                        deglacial={"age_ka": 0, "level_m": 0.0, "url": None}))
     return window
 
@@ -246,6 +249,16 @@ def ice_low_path(item, age):
     """One dated lowstand field for the ice, a slice of the present's deglaciation at `age`
     thousand years; only where built."""
     return derived_path(item, f"ice-low-{age}.png")
+
+
+def climate_path(item, age):
+    """Modelled plant cover and annual precipitation at `age` thousand years, from Krapp et
+    al. 2021 by scripts/build_climate.py; only where built."""
+    return derived_path(item, f"climate-{age}.png")
+
+
+def climate_url(item, age):
+    return reverse("globe-climate", args=[item["id"], age]) if climate_path(item, age).exists() else None
 
 
 def temperature_path(item):
@@ -469,6 +482,11 @@ def viewer_strings():
         "temperature": _("기온"),
         "temperatureGlobe": _("기온 지구본"),
         "loadingTemperature": _("{period} 기온 지도를 불러오는 중…"),
+        "vegetation": _("모형 식생"),
+        "vegetationGlobe": _("모형 식생 지구본"),
+        "rainfall": _("모형 강수"),
+        "rainfallGlobe": _("모형 강수 지구본"),
+        "loadingClimate": _("{period} 기후 모형 지도를 불러오는 중…"),
         "meanTemperature": _("전 지구 평균 기온 약 {value} °C{between}"),
         "meanTemperatureBetween": _(" (보간)"),
         "meanTemperatureNone": _("전 지구 평균 기온: 자료 없음 (540 Ma 이전)"),
@@ -949,6 +967,7 @@ def globe(request):
                    "coastlines": coastlines(source) if enabled() else None,
                    "temperature_curve": climate["curve"],
                    "temperature_available": any(frame.get("temp") for frame in frames),
+                   "climate_available": any(frame.get("climate") for frame in frames),
                    "sealevel": {"long": sea["long"], "pleistocene": sea["pleistocene"],
                                 "model": kinds["model_levels"] if window else []},
                    "sealevel_available": bool(sea["long"]),
@@ -1065,6 +1084,20 @@ def ice_low(request, map_id, age):
         file = ice_low_path(item, age).open("rb")
     except FileNotFoundError:
         raise Http404("Ice lowstand not generated") from None
+    response = FileResponse(file, content_type="image/png")
+    response["Cache-Control"] = "private, max-age=3600"
+    return response
+
+
+@require_safe
+def climate_map(request, map_id, age):
+    item = find_map(map_id) if enabled() else None
+    if item is None:
+        raise Http404
+    try:
+        file = climate_path(item, age).open("rb")
+    except FileNotFoundError:
+        raise Http404("Climate texture not generated") from None
     response = FileResponse(file, content_type="image/png")
     response["Cache-Control"] = "private, max-age=3600"
     return response
