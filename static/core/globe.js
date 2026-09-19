@@ -384,9 +384,10 @@ async function selectStop(value, manual = false, overlayManaged = false, transit
   const fielded = !place.mapless && Boolean(place.from.field) && Boolean(place.to.field);
   // Temperature needs a map on both sides; a stop without one shows its relief instead.
   const heated = surface === 'temp' && fielded && Boolean(place.from.temp) && Boolean(place.to.temp);
-  // Modelled climate likewise, and only a time window's stops have it.
+  // Modelled climate likewise, and only a time window's stops have it. A window's stops
+  // never blend, so the stop's own texture is enough there; between stops both are needed.
   const climated = (surface === 'veg' || surface === 'rain') && fielded
-    && Boolean(place.from.climate) && Boolean(place.to.climate);
+    && Boolean(place.from.climate) && (place.blend === 0 || Boolean(place.to.climate));
   const climateLabel = !climated ? null : surface === 'veg' ? L.vegetation : L.rainfall;
   // A stop needs heights on both sides to be drawn by height; the atlas prelude has none.
   const relief = !heated && !climated && ['relief', 'temp', 'veg', 'rain'].includes(surface) && fielded
@@ -480,10 +481,10 @@ async function selectStop(value, manual = false, overlayManaged = false, transit
       const riversB = riverChoice(place.to, seaOffset);
       const [first, second, warmA, warmB, iceA, iceB, low0, low1, riverA, riverB, riverLowA, riverLowB, preparedOverlay] = await Promise.all([
         loadSurface(place.from), loadSurface(place.to),
-        // ponytail: the climate textures ride the temperature pair, as the two never show
-        // together and the shader is three samplers short of the sixteen a GPU must offer.
+        // The climate textures ride the temperature pair, as the two never show together
+        // and the shader is three samplers short of the sixteen a GPU must offer.
         heated ? loadTemperature(place.from) : climated ? loadClimate(place.from) : null,
-        heated ? loadTemperature(place.to) : climated ? loadClimate(place.to) : null,
+        heated ? loadTemperature(place.to) : climated && place.to.climate ? loadClimate(place.to) : null,
         fielded ? loadIce(place.from) : null, fielded ? loadIce(place.to) : null,
         !fielded ? null : dated ? loadDeglacial(place.from) : low ? loadIceLow(place[sliced], low.from) : null,
         !fielded ? null : dated ? loadDeglacial(place.to) : low ? loadIceLow(place[sliced], low.to) : null,

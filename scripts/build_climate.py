@@ -52,7 +52,7 @@ def cover_class(biome):
 
 def fill_nearest(values, missing):
     """`values` with every `missing` cell given the nearest kept cell's value.
-    ponytail: nearest in cell space, not on the sphere; it only feeds a coastal fringe."""
+    Nearest in cell space, not on the sphere; it only feeds a coastal fringe."""
     if not missing.any():
         return values
     if missing.all():
