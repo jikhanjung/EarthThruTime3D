@@ -22,6 +22,7 @@ wwolf는 001부터 셉니다. 그 전의 001–045는 링크와 본문 속 번�
 
 ## 계획
 
+- [jikhanjung P08 — 시간 창의 해안선을 빌더의 바다 마스크로 (#59 (c) 1단계)](20260919_jikhanjung_P08_glacial_coast_mask.md)
 - [jikhanjung P07 — CRUST 2.0으로 현재 지구의 지각 두께 표시](20260916_jikhanjung_P07_crust2_visualization.md)
 - [jikhanjung P06 — v0.11–v0.12 맨틀 통합 리뷰 후속 수정](20260915_jikhanjung_P06_mantle_integration_review_fixes.md)
 - [jikhanjung P05 — 맨틀 근사 중첩부터 단면·시간 통합까지](20260915_jikhanjung_P05_globe_mantle_approximate_overlay.md)
