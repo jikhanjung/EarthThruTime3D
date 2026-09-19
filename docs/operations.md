@@ -5,22 +5,21 @@ host. Configuration and procedure live in `deploy/README.md` and `deploy/deploy.
 Builds happen on the development host; the server only loads the image and swaps.
 The shared guides are referenced privately through `.guides`; they are not copied.
 
-Current release: **v0.19.0**, deployed 2026-09-18 (Asia/Seoul). The 130 ka time window
-draws PaleoMIST 1.0's modelled ice from 26 to 80 ka (issue #59, step b) in place of the
-same-sea-level analogue, within the reach of the NADI-1/DATED-1 margins; its stops pick
-the ice-routed river fields by age, so all 32 fields from 2.5 to 80 ka are deployed. Sea
-level stays the Spratt & Lisiecki stack and the window's strip draws PaleoMIST's own
-level beside it. The runtime bundle has 1,157 files (471,153,936 bytes): 77 files added
-to v0.18.1 (55 ice slices, 22 river fields), two sidecars changed, nothing removed or
-otherwise altered. Cutaways, pan/zoom/tilt, CRUST 2.0 and the mantle overlay are as in
-v0.18.1. The crustal depression under the ice is still not drawn (step c of #59).
+Current release: **v0.20.0**, deployed 2026-09-19 (Asia/Seoul). The two time windows
+offer a modelled climate at every stop (issue #6, PR #75): Krapp et al. 2021's BIOME4
+plant cover and annual rainfall on the source's own 0.5° cells, a HadCM3 emulator rather
+than a reconstruction, whose Sahara stays desert through the African Humid Period, as
+the page says. The runtime bundle has 1,288 files (482,280,982 bytes): the 131 climate
+textures added to v0.19.0, nothing removed or changed. The v0.19.0 PaleoMIST ice at
+26–80 ka and the age-picked ice-river fields are as before; the crustal depression is
+still not drawn (#59 step c, planned in P08).
 Image/data hashes, DB backup and public verification are in
-[devlog 102](../devlog/20260918_jikhanjung_102_release_0190.md).
+[devlog 103](../devlog/20260919_jikhanjung_103_release_0200.md).
 Browser transfer measurements and the ice-river data generation are recorded in
 [devlog 079](../devlog/20260916_jikhanjung_079_release_0140.md).
 
 On 2026-09-18, old project releases were pruned with `KEEP=2`: v0.18.1 and
-v0.18.0 remained available (v0.19.0 has since been added; v0.18.1 is the rollback). Eleven old releases were removed, reclaiming 8,099 MiB;
+v0.18.0 remained available (v0.19.0 and v0.20.0 have since been added; v0.19.0 is the rollback). Eleven old releases were removed, reclaiming 8,099 MiB;
 the host had 16.4 GiB free (72% used) immediately afterwards. No database, backups,
 secrets or other projects were pruned. See
 [devlog 099](../devlog/20260918_jikhanjung_099_dolfinid_release_cleanup.md).
