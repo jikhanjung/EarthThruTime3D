@@ -16,7 +16,8 @@ https://earththrutime.nopeoplestime.info 에서 운영합니다.
 - 한국어/영어(KO|EN) 전환.
 
 보간 화면과 해수면 가정 화면은 관측이나 발표된 복원이 아닙니다. 화면과 문서에서 원본 자료,
-보간 결과, 가정 화면을 구분해 표시합니다. 문제 보고는
+보간 결과, 가정 화면을 구분해 표시합니다. 릴리스별 변경과 화면에서 확인하는 방법은
+[CHANGELOG.md](CHANGELOG.md)에 있습니다. 문제 보고는
 [GitHub Issues](https://github.com/jikhanjung/EarthThruTime3D/issues)에 남겨 주세요.
 
 ## 로컬 실행
