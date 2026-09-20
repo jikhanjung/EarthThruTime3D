@@ -22,6 +22,7 @@ wwolf는 001부터 셉니다. 그 전의 001–045는 링크와 본문 속 번�
 
 ## 계획
 
+- [wwolf P01 — 위치 핀: 한 지점을 찍고 시간에 따라 따라가기, 가능성 평가](20260919_wwolf_P01_location_pin_feasibility.md)
 - [jikhanjung P08 — 시간 창의 해안선을 빌더의 바다 마스크로 (#59 (c) 1단계)](20260919_jikhanjung_P08_glacial_coast_mask.md)
 - [jikhanjung P07 — CRUST 2.0으로 현재 지구의 지각 두께 표시](20260916_jikhanjung_P07_crust2_visualization.md)
 - [jikhanjung P06 — v0.11–v0.12 맨틀 통합 리뷰 후속 수정](20260915_jikhanjung_P06_mantle_integration_review_fixes.md)
@@ -34,6 +35,8 @@ wwolf는 001부터 셉니다. 그 전의 001–045는 링크와 본문 속 번�
 ## 작업 기록
 
 - [jikhanjung 104 — dolfinid 배포 파일 정리 (v0.20.0 이후)](20260920_jikhanjung_104_dolfinid_prune_0200.md)
+
+- [wwolf 014 — 위치 핀: 가능성 측정 결과](20260919_wwolf_014_location_pin_measurements.md)
 
 - [jikhanjung 103 — v0.20.0 시간 창의 모형 식생·강수 릴리스](20260919_jikhanjung_103_release_0200.md)
 
