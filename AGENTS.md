@@ -13,6 +13,10 @@
   merge wastes the reviewer's time.
 - Devlogs are named `YYYYMMDD_{author}_{nnn}_{title}.md` with a per-author number (see
   `devlog/README.md`); take your own next number, and add the entry to the index.
+- Every PR that changes what the site shows or the data it serves adds an entry to
+  `CHANGELOG.md`: what changed, with the PR and devlog linked, and how to see it on screen
+  (dataset, time range, stop, control). The release PR gives the pending entries their
+  `## vX.Y.Z — date` heading. Docs-only PRs are exempt.
 - Keep scientific source observations, interpolated geometry and simulated results
   distinguishable. A 10,000-year display tick is not a claim of scientific accuracy.
 - Production runs on the dolfinid host (`deploy/README.md`). Changes to deployment must
