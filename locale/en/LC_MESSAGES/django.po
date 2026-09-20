@@ -1354,3 +1354,39 @@ msgstr "Showing a modelled climate: the 0.5° data of <a href=\"https://doi.org/
 
 msgid "최근 2.5만 년과 13만 년 시간 범위의 ‘모형 식생’과 ‘모형 강수’ 화면은 이 0.5° 자료에서 옵니다. 기후 모델 HadCM3의 결과를 통계로 이어 천 년마다 낸 모형이며 복원이 아닙니다. 식생은 자료의 BIOME4 생물군계를 식피가 늘어나는 순서로 묶은 것입니다. 이 모형은 아프리카 습윤기의 ‘녹색 사하라’를 재현하지 못합니다. 북위 18~30°, 서경 10°~동경 32° 구역의 연 강수량은 현재 25 mm, 1만 1천 년 전에도 54 mm에 그치고 80만 년 내내 83 mm를 넘지 않습니다."
 msgstr "The ‘modelled vegetation’ and ‘modelled rainfall’ views of the 25,000 and 130,000 year windows come from this 0.5° set: output of the HadCM3 climate model joined by statistics into one value per thousand years, a model and not a reconstruction. Vegetation is the set's BIOME4 biomes folded into an order of increasing plant cover. It does not reproduce the ‘Green Sahara’ of the African Humid Period: over 18–30°N, 10°W–32°E annual rainfall is 25 mm today, only 54 mm 11,000 years ago, and never passes 83 mm in 800,000 years."
+
+msgid "위치 핀"
+msgstr "Location pins"
+
+msgid "지도를 눌러 핀을 놓습니다. 최대 3개, 핀을 다시 누르면 지웁니다."
+msgstr "Click the map to drop a pin. Up to three; click a pin again to remove it."
+
+msgid "지도를 눌러 핀을 놓습니다. 하나만 놓아도 되고 셋까지 놓을 수 있습니다. 핀을 다시 누르거나 ×를 누르면 지웁니다. 핀은 그 땅이 실린 판을 따라 시간축을 움직이고, 둘 이상이면 그 사이 거리를 적습니다."
+msgstr "Click the map to drop a pin: one is enough, up to three. Click a pin again, or its ×, to remove it. A pin rides the plate its land sits on as you move through time; with two or more, the distances between them are listed."
+
+msgid "핀의 자리는 관측이 아니라 PALEOMAP 회전 모델(Scotese 2016, CC BY 4.0)의 계산입니다. 판을 단단한 조각으로 다루므로 같은 판 위의 두 핀은 거리가 변하지 않습니다. 다른 모델은 같은 곳을 다른 자리에 놓으며, 300 Ma 이전의 거리는 모델에 따라 두 배까지 다릅니다."
+msgstr "A pin's position is computed from the PALEOMAP rotation model (Scotese 2016, CC BY 4.0), not observed. Plates are treated as rigid, so two pins on one plate never change their distance. Other models put the same place elsewhere, and before 300 Ma distances differ between models by up to a factor of two."
+
+msgid "오늘 {today} · 판 {plate} · {then}"
+msgstr "Today {today} · plate {plate} · {then}"
+
+msgid "지금 {where}"
+msgstr "here {where}"
+
+msgid "이 핀이 가운데 오도록 화면을 돌립니다."
+msgstr "Turn the view to centre this pin."
+
+msgid "{n}번 핀 지우기"
+msgstr "Remove pin {n}"
+
+msgid "오늘 {today} · 판 {plate} · 이 땅은 모델에서 {from} Ma까지만 거슬러 갑니다."
+msgstr "Today {today} · plate {plate} · the model carries this land back only to {from} Ma."
+
+msgid "오늘 {today} · 판 {plate} · 이 지도에서는 {reach} Ma 이전에 핀을 그리지 않습니다."
+msgstr "Today {today} · plate {plate} · pins are not drawn on these maps before {reach} Ma."
+
+msgid "여기에는 대륙 다각형이 없어 따라갈 판이 없습니다."
+msgstr "No continent polygon here, so there is no plate to follow."
+
+msgid "{a}–{b} {km} km (오늘 {today} km)"
+msgstr "{a}–{b} {km} km ({today} km today)"

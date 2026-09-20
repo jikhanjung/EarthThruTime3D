@@ -164,6 +164,10 @@ summary{cursor:pointer;color:#c9dce2}
    rather than looking like a failure. */
 /* :not([hidden]) matters: a bare display:block would override the attribute that is
    supposed to keep this line out of the way. */
+.pin-panel ol{margin:8px 0;padding-left:1.6em}
+.pin-panel li::marker{color:var(--pin);font-weight:700}
+.pin-panel .pin-here{padding:0;border:0;border-radius:0;background:none;font-size:inherit;color:#88dfcc;text-decoration:underline}
+.pin-panel .pin-remove{padding:0 6px;margin-left:4px;line-height:1.4}
 .model-note .reach:not([hidden]){display:block;margin-top:8px;padding:7px 9px;border-radius:6px;
                    background:#3a2a1e;color:#f0c99a;font-size:.74rem;line-height:1.6}
 

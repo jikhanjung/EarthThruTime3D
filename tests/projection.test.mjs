@@ -42,3 +42,16 @@ test('flat projections place the corners and the centre where they belong', () =
   assert.deepStrictEqual(placeEquirectangular(90, 45), [0.5, 0.25]);
   assert.deepStrictEqual(placeEquirectangular(-180, -90), [-1, -0.5]);
 });
+
+test('a sheet placement undone returns the longitude and latitude', () => {
+  for (const [place, unplace] of [[projection.placeEquirectangular, projection.unplaceEquirectangular],
+                                  [projection.placeMollweide, projection.unplaceMollweide]]) {
+    for (const [longitude, latitude] of [[0, 0], [126.98, 37.57], [-87.63, 41.88], [106.8, -78.46], [-179, 89]]) {
+      const back = unplace(...place(longitude, latitude));
+      close(back[0], longitude);
+      close(back[1], latitude);
+    }
+    assert.equal(unplace(0, 0.6), null);
+  }
+  assert.equal(projection.unplaceMollweide(0.99, 0.45), null);
+});
