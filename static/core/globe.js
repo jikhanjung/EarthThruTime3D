@@ -118,6 +118,7 @@ let gridVisible = true;
 let meridian = 0;
 let spinning = false;
 let lastPlace = null;
+let lastPinModel = null;   // the rotation model the pins were last placed with, for a flat map's meridian refresh
 let lastPlates = null;
 let lastCoastline = null;
 let flatRefresh = 0;
@@ -1008,7 +1009,7 @@ function setMeridian(value) {
     if (plateLayer?.visible && lastPlates) drawPlates(lastPlates.age, lastPlates.loaded);
     if (coastlineLayer?.visible && lastCoastline) drawCoastline(lastCoastline.entry, lastCoastline.rings);
     if (lastPlace && nameLayer.visible) showNames(lastPlace, true);
-    if (lastPlace && pins.length) updatePins(lastPlace);
+    if (lastPlace && pins.length && lastPinModel && pinning) placePins(lastPlace, lastPinModel);
   });
 }
 function setProjection(name, refresh = true) {
@@ -1885,7 +1886,10 @@ function degrees(longitude, latitude) {
   };
   return `${part(latitude, 'N', 'S')} ${part(longitude, 'E', 'W')}`;
 }
-function drawPins(place, model) {
+// The sprites alone: where each pin stands at the place, or hidden. A meridian change on a
+// flat map calls this every frame, so the panel, whose buttons a reader may be pressing,
+// is left to drawPins().
+function placePins(place, model) {
   const off = pinsOff(place);
   const now = pins.map((pin) => (off ? null : carried(model, pin, place.age)));
   pinLayer.children.forEach((sprite, index) => {
@@ -1895,6 +1899,11 @@ function drawPins(place, model) {
   });
   pinLayer.visible = true;
   stage.dataset.pins = String(now.filter(Boolean).length);
+  lastPinModel = model;
+  return { off, now };
+}
+function drawPins(place, model) {
+  const { off, now } = placePins(place, model);
   $('pin-list').replaceChildren(...pins.map((pin, index) => {
     const item = document.createElement('li');
     item.style.setProperty('--pin', PIN_COLOURS[index]);
@@ -1946,7 +1955,8 @@ async function updatePins(place, ticket) {
     $('pin-distances').textContent = '';
     return;
   }
-  const loaded = await loadPlateModel(pinEntry());
+  // A failed fetch leaves the panel empty rather than throwing out of selectStop().
+  const loaded = await loadPlateModel(pinEntry()).catch(() => null);
   if ((ticket !== undefined && ticket !== request) || !loaded) return;
   drawPins(place, loaded.model);
 }
@@ -2001,7 +2011,11 @@ async function dropPin(event) {
   if (near >= 0) pins.splice(near, 1);
   else {
     const where = pickLonLat(event);
-    if (!where || pinsOff(lastPlace)) return;
+    if (!where) return;
+    if (pinsOff(lastPlace)) {
+      status.textContent = fmt(L.pinOff2002.split(' · ').pop(), { reach: PIN_REACH_2002_MA });
+      return;
+    }
     const pin = pinAt(loaded.shapes, loaded.model, where[0], where[1], Number(lastPlace.age.toFixed(3)), pinEntry().covers[1]);
     if (!pin) {
       status.textContent = L.pinOcean;
