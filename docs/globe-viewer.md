@@ -936,10 +936,11 @@ The **위치 핀** toggle in the ☰ menu lets a click drop up to three pins. A 
 present-day place: `static/core/pins.js` takes the clicked longitude and latitude back to
 today with each continent polygon's rotation at the age on screen, keeps the polygon that
 holds it (a bearing-winding test on the sphere, good across the antimeridian and the
-poles), and stores today's coordinates, the plate and the polygon's `from`. At every stop
-the pin is carried by that plate's rotation. Before `from` the land does not exist in the
-model and the pin is removed with a line saying so; ocean floor has no polygon and takes
-no pin.
+poles), and stores today's coordinates, the plate and its reach: the polygon's `from` or
+the age where the model's poles for that plate end, whichever comes first. A polygon's own
+date is often nominal (PALEOMAP dates many cratons 4500 Ma) while the model covers
+1100 Ma. At every stop the pin is carried by that plate's rotation. Beyond its reach the
+pin is removed with a line naming that age; ocean floor has no polygon and takes no pin.
 
 Pins always use the PALEOMAP rotations (`paleomap2016`), whatever the overlay shows: it
 is the edition the 2016 atlas and the PaleoDEMs were drawn with, so a carried place stays
@@ -948,8 +949,10 @@ place 4 to 10 degrees away by 100 Ma (devlog wwolf 014, `scripts/assess_pin.py`)
 standing in blue water over a Palaeozoic craton is a shallow sea, not a miss. On the 2002
 maps pins are not drawn before 300 Ma, where those maps part from the rotations. Between
 two maps the surface is carried by the gap's travel field rather than rotated, so the pin
-rides the same field from both ends, as `carryRings()` does for the coastline; the panel
-always gives the exact rotation. In a time window the rotation is below a pixel and the
+rides the same field from both ends: `drawnAt()` solves where the shader draws the ground
+each map holds under the pin, and the two are mixed by the blend. The panel always gives
+the exact rotation. A pin is drawn without a depth test, so it is hidden past the true
+horizon of the camera that draws, the tilted one included. In a time window the rotation is below a pixel and the
 pin stays where it is today.
 
 The panel lists each pin's coordinates today, its plate and where it is now, a link that

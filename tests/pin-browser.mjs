@@ -65,6 +65,12 @@ try {
   await page.goto(new URL('/?masks=paleodem2018&age=450&pin=71.43,51.13;-87.63,41.88', base).href);
   await expect(globe).toHaveAttribute('data-pins', '1');
   await expect(items.nth(0)).toContainText('back only to 420 Ma');
+  // A polygon's own date is nominal (Chicago's says 4500 Ma); the limit named is where the
+  // model's poles end, 1100 Ma, and older than any map the pin is gone with that note.
+  await page.goto(new URL('/?masks=paleodem2018&age=1500&pin=-87.63,41.88', base).href);
+  await expect(globe).toHaveAttribute('aria-busy', 'false');
+  await expect(items.nth(0)).toContainText('back only to 1100 Ma');
+  await expect(globe).toHaveAttribute('data-pins', '0');
   // The 2002 maps part from the PALEOMAP rotations before 300 Ma, so pins are not drawn there.
   await page.goto(new URL('/?masks=scotese2002&age=425&pin=-87.63,41.88', base).href);
   await expect(globe).toHaveAttribute('aria-busy', 'false');

@@ -4,7 +4,7 @@ import { OrbitControls } from '../vendor/three/OrbitControls.js';
 import { placeEquirectangular, placeMollweide, reproject, unplaceEquirectangular, unplaceMollweide }
   from './projection.js';
 import { RotationModel, turn } from './rotation.js';
-import { MAX_PINS, carried, distanceKm, formatPins, parsePins, pinAt } from './pins.js';
+import { MAX_PINS, carried, distanceKm, drawnAt, formatPins, parsePins, pinAt } from './pins.js';
 import { densifySegments } from './surface-lines.js';
 import { createMantleOverlay } from './mantle-overlay.js';
 import { createMantleScene, CUT_UNIFORMS, CUT_SURFACE } from './mantle-scene.js';
@@ -1870,10 +1870,9 @@ function pinPoint(model, pin, place) {
   const older = gap.length ? carried(model, pin, place.from.age) : null;
   const newer = gap.length ? carried(model, pin, place.to.age) : null;
   if (!older || !newer) return pointAt(exact[0], exact[1], PIN_LIFT);
-  const forward = travelAt(older[0], older[1], gap);
-  const back = travelAt(newer[0], newer[1], gap);
-  const start = pointAt(older[0] + place.blend * forward[0], older[1] + place.blend * forward[1], PIN_LIFT);
-  const finish = pointAt(newer[0] - (1 - place.blend) * back[0], newer[1] - (1 - place.blend) * back[1], PIN_LIFT);
+  const travel = (longitude, latitude) => travelAt(longitude, latitude, gap);
+  const start = pointAt(...drawnAt(older, travel, place.blend), PIN_LIFT);
+  const finish = pointAt(...drawnAt(newer, travel, place.blend - 1), PIN_LIFT);
   if (projection !== 'globe') {
     return Math.abs(finish.x - start.x) > 1 ? (place.blend < 0.5 ? start : finish) : start.lerp(finish, place.blend);
   }
@@ -1899,7 +1898,7 @@ function drawPins(place, model) {
   $('pin-list').replaceChildren(...pins.map((pin, index) => {
     const item = document.createElement('li');
     item.style.setProperty('--pin', PIN_COLOURS[index]);
-    const values = { today: degrees(pin.lon, pin.lat), plate: pin.pid, from: pin.from, reach: PIN_REACH_2002_MA,
+    const values = { today: degrees(pin.lon, pin.lat), plate: pin.pid, from: pin.reach, reach: PIN_REACH_2002_MA,
                      then: now[index] ? degrees(...now[index]) : '' };
     const [before, after = ''] = (now[index] ? L.pinThen : off ? L.pinOff2002 : L.pinGone).split('{then}');
     item.append(fmt(before, values));
@@ -1971,13 +1970,16 @@ function centrePin(index) {
 }
 function updatePinVisibility() {
   if (!pinLayer?.visible) return;
-  const toCamera = camera.position.clone().normalize();
+  // The camera that draws, which a tilt moves away from `camera`. A pin is drawn without a
+  // depth test, so it must be hidden exactly when the globe is in the way: past the horizon
+  // of an eye this far out, allowing for the pin standing a little above the surface.
+  const eye = tiltedView().position;
+  const horizon = Math.acos(Math.min(1, 1 / eye.length())) + Math.acos(1 / (1 + PIN_LIFT));
   const position = new THREE.Vector3();
   const size = PIN_PIXELS * 2 * Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2) / (renderer.domElement.clientHeight || 1);
   for (const sprite of pinLayer.children) {
     sprite.scale.set(size, size, 1);
-    const facing = projection !== 'globe'
-      || sprite.getWorldPosition(position).normalize().dot(toCamera) > 0.1;
+    const facing = projection !== 'globe' || sprite.getWorldPosition(position).angleTo(eye) < horizon;
     sprite.visible = sprite.userData.shown && facing
       && !mantleOverlay?.cutsPoint(sprite.position) && !crust?.cutsPoint(sprite.position);
   }
@@ -2000,7 +2002,7 @@ async function dropPin(event) {
   else {
     const where = pickLonLat(event);
     if (!where || pinsOff(lastPlace)) return;
-    const pin = pinAt(loaded.shapes, loaded.model, where[0], where[1], Number(lastPlace.age.toFixed(3)));
+    const pin = pinAt(loaded.shapes, loaded.model, where[0], where[1], Number(lastPlace.age.toFixed(3)), pinEntry().covers[1]);
     if (!pin) {
       status.textContent = L.pinOcean;
       return;
@@ -2017,7 +2019,7 @@ async function restorePins() {
   const loaded = await loadPlateModel(pinEntry());
   if (!loaded) return;
   for (const [longitude, latitude] of asked) {
-    const pin = pinAt(loaded.shapes, loaded.model, longitude, latitude, 0);
+    const pin = pinAt(loaded.shapes, loaded.model, longitude, latitude, 0, pinEntry().covers[1]);
     if (pin) pins.push(pin);
   }
   if (pins.length) setPinning(true);
