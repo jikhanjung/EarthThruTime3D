@@ -9,7 +9,7 @@
 **시간 범위**는 고도 격자에서 "지구의 시간" 옆 선택(전체 시대 / 최근 2.5만 년 / 최근 13만 년)이다.
 빙기 시점의 화면은 "발표된 복원 · 계산한 결과 · 가정"을 캡션과 안내문으로 구분한다.
 
-## 다음 릴리스
+## v0.21.0 — 2026-09-21
 
 위치 핀: 한 곳을 찍고 시간을 따라가기 ([#80](https://github.com/jikhanjung/EarthThruTime3D/pull/80), [wwolf P01](devlog/20260919_wwolf_P01_location_pin_feasibility.md)·[014](devlog/20260919_wwolf_014_location_pin_measurements.md)·[015](devlog/20260919_wwolf_015_location_pins.md))
 
