@@ -71,3 +71,17 @@ export function placeEquirectangular(longitude, latitude) {
   return [longitude / 180, latitude / 180];
 }
 
+
+// The placements undone, to read a longitude and latitude back off a sheet; null off the map.
+
+export function unplaceEquirectangular(x, y) {
+  return Math.abs(x) <= 1 && Math.abs(y) <= 0.5 ? [x * 180, y * 180] : null;
+}
+
+export function unplaceMollweide(x, y) {
+  if (Math.abs(y) > 0.5) return null;
+  const theta = Math.asin(2 * y);
+  const longitude = x / Math.max(Math.cos(theta), 1e-9) * 180;
+  if (Math.abs(longitude) > 180) return null;
+  return [longitude, Math.asin((2 * theta + Math.sin(2 * theta)) / Math.PI) * 180 / Math.PI];
+}

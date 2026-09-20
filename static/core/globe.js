@@ -1,8 +1,10 @@
 import { cutCentre } from './interior-cutaway.js';
 import * as THREE from 'three';
 import { OrbitControls } from '../vendor/three/OrbitControls.js';
-import { placeEquirectangular, placeMollweide, reproject } from './projection.js';
+import { placeEquirectangular, placeMollweide, reproject, unplaceEquirectangular, unplaceMollweide }
+  from './projection.js';
 import { RotationModel, turn } from './rotation.js';
+import { MAX_PINS, carried, distanceKm, formatPins, parsePins, pinAt } from './pins.js';
 import { densifySegments } from './surface-lines.js';
 import { createMantleOverlay } from './mantle-overlay.js';
 import { createMantleScene, CUT_UNIFORMS, CUT_SURFACE } from './mantle-scene.js';
@@ -53,8 +55,8 @@ const TEXTURE_MERIDIAN = 0;
 // it. The shader undoes the projection per texel; these place the labels and the grid.
 const PROJECTIONS = {
   globe: { sheet: null, code: 0, place: null, half: [1, 1] },
-  equirect: { sheet: [2, 1], code: 1, place: placeEquirectangular, half: [1, 0.5] },
-  mollweide: { sheet: [2, 1], code: 2, place: placeMollweide, half: [1, 0.5] },
+  equirect: { sheet: [2, 1], code: 1, place: placeEquirectangular, unplace: unplaceEquirectangular, half: [1, 0.5] },
+  mollweide: { sheet: [2, 1], code: 2, place: placeMollweide, unplace: unplaceMollweide, half: [1, 0.5] },
 };
 // The plate model is a second, unrelated dataset: EarthByte's rotation model rather
 // than a measurement of the Scotese maps. It is drawn as an overlay so the two can be
@@ -550,6 +552,8 @@ async function selectStop(value, manual = false, overlayManaged = false, transit
     showNames(place, !place.mapless && (masked || relief || heated || climated));
     await updatePlates(place, ticket);
     if (ticket !== request) return;
+    await updatePins(place, ticket);
+    if (ticket !== request) return;
     await updateCoastlines(place, ticket);
     if (ticket !== request) return;
     stage.dataset.frame = place.mapless ? 'none' : place.from.id;
@@ -1004,6 +1008,7 @@ function setMeridian(value) {
     if (plateLayer?.visible && lastPlates) drawPlates(lastPlates.age, lastPlates.loaded);
     if (coastlineLayer?.visible && lastCoastline) drawCoastline(lastCoastline.entry, lastCoastline.rings);
     if (lastPlace && nameLayer.visible) showNames(lastPlace, true);
+    if (lastPlace && pins.length) updatePins(lastPlace);
   });
 }
 function setProjection(name, refresh = true) {
@@ -1676,8 +1681,7 @@ function locked() {
   const entry = plateEntry();
   return Boolean(entry && entry.locked);
 }
-async function loadPlateModel() {
-  const entry = plateEntry();
+async function loadPlateModel(entry = plateEntry()) {
   if (!entry || entry.locked) return null;
   if (!plateData.has(entry.id)) {
     plateData.set(entry.id, (async () => {
@@ -1771,6 +1775,259 @@ async function updatePlates(place, ticket) {
   if ($('plate-frame')) {
     $('plate-frame').textContent = fmt(L.modelFrame, { title: entry.title, frame: entry.frame, reach: entry.covers[1] });
   }
+}
+// Location pins. A pin is a present-day place carried by the plate its land rides on, in
+// the PALEOMAP model: the edition the 2016 atlas and the PaleoDEMs were drawn with, so the
+// pin stays on the land under it (devlog wwolf 014). Other models put the same place
+// several degrees away by 100 Ma, so the overlay's choice does not move the pins.
+const PIN_MODEL = 'paleomap2016';
+const PIN_COLOURS = ['#ffd23f', '#5ce1e6', '#ff8fab'];
+// The 2002 maps stop agreeing with the PALEOMAP rotations before this age.
+const PIN_REACH_2002_MA = 300;
+const PIN_LIFT = 0.02;
+const PIN_PIXELS = 26;
+const pins = [];
+const picker = new THREE.Raycaster();
+let pinLayer;
+let pinning = false;
+function pinEntry() {
+  return plates.find((model) => model.id === PIN_MODEL && !model.locked) ?? null;
+}
+function pinsOff(place) {
+  return place.age > PIN_REACH_2002_MA && !place.mapless && place.from.id.startsWith('scotese-');
+}
+// The longitude and latitude under the pointer, or null off the globe or the map. The
+// sphere and the sheet are hit as drawn flat: raised 3D terrain is not followed.
+function pickLonLat(event) {
+  const box = renderer.domElement.getBoundingClientRect();
+  picker.setFromCamera(new THREE.Vector2((event.clientX - box.left) / box.width * 2 - 1,
+                                         1 - (event.clientY - box.top) / box.height * 2), tiltedView());
+  earth.updateWorldMatrix(true, false);
+  const ray = picker.ray.clone().applyMatrix4(earth.matrixWorld.clone().invert());
+  const hit = new THREE.Vector3();
+  if (projection === 'globe') {
+    if (!ray.intersectSphere(new THREE.Sphere(new THREE.Vector3(), 1), hit)) return null;
+    // onSphere() undone.
+    const longitude = THREE.MathUtils.radToDeg(Math.atan2(hit.z, -hit.x) - TEXTURE_MERIDIAN) - 180;
+    return [((longitude + 540) % 360) - 180,
+            THREE.MathUtils.radToDeg(Math.asin(THREE.MathUtils.clamp(hit.y / hit.length(), -1, 1)))];
+  }
+  if (!ray.intersectPlane(new THREE.Plane(new THREE.Vector3(0, 0, 1), 0), hit)) return null;
+  const place = PROJECTIONS[projection].unplace(hit.x, hit.y);
+  return place && [((place[0] + meridian + 540) % 360) - 180, place[1]];
+}
+function pinSprite(index) {
+  const size = 96;
+  const canvas = document.createElement('canvas');
+  canvas.width = canvas.height = size;
+  const context = canvas.getContext('2d');
+  context.beginPath();
+  context.arc(size / 2, size / 2, size / 2 - 8, 0, Math.PI * 2);
+  context.fillStyle = PIN_COLOURS[index];
+  context.fill();
+  context.lineWidth = 8;
+  context.strokeStyle = 'rgba(11,26,36,0.9)';
+  context.stroke();
+  context.font = `700 ${size * 0.5}px system-ui, sans-serif`;
+  context.textAlign = 'center';
+  context.textBaseline = 'middle';
+  context.fillStyle = '#0b1a24';
+  context.fillText(String(index + 1), size / 2, size / 2 + 2);
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  // Unattenuated, and sized in pixels by updatePinVisibility(), so a pin is the same size
+  // at every zoom and never covers the land it marks.
+  const sprite = new THREE.Sprite(new THREE.SpriteMaterial(
+    { map: texture, transparent: true, depthTest: false, depthWrite: false, sizeAttenuation: false }));
+  sprite.renderOrder = 3;
+  return sprite;
+}
+function rebuildPins() {
+  for (const sprite of pinLayer.children) {
+    sprite.material.map.dispose();
+    sprite.material.dispose();
+  }
+  pinLayer.clear();
+  pins.forEach((pin, index) => pinLayer.add(pinSprite(index)));
+  writePinAddress();
+}
+// The address says what is on screen: pins only while the pin layer is switched on.
+function writePinAddress() {
+  const url = new URL(location.href);
+  if (pinning && pins.length) url.searchParams.set('pin', formatPins(pins));
+  else url.searchParams.delete('pin');
+  // Commas and semicolons are safe in a query and keep the address readable.
+  history.replaceState(null, '', url.href.replace(/%2C/g, ',').replace(/%3B/g, ';'));
+}
+// Where a pin is drawn. At a published map that is its exact rotation. Between two maps
+// the surface is not rotated but carried by the gap's motion field, so the pin rides the
+// same field from both ends, as carryRings() does for the coastline, and stays on the
+// land under it; the two meet the exact rotation again at either map.
+function pinPoint(model, pin, place) {
+  const exact = carried(model, pin, place.age);
+  if (!exact) return null;
+  const gap = place.blend > 0 ? motions[frames.indexOf(place.from)] ?? [] : [];
+  const older = gap.length ? carried(model, pin, place.from.age) : null;
+  const newer = gap.length ? carried(model, pin, place.to.age) : null;
+  if (!older || !newer) return pointAt(exact[0], exact[1], PIN_LIFT);
+  const forward = travelAt(older[0], older[1], gap);
+  const back = travelAt(newer[0], newer[1], gap);
+  const start = pointAt(older[0] + place.blend * forward[0], older[1] + place.blend * forward[1], PIN_LIFT);
+  const finish = pointAt(newer[0] - (1 - place.blend) * back[0], newer[1] - (1 - place.blend) * back[1], PIN_LIFT);
+  if (projection !== 'globe') {
+    return Math.abs(finish.x - start.x) > 1 ? (place.blend < 0.5 ? start : finish) : start.lerp(finish, place.blend);
+  }
+  return start.lerp(finish, place.blend).normalize().multiplyScalar(1 + PIN_LIFT);
+}
+function degrees(longitude, latitude) {
+  const part = (value, positive, negative) => {
+    const rounded = Number(value.toFixed(1));
+    return `${Math.abs(rounded).toFixed(1)}°${rounded < 0 ? negative : positive}`;
+  };
+  return `${part(latitude, 'N', 'S')} ${part(longitude, 'E', 'W')}`;
+}
+function drawPins(place, model) {
+  const off = pinsOff(place);
+  const now = pins.map((pin) => (off ? null : carried(model, pin, place.age)));
+  pinLayer.children.forEach((sprite, index) => {
+    const point = now[index] && pinPoint(model, pins[index], place);
+    sprite.userData.shown = Boolean(point);
+    if (point) sprite.position.copy(point);
+  });
+  pinLayer.visible = true;
+  stage.dataset.pins = String(now.filter(Boolean).length);
+  $('pin-list').replaceChildren(...pins.map((pin, index) => {
+    const item = document.createElement('li');
+    item.style.setProperty('--pin', PIN_COLOURS[index]);
+    const values = { today: degrees(pin.lon, pin.lat), plate: pin.pid, from: pin.from, reach: PIN_REACH_2002_MA,
+                     then: now[index] ? degrees(...now[index]) : '' };
+    const [before, after = ''] = (now[index] ? L.pinThen : off ? L.pinOff2002 : L.pinGone).split('{then}');
+    item.append(fmt(before, values));
+    if (now[index]) {
+      const here = document.createElement('button');
+      here.type = 'button';
+      here.className = 'pin-here';
+      here.textContent = fmt(L.pinHere, { where: degrees(...now[index]) });
+      here.title = L.pinCentre;
+      here.addEventListener('click', () => centrePin(index));
+      item.append(here, fmt(after, values));
+    }
+    const remove = document.createElement('button');
+    remove.type = 'button';
+    remove.className = 'pin-remove';
+    remove.textContent = '×';
+    remove.setAttribute('aria-label', fmt(L.pinRemove, { n: index + 1 }));
+    remove.title = remove.getAttribute('aria-label');
+    remove.addEventListener('click', () => {
+      pins.splice(index, 1);
+      rebuildPins();
+      if (lastPlace) updatePins(lastPlace);
+    });
+    item.append(' ', remove);
+    return item;
+  }));
+  const lines = [];
+  for (let a = 0; a < pins.length; a++) {
+    for (let b = a + 1; b < pins.length; b++) {
+      if (!now[a] || !now[b]) continue;
+      lines.push(fmt(L.pinDistance, {
+        a: a + 1, b: b + 1, km: Math.round(distanceKm(now[a], now[b])).toLocaleString(),
+        today: Math.round(distanceKm([pins[a].lon, pins[a].lat], [pins[b].lon, pins[b].lat])).toLocaleString() }));
+    }
+  }
+  $('pin-distances').textContent = lines.join(' · ');
+}
+async function updatePins(place, ticket) {
+  if (!pinLayer) return;
+  $('pin-panel').hidden = !pinning;
+  if (!pinning || !pins.length) {
+    pinLayer.visible = false;
+    stage.dataset.pins = '0';
+    $('pin-list').replaceChildren();
+    $('pin-distances').textContent = '';
+    return;
+  }
+  const loaded = await loadPlateModel(pinEntry());
+  if ((ticket !== undefined && ticket !== request) || !loaded) return;
+  drawPins(place, loaded.model);
+}
+// Turn the view so a pin sits in the middle of what can be seen, at the zoom in use.
+function centrePin(index) {
+  const sprite = pinLayer.children[index];
+  if (!sprite?.userData.shown) return;
+  const distance = camera.position.distanceTo(controls.target);
+  if (projection === 'globe') {
+    controls.target.set(0, 0, 0);
+    camera.position.copy(sprite.getWorldPosition(new THREE.Vector3()).normalize().multiplyScalar(distance));
+  } else {
+    // Read back off the sheet, so a pin riding between two maps is centred where it is drawn.
+    const [across, latitude] = PROJECTIONS[projection].unplace(sprite.position.x, sprite.position.y) ?? [0, 0];
+    setMeridian(meridian + across);
+    const y = PROJECTIONS[projection].place(0, latitude)[1];
+    controls.target.set(0, y, 0);
+    camera.position.set(0, y, distance);
+  }
+  controls.update();
+}
+function updatePinVisibility() {
+  if (!pinLayer?.visible) return;
+  const toCamera = camera.position.clone().normalize();
+  const position = new THREE.Vector3();
+  const size = PIN_PIXELS * 2 * Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2) / (renderer.domElement.clientHeight || 1);
+  for (const sprite of pinLayer.children) {
+    sprite.scale.set(size, size, 1);
+    const facing = projection !== 'globe'
+      || sprite.getWorldPosition(position).normalize().dot(toCamera) > 0.1;
+    sprite.visible = sprite.userData.shown && facing
+      && !mantleOverlay?.cutsPoint(sprite.position) && !crust?.cutsPoint(sprite.position);
+  }
+}
+// A click that did not drag: on a pin it takes the pin away, elsewhere it drops one, the
+// oldest making room once there are three.
+async function dropPin(event) {
+  const loaded = await loadPlateModel(pinEntry());
+  if (!loaded || !lastPlace) return;
+  const box = renderer.domElement.getBoundingClientRect();
+  const view = tiltedView();
+  const screen = new THREE.Vector3();
+  const near = pinLayer.children.findIndex((sprite) => {
+    if (!sprite.visible) return false;
+    sprite.getWorldPosition(screen).project(view);
+    return Math.hypot((screen.x + 1) / 2 * box.width + box.left - event.clientX,
+                      (1 - screen.y) / 2 * box.height + box.top - event.clientY) < 14;
+  });
+  if (near >= 0) pins.splice(near, 1);
+  else {
+    const where = pickLonLat(event);
+    if (!where || pinsOff(lastPlace)) return;
+    const pin = pinAt(loaded.shapes, loaded.model, where[0], where[1], Number(lastPlace.age.toFixed(3)));
+    if (!pin) {
+      status.textContent = L.pinOcean;
+      return;
+    }
+    if (pins.length === MAX_PINS) pins.shift();
+    pins.push(pin);
+  }
+  rebuildPins();
+  updatePins(lastPlace);
+}
+async function restorePins() {
+  const asked = parsePins(new URL(location.href).searchParams.get('pin'));
+  if (!asked.length || !pinEntry()) return;
+  const loaded = await loadPlateModel(pinEntry());
+  if (!loaded) return;
+  for (const [longitude, latitude] of asked) {
+    const pin = pinAt(loaded.shapes, loaded.model, longitude, latitude, 0);
+    if (pin) pins.push(pin);
+  }
+  if (pins.length) setPinning(true);
+  rebuildPins();
+  if (lastPlace) updatePins(lastPlace);
+}
+function setPinning(on) {
+  pinning = on;
+  $('pin').setAttribute('aria-pressed', String(on));
+  renderer.domElement.style.cursor = on ? 'crosshair' : '';
 }
 function coastlineEntry(age) {
   if (!coastlines) return null;
@@ -2056,6 +2313,9 @@ function init() {
   nameLayer = new THREE.Group();
   nameLayer.visible = false;
   earth.add(nameLayer);
+  pinLayer = new THREE.Group();
+  pinLayer.visible = false;
+  earth.add(pinLayer);
   scene.add(earth);
   resetView();
   const mantleConfig = JSON.parse($('globe-mantle-overlay')?.textContent ?? 'null');
@@ -2104,6 +2364,7 @@ function init() {
     stage.dataset.pan = controls.target.toArray().map(v => v.toFixed(4)).join(',');
     if (spinning && projection !== 'globe' && !reducedMotion) setMeridian(meridian + delta * 12);
     updateNameVisibility();
+    updatePinVisibility();
     const view = tiltedView();
     if (uniforms.mantleCutaway.value > .5 || uniforms.crustCutaway.value > .5 || uniforms.mantleSurfaceOpacity.value < 1) {
       earth.updateWorldMatrix(true,false);
@@ -2348,6 +2609,26 @@ function init() {
     });
   }
   if ($('coastline')) $('coastline').addEventListener('change', () => selectStop(stop, true));
+  if ($('pin') && pinEntry()) {
+    $('pin').hidden = false;
+    $('pin').addEventListener('click', () => {
+      setPinning(!pinning);
+      writePinAddress();
+      if (lastPlace) updatePins(lastPlace);
+    });
+    // A pin is dropped by a click that did not drag, so turning the globe still works.
+    let pressed = null;
+    renderer.domElement.addEventListener('pointerdown', (event) => {
+      const plain = event.isPrimary && event.button === 0 && !event.shiftKey && !event.ctrlKey && !event.metaKey;
+      pressed = pinning && plain ? { x: event.clientX, y: event.clientY } : null;
+    });
+    renderer.domElement.addEventListener('pointerup', (event) => {
+      const still = pressed && Math.hypot(event.clientX - pressed.x, event.clientY - pressed.y) < 5;
+      pressed = null;
+      if (still) dropPin(event);
+    });
+    restorePins();
+  }
   $('projection').addEventListener('change', () => setProjection($('projection').value));
   if ($('shading')) {
     const apply = () => {
