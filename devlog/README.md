@@ -33,6 +33,8 @@ wwolf는 001부터 셉니다. 그 전의 001–045는 링크와 본문 속 번�
 
 ## 작업 기록
 
+- [jikhanjung 104 — dolfinid 배포 파일 정리 (v0.20.0 이후)](20260920_jikhanjung_104_dolfinid_prune_0200.md)
+
 - [jikhanjung 103 — v0.20.0 시간 창의 모형 식생·강수 릴리스](20260919_jikhanjung_103_release_0200.md)
 
 - [wwolf 013 — 시간 범위의 모형 기후: 자료 검토, 사하라 측정, 식생·강수 화면](20260918_wwolf_013_quaternary_climate.md)

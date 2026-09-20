@@ -19,7 +19,9 @@ Browser transfer measurements and the ice-river data generation are recorded in
 [devlog 079](../devlog/20260916_jikhanjung_079_release_0140.md).
 
 On 2026-09-18, old project releases were pruned with `KEEP=2`: v0.18.1 and
-v0.18.0 remained available (v0.19.0 and v0.20.0 have since been added; v0.19.0 is the rollback). Eleven old releases were removed, reclaiming 8,099 MiB;
+v0.18.0 remained available (v0.19.0 and v0.20.0 have since been added). On 2026-09-20 the same `KEEP=2` prune removed
+v0.18.0 and v0.18.1 (+1,784 MiB, 13 GiB free, 79% used); v0.20.0 runs and v0.19.0 is the
+rollback ([devlog 104](../devlog/20260920_jikhanjung_104_dolfinid_prune_0200.md)). Eleven old releases were removed, reclaiming 8,099 MiB;
 the host had 16.4 GiB free (72% used) immediately afterwards. No database, backups,
 secrets or other projects were pruned. See
 [devlog 099](../devlog/20260918_jikhanjung_099_dolfinid_release_cleanup.md).
