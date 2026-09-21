@@ -63,7 +63,7 @@ npm run test:browser
 (지도마다 몇 단계 또는 1 Myr) 선택, 시대 순서 재생, 자동 회전, 격자(기본 켬), 시점 초기화를
 지원합니다. 지구본에 키보드 포커스를 두면 방향키로 회전, `+`/`-`로 확대·축소합니다.
 
-변환 구현, 보간 방식과 한계는 [지구본 뷰어 문서](docs/globe-viewer.md), 고지자기 경도 문제는
+화면·조작·자료 경로의 목록은 [사이트맵](docs/site-map.md), 변환 구현, 보간 방식과 한계는 [지구본 뷰어 문서](docs/globe-viewer.md), 고지자기 경도 문제는
 [경도 고정 문서](docs/palaeolongitude.md)를 참고하세요.
 
 Three.js 0.186.0과 MIT 라이선스는 `static/vendor/three/`에 포함됩니다.
