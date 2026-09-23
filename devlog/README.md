@@ -34,6 +34,8 @@ wwolf는 001부터 셉니다. 그 전의 001–045는 링크와 본문 속 번�
 
 ## 작업 기록
 
+- [jikhanjung 106 — v0.22.0 이퀄 어스 투영 릴리스](20260924_jikhanjung_106_release_0220.md)
+
 - [jikhanjung 105 — v0.21.0 위치 핀 릴리스](20260921_jikhanjung_105_release_0210.md)
 
 - [jikhanjung 104 — dolfinid 배포 파일 정리 (v0.20.0 이후)](20260920_jikhanjung_104_dolfinid_prune_0200.md)
