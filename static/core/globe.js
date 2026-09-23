@@ -1,7 +1,8 @@
 import { cutCentre } from './interior-cutaway.js';
 import * as THREE from 'three';
 import { OrbitControls } from '../vendor/three/OrbitControls.js';
-import { placeEquirectangular, placeMollweide, reproject, unplaceEquirectangular, unplaceMollweide }
+import { EQUAL_EARTH_HALF, EQUAL_EARTH_X, EQUAL_EARTH_Y, placeEqualEarth, placeEquirectangular,
+  placeMollweide, reproject, unplaceEqualEarth, unplaceEquirectangular, unplaceMollweide }
   from './projection.js';
 import { RotationModel, turn } from './rotation.js';
 import { MAX_PINS, carried, distanceKm, drawnAt, formatPins, parsePins, pinAt } from './pins.js';
@@ -57,6 +58,9 @@ const PROJECTIONS = {
   globe: { sheet: null, code: 0, place: null, half: [1, 1] },
   equirect: { sheet: [2, 1], code: 1, place: placeEquirectangular, unplace: unplaceEquirectangular, half: [1, 0.5] },
   mollweide: { sheet: [2, 1], code: 2, place: placeMollweide, unplace: unplaceMollweide, half: [1, 0.5] },
+  // Equal Earth is 2.055:1, not 2:1, so its sheet is a little taller than the others.
+  equalearth: { sheet: [2, 2 * EQUAL_EARTH_HALF], code: 3, place: placeEqualEarth,
+                unplace: unplaceEqualEarth, half: [1, EQUAL_EARTH_HALF] },
 };
 // The plate model is a second, unrelated dataset: EarthByte's rotation model rather
 // than a measurement of the Scotese maps. It is drawn as an overlay so the two can be
@@ -1117,6 +1121,13 @@ const LIFT_UNIFORMS_GLSL = `
       uniform float motionRadius[${MAX_MOTIONS}];
       const float EARTH_RADIUS = 6371000.0;
       const float PI = 3.141592653589793;`;
+// Equal Earth's polynomial, the same figures projection.js carries.
+const EQUAL_EARTH_GLSL = `
+      const float EE_A1 = 1.340264;
+      const float EE_A2 = -0.081106;
+      const float EE_A3 = 0.000893;
+      const float EE_A4 = 0.003796;
+      const float EE_ROOT3 = 1.7320508075688772;`;
 // A line on the surface: the same lift as the ground beneath it, in one flat colour.
 // Shares the surface's uniform objects, so it follows every change without bookkeeping.
 function terrainLineMaterial(colour, opacity) {
@@ -1254,6 +1265,7 @@ function globeMaterial() {
       uniform vec3 land;
       uniform vec3 ocean;
       const float PI = 3.141592653589793;
+      ${EQUAL_EARTH_GLSL}
       uniform int projection;
       uniform float meridian;
       uniform int motionCount;
@@ -1340,6 +1352,28 @@ function globeMaterial() {
         if (projection == 1) { found = vec2(fract(vUv.x + meridian / 360.0), vUv.y); return true; }
         float x = vUv.x * 2.0 - 1.0;
         float y = vUv.y * 2.0 - 1.0;
+        if (projection == 3) {
+          // Equal Earth undone: Newton on theta, which the y polynomial is monotonic in,
+          // then the longitude the paper's x gives. Outside the outline the longitude runs
+          // past the antimeridian, which is what discards the corners.
+          float target = y * ${EQUAL_EARTH_Y};
+          float theta = target;
+          for (int i = 0; i < 8; i++) {
+            float t2 = theta * theta;
+            float t6 = t2 * t2 * t2;
+            theta -= (theta * (EE_A1 + EE_A2 * t2 + EE_A3 * t6 + EE_A4 * t6 * t2) - target)
+                     / (EE_A1 + 3.0 * EE_A2 * t2 + 7.0 * EE_A3 * t6 + 9.0 * EE_A4 * t6 * t2);
+          }
+          float sine = 2.0 * sin(theta) / EE_ROOT3;
+          if (abs(sine) > 1.0) return false;
+          float t2 = theta * theta;
+          float t6 = t2 * t2 * t2;
+          float slope = EE_A1 + 3.0 * EE_A2 * t2 + 7.0 * EE_A3 * t6 + 9.0 * EE_A4 * t6 * t2;
+          float lambda = 3.0 * x * ${EQUAL_EARTH_X} * slope / (2.0 * EE_ROOT3 * cos(theta));
+          if (abs(lambda) > PI) return false;
+          found = vec2(fract(lambda / (2.0 * PI) + 0.5 + meridian / 360.0), asin(sine) / PI + 0.5);
+          return true;
+        }
         if (x * x + y * y > 1.0) return false;
         float theta = asin(clamp(y, -1.0, 1.0));
         float latitude = asin(clamp((2.0 * theta + sin(2.0 * theta)) / PI, -1.0, 1.0));
