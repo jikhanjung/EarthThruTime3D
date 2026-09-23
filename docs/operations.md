@@ -5,23 +5,21 @@ host. Configuration and procedure live in `deploy/README.md` and `deploy/deploy.
 Builds happen on the development host; the server only loads the image and swaps.
 The shared guides are referenced privately through `.guides`; they are not copied.
 
-Current release: **v0.21.0**, deployed 2026-09-21 (Asia/Seoul). Location pins (PR #80):
-a present-day place dropped on the globe is carried through time by the PALEOMAP 2016
-rotation model, with today's and the current coordinates, the plate and pairwise
-great-circle distances in the info panel and a `pin=` address parameter; the page names
-this as a model calculation, not an observation. Code only: the runtime bundle is the
-1,288 files (482,280,982 bytes) of v0.20.0, byte-identical. The modelled climate of
-v0.20.0 and the PaleoMIST ice of v0.19.0 are as before; the crustal depression is still
-not drawn (#59 step c, planned in P08). The host's root filesystem was enlarged to
-77 GB between the two deployments (30 GB free after this one).
+Current release: **v0.22.0**, deployed 2026-09-24 (Asia/Seoul). The projection picker
+gains Equal Earth (PR #86): equal-area like Mollweide but with a pole line 59% of the
+equator's width, so the high-latitude ice sheets are not squeezed into a wedge; its sheet
+is 2.055:1, the one flat mesh that is not the 2:1 box. Code only: the runtime bundle is
+the 1,288 files (482,280,982 bytes) of v0.20.0 and v0.21.0, byte-identical. Location pins
+(v0.21.0), the modelled climate (v0.20.0) and the PaleoMIST ice (v0.19.0) are as before;
+the crustal depression is still not drawn (#59 step c, planned in P08).
 Image/data hashes, DB backup and public verification are in
-[devlog 105](../devlog/20260921_jikhanjung_105_release_0210.md).
+[devlog 106](../devlog/20260924_jikhanjung_106_release_0220.md).
 Browser transfer measurements and the ice-river data generation are recorded in
 [devlog 079](../devlog/20260916_jikhanjung_079_release_0140.md).
 
 On 2026-09-18, old project releases were pruned with `KEEP=2`: v0.18.1 and
 v0.18.0 remained available (v0.19.0 and v0.20.0 have since been added). On 2026-09-20 the same `KEEP=2` prune removed
-v0.18.0 and v0.18.1 (+1,784 MiB, 13 GiB free, 79% used); v0.21.0 now runs, with v0.20.0 and v0.19.0 kept as
+v0.18.0 and v0.18.1 (+1,784 MiB, 13 GiB free, 79% used); v0.22.0 now runs, with v0.21.0 and v0.20.0 kept as
 rollbacks ([devlog 104](../devlog/20260920_jikhanjung_104_dolfinid_prune_0200.md)). Eleven old releases were removed, reclaiming 8,099 MiB;
 the host had 16.4 GiB free (72% used) immediately afterwards. No database, backups,
 secrets or other projects were pruned. See
