@@ -43,9 +43,28 @@ test('flat projections place the corners and the centre where they belong', () =
   assert.deepStrictEqual(placeEquirectangular(-180, -90), [-1, -0.5]);
 });
 
+test('Equal Earth keeps its own aspect and a pole line, not a pole point', () => {
+  const { placeEqualEarth, EQUAL_EARTH_HALF } = projection;
+  // The paper's figure: 2.055:1, against Mollweide's 2:1.
+  assert.ok(Math.abs(1 / EQUAL_EARTH_HALF - 2.0552) < 1e-3, String(1 / EQUAL_EARTH_HALF));
+  const [x, y] = placeEqualEarth(0, 0);
+  assert.ok(Math.abs(x) < 1e-12 && Math.abs(y) < 1e-12);
+  assert.ok(Math.abs(placeEqualEarth(180, 0)[0] - 1) < 1e-9, 'the equator reaches the full width');
+  assert.ok(Math.abs(placeEqualEarth(0, 90)[1] - EQUAL_EARTH_HALF) < 1e-9, 'the pole reaches the full height');
+  // The pole is a line 59% of the equator's width; Mollweide's is a point.
+  assert.ok(Math.abs(placeEqualEarth(180, 90)[0] - 0.5925) < 1e-3, String(placeEqualEarth(180, 90)[0]));
+  // Mollweide's own pole is a point; its bisection leaves a millionth there, not a zero.
+  assert.ok(Math.abs(projection.placeMollweide(180, 90)[0]) < 1e-4);
+  // Equal-area, so the width falls with latitude, but less steeply than Mollweide's.
+  for (const lat of [30, 45, 60, 75]) {
+    assert.ok(placeEqualEarth(180, lat)[0] > projection.placeMollweide(180, lat)[0]);
+  }
+});
+
 test('a sheet placement undone returns the longitude and latitude', () => {
   for (const [place, unplace] of [[projection.placeEquirectangular, projection.unplaceEquirectangular],
-                                  [projection.placeMollweide, projection.unplaceMollweide]]) {
+                                  [projection.placeMollweide, projection.unplaceMollweide],
+                                  [projection.placeEqualEarth, projection.unplaceEqualEarth]]) {
     for (const [longitude, latitude] of [[0, 0], [126.98, 37.57], [-87.63, 41.88], [106.8, -78.46], [-179, 89]]) {
       const back = unplace(...place(longitude, latitude));
       close(back[0], longitude);
@@ -54,4 +73,7 @@ test('a sheet placement undone returns the longitude and latitude', () => {
     assert.equal(unplace(0, 0.6), null);
   }
   assert.equal(projection.unplaceMollweide(0.99, 0.45), null);
+  // Past the Equal Earth outline at that latitude, and past its shorter half-height.
+  assert.equal(projection.unplaceEqualEarth(0.99, 0.45), null);
+  assert.equal(projection.unplaceEqualEarth(0, 0.49), null);
 });

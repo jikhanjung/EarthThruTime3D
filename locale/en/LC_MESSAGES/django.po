@@ -134,6 +134,9 @@ msgstr "Projection"
 msgid "지구본"
 msgstr "Globe"
 
+msgid "이퀄 어스"
+msgstr "Equal Earth"
+
 msgid "몰바이데 지도"
 msgstr "Mollweide map"
 

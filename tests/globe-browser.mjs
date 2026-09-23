@@ -197,6 +197,15 @@ try {
   await expect(globe).toHaveAttribute('aria-busy', 'false');
   await expect(globe).toHaveAttribute('data-names', '7');
   await page.screenshot({path:'data/screenshots/globe-mollweide.png',fullPage:true});
+  // Equal Earth is a second equal-area sheet, taller than the 2:1 box and with a pole
+  // line: the names still land and the picture differs from Mollweide's.
+  const onMollweide = await page.locator('#globe canvas').screenshot();
+  await page.locator('#projection').selectOption('equalearth');
+  await expect(globe).toHaveAttribute('aria-busy', 'false');
+  await expect(globe).toHaveAttribute('data-names', '7');
+  const onEqualEarth = await page.locator('#globe canvas').screenshot();
+  expect(Buffer.compare(onMollweide, onEqualEarth)).not.toBe(0);
+  await page.screenshot({path:'data/screenshots/globe-equalearth.png',fullPage:true});
   await page.locator('#projection').selectOption('globe');
   await expect(page.locator('#rotate')).toBeEnabled();
   // The plate model is a second dataset drawn over the first. It must reconstruct at

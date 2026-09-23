@@ -820,12 +820,25 @@ current `age`, and the viewer opens at the stop nearest that age. With a spacing
 playback advances one stop every 300 ms.
 
 A picker in the toolbar chooses what the map is drawn on: the globe, a Mollweide sheet,
-or equirectangular. Mollweide is the one to compare against the source, because it is
-the projection the Scotese maps are assumed to use, so the sheet reproduces their
-layout. Equirectangular is the fields' own storage laid out flat, a 2:1 box with
+Equal Earth, or equirectangular. Mollweide is the one to compare against the source,
+because it is the projection the Scotese maps are assumed to use, so the sheet reproduces
+their layout. Equirectangular is the fields' own storage laid out flat, a 2:1 box with
 longitude and latitude both linear.
 
-One shader serves all three. On the globe the geometry's own coordinates already say
+Equal Earth (Šavrič, Patterson & Jenny 2018, doi:10.1080/13658816.2018.1504949) is the
+one to read a glacial world on. It is equal-area like Mollweide, so ice sheets and
+shelves keep their true area, but its pole is a line 59% of the equator's width rather
+than a point, and at 60° the map is 75% of the equator's width against Mollweide's 65%
+(75°: 65% against 42%). So Laurentide, Scandinavia, Siberia and Antarctica are not
+squeezed into a wedge, and the maximum angular distortion at the antimeridian falls from
+50° to 17° at the equator and from 55° to 37° at 30°; only past about 85° does Mollweide
+read better. The projection is the paper's polynomial in θ = asin(√3·sinφ/2), with the
+sheet 2.055:1 rather than 2:1, so its plane is the one flat mesh that is not the 2:1 box.
+The shader undoes it with eight Newton steps on the same polynomial, which settles well
+inside a texel; `projection.js` carries the forward, the placement and the inverse, and
+`tests/projection.test.mjs` checks the aspect, the pole line and the round trip.
+
+One shader serves all four. On the globe the geometry's own coordinates already say
 where to sample; on a sheet the fragment undoes the projection to a longitude and
 latitude, then samples the same equirectangular fields. Undoing it is also what decides
 whether a fragment is on the map at all: a Mollweide fragment outside the ellipse is
@@ -833,7 +846,8 @@ discarded rather than painted. Nothing about the data changes with the projectio
 interpolated stop morphs the same way on a sheet as on the globe.
 
 The grid is built from parallels and meridians rather than from the mesh, so it curves
-on the globe and on Mollweide and rules straight lines on the equirectangular sheet.
+on the globe, on Mollweide and on Equal Earth and rules straight lines on the
+equirectangular sheet.
 Labels are placed through the same projection.
 
 Web Mercator was offered for a while and then dropped. It is square rather than 2:1,
