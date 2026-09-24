@@ -234,8 +234,9 @@ summary{cursor:pointer;color:#c9dce2}
 .temp-legend figcaption span:nth-child(2){left:43%}
 .temp-legend figcaption span:nth-child(3){left:71%}
 .temp-legend figcaption span:last-child{left:100%;transform:translateX(-100%)}
-/* Modelled rainfall: one hue along the cube root of the year's millimetres, as the shader mixes it. */
-.rain-bar{height:10px;border-radius:3px;margin-top:.4rem;background:linear-gradient(90deg,#e3f4ec,#2f9e7d 50%,#06402f)}
+/* Modelled rainfall: ColorBrewer BrBG, dry brown to wet teal around 500 mm, along the cube root of the
+   year's millimetres, as the shader mixes it; stops at 50, 250, 500, 1000, 2000 and 4000 mm. */
+.rain-bar{height:10px;border-radius:3px;margin-top:.4rem;background:linear-gradient(90deg,#8c510a,#bf812d 18.4%,#dfc27d 31.5%,#f6e8c3 39.7%,#c7eae5 50%,#5ab4ac 63%,#01665e 79.4%,#003c30)}
 .rain-legend figcaption span:nth-child(2){left:23.2%}
 .rain-legend figcaption span:nth-child(3){left:39.7%}
 .rain-legend figcaption span:nth-child(4){left:63%}
