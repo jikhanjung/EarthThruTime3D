@@ -439,8 +439,9 @@ try {
   await atlas.locator('#plate-overlay').selectOption('paleomap2016');
   await expect(atlasGlobe).toHaveAttribute('aria-busy', 'false');
   expect(Number(await atlasGlobe.getAttribute('data-plates'))).toBeGreaterThan(0);
+  // The address carries the stop and the view, so the reload comes back at 255 Ma.
   await atlas.reload();
-  await expect(atlasGlobe).toHaveAttribute('data-frame', 'paleoatlas-000');
+  await expect(atlasGlobe).toHaveAttribute('data-frame', 'paleoatlas-255');
   await expect(atlasGlobe).toHaveAttribute('aria-busy', 'false');
   expect(await atlas.locator('#plate-overlay').inputValue()).toBe('');
   await expect(atlasGlobe).toHaveAttribute('data-plates', '0');

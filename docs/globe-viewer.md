@@ -1011,6 +1011,10 @@ Neither flag grants data-use rights. See `sources/README.md`, `LICENSE-DATA.md` 
   go to gitignored `data/screenshots/`.
 - `VIEWER_URL=http://127.0.0.1:8153/ node tests/river-browser.mjs`: river PNG, shader,
   toggle, grid-spacing explanation, mobile layout and both languages (requires a built 0 Ma river field).
+- `VIEWER_URL=http://127.0.0.1:8153/ node tests/view-address-browser.mjs`: the view in the address:
+  a link sets projection, surface, shading and grid before the first draw, the controls write back
+  only what differs from the defaults, the written address reloads to the same view, and values
+  outside the lists are ignored (see docs/site-map.md for the parameters).
 - `VIEWER_URL=http://127.0.0.1:8153/ node tests/climate-browser.mjs`: the modelled climate in
   both windows: the textures load, the two modes exclude each other and give the relief back,
   legends and the Sahara note, stop to stop, mobile layout and both languages (requires
