@@ -300,6 +300,11 @@ summary{cursor:pointer;color:#c9dce2}
 /* Preview: current prototypes' legend. */
 .current-legend strong{display:block;font-size:.72rem;color:#dcebee;margin-bottom:.3rem}
 .current-bar{height:10px;border-radius:3px;margin-top:.3rem}
+.conveyor-keys{display:flex;flex-wrap:wrap;gap:.2rem .7rem;margin:.2rem 0 .35rem}
+.conveyor-key{display:inline-flex;align-items:center;gap:.3rem;white-space:nowrap}
+.conveyor-key i{display:inline-block;width:18px;height:6px;border-radius:3px;box-shadow:0 0 0 1px #0d1620}
+canvas.overturn{display:block;width:100%;height:112px;margin:.25rem 0 0}
+.overturn-caption{margin:.15rem 0 0;font-size:.62rem;color:#95afbb}
 .current-legend figcaption{position:relative;height:1.1em;margin-top:6px}
 .current-legend figcaption span{position:absolute;left:0;white-space:nowrap}
 .current-legend figcaption span:nth-child(2){left:50%;transform:translateX(-50%)}

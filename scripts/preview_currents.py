@@ -21,6 +21,9 @@ from pathlib import Path
 import netCDF4
 import numpy as np
 from PIL import Image
+from scipy import ndimage
+from scipy.ndimage import uniform_filter1d
+from skimage import measure
 
 ROOT = Path(__file__).resolve().parents[1]
 SCRATCH = Path(sys.argv[1])
@@ -138,6 +141,142 @@ def lines(u, v, t, sep=450.0, step=30.0, min_len=1500.0, max_len=9000.0, seed_q=
     return kept
 
 
+# The conveyor belt, present: a schematic drawn from the textbook pathways (Broecker 1991,
+# doi:10.5670/oceanog.1991.07; Rahmstorf 2002, doi:10.1038/nature01090), not traced from
+# data. Waypoints (lon, lat), smoothed into curves. "surface": the warm upper limb from the
+# Pacific through the Indonesian passages, round South Africa and up the Atlantic to the
+# Nordic and Labrador Seas; "deep": North Atlantic Deep Water south along the Americas, east
+# with the circumpolar current and north into the Indian and Pacific Oceans; "bottom":
+# Antarctic Bottom Water from the Weddell and Ross Seas.
+CONVEYOR = [
+    ("surface", [(-112, -2), (-140, -1), (-165, 1), (170, 3), (150, 5), (135, 5), (127, 3.5),
+                 (121, 1.5), (118, -2), (115.8, -8.9), (111, -13), (95, -14), (75, -15),
+                 (60, -15), (51, -11), (43, -14), (41, -19), (36, -26), (31, -31),
+                 (25, -36), (18, -37), (12, -31), (5, -22), (-5, -14), (-18, -9),
+                 (-31, -5), (-40, 0), (-48, 4), (-56, 9), (-64, 13.5), (-75, 15),
+                 (-83, 18.5), (-86, 22.5), (-86, 25.5), (-82.5, 24.2), (-79.8, 25.8),
+                 (-79.6, 29), (-76.5, 33), (-74.5, 35.8), (-68, 38.5), (-58, 40.5),
+                 (-48, 42), (-43, 46), (-38, 50), (-28, 52.5), (-18, 54.5), (-11, 57),
+                 (-6, 60), (0, 62.5), (6, 65.5), (11, 69), (8, 72.5)]),
+    ("surface", [(-30, 52.8), (-34, 56.5), (-38, 59.5), (-42.5, 58.8), (-47, 59.8),
+                 (-52, 61), (-56, 59), (-54, 56.5)]),
+    ("deep", [(-4, 72.5), (-14, 69.5), (-26, 66), (-33, 62), (-41, 58.6), (-48, 58),
+              (-54, 55), (-50, 49), (-50, 43), (-60, 40.2), (-68, 37.8), (-73, 33),
+              (-74, 27), (-68, 20.5), (-59, 14), (-51, 8), (-43, 2), (-33.5, -5),
+              (-34, -12), (-37, -20), (-42, -28), (-48, -36), (-50, -44), (-42, -51),
+              (-22, -53), (0, -51), (20, -50), (40, -50), (60, -51), (80, -52), (100, -52),
+              (120, -53), (140, -55), (160, -57), (178, -56), (-172, -48), (-172, -38),
+              (-172, -28), (-169, -18), (-169, -8), (-172, 5), (-178, 18), (175, 30),
+              (166, 38)]),
+    ("deep", [(40, -50), (46, -41), (50, -31), (55, -21), (59, -11), (61, -1), (62, 6)]),
+    ("bottom", [(-48, -71), (-44, -66), (-40, -60), (-37, -55), (-44, -47), (-42, -39),
+                (-38, -31), (-33, -21), (-29, -11), (-27, -1), (-32, 8), (-42, 16)]),
+    ("bottom", [(175, -76.5), (178, -71.5), (-172, -66), (-163, -62)]),
+]
+# Where water sinks (deep water formed) and where the drawn deep limbs end and rise.
+CONVEYOR_MARKS = [("sink", -2, 74.5), ("sink", -53.5, 57.5), ("sink", -50, -73.5),
+                  ("sink", 172, -77.5), ("rise", 162, 40), ("rise", 62.5, 8.5)]
+
+
+def smooth_path(points, step=60.0):
+    """Catmull-Rom curve through the waypoints, one point every `step` km."""
+    lon = np.unwrap(np.radians([p[0] for p in points])) * 180 / np.pi
+    p = np.column_stack([lon, [q[1] for q in points]])
+    p = np.vstack([2 * p[0] - p[1], p, 2 * p[-1] - p[-2]])
+    out = []
+    for i in range(1, len(p) - 2):
+        p0, p1, p2, p3 = p[i - 1], p[i], p[i + 1], p[i + 2]
+        n = max(2, int(km(p1[0], p1[1], p2[0], p2[1]) / step))
+        for t in np.arange(n) / n:
+            out.append(0.5 * (2 * p1 + (-p0 + p2) * t + (2 * p0 - 5 * p1 + 4 * p2 - p3) * t ** 2
+                              + (-p0 + 3 * p1 - 3 * p2 + p3) * t ** 3))
+    out.append(p[-2])
+    return [[round(float((x + 180) % 360 - 180), 2), round(float(y), 2)] for x, y in out]
+
+
+def overturning(v, lat, dlon, thickness, mask, smooth_rows):
+    """Meridional overturning streamfunction, Sv, at the bottom of each level (surface first):
+    the northward transport above that depth across the masked longitudes. The net flow
+    across each latitude is removed (spread over the wet section), and the result smoothed
+    over `smooth_rows` rows of latitude."""
+    dx = dlon * 6.371e6 * np.cos(np.radians(lat))[:, None]
+    wet = np.isfinite(v) & mask[None]
+    transport = np.nansum(np.where(wet, v, 0) * dx[None], 2) * thickness[:, None] / 1e6
+    area = (wet * dx[None]).sum(2) * thickness[:, None]
+    transport -= transport.sum(0) * area / np.maximum(area.sum(0), 1)
+    psi = np.cumsum(transport, 0)
+    psi = uniform_filter1d(psi, smooth_rows, axis=1, mode="nearest")
+    psi[area == 0] = np.nan
+    return psi
+
+
+def section(title, lat, depth, psi, lat_range):
+    """One panel for the page: psi on its grid plus contours every 4 Sv, each oriented along
+    the flow (northward where psi grows with depth, downward where it falls northward)."""
+    keep = (lat >= lat_range[0]) & (lat <= lat_range[1])
+    lat, psi = lat[keep], psi[:, keep]
+    grid = np.nan_to_num(psi)
+    dpsi_dd, dpsi_dy = np.gradient(grid)
+    contours = []
+    for level in [x for x in range(-40, 41, 4) if x]:
+        for c in measure.find_contours(grid, level):
+            if len(c) < 6:
+                continue
+            i, j = c[len(c) // 2].round().astype(int)
+            flow = np.array([-dpsi_dy[i, j], dpsi_dd[i, j]])   # (d depth, d lat) along the flow
+            if np.dot(flow, c[len(c) // 2 + 1] - c[len(c) // 2 - 1]) < 0:
+                c = c[::-1]
+            pts = [[round(float(np.interp(y, np.arange(lat.size), lat)), 2),
+                    round(float(np.interp(x, np.arange(depth.size), depth)))] for x, y in c[::2]]
+            contours.append({"level": level, "points": pts})
+    return {"title": title, "lat": [round(float(x), 2) for x in lat], "depth": [round(float(d)) for d in depth],
+            "psi": [[None if not np.isfinite(x) else round(float(x), 1) for x in row] for row in psi],
+            "contours": contours,
+            "max": round(float(np.nanmax(psi)), 1), "min": round(float(np.nanmin(psi)), 1)}
+
+
+def conveyor_present():
+    """GODAS 2016-2020 mean: Atlantic and Indo-Pacific overturning north of 32 S."""
+    v = None
+    for year in range(2016, 2021):
+        f = netCDF4.Dataset(SCRATCH / "godas" / f"vcur.{year}.nc")
+        a = np.ma.filled(f["vcur"][:].astype(float).mean(0), np.nan)
+        v = a if v is None else v + a
+    v /= 5
+    level = f["level"][:].astype(float)
+    edges = np.concatenate([[0], (level[1:] + level[:-1]) / 2, [level[-1] + (level[-1] - level[-2]) / 2]])
+    lat, lon = f["lat"][:].astype(float), f["lon"][:].astype(float)
+    ocean = np.isfinite(v[0])
+    basins, _ = ndimage.label(ocean & (lat[:, None] > -32))
+    basin = lambda lo, la: basins == basins[np.abs(lat - la).argmin(), np.abs(lon - lo % 360).argmin()]
+    out = []
+    for title, mask in (("대서양", basin(-30, 0)), ("인도양·태평양", basin(-150, 0) | basin(80, -10))):
+        psi = overturning(v, lat, np.radians(1), np.diff(edges), mask, 9)
+        out.append(section(title, lat, edges[1:], psi, (-32, 65)))
+    return out
+
+
+def conveyor_foam(age):
+    """FOAM's global overturning, and where its deep convection is most frequent."""
+    f = netCDF4.Dataset(SCRATCH / f"{age}_ocean.nc")
+    v = np.ma.filled(f["V"][:].astype(float).mean(0), np.nan)[::-1]
+    thickness = f["thickness"][:].astype(float)[::-1]
+    lat, lon = f["lat"][:].astype(float), f["lon"][:].astype(float)
+    lon = np.where(lon > 180, lon - 360, lon)
+    psi = overturning(v, lat, 2 * np.pi / lon.size, thickness, np.isfinite(v[0]), 3)
+    panel = section("전 지구", lat, np.cumsum(thickness), psi, (-80, 80))
+    convection = np.nan_to_num(np.ma.filled(f["CONVEC2"][:].astype(float).mean(0), 0))
+    spots, n = ndimage.label(convection > 50)
+    marks = []
+    for k in range(1, n + 1):
+        cells = spots == k
+        weight = convection * cells
+        i, j = np.unravel_index(weight.argmax(), weight.shape)
+        marks.append((float(weight.sum()), "sink", round(float(lon[j]), 1), round(float(lat[i]), 1)))
+    marks = [m[1:] for m in sorted(marks, reverse=True)[:6]]
+    return [panel], marks
+
+
 def main():
     OUT.mkdir(parents=True, exist_ok=True)
     fields = {"present": drifters(), "100": foam(100)}
@@ -152,6 +291,19 @@ def main():
         sp = np.hypot(u, v)
         print(f"{key}: {np.isfinite(sp).sum()} cells, speed p50 {np.nanquantile(sp, .5):.3f} p90 {np.nanquantile(sp, .9):.3f} m/s; "
               f"{len(found)} lines, {sum(len(l) for l in found)} points")
+    # The conveyor mode: the present schematic with GODAS's basin overturning, and at 100 Ma
+    # FOAM's surface lines with its deep-convection sites and global overturning.
+    panels, marks = conveyor_foam(100)
+    conveyor = {
+        "present": {"lines": [{"kind": kind, "points": smooth_path(pts)} for kind, pts in CONVEYOR],
+                    "marks": CONVEYOR_MARKS, "sections": conveyor_present()},
+        "100": {"lines": [{"kind": "surface", "points": [p[:2] for p in l]} for l in out["100"]],
+                "marks": marks, "sections": panels},
+    }
+    (OUT / "conveyor.json").write_text(json.dumps(conveyor, separators=(",", ":"), allow_nan=False))
+    for key, c in conveyor.items():
+        print(f"conveyor {key}: {len(c['lines'])} lines, marks {c['marks']}; sections "
+              + ", ".join(f"{s['title']} {s['min']}..{s['max']} Sv, {len(s['contours'])} contours" for s in c["sections"]))
     (OUT / "lines.json").write_text(json.dumps(out, separators=(",", ":"), allow_nan=False))
     # How FOAM's coast matches the PaleoDEM grid of the same age (the grids as build_paleodem
     # reads them, north to south).

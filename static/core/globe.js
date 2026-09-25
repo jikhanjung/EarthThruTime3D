@@ -9,7 +9,7 @@ import { MAX_PINS, carried, distanceKm, drawnAt, formatPins, parsePins, pinAt } 
 import { densifySegments } from './surface-lines.js';
 import { describeEvents, drawEventMarks, setEvents } from './climate-events.js';
 import { createFlow } from './preview-flow.js';
-import { buildRibbons } from './preview-currents.js';
+import { buildRibbons, buildConveyor, drawSection, CONVEYOR_COLOURS } from './preview-currents.js';
 import { CLIMATE_EVENTS } from './climate-events-data.js';
 import { createMantleOverlay } from './mantle-overlay.js';
 import { createMantleScene, CUT_UNIFORMS, CUT_SURFACE } from './mantle-scene.js';
@@ -3033,6 +3033,7 @@ const CURRENT_FIELDS = { present: './preview-currents/present.png', 100: './prev
 let currentsMode = '';
 let currentFields = null;
 let currentLines = null;
+let conveyorData = null;
 let flow = null;
 let ribbonGroup = null;
 let ribbonKey = '';
@@ -3055,6 +3056,7 @@ async function loadCurrents() {
     currentFields[key] = texture;
   }
   currentLines = await (await fetch(new URL('./preview-currents/lines.json', import.meta.url))).json();
+  conveyorData = await (await fetch(new URL('./preview-currents/conveyor.json', import.meta.url))).json();
 }
 function currentsLegend(key) {
   let legend = $('current-legend');
@@ -3073,6 +3075,24 @@ function currentsLegend(key) {
     : currentsMode === 'lines' || currentsMode === 'flow-speed'
       ? `<div class="current-bar" style="background:linear-gradient(90deg,${currentsMode === 'lines' ? '#cc4778,#f89540,#f0f921' : '#9ec7f2,#fff08c'})"></div><figcaption><span>느림</span><span></span><span>빠름</span></figcaption>`
       : '';
+  if (currentsMode === 'conveyor') {
+    const swatch = (colour, text) => `<span class="conveyor-key"><i style="background:${colour}"></i>${text}</span>`;
+    const note = key === 'present'
+      ? `교과서식 모식도로, 자료에서 추적한 선이 아니라 Broecker (1991)와 Rahmstorf (2002)의 경로를 따라 그렸습니다. ▼ 물이 가라앉는 곳, ▲ 그린 심층 흐름이 끝나 올라오는 곳. 실제로 깊은 물은 대부분 남극해에서 올라옵니다 (Marshall &amp; Speer 2012). 아래 단면: GODAS 재분석 2016–2020 평균의 자오면 역전 순환, 대서양 최대 약 15 Sv (관측 약 17 Sv). 자료 제공 NOAA PSL.`
+      : key === '100'
+        ? `FOAM 모형 (Pohl, CO₂ 2240 ppm 고정): 표층 주요 해류와 ▼ 깊은 대류가 가장 잦은 곳. 아래 단면: 모형의 전 지구 자오면 역전 순환으로, 오늘의 관측(대서양 약 17 Sv)보다 훨씬 강하게 나옵니다.`
+        : '컨베이어 벨트 시험 자료는 현재와 100 Ma 시점에만 있습니다.';
+    const keys = key === 'present'
+      ? swatch(CONVEYOR_COLOURS.surface, '따뜻한 표층') + swatch(CONVEYOR_COLOURS.deep, '북대서양 심층수 (약 1.5–4 km)') + swatch(CONVEYOR_COLOURS.bottom, '남극 저층수')
+      : key === '100' ? swatch(CONVEYOR_COLOURS.surface, '표층 주요 해류') : '';
+    const sections = key ? conveyorData[key].sections : [];
+    legend.innerHTML = `<strong>해류 컨베이어 벨트 (시험)</strong><div class="conveyor-keys">${keys}</div>`
+      + sections.map((_, i) => `<canvas class="overturn" data-section="${i}"></canvas>`).join('')
+      + (sections.length ? '<figcaption class="overturn-caption"><span>빨강: 표층에서 북쪽으로 흘러 북쪽에서 가라앉는 순환</span></figcaption>' : '')
+      + `<p class="legend-note">${note}</p>`;
+    legend.querySelectorAll('canvas.overturn').forEach(canvas => drawSection(canvas, sections[canvas.dataset.section]));
+    return;
+  }
   legend.innerHTML = `<strong>해류 (시험)</strong>${bar}<p class="legend-note">${source}. ${currentsMode.startsWith('flow') ? '점이 해류를 따라 흐르며 꼬리를 남깁니다(시간 압축).' : '가장 빠른 물을 지나는 유선을 이어 그린 주요 해류, 폭은 속도.'}</p>`;
 }
 function updateCurrents(delta) {
@@ -3091,15 +3111,17 @@ function updateCurrents(delta) {
     uniforms.flowTrail.value = flow.texture;
   }
   const lines = Boolean(key && currentsMode.startsWith('lines') && currentLines);
-  const want = lines ? `${key}:${currentsMode}:${projection}:${meridian}` : '';
+  const conveyor = Boolean(key && currentsMode === 'conveyor' && conveyorData);
+  const want = lines || conveyor ? `${key}:${currentsMode}:${projection}:${meridian}` : '';
   if (want !== ribbonKey) {
     ribbonKey = want;
     if (ribbonGroup) { earth.remove(ribbonGroup); ribbonGroup.traverse(o => { o.geometry?.dispose(); o.material?.dispose(); }); ribbonGroup = null; }
-    if (lines) {
+    if (lines || conveyor) {
       const relative = lon => ((lon - meridian + 540) % 360) - 180;
       const seam = (...lons) => projection !== 'globe' && Math.max(...lons.map(relative)) - Math.min(...lons.map(relative)) > 90;
-      ribbonGroup = buildRibbons(currentLines[key], currentsMode === 'lines-temp' ? 'temp' : 'speed',
-        (lon, lat) => pointAt(lon, lat, 0.0025), seam);
+      const place = (lon, lat) => pointAt(lon, lat, 0.0025);
+      ribbonGroup = conveyor ? buildConveyor(conveyorData[key], place, seam)
+        : buildRibbons(currentLines[key], currentsMode === 'lines-temp' ? 'temp' : 'speed', place, seam);
       earth.add(ribbonGroup);
     }
   }
