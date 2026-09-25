@@ -1295,14 +1295,26 @@ function globeMaterial() {
         vec3 ground = rise < 0.35 ? mix(low, mid, rise / 0.35) : mix(mid, high, (rise - 0.35) / 0.65);
         return mix(sea, ground, landness);
       }
-      // Surface air temperature as colour, blue at -30 C through pale at 0 to red at
-      // 40 C, the range the maps actually span. Grey holds it over -60..60 C.
+      // Surface air temperature as colour over -30..40 C, the range the maps actually span
+      // (grey holds it over -60..60 C): ColorBrewer RdYlBu with stops at -30, -20, -10, -5,
+      // 0, 5, 12, 18, 24, 30 and 40 C, blues below freezing, yellow through red above. Mixed
+      // as encoded and decoded after, as the legend's CSS gradient mixes, so a colour on the
+      // globe is the legend's colour; the three-stop ramp before mixed in linear light and sat
+      // up to dE2000 13 off its own legend (devlog wwolf 017).
       vec3 thermal(float celsius) {
-        float t = clamp((celsius + 30.0) / 70.0, 0.0, 1.0);
-        vec3 cold = decode(vec3(0.16, 0.27, 0.66));
-        vec3 mild = decode(vec3(0.94, 0.93, 0.88));
-        vec3 hot = decode(vec3(0.72, 0.13, 0.11));
-        return t < 0.43 ? mix(cold, mild, t / 0.43) : mix(mild, hot, (t - 0.43) / 0.57);
+        float c = clamp(celsius, -30.0, 40.0);
+        vec3 s;
+        if (c < -20.0) s = mix(vec3(0.192, 0.212, 0.584), vec3(0.271, 0.459, 0.706), (c + 30.0) / 10.0);
+        else if (c < -10.0) s = mix(vec3(0.271, 0.459, 0.706), vec3(0.455, 0.678, 0.820), (c + 20.0) / 10.0);
+        else if (c < -5.0) s = mix(vec3(0.455, 0.678, 0.820), vec3(0.671, 0.851, 0.914), (c + 10.0) / 5.0);
+        else if (c < 0.0) s = mix(vec3(0.671, 0.851, 0.914), vec3(0.878, 0.953, 0.973), (c + 5.0) / 5.0);
+        else if (c < 5.0) s = mix(vec3(0.878, 0.953, 0.973), vec3(1.0, 1.0, 0.749), c / 5.0);
+        else if (c < 12.0) s = mix(vec3(1.0, 1.0, 0.749), vec3(0.996, 0.878, 0.565), (c - 5.0) / 7.0);
+        else if (c < 18.0) s = mix(vec3(0.996, 0.878, 0.565), vec3(0.992, 0.682, 0.380), (c - 12.0) / 6.0);
+        else if (c < 24.0) s = mix(vec3(0.992, 0.682, 0.380), vec3(0.957, 0.427, 0.263), (c - 18.0) / 6.0);
+        else if (c < 30.0) s = mix(vec3(0.957, 0.427, 0.263), vec3(0.843, 0.188, 0.153), (c - 24.0) / 6.0);
+        else s = mix(vec3(0.843, 0.188, 0.153), vec3(0.647, 0.0, 0.149), (c - 30.0) / 10.0);
+        return decode(s);
       }
       // Modelled plant cover: an order of cover in one hue, sand to dark green, with tundra
       // and land ice set apart. Checked as a set for colour-blind separation (devlog wwolf 013).
@@ -1414,14 +1426,22 @@ function globeMaterial() {
             landness = smoothstep(-width, width, metres);
             distance = metres / 400.0;
           }
+          // The relief's hill shading under the colour views too, so mountain ranges read
+          // under temperature and modelled climate. Divided by what level ground gets (0.749),
+          // so flat land keeps the legend's colour exactly and only slopes lighten or darken;
+          // the relief-shading selector turns it off at 0.
+          float terrain = 1.0;
+          if (mode >= 3 && exaggeration > 0.0) {
+            terrain = mix(1.0, clamp(shade(uvA, uvB, (surfaceUv.y - 0.5) * 180.0) / 0.749, 0.55, 1.3), landness);
+          }
           if (mode == 3) {
             float celsius = mix(texture2D(tempA, uvA).r, texture2D(tempB, uvB).r, blend) * 120.0 - 60.0;
             // The coastline as a dark line, so the continents stay readable under colour.
             float coast = 1.0 - smoothstep(0.0, 0.008, abs(distance));
-            colour = thermal(celsius) * (1.0 - 0.55 * coast);
+            colour = thermal(celsius) * (1.0 - 0.55 * coast) * terrain;
           } else if (mode >= 4) {
             // Land only, as the source is: the sea keeps its own colour.
-            vec3 climate = mix(climateColour(texture2D(tempA, uvA), mode), climateColour(texture2D(tempB, uvB), mode), blend);
+            vec3 climate = mix(climateColour(texture2D(tempA, uvA), mode), climateColour(texture2D(tempB, uvB), mode), blend) * terrain;
             colour = mix(ocean, climate, landness);
           } else if (mode == 2) {
             float latitude = (surfaceUv.y - 0.5) * 180.0;
