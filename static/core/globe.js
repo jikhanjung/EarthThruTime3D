@@ -2865,6 +2865,10 @@ function init() {
   } else {
     selectFrame(selected);
   }
+  // A page opened without an age keeps none until the reader leaves its opening stop; one
+  // opened with an age keeps it, so the link it came from still reloads to the same stop.
+  viewDefaults.age = new URL(location.href).searchParams.has('age')
+    ? null : String(+stops[stop][3].toFixed(4));
   addressReady = true;
   for (const type of ['click', 'change', 'input']) document.addEventListener(type, queueAddress);
 }
@@ -2880,7 +2884,11 @@ let addressReady = false;
 let addressTimer = 0;
 function viewState() {
   return {
-    view: projection, surface, shading: $('shading')?.value ?? null, sea: seaLevelControl?.value ?? null,
+    view: projection, surface, shading: $('shading')?.value ?? null,
+    // In a time window the age sets the level and the slider only shows it, so writing it
+    // would put a number the reader never chose in the address, and carry it to the whole
+    // series when they leave the window.
+    sea: lastPlace?.from?.deglacial || !seaLevelControl ? null : seaLevelControl.value,
     relief: reliefWanted ? '1' : '0', rivers: riversVisible ? '1' : '0',
     ice: iceVisible ? '1' : '0', grid: gridVisible ? '1' : '0',
   };
@@ -2896,13 +2904,16 @@ function writeViewAddress() {
     if (value == null || value === viewDefaults[key]) url.searchParams.delete(key);
     else url.searchParams.set(key, value);
   }
-  url.searchParams.set('age', String(+stops[stop][3].toFixed(4)));
+  const age = String(+stops[stop][3].toFixed(4));
+  if (age === viewDefaults.age) url.searchParams.delete('age');
+  else url.searchParams.set('age', age);
   history.replaceState(null, '', url.href.replace(/%2C/g, ',').replace(/%3B/g, ';'));
 }
 function readViewAddress() {
   Object.assign(viewDefaults, viewState());
   const asked = new URL(location.href).searchParams;
-  const flag = key => asked.get(key) !== '0' && asked.get(key) !== 'false';
+  // Only 0 and 1 are read; anything else is ignored rather than counted as on.
+  const flag = key => (asked.get(key) === '1' ? true : asked.get(key) === '0' ? false : null);
   const view = asked.get('view');
   if (view && [...$('projection').options].some(option => option.value === view) && view !== projection) {
     $('projection').value = view;
@@ -2917,10 +2928,10 @@ function readViewAddress() {
     seaLevelControl.value = asked.get('sea');
     showSeaSetting();
   }
-  if (asked.has('grid') && flag('grid') !== gridVisible) $('grid').click();
-  if (asked.has('relief') && flag('relief') !== reliefWanted) $('relief3d')?.click();
-  if (asked.has('rivers')) riversVisible = flag('rivers');
-  if (asked.has('ice')) iceVisible = flag('ice');
+  if (flag('grid') !== null && flag('grid') !== gridVisible) $('grid').click();
+  if (flag('relief') !== null && flag('relief') !== reliefWanted) $('relief3d')?.click();
+  if (flag('rivers') !== null) riversVisible = flag('rivers');
+  if (flag('ice') !== null) iceVisible = flag('ice');
   const wanted = asked.get('surface');
   if (wanted && ['relief', 'map', 'mask', 'temp', 'veg', 'rain'].includes(wanted)) surface = wanted;
   if (surfaceToggle) surfaceToggle.setAttribute('aria-pressed', String(surface === 'mask'));
