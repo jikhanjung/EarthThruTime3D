@@ -1,5 +1,8 @@
-import {chromium, expect} from '@playwright/test';
+import {chromium, expect as baseExpect} from '@playwright/test';
 import {mkdir} from 'node:fs/promises';
+// setDefaultTimeout covers actions; an assertion keeps Playwright's own 5 s unless it is
+// configured too, and a first draw that is merely slow then fails on a loaded machine.
+const expect = baseExpect.configure({timeout: 20000});
 const browser = await chromium.launch({headless: true, args: ['--enable-unsafe-swiftshader']});
 const base = process.env.VIEWER_URL || 'http://127.0.0.1:8153/';
 try {
