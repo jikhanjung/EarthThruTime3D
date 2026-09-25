@@ -417,6 +417,7 @@ async function selectStop(value, manual = false, overlayManaged = false, transit
     place.mapless ? L.noMap : (between ? L.interpolated : null),
     !place.mapless && place.from.ice_kind === 'analogue' ? L.analogueIce : null,
     !place.mapless && place.from.ice_kind === 'reconstructed' ? L.reconstructedIce : null].filter(Boolean).join(' / ');
+  queueAddress();
   requestAnimationFrame(markFoldableNotes);
   const nextLabel = $('globe-age').textContent;
   if (transition) $('globe-age').textContent = displayedLabel;
@@ -2853,6 +2854,7 @@ function init() {
       location.assign(url.href);
     });
   }
+  readViewAddress();
   const askedAge = Number(new URL(location.href).searchParams.get('age'));
   if (new URL(location.href).searchParams.has('age') && Number.isFinite(askedAge)) {
     let nearest = 0;
@@ -2863,6 +2865,76 @@ function init() {
   } else {
     selectFrame(selected);
   }
+  // A page opened without an age keeps none until the reader leaves its opening stop; one
+  // opened with an age keeps it, so the link it came from still reloads to the same stop.
+  viewDefaults.age = new URL(location.href).searchParams.has('age')
+    ? null : String(+stops[stop][3].toFixed(4));
+  addressReady = true;
+  for (const type of ['click', 'change', 'input']) document.addEventListener(type, queueAddress);
+}
+// The view in the address, so a link opens the same view. Read once before the first stop
+// is drawn, setting the module's state as the controls would; written back a moment after
+// the view changes, and only where it differs from the page's own defaults, as playback
+// would otherwise rewrite the address several times a second. Pins, the dataset and the
+// time range keep their own parameters.
+// view: globe | mollweide | equalearth | equirect · surface: relief | map | mask | temp | veg | rain
+// shading: 0 | 1 | 5 | 20 · sea: metres · relief, rivers, ice, grid: 0 | 1 · age: Ma
+const viewDefaults = {};
+let addressReady = false;
+let addressTimer = 0;
+function viewState() {
+  return {
+    view: projection, surface, shading: $('shading')?.value ?? null,
+    // In a time window the age sets the level and the slider only shows it, so writing it
+    // would put a number the reader never chose in the address, and carry it to the whole
+    // series when they leave the window.
+    sea: lastPlace?.from?.deglacial || !seaLevelControl ? null : seaLevelControl.value,
+    relief: reliefWanted ? '1' : '0', rivers: riversVisible ? '1' : '0',
+    ice: iceVisible ? '1' : '0', grid: gridVisible ? '1' : '0',
+  };
+}
+function queueAddress() {
+  if (!addressReady) return;
+  clearTimeout(addressTimer);
+  addressTimer = setTimeout(writeViewAddress, 400);
+}
+function writeViewAddress() {
+  const url = new URL(location.href);
+  for (const [key, value] of Object.entries(viewState())) {
+    if (value == null || value === viewDefaults[key]) url.searchParams.delete(key);
+    else url.searchParams.set(key, value);
+  }
+  const age = String(+stops[stop][3].toFixed(4));
+  if (age === viewDefaults.age) url.searchParams.delete('age');
+  else url.searchParams.set('age', age);
+  history.replaceState(null, '', url.href.replace(/%2C/g, ',').replace(/%3B/g, ';'));
+}
+function readViewAddress() {
+  Object.assign(viewDefaults, viewState());
+  const asked = new URL(location.href).searchParams;
+  // Only 0 and 1 are read; anything else is ignored rather than counted as on.
+  const flag = key => (asked.get(key) === '1' ? true : asked.get(key) === '0' ? false : null);
+  const view = asked.get('view');
+  if (view && [...$('projection').options].some(option => option.value === view) && view !== projection) {
+    $('projection').value = view;
+    setProjection(view, false);
+  }
+  const shading = asked.get('shading');
+  if ($('shading') && shading && [...$('shading').options].some(option => option.value === shading)) {
+    $('shading').value = shading;
+    $('shading').dispatchEvent(new Event('change'));
+  }
+  if (seaLevelControl && asked.has('sea') && Number.isFinite(Number(asked.get('sea')))) {
+    seaLevelControl.value = asked.get('sea');
+    showSeaSetting();
+  }
+  if (flag('grid') !== null && flag('grid') !== gridVisible) $('grid').click();
+  if (flag('relief') !== null && flag('relief') !== reliefWanted) $('relief3d')?.click();
+  if (flag('rivers') !== null) riversVisible = flag('rivers');
+  if (flag('ice') !== null) iceVisible = flag('ice');
+  const wanted = asked.get('surface');
+  if (wanted && ['relief', 'map', 'mask', 'temp', 'veg', 'rain'].includes(wanted)) surface = wanted;
+  if (surfaceToggle) surfaceToggle.setAttribute('aria-pressed', String(surface === 'mask'));
 }
 // A folded note that fits in its two lines gets no marker and no pointer.
 function markFoldableNotes() {
