@@ -293,3 +293,11 @@ summary{cursor:pointer;color:#c9dce2}
 .model-note.foldable:focus-visible{outline:2px solid #88dfcc;outline-offset:2px}
 .model-note.foldable.fits{cursor:auto}
 .model-note.foldable.fits::before{content:none}
+
+/* On a narrow screen the colour key docks above the controls rather than lying across the
+   middle of the globe, which there is most of the map; it rises over the sea-level chart
+   when that is open. After the base rule, so the media query wins on equal specificity. */
+@media(max-width:640px){
+  .map-legend{top:auto;bottom:calc(var(--controls-space,200px) + 8px + var(--menu-space,0px));left:8px;right:8px;width:auto;padding:.45rem .6rem .15rem}
+  .explorer:has(#sea-overlay:not([hidden])) .map-legend{bottom:calc(var(--controls-space,200px) + 8px + var(--menu-space,0px) + 132px)}
+}
