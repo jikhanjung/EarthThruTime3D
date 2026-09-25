@@ -196,6 +196,14 @@ def pack_elevation(dem, dem_source, staging, files):
         shutil.copy2(climate, staging / "paleodem" / climate.name)
         files.append({"path": f"paleodem/{climate.name}", "bytes": (staging / "paleodem" / climate.name).stat().st_size,
                       "sha256": digest(staging / "paleodem" / climate.name), "map_id": "paleodem-0000"})
+    # Mountain-range marks for the flat maps, by scripts/build_mountain_ranges.py; optional
+    # like the rivers.
+    ranges = dem_source / "mountain-ranges.json"
+    if ranges.exists():
+        shutil.copy2(ranges, staging / "paleodem" / ranges.name)
+        files.append({"path": "paleodem/mountain-ranges.json",
+                      "bytes": (staging / "paleodem" / ranges.name).stat().st_size,
+                      "sha256": digest(staging / "paleodem" / ranges.name), "dataset": "paleodem2018"})
     # Where each mask came from, written by the same script; optional like the masks.
     kinds = dem_source / "ice-sources.json"
     if kinds.exists():

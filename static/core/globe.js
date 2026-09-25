@@ -70,6 +70,7 @@ const PLATE_COLOUR = 0xff62c0;
 // PaleoCoastlines (Kocsis & Scotese 2021): coastlines moved to where marine fossils say
 // the sea reached. Same PALEOMAP frame as the 2016 masks, so drawn without rotation.
 const coastlines = JSON.parse($('globe-coastlines')?.textContent ?? 'null');
+const rangesUrl = JSON.parse($('globe-ranges')?.textContent ?? 'null');
 // Amber vanished against the tan land; this reads on land and on sea, and is not the
 // plate overlay's pink.
 const COASTLINE_COLOUR = 0xff4d1a;
@@ -2366,6 +2367,7 @@ function init() {
   pinLayer = new THREE.Group();
   pinLayer.visible = false;
   earth.add(pinLayer);
+  loadRanges();
   scene.add(earth);
   resetView();
   const mantleConfig = JSON.parse($('globe-mantle-overlay')?.textContent ?? 'null');
@@ -2415,6 +2417,7 @@ function init() {
     if (spinning && projection !== 'globe' && !reducedMotion) setMeridian(meridian + delta * 12);
     updateNameVisibility();
     updatePinVisibility();
+    updateRanges();
     const view = tiltedView();
     if (uniforms.mantleCutaway.value > .5 || uniforms.crustCutaway.value > .5 || uniforms.mantleSurfaceOpacity.value < 1) {
       earth.updateWorldMatrix(true,false);
@@ -2752,6 +2755,8 @@ function init() {
     $('relief3d').addEventListener('click', () => {
       reliefWanted = !reliefWanted;
       $('relief3d').setAttribute('aria-pressed', String(reliefWanted));
+      // At once, not at the next pan or zoom, which is when followZoom() would.
+      updateRelief(zoomFactor());
     });
   }
   if ($('sea-chart')) {
@@ -2782,6 +2787,120 @@ function init() {
     selectStop(nearest);
   } else {
     selectFrame(selected);
+  }
+}
+// Mountain ranges as triangle marks on the flat maps while the raised-relief switch is on,
+// where the globe's 3D lift has no counterpart: today's named ranges at the present and in
+// the time windows, and on a past grid the ranges found in its own heights
+// (scripts/build_mountain_ranges.py). A mark's size steps with the crest height, in screen
+// pixels so it keeps its size at any zoom. The marks follow the map on screen (lastPlace,
+// set once its textures are in), not the slider; between two grids each side's marks ride
+// the travel field the shader moves the land by, as the overlay lines do, and fade with the
+// same blend.
+const RANGE_PIXELS = [[2000, 9], [4000, 13], [Infinity, 17]];
+const RANGE_LIFT = 0.003;
+let rangeLayer = null;
+let rangeSets = null;
+let rangeKey = '';
+function rangeMaterial() {
+  const size = 64;
+  const canvas = document.createElement('canvas');
+  canvas.width = canvas.height = size;
+  const context = canvas.getContext('2d');
+  const apex = [size / 2, 6], left = [5, size - 8], right = [size - 5, size - 8], foot = [size / 2, size - 8];
+  const face = (points, colour) => {
+    context.beginPath();
+    context.moveTo(...points[0]);
+    for (const point of points.slice(1)) context.lineTo(...point);
+    context.closePath();
+    context.fillStyle = colour;
+    context.fill();
+  };
+  face([apex, left, foot], 'rgba(246,241,229,0.95)');
+  face([apex, foot, right], 'rgba(92,72,55,0.95)');
+  context.beginPath();
+  context.moveTo(...apex); context.lineTo(...left); context.lineTo(...right); context.closePath();
+  context.lineWidth = 4;
+  context.strokeStyle = 'rgba(40,30,22,0.95)';
+  context.stroke();
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  return new THREE.SpriteMaterial({ map: texture, transparent: true, depthTest: false, depthWrite: false, sizeAttenuation: false });
+}
+async function loadRanges() {
+  if (!rangesUrl) return;
+  try {
+    const data = await (await fetch(rangesUrl)).json();
+    rangeSets = { present: data.present.flatMap((range) => range.marks), ...data.maps };
+    const material = rangeMaterial();
+    rangeLayer = new THREE.Group();
+    rangeLayer.visible = false;
+    // One group per side of the blend, each with its own opacity.
+    for (let side = 0; side < 2; side++) {
+      const group = new THREE.Group();
+      group.userData.material = side ? material.clone() : material;
+      rangeLayer.add(group);
+    }
+    earth.add(rangeLayer);
+  } catch {
+    rangeLayer = null;
+  }
+}
+// The marks of one side's map: today's named ranges near the present, else that grid's
+// own; none for a map without heights.
+function rangeSetOf(frame) {
+  if (!frame) return '';
+  if (frame.age < 0.2) return 'present';
+  return frame.relief && rangeSets[frame.id] ? frame.id : '';
+}
+// A mark moves by its side's share of the travel field.
+function fillRanges(group, marks, gap, share) {
+  while (group.children.length < marks.length) {
+    const sprite = new THREE.Sprite(group.userData.material);
+    sprite.center.set(0.5, 0.15);
+    sprite.renderOrder = 2;
+    group.add(sprite);
+  }
+  group.children.forEach((sprite, index) => {
+    const mark = marks[index];
+    sprite.visible = Boolean(mark);
+    if (!mark) return;
+    const [east, north] = share ? travelAt(mark[0], mark[1], gap) : [0, 0];
+    const lon = ((mark[0] + share * east + 540) % 360) - 180;
+    const lat = Math.max(-90, Math.min(90, mark[1] + share * north));
+    sprite.position.copy(pointAt(lon, lat, RANGE_LIFT));
+    sprite.userData.pixels = RANGE_PIXELS.find(([top]) => mark[2] < top)[1];
+  });
+}
+function updateRanges() {
+  if (!rangeLayer) return;
+  const place = lastPlace;
+  const on = reliefWanted && projection !== 'globe' && place && !place.mapless;
+  const setA = on ? rangeSetOf(place.from) : '';
+  // A stop on a grid, or two sides with the same marks, shows one set at full strength.
+  const setB = on && place.blend > 0 && rangeSetOf(place.to) !== setA ? rangeSetOf(place.to) : '';
+  rangeLayer.visible = Boolean(setA || setB);
+  stage.dataset.ranges = [setA, setB].filter(Boolean).join('>') || 'false';
+  if (!rangeLayer.visible) return;
+  const [groupA, groupB] = rangeLayer.children;
+  const key = `${setA}:${setB}:${place.blend}:${projection}:${meridian}`;
+  if (key !== rangeKey) {
+    rangeKey = key;
+    const blend = setB ? place.blend : 0;
+    const gap = blend > 0 ? motions[frames.indexOf(place.from)] ?? [] : [];
+    fillRanges(groupA, setA ? rangeSets[setA] : [], gap, blend);
+    fillRanges(groupB, setB ? rangeSets[setB] : [], gap, blend - 1);
+    groupA.userData.material.opacity = setB ? 1 - blend : 1;
+    groupB.userData.material.opacity = blend;
+    groupA.visible = Boolean(setA);
+    groupB.visible = Boolean(setB);
+    stage.dataset.rangeMarks = String((setA ? rangeSets[setA].length : 0) + (setB ? rangeSets[setB].length : 0));
+  }
+  const unit = 2 * Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2) / (renderer.domElement.clientHeight || 1);
+  for (const group of rangeLayer.children) {
+    for (const sprite of group.children) {
+      if (sprite.visible) sprite.scale.set(sprite.userData.pixels * unit, sprite.userData.pixels * unit, 1);
+    }
   }
 }
 // The inspector floats over the map and folds away. It starts open where there is room
