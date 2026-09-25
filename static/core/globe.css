@@ -274,3 +274,30 @@ summary{cursor:pointer;color:#c9dce2}
 #interior-section-controls:disabled { opacity: .55; }
 #interior-section-controls input[type=range] { width: 100%; }
 #interior-panel > h2 { margin-top: 0; font-size: 1rem; }
+
+/* The active colour legend floats on the map, under the caption, so it is seen without
+   opening the info panel; it hides when no legend inside it is shown. */
+.map-legend{position:absolute;top:92px;left:16px;z-index:5;width:min(280px,calc(100vw - 32px));padding:.55rem .7rem .2rem;border-radius:8px;background:rgba(8,20,30,.78);backdrop-filter:blur(4px);box-shadow:0 2px 12px rgba(0,0,0,.35)}
+.map-legend:not(:has(> figure:not([hidden]))){display:none}
+.map-legend .temp-legend,.map-legend .cover-legend{margin:0 0 .4rem}
+/* The Earth interior section folds to its heading. */
+#interior-panel > h2{cursor:pointer;user-select:none}
+#interior-panel > h2::before{content:'▾ ';font-size:.8em}
+#interior-panel.folded > h2::before{content:'▸ '}
+#interior-panel.folded > :not(h2){display:none}
+/* Explanatory notes fold to two lines; ▸ folded, ▾ open. */
+.model-note.foldable{cursor:pointer}
+.model-note.foldable::before{content:'▾ ';color:#cdc194}
+.model-note.foldable.folded::before{content:'▸ '}
+.model-note.foldable.folded:not([hidden]){display:-webkit-box;-webkit-line-clamp:2;line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.model-note.foldable:focus-visible{outline:2px solid #88dfcc;outline-offset:2px}
+.model-note.foldable.fits{cursor:auto}
+.model-note.foldable.fits::before{content:none}
+
+/* On a narrow screen the colour key docks above the controls rather than lying across the
+   middle of the globe, which there is most of the map; it rises over the sea-level chart
+   when that is open. After the base rule, so the media query wins on equal specificity. */
+@media(max-width:640px){
+  .map-legend{top:auto;bottom:calc(var(--controls-space,200px) + 8px + var(--menu-space,0px));left:8px;right:8px;width:auto;padding:.45rem .6rem .15rem}
+  .explorer:has(#sea-overlay:not([hidden])) .map-legend{bottom:calc(var(--controls-space,200px) + 8px + var(--menu-space,0px) + 132px)}
+}

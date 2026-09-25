@@ -3,6 +3,10 @@ const expect = baseExpect.configure({timeout: 30000});
 
 const browser = await chromium.launch({headless: true, args: ['--enable-unsafe-swiftshader']});
 const base = process.env.VIEWER_URL || 'http://127.0.0.1:8150/';
+// The Earth interior section starts folded to its heading; open it before using its controls.
+const openInterior = async (target) => {
+  if (await target.locator('#interior-panel.folded').count()) await target.locator('#interior-title').click();
+};
 try {
   const page = await browser.newPage({viewport: {width: 1400, height: 1000}, reducedMotion: 'reduce'});
   const errors = [], requests = [];
@@ -13,6 +17,7 @@ try {
   const globe = page.locator('#globe');
   await expect(globe).toHaveAttribute('aria-busy', 'false');
   expect(requests.length).toBe(0);
+  await openInterior(page);
   await page.locator('#crust-enabled').check();
   await expect(globe).toHaveAttribute('data-crust', 'ready');
   expect(requests.length).toBe(1);
@@ -92,6 +97,7 @@ try {
   await failure.route('**/crust/assets/**', r => r.fulfill({status: 503}));
   await failure.goto(new URL('/?masks=paleodem2018', base).href);
   await expect(failure.locator('#globe')).toHaveAttribute('aria-busy', 'false');
+  await openInterior(failure);
   await failure.locator('#crust-enabled').check();
   await expect(failure.locator('#globe')).toHaveAttribute('data-crust', 'error');
   await failure.unroute('**/crust/assets/**');
@@ -105,6 +111,7 @@ try {
   await late.route('**/crust/assets/**', async route => { downloads++; await gate; await route.continue(); });
   await late.goto(new URL('/?masks=paleodem2018', base).href);
   await expect(late.locator('#globe')).toHaveAttribute('aria-busy', 'false');
+  await openInterior(late);
   await late.locator('#crust-enabled').check();
   await late.locator('#timeline').fill(at(20));
   await expect(late.locator('#globe')).toHaveAttribute('data-crust', 'unavailable');
