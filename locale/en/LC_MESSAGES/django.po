@@ -1187,8 +1187,8 @@ msgstr "The grey sphere marks a reference core boundary at about 3,479 km radius
 msgid "EarthThruTime3D: OPT1 표면에서 단면 교차선을 추출하고, PaleoDEM을 지역 지표 격자로 다시 표본화했습니다."
 msgstr "EarthThruTime3D: extracted section intersections from OPT1 surfaces and resampled PaleoDEM into a regional terrain grid."
 
-msgid "하천"
-msgstr "Rivers"
+msgid "잠재 하천"
+msgstr "Potential rivers"
 
 msgid "위의 PaleoDEM 격자 위로 물을 흘려 이 프로젝트가 계산한 잠재 배수망입니다. 발표된 복원이 아닙니다."
 msgstr "Potential drainage computed by this project by routing water over the PaleoDEM grids above; not a published reconstruction."
@@ -1393,3 +1393,9 @@ msgstr "No continent polygon here, so there is no plate to follow."
 
 msgid "{a}–{b} {km} km (오늘 {today} km)"
 msgstr "{a}–{b} {km} km ({today} km today)"
+
+msgid "파란 선은 강수와 무관하게 지형만으로 그린 잠재 물길입니다. 사막을 가로지르는 선은 그곳에 물이 흐른다는 뜻이 아니며, 나일강처럼 먼 상류의 비로 사막을 건너는 강도 있습니다."
+msgstr "Blue lines are potential water paths drawn from the terrain alone, whatever the rainfall. A line across a desert does not mean water flows there, though some rivers, like the Nile, cross deserts on rain that fell far upstream."
+
+msgid "기후·생물 사건"
+msgstr "Climate and biotic events"

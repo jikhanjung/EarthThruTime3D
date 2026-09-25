@@ -66,7 +66,7 @@ CC BY 자료의 파생물과 원본 조건이 확정되지 않은 마스크를 �
   `INTEGRITY_FAIL` 표식이 있으면 `degraded`/200이다. 모든 선택 레이어를 검사하는 것은 아니다.
   `smoke.sh`는 상태 `ok`, 버전 일치, 필수 필드 누락 0을 요구한다.
 
-운영 자료의 빙기 하천 범위는 v0.22.0부터 2.5–80 ka의 32장이다. `scripts/build_ice.py`
+운영 자료의 빙기 하천 범위는 2.5–80 ka의 32장이다(v0.19.0에서 10장에서 늘렸다). `scripts/build_ice.py`
 전체(약 6분)와 `scripts/build_rivers.py --ice --ice-to 80`(약 30분)으로 생성하고 sidecar와
 PNG 목록을 확인한다. 패커는 디렉터리에 있는 모든 빙기 PNG와 빙상 조각을 포함한다.
 

@@ -220,10 +220,11 @@ summary{cursor:pointer;color:#c9dce2}
 .sea-inset .axis-tick:not(.x) { left: -48px; }
 .sea-inset figcaption { color: #9fb3bd; font-size: 0.8rem; margin-top: 0.3rem; }
 
-/* Colour key for the temperature surface: the shader's ramp over -30..40 C as a gradient,
+/* Colour key for the temperature surface: the shader's ramp over -30..40 C as a gradient
+   with the same stops, mixed the same way,
    today's global mean as a white tick, the current stop's mean as a triangle below. */
 .temp-legend{margin:0 0 .9rem;font-size:.68rem;color:#95afbb}
-.temp-bar{position:relative;height:10px;border-radius:3px;margin-top:1.15rem;background:linear-gradient(90deg,rgb(41,69,168) 0%,rgb(240,237,224) 43%,rgb(184,33,28) 100%)}
+.temp-bar{position:relative;height:10px;border-radius:3px;margin-top:1.15rem;background:linear-gradient(90deg,#313695 0.0%,#4575b4 14.3%,#74add1 28.6%,#abd9e9 35.7%,#e0f3f8 42.9%,#ffffbf 50.0%,#fee090 60.0%,#fdae61 68.6%,#f46d43 77.1%,#d73027 85.7%,#a50026 100.0%)}
 .temp-mark{position:absolute;top:0;width:0;transform:translateX(-50%)}
 .temp-mark.today{height:10px;border-left:2px solid #fff}
 .temp-mark.today span{position:absolute;bottom:12px;left:-1px;transform:translateX(-50%);white-space:nowrap;color:#dcebee}
@@ -234,8 +235,11 @@ summary{cursor:pointer;color:#c9dce2}
 .temp-legend figcaption span:nth-child(2){left:43%}
 .temp-legend figcaption span:nth-child(3){left:71%}
 .temp-legend figcaption span:last-child{left:100%;transform:translateX(-100%)}
-/* Modelled rainfall: one hue along the cube root of the year's millimetres, as the shader mixes it. */
-.rain-bar{height:10px;border-radius:3px;margin-top:.4rem;background:linear-gradient(90deg,#e3f4ec,#2f9e7d 50%,#06402f)}
+/* Modelled rainfall: ColorBrewer BrBG, dry brown to wet teal around 500 mm, along the cube root of the
+   year's millimetres, as the shader mixes it; stops at 50, 250, 500, 1000, 2000 and 4000 mm. */
+.rain-bar{height:10px;border-radius:3px;margin-top:.4rem;background:linear-gradient(90deg,#8c510a,#bf812d 18.4%,#dfc27d 31.5%,#f6e8c3 39.7%,#c7eae5 50%,#5ab4ac 63%,#01665e 79.4%,#003c30)}
+/* A caveat under a legend, e.g. that the rivers are drawn from the terrain alone. */
+.legend-note{margin:.5rem 0 .3rem;font-size:.66rem;line-height:1.35;color:#b9c9d1}
 .rain-legend figcaption span:nth-child(2){left:23.2%}
 .rain-legend figcaption span:nth-child(3){left:39.7%}
 .rain-legend figcaption span:nth-child(4){left:63%}
@@ -270,3 +274,40 @@ summary{cursor:pointer;color:#c9dce2}
 #interior-section-controls:disabled { opacity: .55; }
 #interior-section-controls input[type=range] { width: 100%; }
 #interior-panel > h2 { margin-top: 0; font-size: 1rem; }
+
+/* The active colour legend floats on the map, under the caption, so it is seen without
+   opening the info panel; it hides when no legend inside it is shown. */
+.map-legend{position:absolute;top:92px;left:16px;z-index:5;width:min(280px,calc(100vw - 32px));padding:.55rem .7rem .2rem;border-radius:8px;background:rgba(8,20,30,.78);backdrop-filter:blur(4px);box-shadow:0 2px 12px rgba(0,0,0,.35)}
+.map-legend:not(:has(> figure:not([hidden]))){display:none}
+.map-legend .temp-legend,.map-legend .cover-legend{margin:0 0 .4rem}
+/* The Earth interior section folds to its heading. */
+#interior-panel > h2{cursor:pointer;user-select:none}
+#interior-panel > h2::before{content:'▾ ';font-size:.8em}
+#interior-panel.folded > h2::before{content:'▸ '}
+#interior-panel.folded > :not(h2){display:none}
+/* Explanatory notes fold to two lines; ▸ folded, ▾ open. */
+.model-note.foldable{cursor:pointer}
+.model-note.foldable::before{content:'▾ ';color:#cdc194}
+.model-note.foldable.folded::before{content:'▸ '}
+.model-note.foldable.folded:not([hidden]){display:-webkit-box;-webkit-line-clamp:2;line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.model-note.foldable:focus-visible{outline:2px solid #88dfcc;outline-offset:2px}
+.model-note.foldable.fits{cursor:auto}
+.model-note.foldable.fits::before{content:none}
+
+/* On a narrow screen the colour key docks above the controls rather than lying across the
+   middle of the globe, which there is most of the map; it rises over the sea-level chart
+   when that is open. After the base rule, so the media query wins on equal specificity. */
+@media(max-width:640px){
+  .map-legend{top:auto;bottom:calc(var(--controls-space,200px) + 8px + var(--menu-space,0px));left:8px;right:8px;width:auto;padding:.45rem .6rem .15rem}
+  .explorer:has(#sea-overlay:not([hidden])) .map-legend{bottom:calc(var(--controls-space,200px) + 8px + var(--menu-space,0px) + 132px)}
+}
+
+/* Short climate and biotic events over the timeline: a mark per event, coloured and
+   lettered by kind, and a note under the slider while it sits inside one. The minimum width
+   holds the letter between the borders: at 8px a W was clipped on both sides, on exactly the
+   short events the marks exist for, and then the colour was the only cue left. */
+.event-marks{position:relative;height:13px;margin:0 0 4px}
+.event-mark{position:absolute;top:0;height:13px;padding:0;border:1px solid rgba(255,255,255,.55);border-radius:3px;color:#fff;font:600 9px/11px system-ui,sans-serif;text-align:center;cursor:pointer;overflow:hidden;opacity:.9}
+.event-mark:hover,.event-mark:focus-visible{opacity:1;outline:2px solid #fff;z-index:1}
+.event-note{margin:6px 0 0;font-size:.78rem;line-height:1.35;color:var(--muted,#b9c4cf)}
+.event-note p{margin:.2rem 0}.event-note a{color:inherit}
