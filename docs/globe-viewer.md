@@ -189,9 +189,14 @@ map within 5 Myr; the atlas prelude has none. It also writes `paleotemp-curve.js
 area-weighted global mean of every map, and the mean each grid was given. The server
 passes the curve to the page and each frame its texture route and mean.
 
-A 기온 toggle switches the surface to a fourth mode: a diverging ramp, blue at −30 °C
-through pale at 0 to red at 40 °C, with the coastline from the distance field drawn as
-a dark line so the continents stay readable. Between stops the two maps are mixed like
+A 기온 toggle switches the surface to a fourth mode: a diverging ramp over −30 to 40 °C,
+ColorBrewer RdYlBu with stops at −30, −20, −10, −5, 0, 5, 12, 18, 24, 30 and 40 °C
+(blues below freezing, yellow through red above), mixed in encoded sRGB as the key's CSS
+gradient is so the globe and the key show one colour per temperature (devlog wwolf 017),
+with the coastline from the distance field drawn as a dark line so the continents stay
+readable. Under the temperature and modelled-climate colours the land takes the relief
+view's hill shading, divided by what level ground gets so flat land keeps the key's colour
+and only slopes change; the 지형 음영 selector sets or removes it. Between stops the two maps are mixed like
 the fields. Above the slider a strip colours every stop by the global mean at its age,
 linear between maps and grey where none reaches, over 5 to 35 °C so an icehouse reads
 blue; the inspector reads out the mean at the current stop, interpolated between the
