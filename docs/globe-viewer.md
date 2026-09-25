@@ -196,7 +196,7 @@ the fields. Above the slider a strip colours every stop by the global mean at it
 linear between maps and grey where none reaches, over 5 to 35 °C so an icehouse reads
 blue; the inspector reads out the mean at the current stop, interpolated between the
 neighbouring maps' means when the stop is between them, and adds its difference from
-today's mean. Under the readout a colour key draws the surface ramp with its −30, 0, 20
+today's mean. A colour key floating on the map's top left draws the surface ramp with its −30, 0, 20
 and 40 °C marks, today's global mean as a white tick and the stop's mean as a marker,
 so a colour on the globe can be read against the present. It shows only while the
 temperature surface does; `data-delta` on the key carries the difference for tests.
@@ -237,7 +237,15 @@ dark green, with tundra violet and the model's ice near white; rainfall is one t
 light to dark along the cube root of the year's millimetres so a desert's tens of
 millimetres still show, teal because blue is the sea's and the rivers'. Both sets were
 run through a colour-blindness validator (devlog wwolf 013). The sea keeps its colour and
-the ice and rivers draw on top as ever. A legend under the readout shows while its mode does.
+the ice and rivers draw on top as ever. A legend shows while its mode does.
+
+The three colour keys (temperature, vegetation, rainfall) are rendered in the inspector
+and moved at start-up into one box floating on the map's top left (`#map-legend`), so the
+key is on screen without opening the info panel; the box hides when none of them is shown.
+In the inspector the 지구 내부 section folds to its heading (folded unless crust or mantle
+is on; the reader's choice is kept in `localStorage`), and every explanatory note folds to
+two lines by CSS line clamp and opens on click or Enter, so the date and the controls stay
+near the top. A note short enough to fit gets no fold marker.
 
 It is a model, and a statistical emulator of HadCM3 snapshots at that, not a
 reconstruction, and the note says so. Its largest known failure is named on the page: it

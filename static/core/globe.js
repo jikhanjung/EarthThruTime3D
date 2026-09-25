@@ -417,6 +417,7 @@ async function selectStop(value, manual = false, overlayManaged = false, transit
     place.mapless ? L.noMap : (between ? L.interpolated : null),
     !place.mapless && place.from.ice_kind === 'analogue' ? L.analogueIce : null,
     !place.mapless && place.from.ice_kind === 'reconstructed' ? L.reconstructedIce : null].filter(Boolean).join(' / ');
+  requestAnimationFrame(markFoldableNotes);
   const nextLabel = $('globe-age').textContent;
   if (transition) $('globe-age').textContent = displayedLabel;
   // Older than any map there is no source to preview, and leaving the last one up
@@ -2616,6 +2617,52 @@ function init() {
     });
   }
   drawTemperatureStrip();
+  // The colour legends float on the map instead of sitting below the Earth interior
+  // controls in the info panel, so the key is seen without opening the panel. The elements
+  // move, so their own code still shows, hides and fills them.
+  const mapLegend = document.createElement('div');
+  mapLegend.className = 'map-legend';
+  mapLegend.id = 'map-legend';
+  for (const id of ['temp-legend', 'rain-legend', 'veg-legend']) if ($(id)) mapLegend.append($(id));
+  $('explorer').append(mapLegend);
+  // The Earth interior section folds to its heading: folded unless one of its layers is on,
+  // and a reader's own choice is kept in this browser.
+  const interiorPanel = $('interior-panel');
+  const interiorTitle = $('interior-title');
+  if (interiorPanel && interiorTitle) {
+    let remembered = null;
+    try { remembered = localStorage.getItem('interior-folded'); } catch {}
+    const inUse = Boolean($('crust-enabled')?.checked || $('mantle-overlay')?.checked);
+    const fold = folded => {
+      interiorPanel.classList.toggle('folded', folded);
+      interiorTitle.setAttribute('aria-expanded', String(!folded));
+    };
+    interiorTitle.setAttribute('role', 'button');
+    interiorTitle.tabIndex = 0;
+    fold(inUse ? false : remembered !== 'false');
+    const flip = () => {
+      const folded = !interiorPanel.classList.contains('folded');
+      fold(folded);
+      try { localStorage.setItem('interior-folded', String(folded)); } catch {}
+    };
+    interiorTitle.addEventListener('click', flip);
+    interiorTitle.addEventListener('keydown', event => {
+      if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); flip(); }
+    });
+  }
+  // Every explanatory note in the panel folds to its first two lines; a click (not on a
+  // link or control inside) or Enter opens it. Folded by CSS line clamp, so the code that
+  // rewrites a note's text keeps working.
+  for (const note of document.querySelectorAll('#inspector .model-note:not(.hint):not(.pin-panel)')) {
+    note.classList.add('foldable', 'folded');
+    note.tabIndex = 0;
+    note.setAttribute('aria-expanded', 'false');
+    const flip = () => note.setAttribute('aria-expanded', String(!note.classList.toggle('folded')));
+    note.addEventListener('click', event => { if (!event.target.closest('a, button, input, select')) flip(); });
+    note.addEventListener('keydown', event => {
+      if (event.target === note && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); flip(); }
+    });
+  }
   drawSeaLevelStrip();
   drawPleistocene();
   if (seaLevelControl) {
@@ -2782,6 +2829,12 @@ function init() {
     selectStop(nearest);
   } else {
     selectFrame(selected);
+  }
+}
+// A folded note that fits in its two lines gets no marker and no pointer.
+function markFoldableNotes() {
+  for (const note of document.querySelectorAll('#inspector .model-note.foldable.folded:not([hidden])')) {
+    note.classList.toggle('fits', note.scrollHeight <= note.clientHeight + 1);
   }
 }
 // The inspector floats over the map and folds away. It starts open where there is room
