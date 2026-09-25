@@ -297,3 +297,10 @@ summary{cursor:pointer;color:#c9dce2}
 .model-note.foldable:focus-visible{outline:2px solid #88dfcc;outline-offset:2px}
 .model-note.foldable.fits{cursor:auto}
 .model-note.foldable.fits::before{content:none}
+/* Preview: current prototypes' legend. */
+.current-legend strong{display:block;font-size:.72rem;color:#dcebee;margin-bottom:.3rem}
+.current-bar{height:10px;border-radius:3px;margin-top:.3rem}
+.current-legend figcaption{position:relative;height:1.1em;margin-top:6px}
+.current-legend figcaption span{position:absolute;left:0;white-space:nowrap}
+.current-legend figcaption span:nth-child(2){left:50%;transform:translateX(-50%)}
+.current-legend figcaption span:last-child{left:100%;transform:translateX(-100%)}

@@ -8,6 +8,8 @@ import { RotationModel, turn } from './rotation.js';
 import { MAX_PINS, carried, distanceKm, drawnAt, formatPins, parsePins, pinAt } from './pins.js';
 import { densifySegments } from './surface-lines.js';
 import { describeEvents, drawEventMarks, setEvents } from './climate-events.js';
+import { createFlow } from './preview-flow.js';
+import { buildRibbons } from './preview-currents.js';
 import { CLIMATE_EVENTS } from './climate-events-data.js';
 import { createMantleOverlay } from './mantle-overlay.js';
 import { createMantleScene, CUT_UNIFORMS, CUT_SURFACE } from './mantle-scene.js';
@@ -1198,6 +1200,9 @@ function globeMaterial() {
     // exaggerated before lighting. 0 switches the shading off.
     texel: { value: new THREE.Vector2(1 / 2048, 1 / 1024) },
     exaggeration: { value: 1 },
+    // Preview: ocean currents, a trail texture drawn by preview-flow.js.
+    flowTrail: { value: null },
+    flowOn: { value: 0 },
     // Metres to move sea level from the slice's datum; 0 keeps the distance-field
     // coastline, anything else cuts the height channel instead.
     seaLevel: { value: 0 },
@@ -1254,6 +1259,8 @@ function globeMaterial() {
       uniform vec2 riverWeight;
       uniform sampler2D riverLow0;
       uniform sampler2D riverLow1;
+      uniform sampler2D flowTrail;
+      uniform float flowOn;
       uniform vec2 riverLowT;
       // The river field's cut: drained area above 10,000 km2, a quarter of its 10^3..10^7 span.
       const float RIVER_CUT = 0.25;
@@ -1487,6 +1494,12 @@ function globeMaterial() {
             float softFlow = fwidth(field.x) + 0.02;
             float river = smoothstep(RIVER_CUT - softFlow, RIVER_CUT + softFlow, field.x) * landness;
             colour = mix(colour, decode(vec3(0.16, 0.42, 0.78)), 0.85 * river);
+          }
+          // Preview: ocean currents over the sea only, the trail texture's colour by its
+          // fading strength (preview-flow.js).
+          if (flowOn > 0.5) {
+            vec4 trail = texture2D(flowTrail, surfaceUv);
+            colour = mix(colour, decode(trail.rgb), trail.a * (1.0 - landness));
           }
         } else {
           colour = mix(decode(texture2D(surfaceA, surfaceUv).rgb),
@@ -2468,6 +2481,7 @@ function init() {
     updateNameVisibility();
     updatePinVisibility();
     updateRanges();
+    updateCurrents(delta);
     const view = tiltedView();
     if (uniforms.mantleCutaway.value > .5 || uniforms.crustCutaway.value > .5 || uniforms.mantleSurfaceOpacity.value < 1) {
       earth.updateWorldMatrix(true,false);
@@ -2858,6 +2872,14 @@ function init() {
       updateRelief(zoomFactor());
     });
   }
+  if ($('currents')) {
+    $('currents').value = '';
+    $('currents').addEventListener('change', async () => {
+      currentsMode = $('currents').value;
+      if (currentsMode) await loadCurrents();
+      fieldKey = '-';   // redraw the legend and clear the trails
+    });
+  }
   if ($('sea-chart')) {
     // The long-term curve floats over the map, opened and closed from the toolbar.
     $('sea-chart').addEventListener('click', () => {
@@ -3002,6 +3024,87 @@ function updateRanges() {
     }
   }
 }
+// Preview: two prototypes for ocean currents, on the present (NOAA drifters) and at 100 Ma
+// (Pohl's FOAM run, surface level). "flow": dots carried by the field with fading trails
+// (preview-flow.js), white or coloured by speed; "lines": the major currents as ribbons
+// (preview-currents.js), coloured by speed or warm/cold. The data follows the map drawn on
+// screen (lastPlace) and shows only on a stop that has a field, not between stops.
+const CURRENT_FIELDS = { present: './preview-currents/present.png', 100: './preview-currents/100.png' };
+let currentsMode = '';
+let currentFields = null;
+let currentLines = null;
+let flow = null;
+let ribbonGroup = null;
+let ribbonKey = '';
+let fieldKey = '';
+function currentsKeyOf(place) {
+  if (!place || place.mapless || place.blend > 0) return '';
+  if (place.age < 0.0005) return 'present';
+  return place.from.id === 'paleodem-1000' ? '100' : '';
+}
+async function loadCurrents() {
+  if (currentFields) return;
+  currentFields = {};
+  const loader = new THREE.TextureLoader();
+  for (const [key, path] of Object.entries(CURRENT_FIELDS)) {
+    const texture = await loader.loadAsync(new URL(path, import.meta.url).href);
+    texture.colorSpace = THREE.NoColorSpace;
+    texture.wrapS = THREE.RepeatWrapping;
+    texture.magFilter = texture.minFilter = THREE.LinearFilter;
+    texture.generateMipmaps = false;
+    currentFields[key] = texture;
+  }
+  currentLines = await (await fetch(new URL('./preview-currents/lines.json', import.meta.url))).json();
+}
+function currentsLegend(key) {
+  let legend = $('current-legend');
+  if (!legend) {
+    legend = document.createElement('figure');
+    legend.id = 'current-legend';
+    legend.className = 'temp-legend current-legend';
+    ($('map-legend') ?? $('explorer')).append(legend);
+  }
+  legend.hidden = !currentsMode;
+  if (!currentsMode) return;
+  const source = key === 'present' ? '현재: NOAA 표류 부이 평균 (Laurindo 2017), 수심 15 m'
+    : key === '100' ? '100 Ma: FOAM 모형 (Pohl, CO₂ 2240 ppm 고정), 표층' : '해류 시험 자료는 현재와 100 Ma 시점에만 있습니다';
+  const bar = currentsMode === 'lines-temp'
+    ? '<div class="current-bar" style="background:linear-gradient(90deg,#3a8fd9,#9ecae1,#f7f7f7,#f4a582,#d6273b)"></div><figcaption><span>−4 °C 찬 해류</span><span>같은 위도 평균</span><span>+4 °C 따뜻한 해류</span></figcaption>'
+    : currentsMode === 'lines' || currentsMode === 'flow-speed'
+      ? `<div class="current-bar" style="background:linear-gradient(90deg,${currentsMode === 'lines' ? '#cc4778,#f89540,#f0f921' : '#9ec7f2,#fff08c'})"></div><figcaption><span>느림</span><span></span><span>빠름</span></figcaption>`
+      : '';
+  legend.innerHTML = `<strong>해류 (시험)</strong>${bar}<p class="legend-note">${source}. ${currentsMode.startsWith('flow') ? '점이 해류를 따라 흐르며 꼬리를 남깁니다(시간 압축).' : '가장 빠른 물을 지나는 유선을 이어 그린 주요 해류, 폭은 속도.'}</p>`;
+}
+function updateCurrents(delta) {
+  const key = currentsMode && projection ? currentsKeyOf(lastPlace) : '';
+  if (key !== fieldKey) {
+    fieldKey = key;
+    flow?.clear();
+    currentsLegend(key);
+  }
+  const flowing = Boolean(key && currentsMode.startsWith('flow') && currentFields);
+  uniforms.flowOn.value = flowing ? 1 : 0;
+  if (flowing) {
+    flow ??= createFlow(renderer);
+    flow.colourBySpeed(currentsMode === 'flow-speed');
+    flow.step(currentFields[key], delta);
+    uniforms.flowTrail.value = flow.texture;
+  }
+  const lines = Boolean(key && currentsMode.startsWith('lines') && currentLines);
+  const want = lines ? `${key}:${currentsMode}:${projection}:${meridian}` : '';
+  if (want !== ribbonKey) {
+    ribbonKey = want;
+    if (ribbonGroup) { earth.remove(ribbonGroup); ribbonGroup.traverse(o => { o.geometry?.dispose(); o.material?.dispose(); }); ribbonGroup = null; }
+    if (lines) {
+      const relative = lon => ((lon - meridian + 540) % 360) - 180;
+      const seam = (...lons) => projection !== 'globe' && Math.max(...lons.map(relative)) - Math.min(...lons.map(relative)) > 90;
+      ribbonGroup = buildRibbons(currentLines[key], currentsMode === 'lines-temp' ? 'temp' : 'speed',
+        (lon, lat) => pointAt(lon, lat, 0.0025), seam);
+      earth.add(ribbonGroup);
+    }
+  }
+  stage.dataset.currents = key ? currentsMode : 'false';
+}
 // Preview: a folded note that fits in its two lines gets no marker and no pointer.
 function markFoldableNotes() {
   for (const note of document.querySelectorAll('#inspector .model-note.foldable.folded:not([hidden])')) {
@@ -3021,7 +3124,7 @@ function viewState() {
   return {
     view: projection, surface, shading: $('shading')?.value ?? null, sea: seaLevelControl?.value ?? null,
     relief: reliefWanted ? '1' : '0', rivers: riversVisible ? '1' : '0',
-    ice: iceVisible ? '1' : '0', grid: gridVisible ? '1' : '0',
+    ice: iceVisible ? '1' : '0', grid: gridVisible ? '1' : '0', currents: currentsMode || 'none',
   };
 }
 function queueAddress() {
@@ -3062,6 +3165,11 @@ function applyViewAddress() {
   if (asked.has('ice')) iceVisible = flag('ice');
   const wanted = asked.get('surface');
   if (wanted && ['relief', 'mask', 'temp', 'veg', 'rain'].includes(wanted)) surface = wanted;
+  const currents = asked.get('currents');
+  if ($('currents') && currents && [...$('currents').options].some(option => option.value === currents)) {
+    $('currents').value = currents;
+    $('currents').dispatchEvent(new Event('change'));
+  }
   if (surfaceToggle) surfaceToggle.setAttribute('aria-pressed', String(surface === 'mask'));
   selectStop(stop, true);
   addressReady = true;
