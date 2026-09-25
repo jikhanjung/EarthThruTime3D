@@ -238,10 +238,11 @@ with each other. The textures ride the temperature sampler pair, as the two neve
 together and the fragment shader already binds thirteen of the sixteen a GPU must offer.
 They are sampled nearest, since a blend of two class numbers is a third class, so the
 globe shows the source's 0.5° cells as cells. Plant cover is one green hue from sand to
-dark green, with tundra violet and the model's ice near white; rainfall is one teal hue,
-light to dark along the cube root of the year's millimetres so a desert's tens of
-millimetres still show, teal because blue is the sea's and the rivers'. Both sets were
-run through a colour-blindness validator (devlog wwolf 013). The sea keeps its colour and
+dark green, with tundra violet and the model's ice near white; rainfall runs dry against
+wet on ColorBrewer's BrBG, brown below 500 mm and teal above, pale at 500 mm, along the
+cube root of the year's millimetres so a desert's tens of millimetres read brown rather than
+near white; teal because blue is the sea's and the rivers'. Both sets were checked for
+colour-blind separation (devlog wwolf 013, rainfall again in wwolf 016). The sea keeps its colour and
 the ice and rivers draw on top as ever. A legend under the readout shows while its mode does.
 
 It is a model, and a statistical emulator of HadCM3 snapshots at that, not a
