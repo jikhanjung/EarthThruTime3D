@@ -40,4 +40,9 @@ test('the whole timeline and the time windows each show their own events', () =>
   assert.deepEqual(eventsAt(whole, 3).map(event => event.id), []);
   const window = [[0, 1, 0, 0.022], [1, 2, 0, 0.021], [2, 2, 0, 0.020]];
   assert.deepEqual(eventsAt(window, 1).map(event => event.id), ['lgm']);
+  // The first and last stop have one neighbour, so that side's spacing stands for both;
+  // clamping the pair instead would leave them a quarter of a spacing rather than a half.
+  const ends = [[0, 1, 0, 56.2], [1, 2, 0, 51.2], [2, 2, 0, 46.2]];
+  assert.deepEqual(eventsAt(ends, 0).map(event => event.id), ['petm'], 'the oldest stop reaches back a half spacing');
+  assert.deepEqual(eventsAt([[0, 1, 0, 5]], 0).map(event => event.id), []);
 });

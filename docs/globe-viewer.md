@@ -203,14 +203,19 @@ map within 5 Myr; the atlas prelude has none. It also writes `paleotemp-curve.js
 area-weighted global mean of every map, and the mean each grid was given. The server
 passes the curve to the page and each frame its texture route and mean.
 
-A 기온 toggle switches the surface to a fourth mode: a diverging ramp, blue at −30 °C
-through pale at 0 to red at 40 °C, with the coastline from the distance field drawn as
-a dark line so the continents stay readable. Between stops the two maps are mixed like
+A 기온 toggle switches the surface to a fourth mode: a diverging ramp over −30 to 40 °C,
+ColorBrewer RdYlBu with stops at −30, −20, −10, −5, 0, 5, 12, 18, 24, 30 and 40 °C
+(blues below freezing, yellow through red above), mixed in encoded sRGB as the key's CSS
+gradient is so the globe and the key show one colour per temperature (devlog wwolf 017),
+with the coastline from the distance field drawn as a dark line so the continents stay
+readable. Under the temperature and modelled-climate colours the land takes the relief
+view's hill shading, divided by what level ground gets so flat land keeps the key's colour
+and only slopes change; the 지형 음영 selector sets or removes it. Between stops the two maps are mixed like
 the fields. Above the slider a strip colours every stop by the global mean at its age,
 linear between maps and grey where none reaches, over 5 to 35 °C so an icehouse reads
 blue; the inspector reads out the mean at the current stop, interpolated between the
 neighbouring maps' means when the stop is between them, and adds its difference from
-today's mean. Under the readout a colour key draws the surface ramp with its −30, 0, 20
+today's mean. A colour key floating on the map's top left draws the surface ramp with its −30, 0, 20
 and 40 °C marks, today's global mean as a white tick and the stop's mean as a marker,
 so a colour on the globe can be read against the present. It shows only while the
 temperature surface does; `data-delta` on the key carries the difference for tests.
@@ -247,11 +252,20 @@ with each other. The textures ride the temperature sampler pair, as the two neve
 together and the fragment shader already binds thirteen of the sixteen a GPU must offer.
 They are sampled nearest, since a blend of two class numbers is a third class, so the
 globe shows the source's 0.5° cells as cells. Plant cover is one green hue from sand to
-dark green, with tundra violet and the model's ice near white; rainfall is one teal hue,
-light to dark along the cube root of the year's millimetres so a desert's tens of
-millimetres still show, teal because blue is the sea's and the rivers'. Both sets were
-run through a colour-blindness validator (devlog wwolf 013). The sea keeps its colour and
-the ice and rivers draw on top as ever. A legend under the readout shows while its mode does.
+dark green, with tundra violet and the model's ice near white; rainfall runs dry against
+wet on ColorBrewer's BrBG, brown below 500 mm and teal above, pale at 500 mm, along the
+cube root of the year's millimetres so a desert's tens of millimetres read brown rather than
+near white; teal because blue is the sea's and the rivers'. Both sets were checked for
+colour-blind separation (devlog wwolf 013, rainfall again in wwolf 016). The sea keeps its colour and
+the ice and rivers draw on top as ever. A legend shows while its mode does.
+
+The three colour keys (temperature, vegetation, rainfall) are rendered in the inspector
+and moved at start-up into one box floating on the map's top left (`#map-legend`), so the
+key is on screen without opening the info panel; the box hides when none of them is shown.
+In the inspector the 지구 내부 section folds to its heading (folded unless crust or mantle
+is on; the reader's choice is kept in `localStorage`), and every explanatory note folds to
+two lines by CSS line clamp and opens on click or Enter, so the date and the controls stay
+near the top. A note short enough to fit gets no fold marker.
 
 It is a model, and a statistical emulator of HadCM3 snapshots at that, not a
 reconstruction, and the note says so. Its largest known failure is named on the page: it
@@ -1025,6 +1039,10 @@ Neither flag grants data-use rights. See `sources/README.md`, `LICENSE-DATA.md` 
   go to gitignored `data/screenshots/`.
 - `VIEWER_URL=http://127.0.0.1:8153/ node tests/river-browser.mjs`: river PNG, shader,
   toggle, grid-spacing explanation, mobile layout and both languages (requires a built 0 Ma river field).
+- `VIEWER_URL=http://127.0.0.1:8153/ node tests/view-address-browser.mjs`: the view in the address:
+  a link sets projection, surface, shading and grid before the first draw, the controls write back
+  only what differs from the defaults, the written address reloads to the same view, and values
+  outside the lists are ignored (see docs/site-map.md for the parameters).
 - `VIEWER_URL=http://127.0.0.1:8153/ node tests/climate-browser.mjs`: the modelled climate in
   both windows: the textures load, the two modes exclude each other and give the relief back,
   legends and the Sahara note, stop to stop, mobile layout and both languages (requires

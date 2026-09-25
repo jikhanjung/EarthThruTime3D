@@ -420,6 +420,8 @@ async function selectStop(value, manual = false, overlayManaged = false, transit
     !place.mapless && place.from.ice_kind === 'analogue' ? L.analogueIce : null,
     !place.mapless && place.from.ice_kind === 'reconstructed' ? L.reconstructedIce : null].filter(Boolean).join(' / ');
   describeEvents($('event-note'), stops, place.value, document.documentElement.lang);
+  queueAddress();
+  requestAnimationFrame(markFoldableNotes);
   const nextLabel = $('globe-age').textContent;
   if (transition) $('globe-age').textContent = displayedLabel;
   // Older than any map there is no source to preview, and leaving the last one up
@@ -1298,14 +1300,26 @@ function globeMaterial() {
         vec3 ground = rise < 0.35 ? mix(low, mid, rise / 0.35) : mix(mid, high, (rise - 0.35) / 0.65);
         return mix(sea, ground, landness);
       }
-      // Surface air temperature as colour, blue at -30 C through pale at 0 to red at
-      // 40 C, the range the maps actually span. Grey holds it over -60..60 C.
+      // Surface air temperature as colour over -30..40 C, the range the maps actually span
+      // (grey holds it over -60..60 C): ColorBrewer RdYlBu with stops at -30, -20, -10, -5,
+      // 0, 5, 12, 18, 24, 30 and 40 C, blues below freezing, yellow through red above. Mixed
+      // as encoded and decoded after, as the legend's CSS gradient mixes, so a colour on the
+      // globe is the legend's colour; the three-stop ramp before mixed in linear light and sat
+      // up to dE2000 13 off its own legend (devlog wwolf 017).
       vec3 thermal(float celsius) {
-        float t = clamp((celsius + 30.0) / 70.0, 0.0, 1.0);
-        vec3 cold = decode(vec3(0.16, 0.27, 0.66));
-        vec3 mild = decode(vec3(0.94, 0.93, 0.88));
-        vec3 hot = decode(vec3(0.72, 0.13, 0.11));
-        return t < 0.43 ? mix(cold, mild, t / 0.43) : mix(mild, hot, (t - 0.43) / 0.57);
+        float c = clamp(celsius, -30.0, 40.0);
+        vec3 s;
+        if (c < -20.0) s = mix(vec3(0.192, 0.212, 0.584), vec3(0.271, 0.459, 0.706), (c + 30.0) / 10.0);
+        else if (c < -10.0) s = mix(vec3(0.271, 0.459, 0.706), vec3(0.455, 0.678, 0.820), (c + 20.0) / 10.0);
+        else if (c < -5.0) s = mix(vec3(0.455, 0.678, 0.820), vec3(0.671, 0.851, 0.914), (c + 10.0) / 5.0);
+        else if (c < 0.0) s = mix(vec3(0.671, 0.851, 0.914), vec3(0.878, 0.953, 0.973), (c + 5.0) / 5.0);
+        else if (c < 5.0) s = mix(vec3(0.878, 0.953, 0.973), vec3(1.0, 1.0, 0.749), c / 5.0);
+        else if (c < 12.0) s = mix(vec3(1.0, 1.0, 0.749), vec3(0.996, 0.878, 0.565), (c - 5.0) / 7.0);
+        else if (c < 18.0) s = mix(vec3(0.996, 0.878, 0.565), vec3(0.992, 0.682, 0.380), (c - 12.0) / 6.0);
+        else if (c < 24.0) s = mix(vec3(0.992, 0.682, 0.380), vec3(0.957, 0.427, 0.263), (c - 18.0) / 6.0);
+        else if (c < 30.0) s = mix(vec3(0.957, 0.427, 0.263), vec3(0.843, 0.188, 0.153), (c - 24.0) / 6.0);
+        else s = mix(vec3(0.843, 0.188, 0.153), vec3(0.647, 0.0, 0.149), (c - 30.0) / 10.0);
+        return decode(s);
       }
       // Modelled plant cover: an order of cover in one hue, sand to dark green, with tundra
       // and land ice set apart. Checked as a set for colour-blind separation (devlog wwolf 013).
@@ -1318,17 +1332,30 @@ function globeMaterial() {
         if (cover < 5.5) return decode(vec3(0.690, 0.486, 0.776));   // tundra
         return decode(vec3(0.957, 0.965, 0.973));                    // land ice
       }
+      // Annual rainfall as dry against wet: ColorBrewer BrBG, brown below 500 mm and teal
+      // above, pale at 500 mm, the semi-arid edge. Stops at 0, 50, 250, 500, 1000, 2000,
+      // 4000 and 8000 mm along the cube root. A single hue left every desert near white;
+      // here the Sahara's tens of millimetres read brown. Brown against teal stays yellow
+      // against blue under red-green colour blindness, so dry and wet never meet (wwolf 016).
+      // Teal, not blue, as blue is the sea's and the rivers'.
+      vec3 rainRamp(float t) {
+        if (t < 0.184) return mix(vec3(0.549, 0.318, 0.039), vec3(0.749, 0.506, 0.176), t / 0.184);
+        if (t < 0.315) return mix(vec3(0.749, 0.506, 0.176), vec3(0.875, 0.761, 0.490), (t - 0.184) / 0.131);
+        if (t < 0.397) return mix(vec3(0.875, 0.761, 0.490), vec3(0.965, 0.910, 0.765), (t - 0.315) / 0.082);
+        if (t < 0.5) return mix(vec3(0.965, 0.910, 0.765), vec3(0.780, 0.918, 0.898), (t - 0.397) / 0.103);
+        if (t < 0.63) return mix(vec3(0.780, 0.918, 0.898), vec3(0.353, 0.706, 0.675), (t - 0.5) / 0.13);
+        if (t < 0.794) return mix(vec3(0.353, 0.706, 0.675), vec3(0.004, 0.400, 0.369), (t - 0.63) / 0.164);
+        return mix(vec3(0.004, 0.400, 0.369), vec3(0.0, 0.235, 0.188), (t - 0.794) / 0.206);
+      }
       // One cell of a climate texture: red the cover class times 32, green the square root of
-      // annual precipitation over 8000 mm. Rain is one hue, light to dark, along the cube root,
-      // so a desert's tens of millimetres still show; teal, as blue is the sea's and the rivers'.
-      // The stops are mixed as encoded, which steps evenly to the eye and is what the legend's
+      // annual precipitation over 8000 mm, drawn along the cube root so a desert's tens of
+      // millimetres still show. The stops are mixed as encoded, which is what the legend's
       // gradient does. Under the model's ice there is no rain to show.
       vec3 climateColour(vec4 cell, int which) {
         float cover = floor(cell.r * 255.0 / 32.0 + 0.5);
         if (which == 4 || cover > 5.5) return plantCover(cover);
         float t = pow(cell.g, 2.0 / 3.0);
-        vec3 mid = vec3(0.184, 0.620, 0.490);
-        return decode(t < 0.5 ? mix(vec3(0.890, 0.957, 0.925), mid, t / 0.5) : mix(mid, vec3(0.024, 0.251, 0.184), (t - 0.5) / 0.5));
+        return decode(rainRamp(t));
       }
       ${METRES_GLSL}
       // Shaded relief from the height gradient, lit from the upper left. Texel spacing
@@ -1417,14 +1444,22 @@ function globeMaterial() {
             landness = smoothstep(-width, width, metres);
             distance = metres / 400.0;
           }
+          // The relief's hill shading under the colour views too, so mountain ranges read
+          // under temperature and modelled climate. Divided by what level ground gets (0.749),
+          // so flat land keeps the legend's colour exactly and only slopes lighten or darken;
+          // the relief-shading selector turns it off at 0.
+          float terrain = 1.0;
+          if (mode >= 3 && exaggeration > 0.0) {
+            terrain = mix(1.0, clamp(shade(uvA, uvB, (surfaceUv.y - 0.5) * 180.0) / 0.749, 0.55, 1.3), landness);
+          }
           if (mode == 3) {
             float celsius = mix(texture2D(tempA, uvA).r, texture2D(tempB, uvB).r, blend) * 120.0 - 60.0;
             // The coastline as a dark line, so the continents stay readable under colour.
             float coast = 1.0 - smoothstep(0.0, 0.008, abs(distance));
-            colour = thermal(celsius) * (1.0 - 0.55 * coast);
+            colour = thermal(celsius) * (1.0 - 0.55 * coast) * terrain;
           } else if (mode >= 4) {
             // Land only, as the source is: the sea keeps its own colour.
-            vec3 climate = mix(climateColour(texture2D(tempA, uvA), mode), climateColour(texture2D(tempB, uvB), mode), blend);
+            vec3 climate = mix(climateColour(texture2D(tempA, uvA), mode), climateColour(texture2D(tempB, uvB), mode), blend) * terrain;
             colour = mix(ocean, climate, landness);
           } else if (mode == 2) {
             float latitude = (surfaceUv.y - 0.5) * 180.0;
@@ -2619,6 +2654,52 @@ function init() {
     });
   }
   drawTemperatureStrip();
+  // The colour legends float on the map instead of sitting below the Earth interior
+  // controls in the info panel, so the key is seen without opening the panel. The elements
+  // move, so their own code still shows, hides and fills them.
+  const mapLegend = document.createElement('div');
+  mapLegend.className = 'map-legend';
+  mapLegend.id = 'map-legend';
+  for (const id of ['temp-legend', 'rain-legend', 'veg-legend']) if ($(id)) mapLegend.append($(id));
+  $('explorer').append(mapLegend);
+  // The Earth interior section folds to its heading: folded unless one of its layers is on,
+  // and a reader's own choice is kept in this browser.
+  const interiorPanel = $('interior-panel');
+  const interiorTitle = $('interior-title');
+  if (interiorPanel && interiorTitle) {
+    let remembered = null;
+    try { remembered = localStorage.getItem('interior-folded'); } catch {}
+    const inUse = Boolean($('crust-enabled')?.checked || $('mantle-overlay')?.checked);
+    const fold = folded => {
+      interiorPanel.classList.toggle('folded', folded);
+      interiorTitle.setAttribute('aria-expanded', String(!folded));
+    };
+    interiorTitle.setAttribute('role', 'button');
+    interiorTitle.tabIndex = 0;
+    fold(inUse ? false : remembered !== 'false');
+    const flip = () => {
+      const folded = !interiorPanel.classList.contains('folded');
+      fold(folded);
+      try { localStorage.setItem('interior-folded', String(folded)); } catch {}
+    };
+    interiorTitle.addEventListener('click', flip);
+    interiorTitle.addEventListener('keydown', event => {
+      if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); flip(); }
+    });
+  }
+  // Every explanatory note in the panel folds to its first two lines; a click (not on a
+  // link or control inside) or Enter opens it. Folded by CSS line clamp, so the code that
+  // rewrites a note's text keeps working.
+  for (const note of document.querySelectorAll('#inspector .model-note:not(.hint):not(.pin-panel)')) {
+    note.classList.add('foldable', 'folded');
+    note.tabIndex = 0;
+    note.setAttribute('aria-expanded', 'false');
+    const flip = () => note.setAttribute('aria-expanded', String(!note.classList.toggle('folded')));
+    note.addEventListener('click', event => { if (!event.target.closest('a, button, input, select')) flip(); });
+    note.addEventListener('keydown', event => {
+      if (event.target === note && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); flip(); }
+    });
+  }
   // Dated climate and biotic events as marks over the slider; a mark moves the slider to it.
   setEvents(CLIMATE_EVENTS);
   drawEventMarks($('event-marks'), stops, document.documentElement.lang, index => {
@@ -2782,6 +2863,7 @@ function init() {
       location.assign(url.href);
     });
   }
+  readViewAddress();
   const askedAge = Number(new URL(location.href).searchParams.get('age'));
   if (new URL(location.href).searchParams.has('age') && Number.isFinite(askedAge)) {
     let nearest = 0;
@@ -2791,6 +2873,82 @@ function init() {
     selectStop(nearest);
   } else {
     selectFrame(selected);
+  }
+  // A page opened without an age keeps none until the reader leaves its opening stop; one
+  // opened with an age keeps it, so the link it came from still reloads to the same stop.
+  viewDefaults.age = new URL(location.href).searchParams.has('age')
+    ? null : String(+stops[stop][3].toFixed(4));
+  addressReady = true;
+  for (const type of ['click', 'change', 'input']) document.addEventListener(type, queueAddress);
+}
+// The view in the address, so a link opens the same view. Read once before the first stop
+// is drawn, setting the module's state as the controls would; written back a moment after
+// the view changes, and only where it differs from the page's own defaults, as playback
+// would otherwise rewrite the address several times a second. Pins, the dataset and the
+// time range keep their own parameters.
+// view: globe | mollweide | equalearth | equirect · surface: relief | map | mask | temp | veg | rain
+// shading: 0 | 1 | 5 | 20 · sea: metres · relief, rivers, ice, grid: 0 | 1 · age: Ma
+const viewDefaults = {};
+let addressReady = false;
+let addressTimer = 0;
+function viewState() {
+  return {
+    view: projection, surface, shading: $('shading')?.value ?? null,
+    // In a time window the age sets the level and the slider only shows it, so writing it
+    // would put a number the reader never chose in the address, and carry it to the whole
+    // series when they leave the window.
+    sea: lastPlace?.from?.deglacial || !seaLevelControl ? null : seaLevelControl.value,
+    relief: reliefWanted ? '1' : '0', rivers: riversVisible ? '1' : '0',
+    ice: iceVisible ? '1' : '0', grid: gridVisible ? '1' : '0',
+  };
+}
+function queueAddress() {
+  if (!addressReady) return;
+  clearTimeout(addressTimer);
+  addressTimer = setTimeout(writeViewAddress, 400);
+}
+function writeViewAddress() {
+  const url = new URL(location.href);
+  for (const [key, value] of Object.entries(viewState())) {
+    if (value == null || value === viewDefaults[key]) url.searchParams.delete(key);
+    else url.searchParams.set(key, value);
+  }
+  const age = String(+stops[stop][3].toFixed(4));
+  if (age === viewDefaults.age) url.searchParams.delete('age');
+  else url.searchParams.set('age', age);
+  history.replaceState(null, '', url.href.replace(/%2C/g, ',').replace(/%3B/g, ';'));
+}
+function readViewAddress() {
+  Object.assign(viewDefaults, viewState());
+  const asked = new URL(location.href).searchParams;
+  // Only 0 and 1 are read; anything else is ignored rather than counted as on.
+  const flag = key => (asked.get(key) === '1' ? true : asked.get(key) === '0' ? false : null);
+  const view = asked.get('view');
+  if (view && [...$('projection').options].some(option => option.value === view) && view !== projection) {
+    $('projection').value = view;
+    setProjection(view, false);
+  }
+  const shading = asked.get('shading');
+  if ($('shading') && shading && [...$('shading').options].some(option => option.value === shading)) {
+    $('shading').value = shading;
+    $('shading').dispatchEvent(new Event('change'));
+  }
+  if (seaLevelControl && asked.has('sea') && Number.isFinite(Number(asked.get('sea')))) {
+    seaLevelControl.value = asked.get('sea');
+    showSeaSetting();
+  }
+  if (flag('grid') !== null && flag('grid') !== gridVisible) $('grid').click();
+  if (flag('relief') !== null && flag('relief') !== reliefWanted) $('relief3d')?.click();
+  if (flag('rivers') !== null) riversVisible = flag('rivers');
+  if (flag('ice') !== null) iceVisible = flag('ice');
+  const wanted = asked.get('surface');
+  if (wanted && ['relief', 'map', 'mask', 'temp', 'veg', 'rain'].includes(wanted)) surface = wanted;
+  if (surfaceToggle) surfaceToggle.setAttribute('aria-pressed', String(surface === 'mask'));
+}
+// A folded note that fits in its two lines gets no marker and no pointer.
+function markFoldableNotes() {
+  for (const note of document.querySelectorAll('#inspector .model-note.foldable.folded:not([hidden])')) {
+    note.classList.toggle('fits', note.scrollHeight <= note.clientHeight + 1);
   }
 }
 // The inspector floats over the map and folds away. It starts open where there is room
