@@ -1393,3 +1393,15 @@ msgstr "No continent polygon here, so there is no plate to follow."
 
 msgid "{a}–{b} {km} km (오늘 {today} km)"
 msgstr "{a}–{b} {km} km ({today} km today)"
+
+msgid "잠재 하천"
+msgstr "Potential rivers"
+
+msgid "파란 선은 강수와 무관하게 지형만으로 그린 잠재 물길입니다. 사막을 가로지르는 선은 그곳에 물이 흐른다는 뜻이 아니며, 나일강처럼 먼 상류의 비로 사막을 건너는 강도 있습니다."
+msgstr "Blue lines are potential water paths drawn from the terrain alone, whatever the rainfall. A line across a desert does not mean water flows there, though some rivers, like the Nile, cross deserts on rain that fell far upstream."
+
+msgid "입체 지형"
+msgstr "Raised relief"
+
+msgid "지구본에서는 확대하면 높이를 입체로, 평면 지도에서는 산맥을 기호로 보여 줍니다(현재는 이름난 주요 산맥, 과거는 그 시기 지도의 높이에서 찾은 산맥)"
+msgstr "On the globe, heights rise in 3D when you zoom in; on flat maps, mountain ranges are marked (today's major named ranges at the present; in the past, ranges found in that map's own heights)"

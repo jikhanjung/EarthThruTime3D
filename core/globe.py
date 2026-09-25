@@ -890,6 +890,9 @@ def globe(request):
                            "temp": (reverse("globe-temperature", args=[item["id"]])
                                     if given and temperature_path(item).exists() else None),
                            "mean_c": given["mean_c"] if given else None,
+                           # Preview only: PhanDA rainfall, where scripts/preview_phanda.py wrote it;
+                           # the present takes the windows' Krapp 0 ka texture.
+                           "climate": climate_url(item, 0) if source == "paleodem2018" else None,
                            "sea_m": sea["stops"].get(item["id"]),
                            "ice": reverse("globe-ice", args=[item["id"]]) if iced else None,
                            # natural-earth, atlas, or limit: a cap at a modelled ice latitude,
