@@ -1315,17 +1315,30 @@ function globeMaterial() {
         if (cover < 5.5) return decode(vec3(0.690, 0.486, 0.776));   // tundra
         return decode(vec3(0.957, 0.965, 0.973));                    // land ice
       }
+      // Annual rainfall as dry against wet: ColorBrewer BrBG, brown below 500 mm and teal
+      // above, pale at 500 mm, the semi-arid edge. Stops at 0, 50, 250, 500, 1000, 2000,
+      // 4000 and 8000 mm along the cube root. A single hue left every desert near white;
+      // here the Sahara's tens of millimetres read brown. Brown against teal stays yellow
+      // against blue under red-green colour blindness, so dry and wet never meet (wwolf 016).
+      // Teal, not blue, as blue is the sea's and the rivers'.
+      vec3 rainRamp(float t) {
+        if (t < 0.184) return mix(vec3(0.549, 0.318, 0.039), vec3(0.749, 0.506, 0.176), t / 0.184);
+        if (t < 0.315) return mix(vec3(0.749, 0.506, 0.176), vec3(0.875, 0.761, 0.490), (t - 0.184) / 0.131);
+        if (t < 0.397) return mix(vec3(0.875, 0.761, 0.490), vec3(0.965, 0.910, 0.765), (t - 0.315) / 0.082);
+        if (t < 0.5) return mix(vec3(0.965, 0.910, 0.765), vec3(0.780, 0.918, 0.898), (t - 0.397) / 0.103);
+        if (t < 0.63) return mix(vec3(0.780, 0.918, 0.898), vec3(0.353, 0.706, 0.675), (t - 0.5) / 0.13);
+        if (t < 0.794) return mix(vec3(0.353, 0.706, 0.675), vec3(0.004, 0.400, 0.369), (t - 0.63) / 0.164);
+        return mix(vec3(0.004, 0.400, 0.369), vec3(0.0, 0.235, 0.188), (t - 0.794) / 0.206);
+      }
       // One cell of a climate texture: red the cover class times 32, green the square root of
-      // annual precipitation over 8000 mm. Rain is one hue, light to dark, along the cube root,
-      // so a desert's tens of millimetres still show; teal, as blue is the sea's and the rivers'.
-      // The stops are mixed as encoded, which steps evenly to the eye and is what the legend's
+      // annual precipitation over 8000 mm, drawn along the cube root so a desert's tens of
+      // millimetres still show. The stops are mixed as encoded, which is what the legend's
       // gradient does. Under the model's ice there is no rain to show.
       vec3 climateColour(vec4 cell, int which) {
         float cover = floor(cell.r * 255.0 / 32.0 + 0.5);
         if (which == 4 || cover > 5.5) return plantCover(cover);
         float t = pow(cell.g, 2.0 / 3.0);
-        vec3 mid = vec3(0.184, 0.620, 0.490);
-        return decode(t < 0.5 ? mix(vec3(0.890, 0.957, 0.925), mid, t / 0.5) : mix(mid, vec3(0.024, 0.251, 0.184), (t - 0.5) / 0.5));
+        return decode(rainRamp(t));
       }
       ${METRES_GLSL}
       // Shaded relief from the height gradient, lit from the upper left. Texel spacing
