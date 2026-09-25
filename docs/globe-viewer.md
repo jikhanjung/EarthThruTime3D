@@ -167,7 +167,8 @@ change), OrbitControls pauses until a finger lifts.
 
 Automatic close-up tilt fades in from zoom factor 0.3 to 0.12 for every globe.
 Terrain lift uses the same zoom interval, but only elevation data is displaced.
-The 3D terrain button controls displacement, not navigation. Manual tilt is independent
+The raised-relief button (입체 지형, formerly 3D 지형) controls displacement, not navigation,
+and applies at once when pressed rather than at the next pan or zoom. Manual tilt is independent
 of zoom. Detailed sphere geometry is used at close zoom; flat projections retain
 sheet navigation. `data-relief` reports terrain displacement strength from 0 to 1.
 The plate
@@ -191,6 +192,25 @@ unless the event is resolved by the page (`snapshot_caveat: false`), that the ma
 model snapshots spaced wider than the event. A stop covers half the gap to each neighbour,
 so every moment is reported at its nearest stop. Korean names marked `*` in the data are
 the list's own translations and are shown without the mark.
+
+### Mountain marks on the flat maps
+
+On the flat projections the raised-relief button (입체 지형) marks mountain ranges with small shaded
+triangles, sized in three steps by the crest height (below 2000 m, below 4000 m, above)
+and kept at a fixed size on screen. `scripts/build_mountain_ranges.py` writes one file,
+`data/derived/paleodem/mountain-ranges.json`, served at `/globe/ranges.json` and offered
+to the elevation series only. At the present and in the time windows the marks follow the
+crests of Natural Earth's named ranges of scale rank 1–2 (29 ranges, one mark per 2° cell,
+heights from the present grid; `sources/mountain-ranges.json`). A past grid has no named
+ranges, so its marks come from its own heights: a 0.5° block whose top is at least 1000 m
+and stands 900 m above the 20th percentile of the land around it within 6° (sea as 0 m),
+one mark per 3° cell, isolated marks dropped. An absolute height cut tuned on today would
+erase the older, lower grids (at 250 Ma 0.1 % of land is above 2000 m); on the present grid
+the rule reaches 91 % of the named ranges' marks within 300 km (devlog wwolf 018). The
+marks follow the map drawn on screen (`lastPlace`), not the slider, and between two grids
+each side's marks ride `travelAt()` and fade with the blend, as the overlay lines do.
+`data-ranges` names the set or sets shown (`present`, a grid id, or `from>to`) and
+`data-range-marks` their count.
 
 ## Temperature
 

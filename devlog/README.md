@@ -40,6 +40,8 @@ wwolf는 001부터 셉니다. 그 전의 001–045는 링크와 본문 속 번�
 
 - [wwolf 019 — 시간축의 기후·생물 사건 표시](20260925_wwolf_019_event_markers.md)
 
+- [wwolf 018 — 평면 지도의 산맥 기호: 현재는 이름난 산맥, 과거는 그 격자의 높이에서](20260925_wwolf_018_mountain_marks.md)
+
 - [jikhanjung 106 — v0.22.0 이퀄 어스 투영 릴리스](20260924_jikhanjung_106_release_0220.md)
 
 - [jikhanjung 105 — v0.21.0 위치 핀 릴리스](20260921_jikhanjung_105_release_0210.md)
