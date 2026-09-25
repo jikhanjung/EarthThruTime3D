@@ -220,10 +220,11 @@ summary{cursor:pointer;color:#c9dce2}
 .sea-inset .axis-tick:not(.x) { left: -48px; }
 .sea-inset figcaption { color: #9fb3bd; font-size: 0.8rem; margin-top: 0.3rem; }
 
-/* Colour key for the temperature surface: the shader's ramp over -30..40 C as a gradient,
+/* Colour key for the temperature surface: the shader's ramp over -30..40 C as a gradient
+   with the same stops, mixed the same way,
    today's global mean as a white tick, the current stop's mean as a triangle below. */
 .temp-legend{margin:0 0 .9rem;font-size:.68rem;color:#95afbb}
-.temp-bar{position:relative;height:10px;border-radius:3px;margin-top:1.15rem;background:linear-gradient(90deg,rgb(41,69,168) 0%,rgb(240,237,224) 43%,rgb(184,33,28) 100%)}
+.temp-bar{position:relative;height:10px;border-radius:3px;margin-top:1.15rem;background:linear-gradient(90deg,#313695 0.0%,#4575b4 14.3%,#74add1 28.6%,#abd9e9 35.7%,#e0f3f8 42.9%,#ffffbf 50.0%,#fee090 60.0%,#fdae61 68.6%,#f46d43 77.1%,#d73027 85.7%,#a50026 100.0%)}
 .temp-mark{position:absolute;top:0;width:0;transform:translateX(-50%)}
 .temp-mark.today{height:10px;border-left:2px solid #fff}
 .temp-mark.today span{position:absolute;bottom:12px;left:-1px;transform:translateX(-50%);white-space:nowrap;color:#dcebee}
@@ -234,8 +235,11 @@ summary{cursor:pointer;color:#c9dce2}
 .temp-legend figcaption span:nth-child(2){left:43%}
 .temp-legend figcaption span:nth-child(3){left:71%}
 .temp-legend figcaption span:last-child{left:100%;transform:translateX(-100%)}
-/* Modelled rainfall: one hue along the cube root of the year's millimetres, as the shader mixes it. */
-.rain-bar{height:10px;border-radius:3px;margin-top:.4rem;background:linear-gradient(90deg,#e3f4ec,#2f9e7d 50%,#06402f)}
+/* Modelled rainfall: ColorBrewer BrBG, dry brown to wet teal around 500 mm, along the cube root of the
+   year's millimetres, as the shader mixes it; stops at 50, 250, 500, 1000, 2000 and 4000 mm. */
+.rain-bar{height:10px;border-radius:3px;margin-top:.4rem;background:linear-gradient(90deg,#8c510a,#bf812d 18.4%,#dfc27d 31.5%,#f6e8c3 39.7%,#c7eae5 50%,#5ab4ac 63%,#01665e 79.4%,#003c30)}
+/* A caveat under a legend, e.g. that the rivers are drawn from the terrain alone. */
+.legend-note{margin:.5rem 0 .3rem;font-size:.66rem;line-height:1.35;color:#b9c9d1}
 .rain-legend figcaption span:nth-child(2){left:23.2%}
 .rain-legend figcaption span:nth-child(3){left:39.7%}
 .rain-legend figcaption span:nth-child(4){left:63%}
