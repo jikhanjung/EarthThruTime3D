@@ -1393,3 +1393,6 @@ msgstr "No continent polygon here, so there is no plate to follow."
 
 msgid "{a}–{b} {km} km (오늘 {today} km)"
 msgstr "{a}–{b} {km} km ({today} km today)"
+
+msgid "기후·생물 사건"
+msgstr "Climate and biotic events"
