@@ -25,8 +25,10 @@ try {
   await page.selectOption('#projection', 'mollweide');
   await page.locator('#settings-toggle').click();
   await page.locator('#rivers').click();
+  // Each control resets the 0.4 s debounce, so the projection can land in one write and
+  // the switch in the next: poll for both rather than reading straight after the first.
   await expect.poll(() => params().get('view')).toBe('mollweide');
-  expect(params().get('rivers')).toBe('0');
+  await expect.poll(() => params().get('rivers')).toBe('0');
   expect(params().has('shading')).toBe(false);
   // Reloading the written address gives the same view.
   const written = page.url();
