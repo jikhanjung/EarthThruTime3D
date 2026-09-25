@@ -3078,14 +3078,17 @@ function currentsLegend(key) {
   if (currentsMode === 'conveyor') {
     const swatch = (colour, text) => `<span class="conveyor-key"><i style="background:${colour}"></i>${text}</span>`;
     const note = key === 'present'
-      ? `교과서식 모식도로, 자료에서 추적한 선이 아니라 Broecker (1991)와 Rahmstorf (2002)의 경로를 따라 그렸습니다. ▼ 물이 가라앉는 곳, ▲ 그린 심층 흐름이 끝나 올라오는 곳. 실제로 깊은 물은 대부분 남극해에서 올라옵니다 (Marshall &amp; Speer 2012). 아래 단면: GODAS 재분석 2016–2020 평균의 자오면 역전 순환, 대서양 최대 약 15 Sv (관측 약 17 Sv). 자료 제공 NOAA PSL.`
+      ? `교과서식 모식도로, 자료에서 추적한 선이 아니라 Broecker (1991)와 Rahmstorf (2002)의 경로를 따라 그렸습니다. 화살표는 흐르는 방향입니다. 실제로 깊은 물은 넓은 바다에서 천천히, 대부분 남극해에서 올라옵니다 (Marshall &amp; Speer 2012). 아래 단면: GODAS 재분석 2016–2020 평균의 자오면 역전 순환, 대서양 최대 약 15 Sv (관측 약 17 Sv). 자료 제공 NOAA PSL.`
       : key === '100'
         ? `FOAM 모형 (Pohl, CO₂ 2240 ppm 고정): 표층 주요 해류와 ▼ 깊은 대류가 가장 잦은 곳. 아래 단면: 모형의 전 지구 자오면 역전 순환으로, 오늘의 관측(대서양 약 17 Sv)보다 훨씬 강하게 나옵니다.`
         : '컨베이어 벨트 시험 자료는 현재와 100 Ma 시점에만 있습니다.';
     const keys = key === 'present'
       ? swatch(CONVEYOR_COLOURS.surface, '따뜻한 표층') + swatch(CONVEYOR_COLOURS.deep, '북대서양 심층수 (약 1.5–4 km)') + swatch(CONVEYOR_COLOURS.bottom, '남극 저층수')
+        + '<span class="conveyor-key conveyor-mark"><b class="sink">▼</b>가라앉는 곳: 주황 선이 끝나고 파랑·보라 선이 시작</span>'
+        + '<span class="conveyor-key conveyor-mark"><b class="rise">▲</b>올라오는 곳: 파란 선이 끝나고 주황 선이 시작</span>'
+        + `<span class="conveyor-key conveyor-mark"><i style="background:linear-gradient(90deg,${CONVEYOR_COLOURS.bottom},transparent)"></i>흐려지며 끝남: 위의 물과 서서히 섞임</span>`
       : key === '100' ? swatch(CONVEYOR_COLOURS.surface, '표층 주요 해류') : '';
-    const sections = key ? conveyorData[key].sections : [];
+    const sections = key && conveyorData ? conveyorData[key].sections : [];   // drawn again once loaded
     legend.innerHTML = `<strong>해류 컨베이어 벨트 (시험)</strong><div class="conveyor-keys">${keys}</div>`
       + sections.map((_, i) => `<canvas class="overturn" data-section="${i}"></canvas>`).join('')
       + (sections.length ? '<figcaption class="overturn-caption"><span>빨강: 표층에서 북쪽으로 흘러 북쪽에서 가라앉는 순환</span></figcaption>' : '')

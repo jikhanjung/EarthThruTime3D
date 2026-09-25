@@ -143,13 +143,15 @@ def lines(u, v, t, sep=450.0, step=30.0, min_len=1500.0, max_len=9000.0, seed_q=
 
 # The conveyor belt, present: a schematic drawn from the textbook pathways (Broecker 1991,
 # doi:10.5670/oceanog.1991.07; Rahmstorf 2002, doi:10.1038/nature01090), not traced from
-# data. Waypoints (lon, lat), smoothed into curves. "surface": the warm upper limb from the
-# Pacific through the Indonesian passages, round South Africa and up the Atlantic to the
-# Nordic and Labrador Seas; "deep": North Atlantic Deep Water south along the Americas, east
-# with the circumpolar current and north into the Indian and Pacific Oceans; "bottom":
-# Antarctic Bottom Water from the Weddell and Ross Seas.
+# data. Waypoints (lon, lat), smoothed into curves. "surface": the warm upper limb, from
+# where deep water rises in the North Pacific through the Indonesian passages (joined by
+# the water rising in the Indian Ocean), round South Africa and up the Atlantic to the
+# Nordic and Labrador Seas; "deep": North Atlantic Deep Water from where it sinks, south
+# along the Americas, east with the circumpolar current and north into the Indian and
+# Pacific Oceans; "bottom": Antarctic Bottom Water from the Weddell and Ross Seas, marked
+# "fade". Every line starts and ends at a marker or on another line.
 CONVEYOR = [
-    ("surface", [(-112, -2), (-140, -1), (-165, 1), (170, 3), (150, 5), (135, 5), (127, 3.5),
+    ("surface", [(162, 40), (159, 33), (155, 25), (148, 17), (139, 10), (133, 6), (127, 3.5),
                  (121, 1.5), (118, -2), (115.8, -8.9), (111, -13), (95, -14), (75, -15),
                  (60, -15), (51, -11), (43, -14), (41, -19), (36, -26), (31, -31),
                  (25, -36), (18, -37), (12, -31), (5, -22), (-5, -14), (-18, -9),
@@ -157,23 +159,28 @@ CONVEYOR = [
                  (-83, 18.5), (-86, 22.5), (-86, 25.5), (-82.5, 24.2), (-79.8, 25.8),
                  (-79.6, 29), (-76.5, 33), (-74.5, 35.8), (-68, 38.5), (-58, 40.5),
                  (-48, 42), (-43, 46), (-38, 50), (-28, 52.5), (-18, 54.5), (-11, 57),
-                 (-6, 60), (0, 62.5), (6, 65.5), (11, 69), (8, 72.5)]),
+                 (-6, 60), (0, 62.5), (6, 65.5), (10, 69), (5, 72.5), (-1.5, 74.3)]),
     ("surface", [(-30, 52.8), (-34, 56.5), (-38, 59.5), (-42.5, 58.8), (-47, 59.8),
-                 (-52, 61), (-56, 59), (-54, 56.5)]),
-    ("deep", [(-4, 72.5), (-14, 69.5), (-26, 66), (-33, 62), (-41, 58.6), (-48, 58),
-              (-54, 55), (-50, 49), (-50, 43), (-60, 40.2), (-68, 37.8), (-73, 33),
-              (-74, 27), (-68, 20.5), (-59, 14), (-51, 8), (-43, 2), (-33.5, -5),
-              (-34, -12), (-37, -20), (-42, -28), (-48, -36), (-50, -44), (-42, -51),
-              (-22, -53), (0, -51), (20, -50), (40, -50), (60, -51), (80, -52), (100, -52),
-              (120, -53), (140, -55), (160, -57), (178, -56), (-172, -48), (-172, -38),
-              (-172, -28), (-169, -18), (-169, -8), (-172, 5), (-178, 18), (175, 30),
-              (166, 38)]),
-    ("deep", [(40, -50), (46, -41), (50, -31), (55, -21), (59, -11), (61, -1), (62, 6)]),
-    ("bottom", [(-48, -71), (-44, -66), (-40, -60), (-37, -55), (-44, -47), (-42, -39),
-                (-38, -31), (-33, -21), (-29, -11), (-27, -1), (-32, 8), (-42, 16)]),
-    ("bottom", [(175, -76.5), (178, -71.5), (-172, -66), (-163, -62)]),
+                 (-52, 60.5), (-55, 59), (-53.6, 57.6)]),
+    ("surface", [(62, 8.5), (58.5, 3.5), (56, -3), (54.5, -9), (54.8, -12.6)]),
+    ("deep", [(-2, 74.3), (-9, 71.5), (-15, 69), (-26, 66), (-33, 62), (-41, 58.6),
+              (-47.5, 58.3), (-53.5, 57.4), (-54, 53.5), (-50, 49), (-50, 43), (-60, 40.2),
+              (-68, 37.8), (-73, 33), (-74, 27), (-68, 20.5), (-59, 14), (-51, 8), (-43, 2),
+              (-33.5, -5), (-34, -12), (-37, -20), (-42, -28), (-48, -36), (-50, -44),
+              (-42, -51), (-22, -53), (0, -51), (20, -50), (40, -50), (60, -51), (80, -52),
+              (100, -52), (120, -53), (140, -55), (160, -57), (178, -56), (-172, -48),
+              (-172, -38), (-172, -28), (-169, -18), (-169, -8), (-172, 5), (-178, 18),
+              (174, 30), (166, 37), (162.3, 39.6)]),
+    ("deep", [(40, -50), (47, -41), (54, -31), (60, -21), (64.5, -11), (66, -1), (65, 5),
+              (63, 8.2)]),
+    ("bottom", [(-50, -73.3), (-46, -68), (-40, -60), (-37, -55), (-44, -47), (-42, -39),
+                (-38, -31), (-33, -21), (-29, -11), (-27, -1), (-32, 8), (-42, 16)], "fade"),
+    ("bottom", [(172.5, -77.3), (177, -72), (-172, -66), (-163, -62)], "fade"),
 ]
-# Where water sinks (deep water formed) and where the drawn deep limbs end and rise.
+# Where water sinks (deep water formed; a surface line ends there and a deep or bottom line
+# starts) and where a drawn deep limb ends and its water rises (a surface line starts). The
+# bottom water has no such end: it mixes upward into the water above as it spreads, drawn
+# as a ribbon that fades out.
 CONVEYOR_MARKS = [("sink", -2, 74.5), ("sink", -53.5, 57.5), ("sink", -50, -73.5),
                   ("sink", 172, -77.5), ("rise", 162, 40), ("rise", 62.5, 8.5)]
 
@@ -295,7 +302,7 @@ def main():
     # FOAM's surface lines with its deep-convection sites and global overturning.
     panels, marks = conveyor_foam(100)
     conveyor = {
-        "present": {"lines": [{"kind": kind, "points": smooth_path(pts)} for kind, pts in CONVEYOR],
+        "present": {"lines": [{"kind": kind, "points": smooth_path(pts), "fade": bool(rest)} for kind, pts, *rest in CONVEYOR],
                     "marks": CONVEYOR_MARKS, "sections": conveyor_present()},
         "100": {"lines": [{"kind": "surface", "points": [p[:2] for p in l]} for l in out["100"]],
                 "marks": marks, "sections": panels},

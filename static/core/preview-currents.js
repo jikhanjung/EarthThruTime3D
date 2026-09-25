@@ -23,19 +23,21 @@ export function colourOf(point, mode, reference) {
 // lines: the traced currents; place(lon, lat) -> Vector3 on the current projection;
 // seam(...lons) -> true where a flat map's edge falls between the longitudes, so a triangle
 // spanning it is left out rather than stretched across the whole map.
-// style (optional): { colour, width (half-width in degrees), order } for one fixed colour and
-// width, as the conveyor's layers use.
+// style (optional): { colour, width (half-width in degrees), order, endArrow } for one fixed
+// colour and width, as the conveyor's layers use; endArrow false puts the arrowheads along the
+// line only. A point's fifth value, when given, is its opacity (a ribbon fading out).
 export function buildRibbons(lines, mode, place, seam, style = {}) {
   const speeds = lines.flat().map(p => p[2]).sort((a, b) => a - b);
   const reference = speeds[Math.floor(speeds.length * 0.95)] || 1;
   const fill = { position: [], colour: [] };
   const rim = { position: [], colour: [] };
   const dark = new THREE.Color('#0d1620');
-  const tri = (target, a, b, c, colours) => {
+  const tri = (target, a, b, c, colours, alphas) => {
     if (seam(a[0], b[0], c[0])) return;
     for (const [lon, lat] of [a, b, c]) target.position.push(...place(lon, lat).toArray());
-    for (const colour of colours) target.colour.push(colour.r, colour.g, colour.b);
+    colours.forEach((colour, i) => target.colour.push(colour.r, colour.g, colour.b, alphas[i]));
   };
+  const alphaOf = p => p[4] ?? 1;
   const halfWidth = speed => style.width ?? 0.16 + 0.55 * Math.min(1, Math.sqrt(speed / reference));
   const fixed = style.colour && new THREE.Color(style.colour);
   const colourAt = p => fixed || colourOf(p, mode, reference);
@@ -55,27 +57,30 @@ export function buildRibbons(lines, mode, place, seam, style = {}) {
       const w0 = halfWidth(s0.p[2]), w1 = halfWidth(s1.p[2]);
       const c0 = colourAt(s0.p), c1 = colourAt(s1.p);
       const [l0, r0, l1, r1] = [edge(s0, w0, 1), edge(s0, w0, -1), edge(s1, w1, 1), edge(s1, w1, -1)];
-      tri(fill, l0, r0, l1, [c0, c0, c1]);
-      tri(fill, r0, r1, l1, [c0, c1, c1]);
+      const [a0, a1] = [alphaOf(s0.p), alphaOf(s1.p)];
+      tri(fill, l0, r0, l1, [c0, c0, c1], [a0, a0, a1]);
+      tri(fill, r0, r1, l1, [c0, c1, c1], [a0, a1, a1]);
       const [L0, R0, L1, R1] = [edge(s0, w0 + 0.12, 1), edge(s0, w0 + 0.12, -1), edge(s1, w1 + 0.12, 1), edge(s1, w1 + 0.12, -1)];
-      tri(rim, L0, R0, L1, [dark, dark, dark]);
-      tri(rim, R0, R1, L1, [dark, dark, dark]);
+      tri(rim, L0, R0, L1, [dark, dark, dark], [a0, a0, a1]);
+      tri(rim, R0, R1, L1, [dark, dark, dark], [a0, a1, a1]);
     }
-    // Arrowheads at the end and every 30 points (about 1800 km) along the way.
-    for (let i = sides.length - 1; i > 3; i -= 30) {
+    // Arrowheads every 30 points (about 1800 km), from the end or, with endArrow false, from
+    // half a spacing before it.
+    for (let i = sides.length - 1 - (style.endArrow === false ? 15 : 0); i > 3; i -= 30) {
       const s = sides[i];
       const w = halfWidth(s.p[2]) * 2.4, length = w * 1.6;
       const tip = [s.p[0] + s.dx * length / s.c, s.p[1] + s.dy * length];
       const colour = colourAt(s.p);
-      tri(rim, edge(s, w + 0.2, 1), edge(s, w + 0.2, -1), [tip[0] + s.dx * 0.25 / s.c, tip[1] + s.dy * 0.25], [dark, dark, dark]);
-      tri(fill, edge(s, w, 1), edge(s, w, -1), tip, [colour, colour, colour]);
+      const a = [alphaOf(s.p), alphaOf(s.p), alphaOf(s.p)];
+      tri(rim, edge(s, w + 0.2, 1), edge(s, w + 0.2, -1), [tip[0] + s.dx * 0.25 / s.c, tip[1] + s.dy * 0.25], [dark, dark, dark], a);
+      tri(fill, edge(s, w, 1), edge(s, w, -1), tip, [colour, colour, colour], a);
     }
   }
   const group = new THREE.Group();
   for (const [part, order] of [[rim, style.order ?? 3], [fill, (style.order ?? 3) + 1]]) {
     const geometry = new THREE.BufferGeometry();
     geometry.setAttribute('position', new THREE.Float32BufferAttribute(part.position, 3));
-    geometry.setAttribute('color', new THREE.Float32BufferAttribute(part.colour, 3));
+    geometry.setAttribute('color', new THREE.Float32BufferAttribute(part.colour, 4));
     const mesh = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.DoubleSide,
       transparent: true, opacity: part === rim ? 0.55 : 0.95, depthWrite: false }));
     mesh.renderOrder = order;
@@ -92,9 +97,13 @@ export const CONVEYOR_COLOURS = { surface: '#f07b3f', deep: '#3d7fe0', bottom: '
 export function buildConveyor(data, place, seam) {
   const group = new THREE.Group();
   const layers = { bottom: { width: 0.38, order: 3 }, deep: { width: 0.5, order: 5 }, surface: { width: 0.7, order: 7 } };
+  // A line marked "fade" fades out over its last 25 points (about 1500 km): the bottom
+  // water mixing upward as it spreads, where no single end exists.
+  const faded = line => line.points.map(([lon, lat], i) =>
+    [lon, lat, 1, 0, line.fade ? Math.min(1, (line.points.length - 1 - i) / 25) : 1]);
   for (const [kind, style] of Object.entries(layers)) {
-    const lines = data.lines.filter(line => line.kind === kind).map(line => line.points);
-    if (lines.length) group.add(buildRibbons(lines, 'speed', place, seam, { ...style, colour: CONVEYOR_COLOURS[kind] }));
+    const lines = data.lines.filter(line => line.kind === kind).map(faded);
+    if (lines.length) group.add(buildRibbons(lines, 'speed', place, seam, { ...style, colour: CONVEYOR_COLOURS[kind], endArrow: false }));
   }
   const fill = { position: [], colour: [] }, rim = { position: [], colour: [] };
   const push = (target, points, colour) => {
