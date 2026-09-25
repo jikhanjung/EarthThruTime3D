@@ -236,6 +236,8 @@ summary{cursor:pointer;color:#c9dce2}
 .temp-legend figcaption span:last-child{left:100%;transform:translateX(-100%)}
 /* Modelled rainfall: one hue along the cube root of the year's millimetres, as the shader mixes it. */
 .rain-bar{height:10px;border-radius:3px;margin-top:.4rem;background:linear-gradient(90deg,#e3f4ec,#2f9e7d 50%,#06402f)}
+/* A caveat under a legend, e.g. that the rivers are drawn from the terrain alone. */
+.legend-note{margin:.5rem 0 .3rem;font-size:.66rem;line-height:1.35;color:#b9c9d1}
 .rain-legend figcaption span:nth-child(2){left:23.2%}
 .rain-legend figcaption span:nth-child(3){left:39.7%}
 .rain-legend figcaption span:nth-child(4){left:63%}
