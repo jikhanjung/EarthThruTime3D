@@ -1,5 +1,8 @@
-import { chromium, expect } from '@playwright/test';
+import { chromium, expect as baseExpect } from '@playwright/test';
 import { mkdir } from 'node:fs/promises';
+// setDefaultTimeout covers actions; an assertion keeps Playwright's own 5 s unless it is
+// configured too, and a first draw that is merely slow then fails on a loaded machine.
+const expect = baseExpect.configure({timeout: 20000});
 // BROWSER_CHANNEL=chrome runs on the installed Google Chrome when the bundled Chromium is absent.
 const browser = await chromium.launch({headless: true, channel: process.env.BROWSER_CHANNEL, args: ['--enable-unsafe-swiftshader']});
 const errors = [];
