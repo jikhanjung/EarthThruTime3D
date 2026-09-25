@@ -178,6 +178,20 @@ longitude and latitude from the point itself, the inverse of `onSphere()`. Only 
 vertices are lifted, so a long straight segment can still cut through a ridge between
 them.
 
+## Climate and biotic events on the timeline
+
+`static/core/climate-events-data.js` lists 16 dated events (ages from the ICS chart
+v2024/12 = GTS2020, or a finer radiometric or astronomical age where the event has one;
+30 DOIs resolved through Crossref; devlog wwolf 019), and `static/core/climate-events.js`
+draws one mark per event above the slider (`#event-marks`), coloured and lettered by kind so
+colour is not the only cue, at the fractional slider index of its span. The whole timeline
+shows events of 1 Ma and older, a time window only its own. While the slider sits inside an
+event, `#event-note` under it names the event, gives one sentence and the DOIs, and says,
+unless the event is resolved by the page (`snapshot_caveat: false`), that the maps are
+model snapshots spaced wider than the event. A stop covers half the gap to each neighbour,
+so every moment is reported at its nearest stop. Korean names marked `*` in the data are
+the list's own translations and are shown without the mark.
+
 ## Temperature
 
 `sources/paleotemp.json` pins Scotese (2021), *Global Mean Surface Temperatures for 100

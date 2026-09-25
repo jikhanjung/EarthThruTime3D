@@ -1396,3 +1396,6 @@ msgstr "{a}–{b} {km} km ({today} km today)"
 
 msgid "파란 선은 강수와 무관하게 지형만으로 그린 잠재 물길입니다. 사막을 가로지르는 선은 그곳에 물이 흐른다는 뜻이 아니며, 나일강처럼 먼 상류의 비로 사막을 건너는 강도 있습니다."
 msgstr "Blue lines are potential water paths drawn from the terrain alone, whatever the rainfall. A line across a desert does not mean water flows there, though some rivers, like the Nile, cross deserts on rain that fell far upstream."
+
+msgid "기후·생물 사건"
+msgstr "Climate and biotic events"

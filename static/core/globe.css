@@ -301,3 +301,13 @@ summary{cursor:pointer;color:#c9dce2}
   .map-legend{top:auto;bottom:calc(var(--controls-space,200px) + 8px + var(--menu-space,0px));left:8px;right:8px;width:auto;padding:.45rem .6rem .15rem}
   .explorer:has(#sea-overlay:not([hidden])) .map-legend{bottom:calc(var(--controls-space,200px) + 8px + var(--menu-space,0px) + 132px)}
 }
+
+/* Short climate and biotic events over the timeline: a mark per event, coloured and
+   lettered by kind, and a note under the slider while it sits inside one. The minimum width
+   holds the letter between the borders: at 8px a W was clipped on both sides, on exactly the
+   short events the marks exist for, and then the colour was the only cue left. */
+.event-marks{position:relative;height:13px;margin:0 0 4px}
+.event-mark{position:absolute;top:0;height:13px;padding:0;border:1px solid rgba(255,255,255,.55);border-radius:3px;color:#fff;font:600 9px/11px system-ui,sans-serif;text-align:center;cursor:pointer;overflow:hidden;opacity:.9}
+.event-mark:hover,.event-mark:focus-visible{opacity:1;outline:2px solid #fff;z-index:1}
+.event-note{margin:6px 0 0;font-size:.78rem;line-height:1.35;color:var(--muted,#b9c4cf)}
+.event-note p{margin:.2rem 0}.event-note a{color:inherit}

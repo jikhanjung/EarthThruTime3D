@@ -7,6 +7,8 @@ import { EQUAL_EARTH_HALF, EQUAL_EARTH_X, EQUAL_EARTH_Y, placeEqualEarth, placeE
 import { RotationModel, turn } from './rotation.js';
 import { MAX_PINS, carried, distanceKm, drawnAt, formatPins, parsePins, pinAt } from './pins.js';
 import { densifySegments } from './surface-lines.js';
+import { describeEvents, drawEventMarks, setEvents } from './climate-events.js';
+import { CLIMATE_EVENTS } from './climate-events-data.js';
 import { createMantleOverlay } from './mantle-overlay.js';
 import { createMantleScene, CUT_UNIFORMS, CUT_SURFACE } from './mantle-scene.js';
 import { createCrust, CRUST_GLSL } from './crust.js';
@@ -417,6 +419,7 @@ async function selectStop(value, manual = false, overlayManaged = false, transit
     place.mapless ? L.noMap : (between ? L.interpolated : null),
     !place.mapless && place.from.ice_kind === 'analogue' ? L.analogueIce : null,
     !place.mapless && place.from.ice_kind === 'reconstructed' ? L.reconstructedIce : null].filter(Boolean).join(' / ');
+  describeEvents($('event-note'), stops, place.value, document.documentElement.lang);
   queueAddress();
   requestAnimationFrame(markFoldableNotes);
   const nextLabel = $('globe-age').textContent;
@@ -2697,6 +2700,12 @@ function init() {
       if (event.target === note && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); flip(); }
     });
   }
+  // Dated climate and biotic events as marks over the slider; a mark moves the slider to it.
+  setEvents(CLIMATE_EVENTS);
+  drawEventMarks($('event-marks'), stops, document.documentElement.lang, index => {
+    $('timeline').value = String(index);
+    selectStop(index, true);
+  });
   drawSeaLevelStrip();
   drawPleistocene();
   if (seaLevelControl) {
