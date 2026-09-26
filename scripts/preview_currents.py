@@ -148,8 +148,11 @@ def lines(u, v, t, sep=450.0, step=30.0, min_len=1500.0, max_len=9000.0, seed_q=
 # the water rising in the Indian Ocean), round South Africa and up the Atlantic to the
 # Nordic and Labrador Seas; "deep": North Atlantic Deep Water from where it sinks, south
 # along the Americas, east with the circumpolar current and north into the Indian and
-# Pacific Oceans; "bottom": Antarctic Bottom Water from the Weddell and Ross Seas, marked
-# "fade". Every line starts and ends at a marker or on another line.
+# Pacific Oceans; "bottom": Antarctic Bottom Water from the Weddell and Ross Seas, the Adelie
+# coast and Cape Darnley (Orsi et al. 1999, doi:10.1016/S0079-6611(99)00004-X; Ohshima et
+# al. 2013, doi:10.1038/ngeo1738), north along the sea floor under the deep water into the
+# Atlantic, Pacific and Indian Oceans, marked "fade". Every line starts and ends at a marker
+# or on another line; where lines cross they are at different depths.
 CONVEYOR = [
     ("surface", [(162, 40), (159, 33), (155, 25), (148, 17), (139, 10), (133, 6), (127, 3.5),
                  (121, 1.5), (118, -2), (115.8, -8.9), (111, -13), (95, -14), (75, -15),
@@ -175,14 +178,20 @@ CONVEYOR = [
               (63, 8.2)]),
     ("bottom", [(-50, -73.3), (-46, -68), (-40, -60), (-37, -55), (-44, -47), (-42, -39),
                 (-38, -31), (-33, -21), (-29, -11), (-27, -1), (-32, 8), (-42, 16)], "fade"),
-    ("bottom", [(172.5, -77.3), (177, -72), (-172, -66), (-163, -62)], "fade"),
+    ("bottom", [(172.5, -77.3), (177, -72), (-175, -66), (-172, -58), (-176, -46),
+                (-177, -36), (-173.5, -24), (-174, -15.5), (-173, -5), (-177, 5), (178, 15),
+                (170, 25)], "fade"),
+    ("bottom", [(69, -67.3), (64, -62), (58, -56), (56, -48), (58, -40), (56, -32)], "fade"),
+    ("bottom", [(140, -66.3), (135, -62), (125, -56), (115, -50), (108, -42), (104, -32),
+                (100, -22)], "fade"),
 ]
 # Where water sinks (deep water formed; a surface line ends there and a deep or bottom line
 # starts) and where a drawn deep limb ends and its water rises (a surface line starts). The
 # bottom water has no such end: it mixes upward into the water above as it spreads, drawn
 # as a ribbon that fades out.
 CONVEYOR_MARKS = [("sink", -2, 74.5), ("sink", -53.5, 57.5), ("sink", -50, -73.5),
-                  ("sink", 172, -77.5), ("rise", 162, 40), ("rise", 62.5, 8.5)]
+                  ("sink", 172, -77.5), ("sink", 69, -67.6), ("sink", 140, -66.6),
+                  ("rise", 162, 40), ("rise", 62.5, 8.5)]
 
 
 def smooth_path(points, step=60.0):
