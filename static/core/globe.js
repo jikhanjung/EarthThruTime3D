@@ -2715,19 +2715,8 @@ function init() {
       if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); flip(); }
     });
   }
-  // Preview: every explanatory note in the panel folds to its first two lines; a click
-  // (not on a link inside) or Enter opens it. Folded by CSS line clamp, so code that
-  // rewrites a note's text keeps working.
-  for (const note of document.querySelectorAll('#inspector .model-note:not(.hint):not(.pin-panel)')) {
-    note.classList.add('foldable', 'folded');
-    note.tabIndex = 0;
-    note.setAttribute('aria-expanded', 'false');
-    const flip = () => note.setAttribute('aria-expanded', String(!note.classList.toggle('folded')));
-    note.addEventListener('click', event => { if (!event.target.closest('a, button, input, select')) flip(); });
-    note.addEventListener('keydown', event => {
-      if (event.target === note && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); flip(); }
-    });
-  }
+  // Preview: every explanatory note in the panel folds to its first two lines.
+  for (const note of document.querySelectorAll('#inspector .model-note:not(.hint):not(.pin-panel)')) makeFoldable(note);
   setEvents(CLIMATE_EVENTS);
   drawEventMarks($('event-marks'), stops, document.documentElement.lang, index => {
     $('timeline').value = String(index);
@@ -3078,7 +3067,7 @@ function currentsLegend(key) {
   if (currentsMode === 'conveyor') {
     const swatch = (colour, text) => `<span class="conveyor-key"><i style="background:${colour}"></i>${text}</span>`;
     const note = key === 'present'
-      ? `교과서식 모식도로, 자료에서 추적한 선이 아니라 Broecker (1991)와 Rahmstorf (2002)의 경로를 따라 그렸습니다. 화살표는 흐르는 방향입니다. 선이 교차하는 곳은 깊이가 달라, 보라(바닥)가 파랑 아래를 지납니다. 남극 저층수는 녹은 물이 아니라 바다가 얼 때 빠져나온 소금으로 차고 짜진 물이 가라앉아 생깁니다 (Orsi 외 1999). 실제로 깊은 물은 넓은 바다에서 천천히, 대부분 남극해에서 올라옵니다 (Marshall &amp; Speer 2012). 아래 단면: GODAS 재분석 2016–2020 평균의 자오면 역전 순환, 대서양 최대 약 15 Sv (관측 약 17 Sv). 자료 제공 NOAA PSL.`
+      ? `교과서식 모식도로, 자료에서 추적한 선이 아니라 Broecker (1991)와 Rahmstorf (2002)의 경로를 따라 그렸습니다. 화살표는 흐르는 방향입니다. 선이 교차하는 곳은 깊이가 달라, 보라(바닥)가 파랑 아래를 지납니다. 남극 저층수는 녹은 물이 아니라 바다가 얼 때 빠져나온 소금으로 차고 짜진 물이 가라앉아 생깁니다 (Orsi 외 1999). 실제로 깊은 물은 넓은 바다에서 천천히, 대부분 남극해에서 올라옵니다 (Marshall &amp; Speer 2012). 아래 단면: GODAS 재분석 2016–2020 평균의 자오면 역전 순환, 대서양 최대 약 15 Sv (관측 약 17 Sv). 단면은 남위 32°부터라 남극에서 저층수가 생기는 곳은 빠져 있고, GODAS는 약 4.7 km보다 깊은 바다가 없어 파란 순환이 실제보다 얕게 나옵니다. 자료 제공 NOAA PSL.`
       : key === '100'
         ? `FOAM 모형 (Pohl, CO₂ 2240 ppm 고정): 표층 주요 해류와 ▼ 깊은 대류가 가장 잦은 곳. 아래 단면: 모형의 전 지구 자오면 역전 순환으로, 오늘의 관측(대서양 약 17 Sv)보다 훨씬 강하게 나옵니다.`
         : '컨베이어 벨트 시험 자료는 현재와 100 Ma 시점에만 있습니다.';
@@ -3091,9 +3080,10 @@ function currentsLegend(key) {
     const sections = key && conveyorData ? conveyorData[key].sections : [];   // drawn again once loaded
     legend.innerHTML = `<strong>해류 컨베이어 벨트 (시험)</strong><div class="conveyor-keys">${keys}</div>`
       + sections.map((_, i) => `<canvas class="overturn" data-section="${i}"></canvas>`).join('')
-      + (sections.length ? '<figcaption class="overturn-caption"><span>빨강: 표층에서 북쪽으로 흘러 북쪽에서 가라앉는 순환</span></figcaption>' : '')
+      + (sections.length ? `<p class="overturn-caption">빨강: 북쪽에서 가라앉는 순환${key === 'present' ? ' (북대서양 심층수)' : ''} · 파랑: 남쪽에서 가라앉아 바닥을 따라 북쪽으로 오는 순환${key === 'present' ? ' (남극 저층수)' : ''}</p>` : '')
       + `<p class="legend-note">${note}</p>`;
     legend.querySelectorAll('canvas.overturn').forEach(canvas => drawSection(canvas, sections[canvas.dataset.section]));
+    makeFoldable(legend.querySelector('.legend-note'));
     return;
   }
   legend.innerHTML = `<strong>해류 (시험)</strong>${bar}<p class="legend-note">${source}. ${currentsMode.startsWith('flow') ? '점이 해류를 따라 흐르며 꼬리를 남깁니다(시간 압축).' : '가장 빠른 물을 지나는 유선을 이어 그린 주요 해류, 폭은 속도.'}</p>`;
@@ -3129,6 +3119,18 @@ function updateCurrents(delta) {
     }
   }
   stage.dataset.currents = key ? currentsMode : 'false';
+}
+// Preview: a note folded to its first two lines; a click (not on a link inside) or Enter
+// opens it. Folded by CSS line clamp, so code that rewrites the note's text keeps working.
+function makeFoldable(note) {
+  note.classList.add('foldable', 'folded');
+  note.tabIndex = 0;
+  note.setAttribute('aria-expanded', 'false');
+  const flip = () => note.setAttribute('aria-expanded', String(!note.classList.toggle('folded')));
+  note.addEventListener('click', event => { if (!event.target.closest('a, button, input, select')) flip(); });
+  note.addEventListener('keydown', event => {
+    if (event.target === note && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); flip(); }
+  });
 }
 // Preview: a folded note that fits in its two lines gets no marker and no pointer.
 function markFoldableNotes() {

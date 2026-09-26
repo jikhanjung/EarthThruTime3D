@@ -248,7 +248,11 @@ def section(title, lat, depth, psi, lat_range):
     return {"title": title, "lat": [round(float(x), 2) for x in lat], "depth": [round(float(d)) for d in depth],
             "psi": [[None if not np.isfinite(x) else round(float(x), 1) for x in row] for row in psi],
             "contours": contours,
-            "max": round(float(np.nanmax(psi)), 1), "min": round(float(np.nanmin(psi)), 1)}
+            "max": round(float(np.nanmax(psi)), 1), "min": round(float(np.nanmin(psi)), 1),
+            # the deep cells, leaving out the shallow tropical cells near the surface: the
+            # strongest clockwise cell below 300 m and anticlockwise cell below 1 km
+            "red": round(float(np.nanmax(np.where(depth[:, None] >= 300, psi, np.nan))), 1),
+            "blue": round(float(-np.nanmin(np.where(depth[:, None] >= 1000, psi, np.nan))), 1)}
 
 
 def conveyor_present():

@@ -188,5 +188,5 @@ export function drawSection(canvas, section, limit = 20) {
   }
   g.textAlign = 'left';
   g.fillStyle = '#dcebee';
-  g.fillText(`${section.title}  (최대 ${Math.round(section.max)}, 최소 ${Math.round(section.min)} Sv)`, left, 10);
+  g.fillText(`${section.title}  빨강 최대 ${Math.round(section.red)} Sv · 파랑 최대 ${Math.round(section.blue)} Sv`, left, 10);
 }
