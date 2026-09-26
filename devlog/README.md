@@ -34,6 +34,8 @@ wwolf는 001부터 셉니다. 그 전의 001–045는 링크와 본문 속 번�
 
 ## 작업 기록
 
+- [jikhanjung 107 — v0.23.0 화면 색·배치와 새 표시 레이어 릴리스](20260926_jikhanjung_107_release_0230.md)
+
 - [wwolf 016 — 모형 강수의 색: 사막이 갈색으로 보이게](20260924_wwolf_016_rainfall_colours.md)
 
 - [wwolf 017 — 기온 색: 지구본과 범례가 같은 색, 그리고 색 아래의 산맥](20260924_wwolf_017_temperature_colours.md)
