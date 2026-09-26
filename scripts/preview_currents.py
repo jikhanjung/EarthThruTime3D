@@ -22,7 +22,7 @@ import netCDF4
 import numpy as np
 from PIL import Image
 from scipy import ndimage
-from scipy.ndimage import uniform_filter1d
+from scipy.ndimage import gaussian_filter, uniform_filter1d
 from skimage import measure
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -276,6 +276,35 @@ def conveyor_present():
     return out
 
 
+FOAM_AGES = (20, 40, 60, 80, 100)
+
+
+def fill_map(age):
+    """Where the model's deep water spreads: the positions below 1 km of particles released
+    under FOAM's deep-convection sites and followed for 2000 years through its 3-D annual-mean
+    flow with its own tracer mixing (4000 m2/s; the scratch tracker track3d.py writes
+    track<age>.npy), binned per degree and smoothed. Red where the water came from northern
+    sites, blue from southern, purple where both; opacity by how often particles were there.
+    Rows north to south, columns -180..180, like the current fields."""
+    t = np.load(SCRATCH / f"track{age}.npy")
+    north = t[0, :, 1] > 0
+    density = []
+    for chosen in (north, ~north):
+        p = t[:, chosen].reshape(-1, 3)
+        p = p[p[:, 2] > 1000]
+        h, _, _ = np.histogram2d(p[:, 1], (p[:, 0] + 180) % 360 - 180, bins=[180, 360], range=[[-90, 90], [-180, 180]])
+        h = gaussian_filter(np.log1p(h[::-1]), 1.2, mode=("nearest", "wrap"))
+        density.append(h / h.max() if h.max() > 0 else h)
+    n, s = density
+    share = n / np.maximum(n + s, 1e-9)
+    red, blue = np.array([214, 96, 77]), np.array([67, 147, 195])
+    rgb = share[..., None] * red + (1 - share[..., None]) * blue
+    rgba = np.zeros((180, 360, 4), np.uint8)
+    rgba[..., :3] = np.round(rgb)
+    rgba[..., 3] = np.round(np.clip(np.maximum(n, s), 0, 1) * 0.5 * 255)
+    return rgba
+
+
 def conveyor_foam(age):
     """FOAM's global overturning, and where its deep convection is most frequent."""
     f = netCDF4.Dataset(SCRATCH / f"{age}_ocean.nc")
@@ -292,16 +321,19 @@ def conveyor_foam(age):
         cells = spots == k
         weight = convection * cells
         i, j = np.unravel_index(weight.argmax(), weight.shape)
-        marks.append((float(weight.sum()), "sink", round(float(lon[j]), 1), round(float(lat[i]), 1)))
-    marks = [m[1:] for m in sorted(marks, reverse=True)[:6]]
+        marks.append((float(weight.sum()), "model", round(float(lon[j]), 1), round(float(lat[i]), 1)))
+    # the four strongest spots in each hemisphere, so a weaker southern source still shows
+    marks = [m[1:] for m in sorted(marks, reverse=True)]
+    marks = [m for m in marks if m[2] > 0][:4] + [m for m in marks if m[2] <= 0][:4]
     return [panel], marks
 
 
 def main():
     OUT.mkdir(parents=True, exist_ok=True)
-    fields = {"present": drifters(), "100": foam(100)}
+    fields = {"present": drifters(), **{str(age): foam(age) for age in FOAM_AGES}}
     out = {"source": {"present": "NOAA Global Drifter Program 1-degree climatology (Laurindo et al. 2017), CC BY 4.0",
-                      "100": "Pohl, FOAM coupled run at 100 Ma, surface level, annual mean (Zenodo 5780097), CC BY 4.0"}}
+                      **{str(age): f"Pohl, FOAM coupled run at {age} Ma, surface level, annual mean (Zenodo 5780097), CC BY 4.0"
+                         for age in FOAM_AGES}}}
     for key, (u, v, t) in fields.items():
         Image.fromarray(encode(u, v)).save(OUT / f"{key}.png")
         # FOAM's surface carries a broad slow wind drift away from the equator; stricter
@@ -313,13 +345,15 @@ def main():
               f"{len(found)} lines, {sum(len(l) for l in found)} points")
     # The conveyor mode: the present schematic with GODAS's basin overturning, and at 100 Ma
     # FOAM's surface lines with its deep-convection sites and global overturning.
-    panels, marks = conveyor_foam(100)
     conveyor = {
         "present": {"lines": [{"kind": kind, "points": smooth_path(pts), "fade": bool(rest)} for kind, pts, *rest in CONVEYOR],
                     "marks": CONVEYOR_MARKS, "sections": conveyor_present()},
-        "100": {"lines": [{"kind": "surface", "points": [p[:2] for p in l]} for l in out["100"]],
-                "marks": marks, "sections": panels},
     }
+    for age in FOAM_AGES:
+        panels, marks = conveyor_foam(age)
+        conveyor[str(age)] = {"lines": [{"kind": "surface", "points": [p[:2] for p in l]} for l in out[str(age)]],
+                              "marks": marks, "sections": panels}
+        Image.fromarray(fill_map(age)).save(OUT / f"fill-{age}.png")
     (OUT / "conveyor.json").write_text(json.dumps(conveyor, separators=(",", ":"), allow_nan=False))
     for key, c in conveyor.items():
         print(f"conveyor {key}: {len(c['lines'])} lines, marks {c['marks']}; sections "

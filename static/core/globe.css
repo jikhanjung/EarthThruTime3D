@@ -306,6 +306,8 @@ summary{cursor:pointer;color:#c9dce2}
 .conveyor-mark{white-space:normal}
 .conveyor-mark b{display:inline-block;width:18px;text-align:center;font-size:.8rem;line-height:1;-webkit-text-stroke:.5px #f4f7f8}
 .conveyor-mark b.sink{color:#1f4fa8}.conveyor-mark b.rise{color:#f07b3f}
+.conveyor-mark b.likely{color:#3d7fe0;-webkit-text-stroke:0}.conveyor-mark b.warm{color:#e0475a;-webkit-text-stroke:0}
+.conveyor-mark b.model{color:#9aa6ae;font-size:.62rem;-webkit-text-stroke:.5px #1b242b}
 canvas.overturn{display:block;width:100%;height:112px;margin:.25rem 0 0}
 .overturn-caption{margin:.2rem 0 0;font-size:.62rem;line-height:1.35;color:#95afbb}
 .current-legend figcaption{position:relative;height:1.1em;margin-top:6px}

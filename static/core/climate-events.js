@@ -11,6 +11,7 @@ export const KINDS = {
   glaciation: { colour: '#2945a8', letter: 'I' },
   anoxic: { colour: '#6a3d9a', letter: 'A' },
   extinction: { colour: '#333333', letter: 'X' },
+  ocean: { colour: '#157fa0', letter: 'O' },
 };
 
 export let EVENTS = [];

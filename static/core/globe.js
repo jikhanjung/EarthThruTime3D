@@ -11,6 +11,7 @@ import { describeEvents, drawEventMarks, setEvents } from './climate-events.js';
 import { createFlow } from './preview-flow.js';
 import { buildRibbons, buildConveyor, drawSection, CONVEYOR_COLOURS } from './preview-currents.js';
 import { CLIMATE_EVENTS } from './climate-events-data.js';
+import { DEEPWATER } from './preview-deepwater-data.js';
 import { createMantleOverlay } from './mantle-overlay.js';
 import { createMantleScene, CUT_UNIFORMS, CUT_SURFACE } from './mantle-scene.js';
 import { createCrust, CRUST_GLSL } from './crust.js';
@@ -3013,16 +3014,23 @@ function updateRanges() {
     }
   }
 }
-// Preview: two prototypes for ocean currents, on the present (NOAA drifters) and at 100 Ma
-// (Pohl's FOAM run, surface level). "flow": dots carried by the field with fading trails
-// (preview-flow.js), white or coloured by speed; "lines": the major currents as ribbons
-// (preview-currents.js), coloured by speed or warm/cold. The data follows the map drawn on
-// screen (lastPlace) and shows only on a stop that has a field, not between stops.
-const CURRENT_FIELDS = { present: './preview-currents/present.png', 100: './preview-currents/100.png' };
+// Preview: prototypes for ocean currents. Fields: the present (NOAA drifters) and Pohl's
+// FOAM runs every 20 Myr from 20 to 100 Ma (surface level). "flow": dots carried by the
+// field with fading trails (preview-flow.js), white or coloured by speed; "lines": the major
+// currents as ribbons (preview-currents.js), coloured by speed or warm/cold; "conveyor": the
+// present's textbook belt, and in the past the regions where deep water formed according to
+// the literature (preview-deepwater-data.js, carried with the plates), with the FOAM run's
+// own view where one exists. The data follows the map drawn on screen (lastPlace) and shows
+// only on a stop, not between stops.
+const FOAM_AGES = [20, 40, 60, 80, 100];
+const CURRENT_FIELDS = { present: './preview-currents/present.png',
+  ...Object.fromEntries(FOAM_AGES.map(age => [age, `./preview-currents/${age}.png`])) };
 let currentsMode = '';
 let currentFields = null;
+let currentFills = null;
 let currentLines = null;
 let conveyorData = null;
+let evidence = null;   // { model, marks: [{ slice, level, warm, name, pin }] } once the plate model is in
 let flow = null;
 let ribbonGroup = null;
 let ribbonKey = '';
@@ -3030,24 +3038,50 @@ let fieldKey = '';
 function currentsKeyOf(place) {
   if (!place || place.mapless || place.blend > 0) return '';
   if (place.age < 0.0005) return 'present';
-  return place.from.id === 'paleodem-1000' ? '100' : '';
+  const age = FOAM_AGES.find(a => place.from.id === `paleodem-${String(a * 10).padStart(4, '0')}`);
+  return age ? String(age) : '';
+}
+// The literature slice for a stop: the nearest of 0, 20 ... 100 Ma, for stops from 1 to
+// 110 Ma; the present keeps its schematic.
+function evidenceSliceOf(place) {
+  if (!place || place.mapless || place.blend > 0 || place.age < 1 || place.age > 110) return null;
+  return [0, ...FOAM_AGES].reduce((best, a) => (Math.abs(a - place.age) < Math.abs(best - place.age) ? a : best), 0);
+}
+async function loadEvidence() {
+  const entry = pinEntry();
+  const loaded = entry && await loadPlateModel(entry).catch(() => null);
+  if (!loaded) return;
+  const marks = [];
+  for (const [slice, { marks: list }] of Object.entries(DEEPWATER)) {
+    for (const mark of list) {
+      const pin = pinAt(loaded.shapes, loaded.model, mark.at[0], mark.at[1], 0, entry.covers[1]);
+      if (pin) marks.push({ ...mark, slice: Number(slice), pin });
+      else console.warn('deep-water anchor off the continents', mark.name, mark.at);
+    }
+  }
+  evidence = { model: loaded.model, marks };
+  ribbonKey = '-';   // draw them now
 }
 async function loadCurrents() {
   if (currentFields) return;
   currentFields = {};
+  currentFills = {};
   const loader = new THREE.TextureLoader();
-  for (const [key, path] of Object.entries(CURRENT_FIELDS)) {
+  const load = async path => {
     const texture = await loader.loadAsync(new URL(path, import.meta.url).href);
     texture.colorSpace = THREE.NoColorSpace;
     texture.wrapS = THREE.RepeatWrapping;
     texture.magFilter = texture.minFilter = THREE.LinearFilter;
     texture.generateMipmaps = false;
-    currentFields[key] = texture;
-  }
+    return texture;
+  };
+  for (const [key, path] of Object.entries(CURRENT_FIELDS)) currentFields[key] = await load(path);
+  for (const age of FOAM_AGES) currentFills[age] = await load(`./preview-currents/fill-${age}.png`);
   currentLines = await (await fetch(new URL('./preview-currents/lines.json', import.meta.url))).json();
   conveyorData = await (await fetch(new URL('./preview-currents/conveyor.json', import.meta.url))).json();
+  loadEvidence();
 }
-function currentsLegend(key) {
+function currentsLegend(key, slice) {
   let legend = $('current-legend');
   if (!legend) {
     legend = document.createElement('figure');
@@ -3058,7 +3092,7 @@ function currentsLegend(key) {
   legend.hidden = !currentsMode;
   if (!currentsMode) return;
   const source = key === 'present' ? '현재: NOAA 표류 부이 평균 (Laurindo 2017), 수심 15 m'
-    : key === '100' ? '100 Ma: FOAM 모형 (Pohl, CO₂ 2240 ppm 고정), 표층' : '해류 시험 자료는 현재와 100 Ma 시점에만 있습니다';
+    : key ? `${key} Ma: FOAM 모형 (Pohl, CO₂ 2240 ppm 고정), 표층` : '해류 시험 자료는 현재와 20–100 Ma (20 Myr 간격) 시점에만 있습니다';
   const bar = currentsMode === 'lines-temp'
     ? '<div class="current-bar" style="background:linear-gradient(90deg,#3a8fd9,#9ecae1,#f7f7f7,#f4a582,#d6273b)"></div><figcaption><span>−4 °C 찬 해류</span><span>같은 위도 평균</span><span>+4 °C 따뜻한 해류</span></figcaption>'
     : currentsMode === 'lines' || currentsMode === 'flow-speed'
@@ -3066,19 +3100,29 @@ function currentsLegend(key) {
       : '';
   if (currentsMode === 'conveyor') {
     const swatch = (colour, text) => `<span class="conveyor-key"><i style="background:${colour}"></i>${text}</span>`;
-    const note = key === 'present'
-      ? `교과서식 모식도로, 자료에서 추적한 선이 아니라 Broecker (1991)와 Rahmstorf (2002)의 경로를 따라 그렸습니다. 화살표는 흐르는 방향입니다. 선이 교차하는 곳은 깊이가 달라, 보라(바닥)가 파랑 아래를 지납니다. 남극 저층수는 녹은 물이 아니라 바다가 얼 때 빠져나온 소금으로 차고 짜진 물이 가라앉아 생깁니다 (Orsi 외 1999). 실제로 깊은 물은 넓은 바다에서 천천히, 대부분 남극해에서 올라옵니다 (Marshall &amp; Speer 2012). 아래 단면: GODAS 재분석 2016–2020 평균의 자오면 역전 순환, 대서양 최대 약 15 Sv (관측 약 17 Sv). 단면은 남위 32°부터라 남극에서 저층수가 생기는 곳은 빠져 있고, GODAS는 약 4.7 km보다 깊은 바다가 없어 파란 순환이 실제보다 얕게 나옵니다. 자료 제공 NOAA PSL.`
-      : key === '100'
-        ? `FOAM 모형 (Pohl, CO₂ 2240 ppm 고정): 표층 주요 해류와 ▼ 깊은 대류가 가장 잦은 곳. 아래 단면: 모형의 전 지구 자오면 역전 순환으로, 오늘의 관측(대서양 약 17 Sv)보다 훨씬 강하게 나옵니다.`
-        : '컨베이어 벨트 시험 자료는 현재와 100 Ma 시점에만 있습니다.';
-    const keys = key === 'present'
-      ? swatch(CONVEYOR_COLOURS.surface, '따뜻한 표층') + swatch(CONVEYOR_COLOURS.deep, '북대서양 심층수 (약 1.5–4 km)') + swatch(CONVEYOR_COLOURS.bottom, '남극 저층수 (바닥, 약 4 km 아래)')
-        + '<span class="conveyor-key conveyor-mark"><b class="sink">▼</b>가라앉는 곳: 북대서양에서는 주황 선이 끝나고 파란 선이, 남극 둘레에서는 보라 선이 시작</span>'
-        + '<span class="conveyor-key conveyor-mark"><b class="rise">▲</b>올라오는 곳: 파란 선이 끝나고 주황 선이 시작</span>'
-        + `<span class="conveyor-key conveyor-mark"><i style="background:linear-gradient(90deg,${CONVEYOR_COLOURS.bottom},transparent)"></i>흐려지며 끝남: 위의 물과 서서히 섞임</span>`
-      : key === '100' ? swatch(CONVEYOR_COLOURS.surface, '표층 주요 해류') : '';
+    const mark = (cls, glyph, text) => `<span class="conveyor-key conveyor-mark"><b class="${cls}">${glyph}</b>${text}</span>`;
+    const past = slice === null ? null : DEEPWATER[slice];
+    let keys = '', note = '', heading = '';
+    if (key === 'present') {
+      keys = swatch(CONVEYOR_COLOURS.surface, '따뜻한 표층') + swatch(CONVEYOR_COLOURS.deep, '북대서양 심층수 (약 1.5–4 km)') + swatch(CONVEYOR_COLOURS.bottom, '남극 저층수 (바닥, 약 4 km 아래)')
+        + mark('sink', '▼', '가라앉는 곳: 북대서양에서는 주황 선이 끝나고 파란 선이, 남극 둘레에서는 보라 선이 시작')
+        + mark('rise', '▲', '올라오는 곳: 파란 선이 끝나고 주황 선이 시작')
+        + `<span class="conveyor-key conveyor-mark"><i style="background:linear-gradient(90deg,${CONVEYOR_COLOURS.bottom},transparent)"></i>흐려지며 끝남: 위의 물과 서서히 섞임</span>`;
+      note = `교과서식 모식도로, 자료에서 추적한 선이 아니라 Broecker (1991)와 Rahmstorf (2002)의 경로를 따라 그렸습니다. 화살표는 흐르는 방향입니다. 선이 교차하는 곳은 깊이가 달라, 보라(바닥)가 파랑 아래를 지납니다. 남극 저층수는 녹은 물이 아니라 바다가 얼 때 빠져나온 소금으로 차고 짜진 물이 가라앉아 생깁니다 (Orsi 외 1999). 실제로 깊은 물은 넓은 바다에서 천천히, 대부분 남극해에서 올라옵니다 (Marshall &amp; Speer 2012). 아래 단면: GODAS 재분석 2016–2020 평균의 자오면 역전 순환, 대서양 최대 약 15 Sv (관측 약 17 Sv). 단면은 남위 32°부터라 남극에서 저층수가 생기는 곳은 빠져 있고, GODAS는 약 4.7 km보다 깊은 바다가 없어 파란 순환이 실제보다 얕게 나옵니다. 자료 제공 NOAA PSL.`;
+    } else if (past) {
+      heading = `<p class="overturn-caption">약 ${slice} Ma에 깊은 물이 생기던 곳 (문헌 종합)${key ? ` · ${key} Ma 모형` : ''}</p>`;
+      keys = mark('sink', '▼', '여러 증거가 일치') + mark('likely', '▽', '뒷받침되나 단서가 있음')
+        + (past.marks.some(m => m.warm) ? mark('warm', '▽', '따뜻하고 짠 물 (지역)') : '')
+        + (key ? swatch(CONVEYOR_COLOURS.surface, '모형 표층 해류') + mark('model', '▼', '모형이 물을 가라앉히는 곳')
+          + `<span class="conveyor-key conveyor-mark"><i style="background:linear-gradient(90deg,#d6604d,#8f79b0,#4393c3)"></i>모형: 북쪽(빨강)·남쪽(파랑)에서 가라앉은 깊은 물이 퍼지는 바다</span>` : '');
+      note = past.note + ' 표시 위치는 해역을 나타내는 대표 지점으로, 판과 함께 옮겨 그렸습니다. 논쟁 중인 해역은 지도에 그리지 않았습니다.'
+        + (key ? ' 모형(FOAM, Pohl): CO₂ 2240 ppm·지금의 태양·맨땅으로 고정하고 대륙 배치만 바꾼 실험으로, 북태평양에서 물을 가라앉히는 경향이 있습니다 (Hutchinson 2021). 퍼지는 바다는 모형의 3차원 흐름과 섞임으로 입자를 2,000년 동안 따라간 결과(1 km보다 깊은 곳)이고, 단면은 모형의 전 지구 자오면 역전 순환입니다.'
+          : ' 이 시점에는 모형 자료가 없습니다 (모형은 20 Myr 간격).');
+    } else {
+      note = '컨베이어 벨트 시험 자료는 현재부터 110 Ma까지만 있습니다.';
+    }
     const sections = key && conveyorData ? conveyorData[key].sections : [];   // drawn again once loaded
-    legend.innerHTML = `<strong>해류 컨베이어 벨트 (시험)</strong><div class="conveyor-keys">${keys}</div>`
+    legend.innerHTML = `<strong>해류 컨베이어 벨트 (시험)</strong>${heading}<div class="conveyor-keys">${keys}</div>`
       + sections.map((_, i) => `<canvas class="overturn" data-section="${i}"></canvas>`).join('')
       + (sections.length ? `<p class="overturn-caption">빨강: 북쪽에서 가라앉는 순환${key === 'present' ? ' (북대서양 심층수)' : ''} · 파랑: 남쪽에서 가라앉아 바닥을 따라 북쪽으로 오는 순환${key === 'present' ? ' (남극 저층수)' : ''}</p>` : '')
       + `<p class="legend-note">${note}</p>`;
@@ -3090,13 +3134,18 @@ function currentsLegend(key) {
 }
 function updateCurrents(delta) {
   const key = currentsMode && projection ? currentsKeyOf(lastPlace) : '';
-  if (key !== fieldKey) {
-    fieldKey = key;
+  const slice = currentsMode === 'conveyor' && projection ? evidenceSliceOf(lastPlace) : null;
+  const state = `${key}|${slice}`;
+  if (state !== fieldKey) {
+    fieldKey = state;
     flow?.clear();
-    currentsLegend(key);
+    currentsLegend(key, slice);
   }
   const flowing = Boolean(key && currentsMode.startsWith('flow') && currentFields);
-  uniforms.flowOn.value = flowing ? 1 : 0;
+  // The conveyor's model view tints the sea through the same overlay the flow uses.
+  const fill = currentsMode === 'conveyor' && key && key !== 'present' && currentFills ? currentFills[key] : null;
+  uniforms.flowOn.value = flowing || fill ? 1 : 0;
+  if (fill) uniforms.flowTrail.value = fill;
   if (flowing) {
     flow ??= createFlow(renderer);
     flow.colourBySpeed(currentsMode === 'flow-speed');
@@ -3104,8 +3153,8 @@ function updateCurrents(delta) {
     uniforms.flowTrail.value = flow.texture;
   }
   const lines = Boolean(key && currentsMode.startsWith('lines') && currentLines);
-  const conveyor = Boolean(key && currentsMode === 'conveyor' && conveyorData);
-  const want = lines || conveyor ? `${key}:${currentsMode}:${projection}:${meridian}` : '';
+  const conveyor = Boolean(currentsMode === 'conveyor' && conveyorData && (key || slice !== null));
+  const want = lines || conveyor ? `${key}:${slice}:${lastPlace?.age}:${currentsMode}:${projection}:${meridian}:${evidence ? 1 : 0}` : '';
   if (want !== ribbonKey) {
     ribbonKey = want;
     if (ribbonGroup) { earth.remove(ribbonGroup); ribbonGroup.traverse(o => { o.geometry?.dispose(); o.material?.dispose(); }); ribbonGroup = null; }
@@ -3113,12 +3162,20 @@ function updateCurrents(delta) {
       const relative = lon => ((lon - meridian + 540) % 360) - 180;
       const seam = (...lons) => projection !== 'globe' && Math.max(...lons.map(relative)) - Math.min(...lons.map(relative)) > 90;
       const place = (lon, lat) => pointAt(lon, lat, 0.0025);
-      ribbonGroup = conveyor ? buildConveyor(conveyorData[key], place, seam)
-        : buildRibbons(currentLines[key], currentsMode === 'lines-temp' ? 'temp' : 'speed', place, seam);
+      if (conveyor) {
+        const data = key ? conveyorData[key] : { lines: [], marks: [] };
+        const past = slice === null || !evidence ? [] : evidence.marks.filter(m => m.slice === slice).map(m => {
+          const at = carried(evidence.model, m.pin, lastPlace.age);
+          return at && [m.warm ? 'warm' : m.level, at[0], at[1]];
+        }).filter(Boolean);
+        ribbonGroup = buildConveyor({ ...data, marks: [...data.marks, ...past] }, place, seam);
+      } else {
+        ribbonGroup = buildRibbons(currentLines[key], currentsMode === 'lines-temp' ? 'temp' : 'speed', place, seam);
+      }
       earth.add(ribbonGroup);
     }
   }
-  stage.dataset.currents = key ? currentsMode : 'false';
+  stage.dataset.currents = key || slice !== null ? currentsMode : 'false';
 }
 // Preview: a note folded to its first two lines; a click (not on a link inside) or Enter
 // opens it. Folded by CSS line clamp, so code that rewrites the note's text keeps working.

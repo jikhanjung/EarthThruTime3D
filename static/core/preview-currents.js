@@ -94,6 +94,17 @@ export function buildRibbons(lines, mode, place, seam, style = {}) {
 // Water as ribbons of one colour each, the deeper ones underneath; triangles where water
 // sinks (pointing down) and where a drawn deep limb ends and rises (pointing up).
 export const CONVEYOR_COLOURS = { surface: '#f07b3f', deep: '#3d7fe0', bottom: '#9b6ad8' };
+// Triangles: the present's schematic (sink, rise), the model's own sinking spots (small,
+// grey), and the literature's regions in the past: consensus solid, likely outlined, a warm
+// low-latitude source outlined in red.
+const MARKS = {
+  sink: { size: 2.3, fill: '#1f4fa8', rim: '#f4f7f8', down: true },
+  rise: { size: 2.3, fill: '#f07b3f', rim: '#f4f7f8', down: false },
+  model: { size: 1.4, fill: '#9aa6ae', rim: '#1b242b', down: true },
+  consensus: { size: 3, fill: '#1f4fa8', rim: '#f4f7f8', down: true },
+  likely: { size: 3, fill: '#f4f7f8', rim: '#1f4fa8', down: true },
+  warm: { size: 3, fill: '#f4f7f8', rim: '#d6273b', down: true },
+};
 export function buildConveyor(data, place, seam) {
   const group = new THREE.Group();
   const layers = { bottom: { width: 0.38, order: 3 }, deep: { width: 0.5, order: 5 }, surface: { width: 0.7, order: 7 } };
@@ -112,13 +123,14 @@ export function buildConveyor(data, place, seam) {
     for (let i = 0; i < 3; i++) target.colour.push(colour.r, colour.g, colour.b);
   };
   for (const [kind, lon, lat] of data.marks) {
+    const style = MARKS[kind] ?? MARKS.sink;
     const c = Math.max(Math.cos(THREE.MathUtils.degToRad(lat)), 0.25);
     const tri = size => {
-      const s = kind === 'sink' ? 1 : -1;   // sink: point down (south on the map), rise: up
+      const s = style.down ? 1 : -1;   // sinking: point down (south on the map), rising: up
       return [[lon - size / c, lat + s * size * 0.7], [lon + size / c, lat + s * size * 0.7], [lon, lat - s * size]];
     };
-    push(rim, tri(3.3), new THREE.Color('#f4f7f8'));
-    push(fill, tri(2.3), new THREE.Color(kind === 'sink' ? '#1f4fa8' : '#f07b3f'));
+    push(rim, tri(style.size + 1), new THREE.Color(style.rim));
+    push(fill, tri(style.size), new THREE.Color(style.fill));
   }
   for (const [part, order] of [[rim, 9], [fill, 10]]) {
     const geometry = new THREE.BufferGeometry();
