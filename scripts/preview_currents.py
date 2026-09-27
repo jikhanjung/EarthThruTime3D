@@ -15,6 +15,7 @@ median, lines kept 450 km apart and 1500 km long or more), each point
 [lon, lat, speed m/s, temperature minus the ocean mean at that latitude].
 """
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -156,7 +157,8 @@ def lines(u, v, t, sep=450.0, step=30.0, min_len=1500.0, max_len=9000.0, seed_q=
 CONVEYOR = [
     ("surface", [(162, 40), (159, 33), (155, 25), (148, 17), (139, 10), (133, 6), (127, 3.5),
                  (121, 1.5), (118, -2), (115.8, -8.9), (111, -13), (95, -14), (75, -15),
-                 (60, -15), (51, -11), (43, -14), (41, -19), (36, -26), (31, -31),
+                 (62, -15.5), (54, -15.5), (51.3, -14.3), (50.3, -11.4),
+                 (47.5, -12.2), (43, -14), (41, -19), (36, -26), (31, -31),
                  (25, -36), (18, -37), (12, -31), (5, -22), (-5, -14), (-18, -9),
                  (-31, -5), (-40, 0), (-48, 4), (-56, 9), (-64, 13.5), (-75, 15),
                  (-83, 18.5), (-86, 22.5), (-86, 25.5), (-82.5, 24.2), (-79.8, 25.8),
@@ -165,7 +167,8 @@ CONVEYOR = [
                  (-6, 60), (0, 62.5), (6, 65.5), (10, 69), (5, 72.5), (-1.5, 74.3)]),
     ("surface", [(-30, 52.8), (-34, 56.5), (-38, 59.5), (-42.5, 58.8), (-47, 59.8),
                  (-52, 60.5), (-55, 59), (-53.6, 57.6)]),
-    ("surface", [(62, 8.5), (58.5, 3.5), (56, -3), (54.5, -9), (54.8, -12.6)]),
+    ("surface", [(62, 8.5), (60.3, 3.5), (58.6, -2.5), (57.5, -8), (56.8, -11.5), (55.8, -14),
+                 (54, -15.4)]),
     ("deep", [(-2, 74.3), (-9, 71.5), (-15, 69), (-26, 66), (-33, 62), (-41, 58.6),
               (-47.5, 58.3), (-53.5, 57.4), (-54, 53.5), (-50, 49), (-50, 43), (-60, 40.2),
               (-68, 37.8), (-73, 33), (-74, 27), (-68, 20.5), (-59, 14), (-51, 8), (-43, 2),
@@ -328,6 +331,177 @@ def conveyor_foam(age):
     return [panel], marks
 
 
+# The belt in the past, from the literature and the model together. The literature says where
+# deep water formed (static/core/preview-deepwater-data.js); its anchors sit on present coasts
+# so a plate can carry them, and they are carried to every PaleoDEM stop from 1 to 110 Ma on
+# PALEOMAP's plates, as the page's pins are, then moved to the nearest sea at least 1 km deep
+# at that stop: the region a mark stands for is the sea beside the coast. At a FOAM stop the
+# model says how water leaves and reaches those places: the fastest routes through its
+# annual-mean deep layer (1.5-4 km) away from each source, and through its surface layer
+# (0-150 m, above the equatorial undercurrent) toward it, on the model's own grid. A step's time is its length over the flow
+# along it, floored at a tenth of the layer's median speed so a route can cross still water.
+# Each source takes the sea its routes reach first; the routes form a tree, drawn where a
+# branch serves at least 8 % of that sea, each point carrying that share (width and opacity).
+# Checked on GODAS 2016-2020 (scratch routes.py): the deep routes from the Labrador and
+# Irminger Seas run south along North America, the surface routes to them follow the Gulf
+# Stream and the North Brazil Current.
+EVIDENCE_SLICES = (0,) + FOAM_AGES
+DEEP_SEA_M = -1000.0
+
+
+def literature_marks():
+    text = (ROOT / "static/core/preview-deepwater-data.js").read_text()
+    out = {}
+    for age in EVIDENCE_SLICES:
+        block = re.search(rf"\n  {age}: {{\s*marks: \[(.*?)\n    \]", text, re.S).group(1)
+        out[age] = [("warm" if warm else level, float(lon), float(lat)) for level, warm, lon, lat in
+                    re.findall(r"level: '(\w+)'(, warm: true)?, at: \[(-?[\d.]+), (-?[\d.]+)\]", block)]
+    return out
+
+
+def great_circle_deg(lon, lat, lon0, lat0):
+    a, b = np.radians(lat), np.radians(lat0)
+    c = np.sin(a) * np.sin(b) + np.cos(a) * np.cos(b) * np.cos(np.radians(lon - lon0))
+    return np.degrees(np.arccos(np.clip(c, -1, 1)))
+
+
+def evidence_positions():
+    """{stop age: [[kind, lon, lat], ...]} for the stop's literature slice (the nearest of 0, 20
+    ... 100 Ma, ties to the younger, as the page picks it)."""
+    sys.path.insert(0, str(ROOT / "scripts"))
+    from assess_pin import PackedModel, Shapes, carried, choose, unit
+    from build_paleodem import elevation, locate
+    model = PackedModel("paleomap2016"); shapes = Shapes(model)
+    marks = literature_marks()
+    anchors = sorted({(lon, lat) for list_ in marks.values() for _, lon, lat in list_})
+    found = shapes.plates(unit(np.array([a[0] for a in anchors]), np.array([a[1] for a in anchors])))
+    plate = {a: choose(f)[0] for a, f in zip(anchors, found)}
+    grids = next(p for p in (ROOT / "data/sources/paleodem/nc6").iterdir() if p.is_dir())
+    out = {}
+    for item in json.loads((ROOT / "sources/paleodem-slices.json").read_text())["maps"]:
+        age = float(item["age_ma"])
+        if not 1 <= age <= 110:
+            continue
+        z = elevation(locate(grids, item))[::5, ::5]   # 0.5 degree
+        rows, cols = np.nonzero(z < DEEP_SEA_M)
+        lats = 90 - rows * 180 / (z.shape[0] - 1); lons = -180 + cols * 360 / (z.shape[1] - 1)
+        chosen = min(EVIDENCE_SLICES, key=lambda s: (abs(s - age), s))
+        placed = []
+        for kind, lon, lat in marks[chosen]:
+            at = carried(model, plate[(lon, lat)], (lon, lat), age)
+            d = great_circle_deg(lons, lats, at[0], at[1])
+            i = d.argmin()
+            placed.append([kind, round(float(lons[i]), 2), round(float(lats[i]), 2)])
+            if d[i] > 12:
+                print(f"  {age:g} Ma: {kind} mark moved {d[i]:.1f} degrees to the sea")
+        out[f"{age:g}"] = placed
+    return out
+
+
+def foam_layers(age):
+    f = netCDF4.Dataset(SCRATCH / f"{age}_ocean.nc")
+    mean = lambda k: np.ma.filled(f[k][:].astype(float).mean(0), np.nan)[::-1]   # top first
+    U, V = mean("U"), mean("V")
+    z, dz = -f["lev"][:].astype(float)[::-1], f["thickness"][:].astype(float)[::-1]
+    lat, lon = f["lat"][:].astype(float), f["lon"][:].astype(float)
+
+    def layer(top, bottom, at):
+        pick = (z >= top) & (z <= bottom)
+        w = dz[pick][:, None, None] * np.isfinite(U[pick])
+        total = np.maximum(w.sum(0), 1e-9)
+        return (np.nansum(np.nan_to_num(U[pick]) * w, 0) / total, np.nansum(np.nan_to_num(V[pick]) * w, 0) / total,
+                np.isfinite(U[np.abs(z - at).argmin()]))
+    return {"deep": layer(1500, 4000, 2000), "surface": layer(0, 150, 0)}, lat, lon
+
+
+def route_graph(u, v, valid, lat, lon):
+    from scipy.sparse import coo_matrix
+    ny, nx = valid.shape
+    index = np.full(valid.shape, -1); index[valid] = np.arange(valid.sum())
+    floor = 0.1 * np.median(np.hypot(u, v)[valid])
+    dlat, dlon = np.radians(lat[1] - lat[0]), np.radians(lon[1] - lon[0])
+    yy, xx = np.nonzero(valid)
+    rows, cols, cost = [], [], []
+    for dy in (-1, 0, 1):
+        for dx in (-1, 0, 1):
+            if not (dy or dx):
+                continue
+            y2, x2 = yy + dy, (xx + dx) % nx
+            ok = (y2 >= 0) & (y2 < ny)
+            y1, x1, y2, x2 = yy[ok], xx[ok], y2[ok], x2[ok]
+            ok = valid[y2, x2] & (valid[y2, x1] & valid[y1, x2] if dy and dx else True)   # no corner past land
+            y1, x1, y2, x2 = y1[ok], x1[ok], y2[ok], x2[ok]
+            ex = 6371e3 * np.cos(np.radians((lat[y1] + lat[y2]) / 2)) * dlon * dx
+            ey = 6371e3 * dlat * dy
+            length = np.hypot(ex, ey)
+            along = ((u[y1, x1] + u[y2, x2]) * ex + (v[y1, x1] + v[y2, x2]) * ey) / (2 * length)
+            rows.append(index[y1, x1]); cols.append(index[y2, x2])
+            cost.append(length / np.maximum(along, floor))
+    n = int(valid.sum())
+    return coo_matrix((np.concatenate(cost), (np.concatenate(rows), np.concatenate(cols))), shape=(n, n)).tocsr(), index
+
+
+def route_trees(u, v, valid, lat, lon, sources, toward, share_min=0.08):
+    """Branches of the fastest-route trees, each running with the flow: away from a source
+    (deep) or toward it (surface, toward=True). Points [lon, lat, share of the source's sea]."""
+    from scipy.sparse.csgraph import dijkstra
+    graph, index = route_graph(u, v, valid, lat, lon)
+    yy, xx = np.nonzero(valid)
+    starts = []
+    for lon0, lat0 in sources:
+        d = great_circle_deg(lon[xx], lat[yy], lon0, lat0)
+        starts.append(index[yy[d.argmin()], xx[d.argmin()]])
+    time, pred = dijkstra(graph.T if toward else graph, indices=starts, return_predecessors=True)
+    owner = time.argmin(0)
+    lines = []
+    for k, start in enumerate(starts):
+        mine = (owner == k) & np.isfinite(time[k])
+        served = np.where(mine, np.cos(np.radians(lat[yy])), 0.0)
+        for c in np.argsort(-np.where(mine, time[k], -1)):
+            if mine[c] and c != start:
+                served[pred[k, c]] += served[c]
+        share = served / served[start]
+        branch = mine & (share >= share_min)
+        has_child = np.zeros(len(share), bool)
+        for c in np.nonzero(branch)[0]:
+            if c != start:
+                has_child[pred[k, c]] = True
+        tips = sorted((c for c in np.nonzero(branch)[0] if not has_child[c] and c != start), key=lambda c: -time[k, c])
+        seen = {start}
+        for c in tips:
+            path = [c]
+            while path[-1] not in seen:
+                seen.add(path[-1]); path.append(pred[k, path[-1]])
+            points = [[float(lon[xx[p]]), float(lat[yy[p]]), float(share[p])] for p in path]
+            if len(points) > 2:
+                lines.append(route_curve(points if toward else points[::-1]))
+    return lines
+
+
+def route_curve(points, step=60.0):
+    """A grid route as a smooth line: a running mean over five cells, ends kept, then a point
+    every `step` km with the share interpolated."""
+    a = np.array(points)
+    a[:, 0] = np.degrees(np.unwrap(np.radians(a[:, 0])))
+    if len(a) > 4:
+        pad = np.vstack([a[:1]] * 2 + [a] + [a[-1:]] * 2)
+        a[1:-1, :2] = np.array([pad[i:i + 5, :2].mean(0) for i in range(1, len(a) - 1)])
+    seg = km(a[:-1, 0], a[:-1, 1], a[1:, 0], a[1:, 1])
+    s = np.concatenate([[0], np.cumsum(seg)])
+    at = np.linspace(0, s[-1], max(2, int(s[-1] / step) + 1))
+    x, y, w = (np.interp(at, s, a[:, i]) for i in range(3))
+    return [[round(float((xi + 180) % 360 - 180), 2), round(float(yi), 2), round(float(wi), 3)] for xi, yi, wi in zip(x, y, w)]
+
+
+def routes_foam(age, sources):
+    layers, lat, lon = foam_layers(age)
+    out = []
+    for kind, (u, v, valid) in layers.items():
+        for line in route_trees(u, v, valid, lat, lon, sources, toward=kind == "surface"):
+            out.append({"kind": kind, "routed": True, "points": line})
+    return out
+
+
 def main():
     OUT.mkdir(parents=True, exist_ok=True)
     fields = {"present": drifters(), **{str(age): foam(age) for age in FOAM_AGES}}
@@ -349,13 +523,17 @@ def main():
         "present": {"lines": [{"kind": kind, "points": smooth_path(pts), "fade": bool(rest)} for kind, pts, *rest in CONVEYOR],
                     "marks": CONVEYOR_MARKS, "sections": conveyor_present()},
     }
+    evidence = evidence_positions()
+    conveyor["evidence"] = evidence
     for age in FOAM_AGES:
         panels, marks = conveyor_foam(age)
-        conveyor[str(age)] = {"lines": [{"kind": "surface", "points": [p[:2] for p in l]} for l in out[str(age)]],
-                              "marks": marks, "sections": panels}
+        sources = [(lon, lat) for _, lon, lat in evidence[f"{age:g}"]]
+        conveyor[str(age)] = {"lines": routes_foam(age, sources), "marks": marks, "sections": panels}
         Image.fromarray(fill_map(age)).save(OUT / f"fill-{age}.png")
     (OUT / "conveyor.json").write_text(json.dumps(conveyor, separators=(",", ":"), allow_nan=False))
     for key, c in conveyor.items():
+        if key == "evidence":
+            continue
         print(f"conveyor {key}: {len(c['lines'])} lines, marks {c['marks']}; sections "
               + ", ".join(f"{s['title']} {s['min']}..{s['max']} Sv, {len(s['contours'])} contours" for s in c["sections"]))
     (OUT / "lines.json").write_text(json.dumps(out, separators=(",", ":"), allow_nan=False))

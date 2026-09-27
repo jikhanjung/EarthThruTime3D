@@ -3113,10 +3113,10 @@ function currentsLegend(key, slice) {
       heading = `<p class="overturn-caption">약 ${slice} Ma에 깊은 물이 생기던 곳 (문헌 종합)${key ? ` · ${key} Ma 모형` : ''}</p>`;
       keys = mark('sink', '▼', '여러 증거가 일치') + mark('likely', '▽', '뒷받침되나 단서가 있음')
         + (past.marks.some(m => m.warm) ? mark('warm', '▽', '따뜻하고 짠 물 (지역)') : '')
-        + (key ? swatch(CONVEYOR_COLOURS.surface, '모형 표층 해류') + mark('model', '▼', '모형이 물을 가라앉히는 곳')
+        + (key ? swatch(CONVEYOR_COLOURS.surface, '표층 (0–150 m): 가라앉는 곳으로 모이는 길') + swatch(CONVEYOR_COLOURS.deep, '깊은 층 (1.5–4 km): 가라앉는 곳에서 퍼지는 길') + mark('model', '▼', '모형이 물을 가라앉히는 곳')
           + `<span class="conveyor-key conveyor-mark"><i style="background:linear-gradient(90deg,#d6604d,#8f79b0,#4393c3)"></i>모형: 북쪽(빨강)·남쪽(파랑)에서 가라앉은 깊은 물이 퍼지는 바다</span>` : '');
       note = past.note + ' 표시 위치는 해역을 나타내는 대표 지점으로, 판과 함께 옮겨 그렸습니다. 논쟁 중인 해역은 지도에 그리지 않았습니다.'
-        + (key ? ' 모형(FOAM, Pohl): CO₂ 2240 ppm·지금의 태양·맨땅으로 고정하고 대륙 배치만 바꾼 실험으로, 북태평양에서 물을 가라앉히는 경향이 있습니다 (Hutchinson 2021). 퍼지는 바다는 모형의 3차원 흐름과 섞임으로 입자를 2,000년 동안 따라간 결과(1 km보다 깊은 곳)이고, 단면은 모형의 전 지구 자오면 역전 순환입니다.'
+        + (key ? ' 선은 문헌이 가리킨 해역(▼▽)에서 모형의 해류를 따라 가장 빨리 가는 길을 이은 것입니다: 표층 물은 넓은 바다에서 모여들어 가라앉고, 깊은 물은 퍼지며 서서히 위의 물과 섞입니다(흐려지는 끝). 굵기는 그 길로 닿는 바다의 몫이지 흐르는 양(Sv)이 아닙니다. 같은 방법을 오늘의 GODAS 재분석에 쓰면 북미 동쪽을 따라 남쪽으로 가는 깊은 경계류와 멕시코 만류가 나옵니다. 모형(FOAM, Pohl): CO₂ 2240 ppm·지금의 태양·맨땅으로 고정하고 대륙 배치만 바꾼 실험으로, 북태평양에서 물을 가라앉히는 경향이 있습니다 (Hutchinson 2021). 퍼지는 바다는 모형의 3차원 흐름과 섞임으로 입자를 2,000년 동안 따라간 결과(1 km보다 깊은 곳)이고, 단면은 모형의 전 지구 자오면 역전 순환입니다.'
           : ' 이 시점에는 모형 자료가 없습니다 (모형은 20 Myr 간격).');
     } else {
       note = '컨베이어 벨트 시험 자료는 현재부터 110 Ma까지만 있습니다.';
@@ -3164,10 +3164,13 @@ function updateCurrents(delta) {
       const place = (lon, lat) => pointAt(lon, lat, 0.0025);
       if (conveyor) {
         const data = key ? conveyorData[key] : { lines: [], marks: [] };
-        const past = slice === null || !evidence ? [] : evidence.marks.filter(m => m.slice === slice).map(m => {
+        // The build placed the marks in the sea beside their coast at each PaleoDEM stop;
+        // elsewhere they are carried here and may sit on the coast itself.
+        const placed = slice === null ? null : conveyorData.evidence?.[String(Number(lastPlace.age.toFixed(3)))];
+        const past = slice === null ? [] : placed ?? (!evidence ? [] : evidence.marks.filter(m => m.slice === slice).map(m => {
           const at = carried(evidence.model, m.pin, lastPlace.age);
           return at && [m.warm ? 'warm' : m.level, at[0], at[1]];
-        }).filter(Boolean);
+        }).filter(Boolean));
         ribbonGroup = buildConveyor({ ...data, marks: [...data.marks, ...past] }, place, seam);
       } else {
         ribbonGroup = buildRibbons(currentLines[key], currentsMode === 'lines-temp' ? 'temp' : 'speed', place, seam);

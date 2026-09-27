@@ -101,9 +101,9 @@ const MARKS = {
   sink: { size: 2.3, fill: '#1f4fa8', rim: '#f4f7f8', down: true },
   rise: { size: 2.3, fill: '#f07b3f', rim: '#f4f7f8', down: false },
   model: { size: 1.4, fill: '#9aa6ae', rim: '#1b242b', down: true },
-  consensus: { size: 3, fill: '#1f4fa8', rim: '#f4f7f8', down: true },
-  likely: { size: 3, fill: '#f4f7f8', rim: '#1f4fa8', down: true },
-  warm: { size: 3, fill: '#f4f7f8', rim: '#d6273b', down: true },
+  consensus: { size: 2.4, fill: '#1f4fa8', rim: '#f4f7f8', down: true },
+  likely: { size: 2.4, fill: '#f4f7f8', rim: '#1f4fa8', down: true },
+  warm: { size: 2.4, fill: '#f4f7f8', rim: '#d6273b', down: true },
 };
 export function buildConveyor(data, place, seam) {
   const group = new THREE.Group();
@@ -113,8 +113,14 @@ export function buildConveyor(data, place, seam) {
   const faded = line => line.points.map(([lon, lat], i) =>
     [lon, lat, 1, 0, line.fade ? Math.min(1, (line.points.length - 1 - i) / 25) : 1]);
   for (const [kind, style] of Object.entries(layers)) {
-    const lines = data.lines.filter(line => line.kind === kind).map(faded);
+    const lines = data.lines.filter(line => line.kind === kind && !line.routed).map(faded);
     if (lines.length) group.add(buildRibbons(lines, 'speed', place, seam, { ...style, colour: CONVEYOR_COLOURS[kind], endArrow: false }));
+    // Routes through a model's currents: each point's third value is the share of the
+    // source's sea its branch serves, giving the width, and the opacity, so the trunks
+    // read and the branches fade out toward their tips.
+    const routed = data.lines.filter(line => line.kind === kind && line.routed)
+      .map(line => line.points.map(([lon, lat, share]) => [lon, lat, share, 0, Math.min(1, 0.3 + 2.5 * share)]));
+    if (routed.length) group.add(buildRibbons(routed, 'speed', place, seam, { order: style.order, colour: CONVEYOR_COLOURS[kind], endArrow: false }));
   }
   const fill = { position: [], colour: [] }, rim = { position: [], colour: [] };
   const push = (target, points, colour) => {

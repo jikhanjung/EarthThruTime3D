@@ -50,7 +50,7 @@ export const DEEPWATER = {
       { level: 'likely', at: [70, -69], name: '남쪽 고위도 (인도양 쪽)' },
       { level: 'likely', at: [-130, -75], name: '남태평양 쪽' },
       { level: 'likely', at: [150, 59.5], name: '북태평양 (모형만)' },
-      { level: 'likely', warm: true, at: [-55, 5.5], name: '막힌 원시 북대서양의 따뜻하고 짠 물' },
+      { level: 'likely', warm: true, at: [-17, 21], name: '막힌 원시 북대서양의 따뜻하고 짠 물' },
     ],
     note: '남쪽 고위도(인도양 쪽, 남태평양)에서 깊은 물이 생겼을 가능성이 크다 (Murphy 2012; Poulsen 2001; Donnadieu 2016). 북태평양은 모형 결과뿐이다 (Donnadieu 2016). 막혀 있던 원시 북대서양은 저위도·테티스에서 온 20–25 °C의 따뜻하고 짠 물로 찼다 (Friedrich 2008; Martin 2012; Liu 2023). 논쟁: 따뜻하고 짠 물이 전 지구의 주된 방식이었는지 (Brass 1982 / Murphy 2012).',
   },
