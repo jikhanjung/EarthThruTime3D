@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 """Preview: current fields and major-current lines for the two current prototypes.
 
-Inputs (scratchpad copies, not pinned): the NOAA Global Drifter Program 1-degree mean
+Inputs (local copies in the folder given as the only argument, e.g.
+data/sources/currents-preview; not pinned): the NOAA Global Drifter Program 1-degree mean
 velocity and SST climatology (Laurindo, Mariano & Lumpkin 2017, CC BY 4.0) for the present,
-and Pohl's FOAM coupled run at 100 Ma (Zenodo 5780097, CC BY 4.0), its surface level
-(-10 m), annual mean of the monthly fields.
+and Pohl's FOAM coupled runs (Zenodo 5780097, CC BY 4.0) at 0, 20 ... 120 Ma as
+<age>_ocean.nc, annual means of the monthly fields.
 
 Writes static/core/preview-currents/{present,100}.png: 360 x 180, rows north to south,
 columns -180..180; red and green the east and north speed, sqrt-encoded over +-2 m/s so
@@ -14,6 +15,7 @@ through the fastest water (seeded at the 90th percentile of speed, followed whil
 median, lines kept 450 km apart and 1500 km long or more), each point
 [lon, lat, speed m/s, temperature minus the ocean mean at that latitude].
 """
+import functools
 import json
 import re
 import sys
@@ -367,7 +369,8 @@ def great_circle_deg(lon, lat, lon0, lat0):
 
 def evidence_positions():
     """{stop age: [[kind, lon, lat], ...]} for the stop's literature slice (the nearest of 0, 20
-    ... 100 Ma, ties to the younger, as the page picks it)."""
+    ... 100 Ma, ties to the younger, as the page picks it), and {stop age: its 0.5-degree
+    PaleoDEM elevation, rows north to south, columns -180..180}."""
     sys.path.insert(0, str(ROOT / "scripts"))
     from assess_pin import PackedModel, Shapes, carried, choose, unit
     from build_paleodem import elevation, locate
@@ -377,7 +380,7 @@ def evidence_positions():
     found = shapes.plates(unit(np.array([a[0] for a in anchors]), np.array([a[1] for a in anchors])))
     plate = {a: choose(f)[0] for a, f in zip(anchors, found)}
     grids = next(p for p in (ROOT / "data/sources/paleodem/nc6").iterdir() if p.is_dir())
-    out = {}
+    out, elevations = {}, {}
     for item in json.loads((ROOT / "sources/paleodem-slices.json").read_text())["maps"]:
         age = float(item["age_ma"])
         if not 1 <= age <= 110:
@@ -395,9 +398,11 @@ def evidence_positions():
             if d[i] > 12:
                 print(f"  {age:g} Ma: {kind} mark moved {d[i]:.1f} degrees to the sea")
         out[f"{age:g}"] = placed
-    return out
+        elevations[age] = z.astype(np.float32)
+    return out, elevations
 
 
+@functools.lru_cache(maxsize=None)
 def foam_layers(age):
     f = netCDF4.Dataset(SCRATCH / f"{age}_ocean.nc")
     mean = lambda k: np.ma.filled(f[k][:].astype(float).mean(0), np.nan)[::-1]   # top first
@@ -447,9 +452,16 @@ def route_trees(u, v, valid, lat, lon, sources, toward, share_min=0.08):
     from scipy.sparse.csgraph import dijkstra
     graph, index = route_graph(u, v, valid, lat, lon)
     yy, xx = np.nonzero(valid)
+    # A source takes the nearest cell of open sea: on the coarse grid a coastal mark can fall
+    # in a pocket cut off from the ocean (40 Ma: three cells on the Antarctic coast).
+    parts, _ = ndimage.label(valid)
+    for a, b in zip(parts[:, 0], parts[:, -1]):   # the grid wraps in longitude
+        if a and b and a != b:
+            parts[parts == b] = a
+    open_sea = np.bincount(parts.ravel())[parts[yy, xx]] >= 50
     starts = []
     for lon0, lat0 in sources:
-        d = great_circle_deg(lon[xx], lat[yy], lon0, lat0)
+        d = np.where(open_sea, great_circle_deg(lon[xx], lat[yy], lon0, lat0), np.inf)
         starts.append(index[yy[d.argmin()], xx[d.argmin()]])
     time, pred = dijkstra(graph.T if toward else graph, indices=starts, return_predecessors=True)
     owner = time.argmin(0)
@@ -493,13 +505,47 @@ def route_curve(points, step=60.0):
     return [[round(float((xi + 180) % 360 - 180), 2), round(float(yi), 2), round(float(wi), 3)] for xi, yi, wi in zip(x, y, w)]
 
 
-def routes_foam(age, sources):
-    layers, lat, lon = foam_layers(age)
+# Between the model's slices (every 20 Myr) a stop is reconstructed: its flow is the two
+# nearest slices mixed by age (45 Ma = 75 % of 40 Ma + 25 % of 60 Ma), each layer's vectors
+# averaged where both slices have sea, taken from the one that has it where only one does,
+# and filled from the nearest such cell where neither does. The routes then run on the
+# stop's own PaleoDEM coast (a model cell is sea where half its 0.5-degree points are below
+# 0 m for the surface layer, below -2000 m for the deep one), from the stop's own marks. A
+# model stop is the same with a single slice, so every stop draws on the coast shown.
+MODEL_AGES = (0,) + FOAM_AGES + (120,)
+
+
+def sea_on_grid(z, lat, lon, below):
+    rows = np.abs(np.linspace(90, -90, z.shape[0])[:, None] - lat[None, :]).argmin(1)
+    cols = np.abs((np.linspace(-180, 180, z.shape[1])[:, None] - lon[None, :] + 180) % 360 - 180).argmin(1)
+    cell = (rows[:, None] * lon.size + cols[None, :]).ravel()
+    n = np.bincount(cell, minlength=lat.size * lon.size)
+    sea = np.bincount(cell, weights=(z < below).ravel(), minlength=lat.size * lon.size)
+    return (sea / np.maximum(n, 1) >= 0.5).reshape(lat.size, lon.size)
+
+
+def mixed_layers(age):
+    a = max(m for m in MODEL_AGES if m <= age); b = min(m for m in MODEL_AGES if m >= age)
+    w = 0.0 if a == b else (age - a) / (b - a)
+    (la, lat, lon), (lb, _, _) = foam_layers(a), foam_layers(b)
+    out = {}
+    for kind in la:
+        (ua, va, ma), (ub, vb, mb) = la[kind], lb[kind]
+        u = np.where(ma & mb, (1 - w) * ua + w * ub, np.where(ma, ua, ub))
+        v = np.where(ma & mb, (1 - w) * va + w * vb, np.where(ma, va, vb))
+        near = ndimage.distance_transform_edt(~(ma | mb), return_distances=False, return_indices=True)
+        out[kind] = (u[tuple(near)], v[tuple(near)])
+    return out, lat, lon, [a, b, round(w, 3)]
+
+
+def routes_stop(age, sources, z):
+    layers, lat, lon, mix = mixed_layers(age)
     out = []
-    for kind, (u, v, valid) in layers.items():
+    for kind, (u, v) in layers.items():
+        valid = sea_on_grid(z, lat, lon, -2000.0 if kind == "deep" else 0.0)
         for line in route_trees(u, v, valid, lat, lon, sources, toward=kind == "surface"):
             out.append({"kind": kind, "routed": True, "points": line})
-    return out
+    return out, mix
 
 
 def main():
@@ -523,16 +569,22 @@ def main():
         "present": {"lines": [{"kind": kind, "points": smooth_path(pts), "fade": bool(rest)} for kind, pts, *rest in CONVEYOR],
                     "marks": CONVEYOR_MARKS, "sections": conveyor_present()},
     }
-    evidence = evidence_positions()
+    evidence, elevations = evidence_positions()
     conveyor["evidence"] = evidence
-    for age in FOAM_AGES:
-        panels, marks = conveyor_foam(age)
-        sources = [(lon, lat) for _, lon, lat in evidence[f"{age:g}"]]
-        conveyor[str(age)] = {"lines": routes_foam(age, sources), "marks": marks, "sections": panels}
-        Image.fromarray(fill_map(age)).save(OUT / f"fill-{age}.png")
+    conveyor["between"] = {}
+    for age, z in sorted(elevations.items()):
+        routed, mix = routes_stop(age, [(lon, lat) for _, lon, lat in evidence[f"{age:g}"]], z)
+        if age in FOAM_AGES:
+            age = int(age)
+            panels, marks = conveyor_foam(age)
+            conveyor[str(age)] = {"lines": routed, "marks": marks, "sections": panels}
+            Image.fromarray(fill_map(age)).save(OUT / f"fill-{age}.png")
+        else:
+            conveyor["between"][f"{age:g}"] = {"lines": routed, "mix": mix}
+        print(f"  {age:g} Ma: {len(routed)} routed lines, flow {mix[0]}/{mix[1]} Ma at {mix[2]:.2f}")
     (OUT / "conveyor.json").write_text(json.dumps(conveyor, separators=(",", ":"), allow_nan=False))
     for key, c in conveyor.items():
-        if key == "evidence":
+        if key in ("evidence", "between"):
             continue
         print(f"conveyor {key}: {len(c['lines'])} lines, marks {c['marks']}; sections "
               + ", ".join(f"{s['title']} {s['min']}..{s['max']} Sv, {len(s['contours'])} contours" for s in c["sections"]))
