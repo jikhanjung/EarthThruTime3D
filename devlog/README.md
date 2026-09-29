@@ -34,6 +34,7 @@ wwolf는 001부터 셉니다. 그 전의 001–045는 링크와 본문 속 번�
 
 ## 작업 기록
 
+- [jikhanjung 108 — dolfinid 배포 파일 정리 (v0.23.0 이후)](20260929_jikhanjung_108_dolfinid_prune_0230.md)
 - [jikhanjung 107 — v0.23.0 화면 색·배치와 새 표시 레이어 릴리스](20260926_jikhanjung_107_release_0230.md)
 
 - [wwolf 016 — 모형 강수의 색: 사막이 갈색으로 보이게](20260924_wwolf_016_rainfall_colours.md)

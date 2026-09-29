@@ -20,13 +20,15 @@ Image/data hashes, DB backup and public verification are in
 Browser transfer measurements and the ice-river data generation are recorded in
 [devlog 079](../devlog/20260916_jikhanjung_079_release_0140.md).
 
-On 2026-09-18, old project releases were pruned with `KEEP=2`: v0.18.1 and
-v0.18.0 remained available (v0.19.0 and v0.20.0 have since been added). On 2026-09-20 the same `KEEP=2` prune removed
-v0.18.0 and v0.18.1 (+1,784 MiB, 13 GiB free, 79% used); v0.23.0 now runs, with v0.22.0 and v0.21.0 kept as
-rollbacks ([devlog 104](../devlog/20260920_jikhanjung_104_dolfinid_prune_0200.md)). Eleven old releases were removed, reclaiming 8,099 MiB;
-the host had 16.4 GiB free (72% used) immediately afterwards. No database, backups,
-secrets or other projects were pruned. See
-[devlog 099](../devlog/20260918_jikhanjung_099_dolfinid_release_cleanup.md).
+Old releases are pruned with `prune.sh` (`KEEP=2`: the running version and one rollback).
+On 2026-09-18 eleven old releases were removed, reclaiming 8,099 MiB
+([devlog 099](../devlog/20260918_jikhanjung_099_dolfinid_release_cleanup.md)); on
+2026-09-20 v0.18.1 and v0.18.0 (+1,784 MiB,
+[devlog 104](../devlog/20260920_jikhanjung_104_dolfinid_prune_0200.md)); on 2026-09-29
+v0.21.0, v0.20.0 and v0.19.0 (+2,877 MiB, 28 GiB free, 64% used). v0.23.0 now runs with
+v0.22.0 kept as the rollback
+([devlog 108](../devlog/20260929_jikhanjung_108_dolfinid_prune_0230.md)). No database,
+backups, secrets or other projects were pruned.
 
 ## Adopted now
 
