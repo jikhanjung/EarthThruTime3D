@@ -158,7 +158,9 @@ def lines(u, v, t, sep=450.0, step=30.0, min_len=1500.0, max_len=9000.0, seed_q=
 # or on another line; where lines cross they are at different depths.
 CONVEYOR = [
     ("surface", [(162, 40), (159, 33), (155, 25), (148, 17), (139, 10), (133, 6), (127, 3.5),
-                 (121, 1.5), (118, -2), (115.8, -8.9), (111, -13), (95, -14), (75, -15),
+                 (121, 1.5), (119.7, 1), (118.8, -0.5), (118.3, -3.5), (118.2, -4.6), (118.7, -5.6),
+                 (119.2, -6.4), (119.1, -7.5), (117.8, -8), (116.3, -8), (115.8, -8.35), (115.75, -8.5), (115.7, -8.7),
+                 (115.7, -9.2), (111, -13), (95, -14), (75, -15),
                  (62, -15.5), (54, -15.5), (51.3, -14.3), (50.3, -11.4),
                  (47.5, -12.2), (43, -14), (41, -19), (36, -26), (31, -31),
                  (25, -36), (18, -37), (12, -31), (5, -22), (-5, -14), (-18, -9),
@@ -198,6 +200,27 @@ CONVEYOR_MARKS = [("sink", -2, 74.5), ("sink", -53.5, 57.5), ("sink", -50, -73.5
                   ("sink", 172, -77.5), ("sink", 69, -67.6), ("sink", 140, -66.6),
                   ("rise", 162, 40), ("rise", 62.5, 8.5)]
 
+
+# The belt in the glacial windows, after Rahmstorf 2002's modes. "cold" (stadials, the
+# glacial maximum): deep water forms south of Iceland instead of in the Nordic and Labrador
+# Seas, the northern cell is shallower, and bottom water from the south reaches further north
+# in the Atlantic. "weak" (Heinrich stadials, the Younger Dryas): the same, with the northern
+# sinking much reduced (its deep limb drawn faint). Which stop takes which mode is the
+# literature's (static/core/preview-deepwater-data.js, QUATERNARY).
+ICELAND_SINK = (-25, 55.2)
+
+
+def glacial_conveyor(weak):
+    surface, labrador, indian, deep, deep_indian, *bottom = CONVEYOR
+    main = surface[1][:surface[1].index((-28, 52.5)) + 1] + [ICELAND_SINK]
+    north = [ICELAND_SINK, (-31, 52.5), (-38, 49.5), (-44, 45), (-47, 41.5), (-54, 39.5)] + deep[1][deep[1].index((-60, 40.2)):]
+    atlantic = bottom[0][1] + [(-45, 24), (-47, 32), (-44, 40), (-38, 46)]   # further north, east of the blue
+    lines = [("surface", main, False, False), ("surface", indian[1], False, False),
+             ("deep", north, False, weak), ("deep", deep_indian[1], False, False),
+             ("bottom", atlantic, True, False)] + [("bottom", b[1], True, False) for b in bottom[1:]]
+    marks = [("weak" if weak else "sink", *ICELAND_SINK)] + [m for m in CONVEYOR_MARKS if m[2] < 0 or m[0] == "rise"]
+    return {"lines": [{"kind": k, "points": smooth_path(pts), "fade": fade, "faint": faint} for k, pts, fade, faint in lines],
+            "marks": marks, "sections": []}
 
 def smooth_path(points, step=60.0):
     """Catmull-Rom curve through the waypoints, one point every `step` km."""
@@ -310,6 +333,7 @@ def fill_map(age):
     return rgba
 
 
+@functools.lru_cache(maxsize=None)
 def conveyor_foam(age):
     """FOAM's global overturning, and where its deep convection is most frequent."""
     f = netCDF4.Dataset(SCRATCH / f"{age}_ocean.nc")
@@ -383,11 +407,14 @@ def evidence_positions():
     out, elevations = {}, {}
     for item in json.loads((ROOT / "sources/paleodem-slices.json").read_text())["maps"]:
         age = float(item["age_ma"])
-        if not 1 <= age <= 110:
+        if age < 1:
             continue
         z = elevation(locate(grids, item))[::5, ::5]   # 0.5 degree
         rows, cols = np.nonzero(z < DEEP_SEA_M)
         lats = 90 - rows * 180 / (z.shape[0] - 1); lons = -180 + cols * 360 / (z.shape[1] - 1)
+        elevations[age] = z.astype(np.float32)
+        if age > 110:
+            continue
         chosen = min(EVIDENCE_SLICES, key=lambda s: (abs(s - age), s))
         placed = []
         for kind, lon, lat in marks[chosen]:
@@ -398,7 +425,6 @@ def evidence_positions():
             if d[i] > 12:
                 print(f"  {age:g} Ma: {kind} mark moved {d[i]:.1f} degrees to the sea")
         out[f"{age:g}"] = placed
-        elevations[age] = z.astype(np.float32)
     return out, elevations
 
 
@@ -512,7 +538,21 @@ def route_curve(points, step=60.0):
 # stop's own PaleoDEM coast (a model cell is sea where half its 0.5-degree points are below
 # 0 m for the surface layer, below -2000 m for the deep one), from the stop's own marks. A
 # model stop is the same with a single slice, so every stop draws on the coast shown.
-MODEL_AGES = (0,) + FOAM_AGES + (120,)
+MODEL_AGES = tuple(range(0, 541, 20))
+
+
+def model_sources(age, z):
+    """Past 110 Ma no literature synthesis: the model's own sinking sites (its most frequent
+    deep convection, conveyor_foam) at the nearest slice, ties to the younger, each moved to
+    the nearest sea at least 1 km deep on the stop's map."""
+    chosen = min(MODEL_AGES, key=lambda m: (abs(m - age), m))
+    rows, cols = np.nonzero(z < DEEP_SEA_M)
+    lats = 90 - rows * 180 / (z.shape[0] - 1); lons = -180 + cols * 360 / (z.shape[1] - 1)
+    out = []
+    for _, lon, lat in conveyor_foam(chosen)[1]:
+        i = great_circle_deg(lons, lats, lon, lat).argmin()
+        out.append(["model", round(float(lons[i]), 2), round(float(lats[i]), 2)])
+    return out
 
 
 def sea_on_grid(z, lat, lon, below):
@@ -569,18 +609,28 @@ def main():
         "present": {"lines": [{"kind": kind, "points": smooth_path(pts), "fade": bool(rest)} for kind, pts, *rest in CONVEYOR],
                     "marks": CONVEYOR_MARKS, "sections": conveyor_present()},
     }
+    conveyor["cold"], conveyor["weak"] = glacial_conveyor(False), glacial_conveyor(True)
+    # Warm stops before about 7 ka: no deep water yet formed in the Labrador Sea
+    # (Hillaire-Marcel 2001, doi:10.1038/35074059), so the belt without its branch and sink.
+    conveyor["nolab"] = {"lines": [line for i, line in enumerate(conveyor["present"]["lines"]) if i != 1],
+                         "marks": [m for m in CONVEYOR_MARKS if m[1:] != (-53.5, 57.5)], "sections": []}
     evidence, elevations = evidence_positions()
     conveyor["evidence"] = evidence
     conveyor["between"] = {}
     for age, z in sorted(elevations.items()):
-        routed, mix = routes_stop(age, [(lon, lat) for _, lon, lat in evidence[f"{age:g}"]], z)
+        marks = None if age <= 110 else model_sources(age, z)
+        routed, mix = routes_stop(age, [(lon, lat) for _, lon, lat in (evidence[f"{age:g}"] if marks is None else marks)], z)
         if age in FOAM_AGES:
             age = int(age)
             panels, marks = conveyor_foam(age)
             conveyor[str(age)] = {"lines": routed, "marks": marks, "sections": panels}
             Image.fromarray(fill_map(age)).save(OUT / f"fill-{age}.png")
         else:
-            conveyor["between"][f"{age:g}"] = {"lines": routed, "mix": mix}
+            entry = conveyor["between"][f"{age:g}"] = {"lines": routed, "mix": mix}
+            if marks is not None:
+                entry["marks"] = marks
+                if age in MODEL_AGES:
+                    entry["sections"] = conveyor_foam(int(age))[0]
         print(f"  {age:g} Ma: {len(routed)} routed lines, flow {mix[0]}/{mix[1]} Ma at {mix[2]:.2f}")
     (OUT / "conveyor.json").write_text(json.dumps(conveyor, separators=(",", ":"), allow_nan=False))
     for key, c in conveyor.items():

@@ -11,7 +11,7 @@ import { describeEvents, drawEventMarks, setEvents } from './climate-events.js';
 import { createFlow } from './preview-flow.js';
 import { buildRibbons, buildConveyor, drawSection, CONVEYOR_COLOURS } from './preview-currents.js';
 import { CLIMATE_EVENTS } from './climate-events-data.js';
-import { DEEPWATER } from './preview-deepwater-data.js';
+import { DEEPWATER, QUATERNARY } from './preview-deepwater-data.js';
 import { createMantleOverlay } from './mantle-overlay.js';
 import { createMantleScene, CUT_UNIFORMS, CUT_SURFACE } from './mantle-scene.js';
 import { createCrust, CRUST_GLSL } from './crust.js';
@@ -3020,8 +3020,8 @@ function updateRanges() {
 // currents as ribbons (preview-currents.js), coloured by speed or warm/cold; "conveyor": the
 // present's textbook belt, and in the past the regions where deep water formed according to
 // the literature (preview-deepwater-data.js, carried with the plates), with the FOAM run's
-// own view where one exists. The data follows the map drawn on screen (lastPlace) and shows
-// only on a stop, not between stops.
+// own view where one exists. The data follows the map drawn on screen (lastPlace); between
+// two stops it is the nearer stop's, carried with the map.
 const FOAM_AGES = [20, 40, 60, 80, 100];
 const CURRENT_FIELDS = { present: './preview-currents/present.png',
   ...Object.fromEntries(FOAM_AGES.map(age => [age, `./preview-currents/${age}.png`])) };
@@ -3081,7 +3081,9 @@ async function loadCurrents() {
   conveyorData = await (await fetch(new URL('./preview-currents/conveyor.json', import.meta.url))).json();
   loadEvidence();
 }
-function currentsLegend(key, slice, mix) {
+function currentsLegend(key, slice, entry, quat) {
+  const mix = entry?.mix ?? null;
+  const mixNote = mix && mix[0] !== mix[1] ? `가까운 두 모형 시점 ${mix[0]} Ma와 ${mix[1]} Ma의 해류를 나이에 따라 ${Math.round((1 - mix[2]) * 100)} : ${Math.round(mix[2] * 100)}로 섞고, 이 시점의 해안선 위에서` : '';
   let legend = $('current-legend');
   if (!legend) {
     legend = document.createElement('figure');
@@ -3103,7 +3105,17 @@ function currentsLegend(key, slice, mix) {
     const mark = (cls, glyph, text) => `<span class="conveyor-key conveyor-mark"><b class="${cls}">${glyph}</b>${text}</span>`;
     const past = slice === null ? null : DEEPWATER[slice];
     let keys = '', note = '', heading = '';
-    if (key === 'present') {
+    if (quat) {
+      const modes = { warm: '오늘과 비슷한 상태', cold: '추운 상태', weak: '약해진 상태' };
+      heading = `<p class="overturn-caption">${(quat.ka * 1000).toLocaleString()}년 전: ${quat.name_ko} · ${modes[quat.mode]}</p>`;
+      keys = swatch(CONVEYOR_COLOURS.surface, '따뜻한 표층')
+        + (quat.mode === 'warm' ? swatch(CONVEYOR_COLOURS.deep, '북대서양 심층수 (약 1.5–4 km)')
+          : `<span class="conveyor-key"><i style="background:${CONVEYOR_COLOURS.deep}${quat.mode === 'weak' ? '4d' : ''}"></i>북쪽에서 가라앉은 물: 약 2 km보다 얕게${quat.mode === 'weak' ? ', 크게 약해짐' : ''}</span>`)
+        + swatch(CONVEYOR_COLOURS.bottom, quat.mode === 'warm' ? '남극 저층수 (바닥, 약 4 km 아래)' : '남극 저층수: 대서양 깊은 곳을 더 북쪽까지 채움')
+        + (quat.mode === 'warm' ? mark('sink', '▼', '가라앉는 곳') : mark(quat.mode === 'weak' ? 'likely' : 'sink', quat.mode === 'weak' ? '▽' : '▼', '북쪽의 가라앉는 곳: 아이슬란드 남쪽') + mark('sink', '▼', '남극 둘레의 가라앉는 곳'))
+        + mark('rise', '▲', '올라오는 곳');
+      note = `${quat.note} 지형은 오늘과 같고 해수면과 빙하만 다릅니다. 선은 오늘의 모식도를 그 상태에 맞게 바꾼 것으로 (Rahmstorf 2002의 세 상태: 오늘과 비슷함·추움·약해짐), 자료에서 추적한 선이 아닙니다. 시점이 1천 년 간격이라 그보다 짧은 변동은 빠질 수 있습니다.`;
+    } else if (key === 'present') {
       keys = swatch(CONVEYOR_COLOURS.surface, '따뜻한 표층') + swatch(CONVEYOR_COLOURS.deep, '북대서양 심층수 (약 1.5–4 km)') + swatch(CONVEYOR_COLOURS.bottom, '남극 저층수 (바닥, 약 4 km 아래)')
         + mark('sink', '▼', '가라앉는 곳: 북대서양에서는 주황 선이 끝나고 파란 선이, 남극 둘레에서는 보라 선이 시작')
         + mark('rise', '▲', '올라오는 곳: 파란 선이 끝나고 주황 선이 시작')
@@ -3118,12 +3130,17 @@ function currentsLegend(key, slice, mix) {
           + `<span class="conveyor-key conveyor-mark"><i style="background:linear-gradient(90deg,#d6604d,#8f79b0,#4393c3)"></i>모형: 북쪽(빨강)·남쪽(파랑)에서 가라앉은 깊은 물이 퍼지는 바다</span>` : '');
       note = past.note + ' 표시 위치는 해역을 나타내는 대표 지점으로, 판과 함께 옮겨 그렸습니다. 논쟁 중인 해역은 지도에 그리지 않았습니다.'
         + (key ? ' 선은 문헌이 가리킨 해역(▼▽)에서 모형의 해류를 따라 가장 빨리 가는 길을 이은 것입니다: 표층 물은 넓은 바다에서 모여들어 가라앉고, 깊은 물은 퍼지며 서서히 위의 물과 섞입니다(흐려지는 끝). 굵기는 그 길로 닿는 바다의 몫이지 흐르는 양(Sv)이 아닙니다. 같은 방법을 오늘의 GODAS 재분석에 쓰면 북미 동쪽을 따라 남쪽으로 가는 깊은 경계류와 멕시코 만류가 나옵니다. 모형(FOAM, Pohl): CO₂ 2240 ppm·지금의 태양·맨땅으로 고정하고 대륙 배치만 바꾼 실험으로, 북태평양에서 물을 가라앉히는 경향이 있습니다 (Hutchinson 2021). 퍼지는 바다는 모형의 3차원 흐름과 섞임으로 입자를 2,000년 동안 따라간 결과(1 km보다 깊은 곳)이고, 단면은 모형의 전 지구 자오면 역전 순환입니다.'
-          : mix ? ` 이 시점에는 모형 자료가 없어 (모형은 20 Myr 간격) 선을 재구성했습니다: 가까운 두 모형 시점 ${mix[0]} Ma와 ${mix[1]} Ma의 해류를 나이에 따라 ${Math.round((1 - mix[2]) * 100)} : ${Math.round(mix[2] * 100)}로 섞고, 이 시점의 해안선 위에서 문헌이 가리킨 해역(▼▽)부터 가장 빨리 가는 길을 따라갔습니다. 두 시점 사이 대륙이 많이 움직인 곳에서는 흐름이 번지거나 어긋날 수 있습니다.${mix[0] === 0 ? ' 0 Ma는 오늘의 관측이 아니라 같은 모형의 0 Ma 실험입니다.' : ''} 모형(FOAM, Pohl): CO₂ 2240 ppm 고정, 대륙 배치만 바꾼 실험.`
+          : mix ? ` 이 시점에는 모형 자료가 없어 (모형은 20 Myr 간격) 선을 재구성했습니다: ${mixNote} 문헌이 가리킨 해역(▼▽)부터 가장 빨리 가는 길을 따라갔습니다. 두 시점 사이 대륙이 많이 움직인 곳에서는 흐름이 번지거나 어긋날 수 있습니다.${mix[0] === 0 ? ' 0 Ma는 오늘의 관측이 아니라 같은 모형의 0 Ma 실험입니다.' : ''} 모형(FOAM, Pohl): CO₂ 2240 ppm 고정, 대륙 배치만 바꾼 실험.`
           : ' 이 시점에는 모형 자료가 없습니다 (모형은 20 Myr 간격).');
+    } else if (entry?.marks) {
+      heading = '<p class="overturn-caption">모형이 물을 가라앉히는 곳 (문헌 종합 없음)</p>';
+      keys = swatch(CONVEYOR_COLOURS.surface, '표층 (0–150 m): 가라앉는 곳으로 모이는 길') + swatch(CONVEYOR_COLOURS.deep, '깊은 층 (1.5–4 km): 가라앉는 곳에서 퍼지는 길')
+        + mark('model', '▼', '모형이 물을 가라앉히는 곳');
+      note = `110 Ma보다 오래된 시점에는 깊은 물이 생긴 곳에 대한 문헌 종합이 없어, 모형(FOAM, Pohl)이 물을 가장 자주 가라앉히는 곳에서 출발했습니다. ${mixNote ? `이 시점에는 모형 자료가 없어 ${mixNote}` : '이 시점의 모형 해류를 따라'} 가장 빨리 가는 길을 그렸습니다: 표층 물은 가라앉는 곳으로 모여들고, 깊은 물은 퍼지며 위의 물과 섞입니다(흐려지는 끝). 굵기는 그 길로 닿는 바다의 몫이지 흐르는 양(Sv)이 아닙니다. 모형은 CO₂ 2240 ppm·지금의 태양·맨땅으로 고정하고 대륙 배치만 바꾼 실험이며, 이 모습은 증거와 맞춰 보지 않은 모형만의 것입니다.`;
     } else {
-      note = '컨베이어 벨트 시험 자료는 현재부터 110 Ma까지만 있습니다.';
+      note = '컨베이어 벨트 시험 자료는 현재부터 540 Ma까지만 있습니다.';
     }
-    const sections = key && conveyorData ? conveyorData[key].sections : [];   // drawn again once loaded
+    const sections = key && conveyorData ? conveyorData[key].sections : entry?.sections ?? [];   // drawn again once loaded
     legend.innerHTML = `<strong>해류 컨베이어 벨트 (시험)</strong>${heading}<div class="conveyor-keys">${keys}</div>`
       + sections.map((_, i) => `<canvas class="overturn" data-section="${i}"></canvas>`).join('')
       + (sections.length ? `<p class="overturn-caption">빨강: 북쪽에서 가라앉는 순환${key === 'present' ? ' (북대서양 심층수)' : ''} · 파랑: 남쪽에서 가라앉아 바닥을 따라 북쪽으로 오는 순환${key === 'present' ? ' (남극 저층수)' : ''}</p>` : '')
@@ -3134,20 +3151,38 @@ function currentsLegend(key, slice, mix) {
   }
   legend.innerHTML = `<strong>해류 (시험)</strong>${bar}<p class="legend-note">${source}. ${currentsMode.startsWith('flow') ? '점이 해류를 따라 흐르며 꼬리를 남깁니다(시간 압축).' : '가장 빠른 물을 지나는 유선을 이어 그린 주요 해류, 폭은 속도.'}</p>`;
 }
+// Between two stops the current layers show the nearer stop's, carried toward the map on
+// screen by the same displacement the range marks and overlay lines use.
+function beltPlaceOf(place) {
+  if (!place || place.mapless || !(place.blend > 0)) return { shown: place, share: 0, gap: [] };
+  const near = place.blend < 0.5 ? place.from : place.to;
+  return { shown: { ...place, blend: 0, from: near, to: near, age: near.age },
+           share: place.blend < 0.5 ? place.blend : place.blend - 1, gap: motions[frames.indexOf(place.from)] ?? [] };
+}
+// In the time windows (every 1,000 years on today's geography) the belt is today's schematic
+// in the overturning state the literature gives for that age (QUATERNARY).
+function quaternaryOf(place) {
+  const ka = place && !place.mapless ? place.from?.deglacial?.age_ka : 0;
+  return ka ? QUATERNARY.find(q => ka >= q.young && ka < q.old) ?? null : null;
+}
 function updateCurrents(delta) {
-  const key = currentsMode && projection ? currentsKeyOf(lastPlace) : '';
-  const slice = currentsMode === 'conveyor' && projection ? evidenceSliceOf(lastPlace) : null;
+  const { shown, share, gap } = beltPlaceOf(lastPlace);
+  const key = currentsMode && projection ? currentsKeyOf(shown) : '';
+  const quat = currentsMode === 'conveyor' && projection && !key ? quaternaryOf(shown) : null;
+  const slice = currentsMode === 'conveyor' && projection ? evidenceSliceOf(shown) : null;
+  const ageKey = shown ? String(Number(shown.age.toFixed(3))) : '';
   // Stops between the model's slices carry lines reconstructed from the two nearest slices.
-  const between = !key && slice !== null ? conveyorData?.between?.[String(Number(lastPlace.age.toFixed(3)))] ?? null : null;
-  const state = `${key}|${slice}|${between?.mix ?? ''}`;
+  // Past 110 Ma, where no literature synthesis exists, they start from the model's own sinks.
+  const between = !key && currentsMode === 'conveyor' ? conveyorData?.between?.[ageKey] ?? null : null;
+  const state = `${key}|${slice}|${between?.mix ?? ''}|${quat?.name ?? ''}|${shown?.age}`;
   if (state !== fieldKey) {
     fieldKey = state;
     flow?.clear();
-    currentsLegend(key, slice, between?.mix ?? null);
+    currentsLegend(key, slice, between, quat && { ...quat, ka: shown.from.deglacial.age_ka });
   }
   const flowing = Boolean(key && currentsMode.startsWith('flow') && currentFields);
   // The conveyor's model view tints the sea through the same overlay the flow uses.
-  const fill = currentsMode === 'conveyor' && key && key !== 'present' && currentFills ? currentFills[key] : null;
+  const fill = currentsMode === 'conveyor' && key && key !== 'present' && !share && currentFills ? currentFills[key] : null;
   uniforms.flowOn.value = flowing || fill ? 1 : 0;
   if (fill) uniforms.flowTrail.value = fill;
   if (flowing) {
@@ -3157,22 +3192,26 @@ function updateCurrents(delta) {
     uniforms.flowTrail.value = flow.texture;
   }
   const lines = Boolean(key && currentsMode.startsWith('lines') && currentLines);
-  const conveyor = Boolean(currentsMode === 'conveyor' && conveyorData && (key || slice !== null));
-  const want = lines || conveyor ? `${key}:${slice}:${lastPlace?.age}:${currentsMode}:${projection}:${meridian}:${evidence ? 1 : 0}` : '';
+  const conveyor = Boolean(currentsMode === 'conveyor' && conveyorData && (key || slice !== null || between || quat));
+  const want = lines || conveyor ? `${key}:${slice}:${lastPlace?.age}:${lastPlace?.blend}:${currentsMode}:${projection}:${meridian}:${evidence ? 1 : 0}` : '';
   if (want !== ribbonKey) {
     ribbonKey = want;
     if (ribbonGroup) { earth.remove(ribbonGroup); ribbonGroup.traverse(o => { o.geometry?.dispose(); o.material?.dispose(); }); ribbonGroup = null; }
     if (lines || conveyor) {
       const relative = lon => ((lon - meridian + 540) % 360) - 180;
       const seam = (...lons) => projection !== 'globe' && Math.max(...lons.map(relative)) - Math.min(...lons.map(relative)) > 90;
-      const place = (lon, lat) => pointAt(lon, lat, 0.0025);
+      const place = !share ? (lon, lat) => pointAt(lon, lat, 0.0025) : (lon, lat) => {
+        const [east, north] = travelAt(lon, lat, gap);
+        return pointAt(((lon + share * east + 540) % 360) - 180, Math.max(-90, Math.min(90, lat + share * north)), 0.0025);
+      };
       if (conveyor) {
-        const data = key ? conveyorData[key] : { lines: between?.lines ?? [], marks: [] };
+        const data = key ? conveyorData[key] : quat ? conveyorData[quat.variant]
+          : { lines: between?.lines ?? [], marks: between?.marks ?? [] };
         // The build placed the marks in the sea beside their coast at each PaleoDEM stop;
         // elsewhere they are carried here and may sit on the coast itself.
-        const placed = slice === null ? null : conveyorData.evidence?.[String(Number(lastPlace.age.toFixed(3)))];
+        const placed = slice === null ? null : conveyorData.evidence?.[ageKey];
         const past = slice === null ? [] : placed ?? (!evidence ? [] : evidence.marks.filter(m => m.slice === slice).map(m => {
-          const at = carried(evidence.model, m.pin, lastPlace.age);
+          const at = carried(evidence.model, m.pin, shown.age);
           return at && [m.warm ? 'warm' : m.level, at[0], at[1]];
         }).filter(Boolean));
         ribbonGroup = buildConveyor({ ...data, marks: [...data.marks, ...past] }, place, seam);
@@ -3182,7 +3221,7 @@ function updateCurrents(delta) {
       earth.add(ribbonGroup);
     }
   }
-  stage.dataset.currents = key || slice !== null ? currentsMode : 'false';
+  stage.dataset.currents = key || slice !== null || between || quat ? currentsMode : 'false';
 }
 // Preview: a note folded to its first two lines; a click (not on a link inside) or Enter
 // opens it. Folded by CSS line clamp, so code that rewrites the note's text keeps working.

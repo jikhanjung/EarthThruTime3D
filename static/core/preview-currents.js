@@ -104,6 +104,7 @@ const MARKS = {
   consensus: { size: 2.4, fill: '#1f4fa8', rim: '#f4f7f8', down: true },
   likely: { size: 2.4, fill: '#f4f7f8', rim: '#1f4fa8', down: true },
   warm: { size: 2.4, fill: '#f4f7f8', rim: '#d6273b', down: true },
+  weak: { size: 2.3, fill: '#f4f7f8', rim: '#1f4fa8', down: true },
 };
 export function buildConveyor(data, place, seam) {
   const group = new THREE.Group();
@@ -111,7 +112,7 @@ export function buildConveyor(data, place, seam) {
   // A line marked "fade" fades out over its last 25 points (about 1500 km): the bottom
   // water mixing upward as it spreads, where no single end exists.
   const faded = line => line.points.map(([lon, lat], i) =>
-    [lon, lat, 1, 0, line.fade ? Math.min(1, (line.points.length - 1 - i) / 25) : 1]);
+    [lon, lat, 1, 0, (line.faint ? 0.3 : 1) * (line.fade ? Math.min(1, (line.points.length - 1 - i) / 25) : 1)]);
   for (const [kind, style] of Object.entries(layers)) {
     const lines = data.lines.filter(line => line.kind === kind && !line.routed).map(faded);
     if (lines.length) group.add(buildRibbons(lines, 'speed', place, seam, { ...style, colour: CONVEYOR_COLOURS[kind], endArrow: false }));
