@@ -22,6 +22,7 @@ wwolf는 001부터 셉니다. 그 전의 001–045는 링크와 본문 속 번�
 
 ## 계획
 
+- [jikhanjung P09 — PBDB 화석 산지를 지구본에 (#81), WegenersDream 방식의 개선판](20261001_jikhanjung_P09_pbdb_fossil_localities.md)
 - [wwolf P01 — 위치 핀: 한 지점을 찍고 시간에 따라 따라가기, 가능성 평가](20260919_wwolf_P01_location_pin_feasibility.md)
 - [jikhanjung P08 — 시간 창의 해안선을 빌더의 바다 마스크로 (#59 (c) 1단계)](20260919_jikhanjung_P08_glacial_coast_mask.md)
 - [jikhanjung P07 — CRUST 2.0으로 현재 지구의 지각 두께 표시](20260916_jikhanjung_P07_crust2_visualization.md)
