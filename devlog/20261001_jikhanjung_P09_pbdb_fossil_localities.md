@@ -1,14 +1,20 @@
 # jikhanjung P09 — PBDB 화석 산지를 지구본에 (#81), WegenersDream 방식의 개선판
 
 날짜: 2026-10-01 · 기준 버전: v0.23.0 · 이슈: [#81](https://github.com/jikhanjung/EarthThruTime3D/issues/81) ·
-참고: [028](20260913_028_fossil_check.md)(화석으로 지도 검사), #80(위치 핀, v0.21.0), WegenersDream
-`docs/PBDB_자료_처리.md`·`docs/PBDB_받기_검토.md`(2026-10-01) · 상태: 계획
+참고: [028](20260913_028_fossil_check.md)(화석으로 지도 검사), #80(위치 핀, v0.21.0),
+[koprifossillab/WegenersDream](https://github.com/koprifossillab/WegenersDream)
+[`docs/PBDB_자료_처리.md`](https://github.com/koprifossillab/WegenersDream/blob/main/docs/PBDB_%EC%9E%90%EB%A3%8C_%EC%B2%98%EB%A6%AC.md)·[`docs/PBDB_받기_검토.md`](https://github.com/koprifossillab/WegenersDream/blob/main/docs/PBDB_%EB%B0%9B%EA%B8%B0_%EA%B2%80%ED%86%A0.md)(2026-10-01) · 상태: 계획
 
 ## 목적
 
 지금 보이는 나이의 화석 산지(PBDB collection)를 지구본에 점으로 그린다. 각 산지는 **그 나이에 판이 있던 자리**로
 옮기고, 누르면 PBDB 기록으로 이어진다. #81(wwolf)이 제안한 층이다. 이 계획은 #81의 설계를 따르면서,
 같은 일을 먼저 한 WegenersDream(이하 WD)에서 얻은 규칙과 WD 검토에서 찾은 약점을 고친 방식을 얹는다.
+
+**WD 는 이 저장소가 아니라 다른 GitHub 계정(`koprifossillab`)의 공개 저장소
+[koprifossillab/WegenersDream](https://github.com/koprifossillab/WegenersDream) 이다.** 이 문서가 WD 의 파일·devlog 번호
+(WD 001·015·016, tupandactyl 008 등)를 들 때는 모두 그 저장소의 것이고, 이 저장소의 같은 번호 devlog 와 다르다. 코드는
+가져다 붙이지 않고 규칙만 옮기며, 옮긴 규칙은 이 저장소의 파일에서 다시 시험한다.
 
 ## 1. WD 에서 가져오는 것, 고치는 것, 버리는 것
 
