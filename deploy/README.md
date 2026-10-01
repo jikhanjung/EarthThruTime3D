@@ -58,6 +58,7 @@ CC BY 자료의 파생물과 원본 조건이 확정되지 않은 마스크를 �
   - OPT1 맨틀 51시점과 인도–아시아 5시점 단면·3D 지표, 각 카탈로그 및 gzip 표현.
     실험 데이터는 누락·해시 불일치·시점 누락 시 패킹을 거부한다.
   - CRUST 2.0 현재 지각 두께 카탈로그·바이너리·gzip 3개. 원본 압축 파일은 제외한다.
+  - 현재 지구(jikhanjung P10): Blue Marble 바탕 2장, 판을 만들 때 받은 GFS 바람 2장·구름 2장, ECCO2 해류 평균 1장과 카탈로그(약 8 MB). 원본 GRIB2·HDF5·ECCO2 층은 제외한다. 판 PR에서 `scripts/fetch_present_weather.py`로 바람·구름 시각을 새로 고정한다.
   경로·크기·SHA-256을 `manifest.json`에 기록한다. v0.23.0 릴리스에는 고도 시리즈와
   빙하 마스크 57장, 빙상 조각 80장, 모형 기후 131장, 산맥 표시 1개, 12비트 0 Ma 고도 텍스처가 포함됐다. 정확한 파일 목록은 릴리스 묶음의 매니페스트를 따른다.
 - 컨테이너: Gunicorn, UID/GID `10001`, 읽기 전용 루트, 쓰기 가능한 곳은 DB 볼륨과 `/tmp`뿐.
@@ -187,6 +188,7 @@ sudo certbot certonly --webroot --webroot-path /srv/earththrutime3d/acme \
 | `MANTLE_DERIVED_DIR` | 이미지 기본 `/runtime/mantle/muller2022-opt1` |
 | `CRUST_DERIVED_DIR` | 기본 `/runtime/crust` (PaleoDEM 자료 디렉터리의 형제 경로) |
 | `INDIA_ASIA_DERIVED_DIR` | 이미지 기본 `/runtime/india-asia` |
+| `PRESENT_DERIVED_DIR` | 기본 `/runtime/present-earth` (PaleoDEM 자료 디렉터리의 형제 경로) |
 | `SCOTESE_DERIVED_DIR` | 컨테이너 기본 `/runtime/segmentation` |
 | `SCOTESE_VIEWER_STEPS` | 지도 사이 눈금 수. 1·2·4·8·16·32 |
 | `SCOTESE_VIEWER_INTERVAL_MA` | 대신 몇 백만 년마다 눈금을 둘지 |

@@ -32,6 +32,8 @@
 | `shading` | `0` · `1`(기본) · `5` · `20` | 지형 음영 |
 | `sea` | m 숫자 | 해수면 조절. 시간 범위에서는 나이가 해수면을 정하므로 적히지 않는다 |
 | `relief` · `rivers` · `ice` · `grid` | `0` · `1`(기본). 다른 값은 무시한다 | 입체 지형 · 잠재 하천 · 빙하 · 격자 |
+| `sat` | `0` · `1`(기본) | 현재(0 Ma)의 위성 영상 바탕 |
+| `wind` · `currents` · `clouds` | `10m` · `250hPa` / `1` / `sat` · `model` | 현재의 바람 · 해류 · 구름(0 Ma에서만 그린다) |
 
 예: `/?masks=paleodem2018&window=lastcycle`, `/?masks=paleodem2018&age=200&pin=126.98,37.57;-87.63,41.88`.
 
@@ -88,6 +90,7 @@
 | `/globe/rivers/<id>.png` · `/globe/rivers-low/<id>.png` · `/globe/rivers-ice/<id>/<years>.png` | 하천 · 저수위 · 빙기(2.5–80 ka) |
 | `/globe/coastlines/<age>.json` · `/plates/<model>/<layer>.json` | PaleoCoastlines · 판 회전·대륙 다각형 |
 | `/mantle/assets/…` · `/crust/assets/…` · `/collision/data/…` | 맨틀·지각·단면 자료(gzip, 불변) |
+| `/present/assets/<이름>-<sha12>.<확장자>` | 현재 지구: Blue Marble 바탕 · 바람 · 구름 · 해류 평균(불변) |
 | `/globe/maps/<id>.jpg` | 2002 원본 지도 — 운영에서는 비공개(404) |
 
 전달 방식(HTML 한 번 → 시점마다 PNG 데이터 텍스처, GPU LRU 12장 → 켤 때만 JSON/gz)은

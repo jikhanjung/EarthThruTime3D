@@ -293,6 +293,29 @@ statistics change independently of the model. The record URL, retrieval date and
 license value remain in the manifest as evidence; an optional local `record.json`
 is not required to build. The ZIP size and SHA-256 checks remain mandatory.
 
+## Present-day Earth: satellite base, wind, clouds, currents
+
+Built into `data/derived/present-earth/` with one `catalogue.json` (jikhanjung P10). None of
+it is a live feed: the screen names the moment or period of each layer.
+
+- **Satellite base** — `bluemarble.json` pins two GetMap images of NASA Blue Marble
+  (`BlueMarble_ShadedRelief_Bathymetry`, a cloud-free composite of about 2004) from NASA
+  EOSDIS GIBS, by bytes and SHA-256. NASA imagery carries no copyright; credit is
+  requested. `scripts/fetch_bluemarble.py [--verify-only]`.
+- **Wind and clouds** — one moment per release: the NOAA/NCEP GFS 0.25° analysis (f000;
+  u/v at 10 m and 250 hPa, total cloud cover) from the NOMADS grib filter, and the NOAA/NESDIS
+  GMGSI longwave-IR geostationary mosaic of the same hour from the `noaa-gmgsi-pds` bucket.
+  Both US government works, public domain. `scripts/fetch_present_weather.py [--cycle
+  YYYYMMDDHH]` is run in the release PR; `present_weather.json` records the URLs, bytes and
+  SHA-256 of what was fetched.
+- **Surface currents** — ECCO2 cube92 (NASA JPL/MIT; Menemenlis et al. 2008), the top layer
+  (5 m) of the 3-day mean nearest the 15th of every month, 1992–2018 (324 samples), from the
+  NASA NAS data portal without login, vector-averaged cell by cell. A model climatology,
+  not an observation. `scripts/build_ecco2_mean.py` (resumable; `--bake-only` re-averages
+  the raw layers kept under `data/sources/ecco2/`). The velocity files sit 430 (u) and 429 (v)
+  columns and one row off their header longitudes, found by GSM against the model's SST
+  (koprifossillab 014); the script undoes it.
+
 ## Present-day crustal thickness
 
 `crust/crust2.json` pins the EarthByte GPlates 2.3 distribution of **CRUST 2.0**:

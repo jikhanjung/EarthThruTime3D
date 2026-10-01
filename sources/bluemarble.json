@@ -1,0 +1,27 @@
+{
+ "id": "bluemarble-gibs",
+ "layer": "BlueMarble_ShadedRelief_Bathymetry",
+ "service": "https://gibs.earthdata.nasa.gov/wms/epsg4326/best/wms.cgi",
+ "license": "NASA imagery, no copyright (credit requested)",
+ "citation": "NASA Earth Observatory Blue Marble (shaded relief and bathymetry), served by NASA EOSDIS GIBS.",
+ "imagery_epoch": "2004 composite",
+ "retrieved": "2026-10-02",
+ "files": [
+  {
+   "path": "8192.jpg",
+   "url": "https://gibs.earthdata.nasa.gov/wms/epsg4326/best/wms.cgi?SERVICE=WMS&REQUEST=GetMap&VERSION=1.3.0&LAYERS=BlueMarble_ShadedRelief_Bathymetry&STYLES=&CRS=EPSG%3A4326&BBOX=-90%2C-180%2C90%2C180&WIDTH=8192&HEIGHT=4096&FORMAT=image%2Fjpeg",
+   "width": 8192,
+   "height": 4096,
+   "bytes": 3118845,
+   "sha256": "dc26b816037021601eeea972c59e264a37fd41cd4062381fdb4d9dc9a6230348"
+  },
+  {
+   "path": "4096.jpg",
+   "url": "https://gibs.earthdata.nasa.gov/wms/epsg4326/best/wms.cgi?SERVICE=WMS&REQUEST=GetMap&VERSION=1.3.0&LAYERS=BlueMarble_ShadedRelief_Bathymetry&STYLES=&CRS=EPSG%3A4326&BBOX=-90%2C-180%2C90%2C180&WIDTH=4096&HEIGHT=2048&FORMAT=image%2Fjpeg",
+   "width": 4096,
+   "height": 2048,
+   "bytes": 939458,
+   "sha256": "ba0d25f05080acf378241a00bf6a96ed9b5d03d13f6018c3c59baf98ff6627a8"
+  }
+ ]
+}
