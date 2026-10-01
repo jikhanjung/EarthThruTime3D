@@ -33,7 +33,7 @@
 | `sea` | m 숫자 | 해수면 조절. 시간 범위에서는 나이가 해수면을 정하므로 적히지 않는다 |
 | `relief` · `rivers` · `ice` · `grid` | `0` · `1`(기본). 다른 값은 무시한다 | 입체 지형 · 잠재 하천 · 빙하 · 격자 |
 | `sat` | `0` · `1`(기본) | 현재(0 Ma)의 위성 영상 바탕 |
-| `wind` · `currents` · `clouds` | `10m` · `250hPa` / `1` / `sat` · `model` | 현재의 바람 · 해류 · 구름(0 Ma에서만 그린다) |
+| `wind` · `currents` · `clouds` | `10m` · `250hPa` / `flow` / `sat` · `model` | 현재의 바람 · 해류 · 구름(0 Ma에서만 그린다). `currents`는 값을 받는다 — 옛 바다나 순환 그림이 같은 열쇠를 쓸 수 있게 |
 
 예: `/?masks=paleodem2018&window=lastcycle`, `/?masks=paleodem2018&age=200&pin=126.98,37.57;-87.63,41.88`.
 

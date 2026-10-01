@@ -314,7 +314,12 @@ it is a live feed: the screen names the moment or period of each layer.
   not an observation. `scripts/build_ecco2_mean.py` (resumable; `--bake-only` re-averages
   the raw layers kept under `data/sources/ecco2/`). The velocity files sit 430 (u) and 429 (v)
   columns and one row off their header longitudes, found by GSM against the model's SST
-  (koprifossillab 014); the script undoes it.
+  (koprifossillab 014); the script undoes it. Terms: the NAS portal carries no terms page
+  (checked 2026-10-02). The terms recorded here, NASA open data without restriction with
+  the Menemenlis et al. (2008) citation requested, are as GSM's review read them from NASA's
+  Earth science data policy (GSM `docs/ECCO_V4_해류.md` §3); the Earthdata policy page refused
+  an automated read on 2026-10-02, so they are to be confirmed by hand before relying on
+  more than citation. wwolf (#89) scores the mean against the NOAA drifter annual mean.
 
 ## Present-day crustal thickness
 

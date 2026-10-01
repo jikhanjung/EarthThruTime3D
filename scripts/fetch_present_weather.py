@@ -155,9 +155,11 @@ def encode_wind(u, v):
     rgb = np.zeros((HEIGHT, WIDTH, 3), dtype=np.uint8)
     scale = {}
     for i, (name, grid) in enumerate((("u", u), ("v", v))):
-        lo, hi = float(grid.min()), float(grid.max())
-        rgb[..., i] = np.rint((grid - lo) / (hi - lo or 1.0) * 255).astype(np.uint8)
-        scale[name] = [round(lo, 3), round(hi, 3)]
+        # Code 128 is exactly zero: -M·128/127 .. M (see build_ecco2_mean.symmetric)
+        m = round(float(np.abs(grid).max()) or 1.0, 3)
+        lo, hi = -m * 128 / 127, m
+        rgb[..., i] = np.rint((np.clip(grid, lo, hi) - lo) / (hi - lo) * 255).astype(np.uint8)
+        scale[name] = [lo, hi]
     return png(rgb, "RGB"), scale
 
 

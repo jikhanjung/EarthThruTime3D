@@ -1054,7 +1054,10 @@ Earth as it looks and moves (jikhanjung P10, ported from GSM's "Earth in flux" l
   pinned in the release PR; the currents are a 1992–2018 mean.
 - **Away from 0 Ma** the controls are disabled, the canvases and cloud shell hidden, and
   `data-flux="unavailable"`. Stage attributes: `data-satellite`, `data-satellite-size`,
-  `data-flux`, `data-wind`, `data-currents`, `data-clouds`, `data-flux-when`.
+  `data-flux`, `data-wind`, `data-currents`, `data-clouds`, `data-flux-when`. Address:
+  `sat=0`, `wind=10m|250hPa`, `currents=flow`, `clouds=sat|model`.
+- **Encoding**: u and v are stored over `-M·128/127 .. M`, so code 128 is exactly zero
+  and still water stays still (wwolf on #89).
 
 Data and serving: `core/present.py` validates each catalogue section on its own (a bad
 section hides only its controls) and serves files named `<key>-<sha12>` through

@@ -2990,7 +2990,7 @@ function init() {
 // time range keep their own parameters.
 // view: globe | mollweide | equalearth | equirect · surface: relief | map | mask | temp | veg | rain
 // shading: 0 | 1 | 5 | 20 · sea: metres · relief, rivers, ice, grid: 0 | 1 · age: Ma
-// sat: 0 | 1 (the present's satellite base) · wind: 10m | 250hPa · currents: 1 · clouds: sat | model
+// sat: 0 | 1 (the present's satellite base) · wind: 10m | 250hPa · currents: flow · clouds: sat | model
 const viewDefaults = {};
 let addressReady = false;
 let addressTimer = 0;
@@ -3004,7 +3004,7 @@ function viewState() {
     relief: reliefWanted ? '1' : '0', rivers: riversVisible ? '1' : '0',
     ice: iceVisible ? '1' : '0', grid: gridVisible ? '1' : '0',
     sat: present?.base ? (satelliteWanted ? '1' : '0') : null,
-    wind: flux?.state().wind ?? null, currents: flux?.state().currents ? '1' : null,
+    wind: flux?.state().wind ?? null, currents: flux?.state().currents ? 'flow' : null,
     clouds: flux?.state().clouds ?? null,
   };
 }
@@ -3048,7 +3048,7 @@ function readViewAddress() {
   if (flag('rivers') !== null) riversVisible = flag('rivers');
   if (flag('ice') !== null) iceVisible = flag('ice');
   if (flag('sat') !== null && present?.base) satelliteWanted = flag('sat');
-  flux?.restore({ wind: asked.get('wind'), currents: flag('currents'), clouds: asked.get('clouds') });
+  flux?.restore({ wind: asked.get('wind'), currents: asked.get('currents') === 'flow', clouds: asked.get('clouds') });
   const wanted = asked.get('surface');
   if (wanted && ['relief', 'map', 'mask', 'temp', 'veg', 'rain'].includes(wanted)) surface = wanted;
   if (surfaceToggle) surfaceToggle.setAttribute('aria-pressed', String(surface === 'mask'));

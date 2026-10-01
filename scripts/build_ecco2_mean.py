@@ -165,6 +165,13 @@ def corrected(var, raw):
     return grid
 
 
+def symmetric(largest):
+    """A range whose code 128 is exactly zero: -M·128/127 .. M, so still water stays still
+    (with the sea's own min and max, zero fell between codes and drifted by ~0.3 cm/s; wwolf, #89)."""
+    m = round(largest or 1.0, 4)
+    return [-m * 128 / 127, m]
+
+
 def bake(stamps):
     import numpy as np
     from PIL import Image
@@ -186,11 +193,9 @@ def bake(stamps):
     rgb = np.zeros((HEIGHT, WIDTH, 3), dtype=np.uint8)
     scale = {}
     for i, (key, grid) in enumerate((("u", u), ("v", v))):
-        sea = grid[~land]
-        lo, hi = float(sea.min()), float(sea.max())
-        span = hi - lo or 1.0
-        rgb[..., i] = np.rint((np.clip(grid, lo, hi) - lo) / span * 255).astype(np.uint8)
-        scale[key] = [round(lo, 4), round(hi, 4)]
+        lo, hi = symmetric(float(np.abs(grid[~land]).max()))
+        rgb[..., i] = np.rint((np.clip(grid, lo, hi) - lo) / (hi - lo) * 255).astype(np.uint8)
+        scale[key] = [lo, hi]
     rgb[..., 2] = np.where(land, 0, 255)
     speed = np.hypot(u, v)[~land]
     out = io.BytesIO()

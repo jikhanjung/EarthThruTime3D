@@ -44,7 +44,7 @@ try {
   await expect(page.locator('#flux-legend')).toContainText(moment);
   await expect(page.locator('#flux-note')).toBeVisible();
   await expect.poll(() => new URL(page.url()).searchParams.get('wind')).toBe('250hPa');
-  await expect.poll(() => new URL(page.url()).searchParams.get('currents')).toBe('1');
+  await expect.poll(() => new URL(page.url()).searchParams.get('currents')).toBe('flow');
   await expect.poll(() => new URL(page.url()).searchParams.get('clouds')).toBe('sat');
   await page.waitForTimeout(2500);
   // Particles are drawn: the wind canvas is not blank.
@@ -92,7 +92,7 @@ try {
   await expect.poll(() => new URL(page.url()).searchParams.get('sat')).toBe('0');
 
   // The address reopens the same view.
-  await page.goto(new URL('/?masks=paleodem2018&wind=10m&currents=1&clouds=model', base).href);
+  await page.goto(new URL('/?masks=paleodem2018&wind=10m&currents=flow&clouds=model', base).href);
   await expect(globe).toHaveAttribute('aria-busy', 'false');
   await expect(globe).toHaveAttribute('data-wind', '10m');
   await expect(globe).toHaveAttribute('data-currents', 'true');
