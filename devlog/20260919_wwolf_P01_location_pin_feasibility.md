@@ -1,6 +1,6 @@
 # wwolf P01 — 위치 핀: 한 지점을 찍고 시간에 따라 따라가기, 가능성 평가
 
-날짜: 2026-09-19 · 기준 버전: v0.20.0 · 상태: 측정 완료([wwolf 014](20260919_wwolf_014_location_pin_measurements.md)), 시제품 구현([wwolf 015](20260919_wwolf_015_location_pins.md))
+날짜: 2026-09-19 · 기준 버전: v0.20.0 · 상태: 구현됨([wwolf 015](20260919_wwolf_015_location_pins.md), v0.21.0 배포 [jikhanjung 105](20260921_jikhanjung_105_release_0210.md)) · 측정: [wwolf 014](20260919_wwolf_014_location_pin_measurements.md)
 
 ## 목적
 
