@@ -973,6 +973,9 @@ def globe(request):
                    "motions": (motions(frames, pieces_by_frame) if source == "scotese2002"
                                else atlas_motions(frames, source)),
                    "coastlines": coastlines(source) if enabled() else None,
+                   # Mountain-range marks for the flat maps; the elevation series only.
+                   "ranges_url": (reverse("globe-ranges") if source == "paleodem2018"
+                                  and mountain_ranges_path().exists() else None),
                    "temperature_curve": climate["curve"],
                    "temperature_available": any(frame.get("temp") for frame in frames),
                    "climate_available": any(frame.get("climate") for frame in frames),
@@ -1124,6 +1127,26 @@ def temperature_map(request, map_id):
         raise Http404("Temperature texture not generated") from None
     response = FileResponse(file, content_type="image/png")
     response["Cache-Control"] = "private, max-age=3600"
+    return response
+
+
+def mountain_ranges_path():
+    """Mountain-range marks for the flat maps, written by scripts/build_mountain_ranges.py."""
+    return Path(settings.PALEODEM_DERIVED_DIR) / "mountain-ranges.json"
+
+
+@require_safe
+def mountain_ranges(request):
+    """The mountain-range marks of the elevation series: today's named ranges and each past
+    grid's own, one file for all grids."""
+    if not enabled():
+        raise Http404
+    try:
+        file = mountain_ranges_path().open("rb")
+    except FileNotFoundError:
+        raise Http404("Mountain ranges not built") from None
+    response = FileResponse(file, content_type="application/json")
+    response["Cache-Control"] = "public, max-age=86400"
     return response
 
 

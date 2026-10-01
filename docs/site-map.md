@@ -27,8 +27,16 @@
 | `age` | Ma 숫자 | 처음 보여 줄 시점 |
 | `pin` | `경도,위도;경도,위도;…` (최대 3) | 위치 핀. 있으면 핀 스위치가 켜진다 |
 | `steps` · `interval` | 허용 목록의 값 | 지도 사이 눈금 수 / 몇 Myr마다(전체 시대만) |
+| `view` | `globe`(기본) · `mollweide` · `equalearth` · `equirect` | 투영 |
+| `surface` | `relief` · `map` · `mask` · `temp` · `veg` · `rain` | 표면: 고도 · 원본 지도 · 대륙 마스크 · 기온 · 모형 식생 · 모형 강수 |
+| `shading` | `0` · `1`(기본) · `5` · `20` | 지형 음영 |
+| `sea` | m 숫자 | 해수면 조절. 시간 범위에서는 나이가 해수면을 정하므로 적히지 않는다 |
+| `relief` · `rivers` · `ice` · `grid` | `0` · `1`(기본). 다른 값은 무시한다 | 입체 지형 · 잠재 하천 · 빙하 · 격자 |
 
 예: `/?masks=paleodem2018&window=lastcycle`, `/?masks=paleodem2018&age=200&pin=126.98,37.57;-87.63,41.88`.
+
+보기를 바꾸면 주소가 따라 바뀐다(마지막 조작 0.4초 뒤, 기본값과 다른 것만). 그 주소를 열면 같은 보기가
+된다. `age`는 주소로 연 시점에서 벗어나면 적히고, 주소에 `age`를 담아 연 경우에는 계속 남는다. 예: `/?masks=paleodem2018&age=300&view=equalearth&surface=rain&shading=5`.
 
 ## 지구본 화면 (`/`) 구성
 
