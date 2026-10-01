@@ -680,6 +680,21 @@ class PaleodemTests(TestCase):
             self.assertContains(response, needle)
         self.assertFalse(self.client.get('/').context['sealevel_available'])
 
+    def test_mountain_ranges_are_offered_only_where_built(self):
+        for item in globe_module.series_items('paleodem2018'):
+            self.build(item)
+        response = self.client.get('/', {'masks': 'paleodem2018'})
+        self.assertIsNone(response.context['ranges_url'])
+        self.assertNotContains(response, 'id="globe-ranges"')
+        self.assertEqual(self.client.get('/globe/ranges.json').status_code, 404)
+        globe_module.mountain_ranges_path().write_text(json.dumps({'present': [], 'maps': {}}))
+        response = self.client.get('/', {'masks': 'paleodem2018'})
+        self.assertEqual(response.context['ranges_url'], '/globe/ranges.json')
+        self.assertContains(response, 'id="globe-ranges"')
+        served = self.client.get('/globe/ranges.json')
+        self.assertEqual(served.status_code, 200)
+        self.assertEqual(json.loads(b''.join(served.streaming_content)), {'present': [], 'maps': {}})
+
     def test_river_fields_are_offered_only_where_built(self):
         for item in globe_module.series_items('paleodem2018'):
             self.build(item)

@@ -1,8 +1,8 @@
-// Preview: short climate and biotic events as marks over the timeline. The model maps are
+// Short climate and biotic events as marks over the timeline. The model maps are
 // snapshots several Myr apart on a smooth CO2 curve, so an event shorter than the gap
 // between them cannot show on the surface; a mark says where it was and what the record
 // shows. Ages in Ma (the time windows' ka are Ma / 1000). Dates and citations are checked
-// in the events list (EVENTS), not guessed here.
+// in climate-events-data.js (devlog wwolf 019), not guessed here.
 export const KINDS = {
   wet: { colour: '#01665e', letter: 'W' },
   dry: { colour: '#bf812d', letter: 'D' },
@@ -30,10 +30,16 @@ export function fractionalIndex(stops, age) {
   return last;
 }
 
-// Events whose span, widened by half a stop gap either side, holds the stop's age.
+// Events whose span, widened by half a stop gap either side, holds the stop's age. At the
+// first and last stop there is only one neighbour, so that one side's spacing stands for
+// both; taking the clamped pair would halve the window exactly where a mark sits alone.
 export function eventsAt(stops, index) {
+  if (!stops.length) return [];
   const age = stops[index][3];
-  const gap = Math.abs((stops[Math.max(0, index - 1)][3] - stops[Math.min(stops.length - 1, index + 1)][3]) / 2) || 0;
+  const before = stops[Math.max(0, index - 1)][3];
+  const after = stops[Math.min(stops.length - 1, index + 1)][3];
+  const spans = [Math.abs(before - age), Math.abs(age - after)].filter(value => value > 0);
+  const gap = spans.length ? spans.reduce((sum, value) => sum + value, 0) / spans.length : 0;
   const windowed = stops[0][3] < 1;
   return EVENTS.filter(event => (windowed ? event.start_ma < 1 : event.start_ma >= 1)
     && age <= event.start_ma + gap / 2 && age >= event.end_ma - gap / 2);
@@ -42,6 +48,8 @@ export function eventsAt(stops, index) {
 export function drawEventMarks(container, stops, lang, onPick) {
   if (!container) return;
   container.replaceChildren();
+  // One stop has no span to place a mark along, and none has nothing to divide by.
+  if (stops.length < 2) { container.hidden = true; return; }
   const last = stops.length - 1;
   // The whole timeline leaves the thousand-year events to the time windows, where they
   // have room; a window shows only its own.
@@ -56,15 +64,30 @@ export function drawEventMarks(container, stops, lang, onPick) {
     mark.type = 'button';
     mark.className = 'event-mark';
     mark.style.left = `${(a * 100).toFixed(3)}%`;
-    mark.style.width = `max(8px, ${((b - a) * 100).toFixed(3)}%)`;
+    mark.style.width = `max(13px, ${((b - a) * 100).toFixed(3)}%)`;
     mark.style.background = kind.colour;
     mark.textContent = kind.letter;
     const name = displayName(event, lang);
     mark.title = `${name} · ${spanText(event)}`;
     mark.setAttribute('aria-label', mark.title);
+    mark.tabIndex = container.children.length === 0 ? 0 : -1;
     mark.addEventListener('click', () => onPick(Math.round(fractionalIndex(stops, event.peak_ma ?? (event.start_ma + event.end_ma) / 2))));
     container.append(mark);
   }
+  // The row is one tab stop, not one per event: thirteen marks otherwise sit between the
+  // era menu and the slider. Left and right move between them, Home and End to the ends.
+  container.addEventListener('keydown', event => {
+    const marks = [...container.children];
+    const at = marks.indexOf(document.activeElement);
+    if (at < 0) return;
+    const to = event.key === 'ArrowRight' ? at + 1 : event.key === 'ArrowLeft' ? at - 1
+      : event.key === 'Home' ? 0 : event.key === 'End' ? marks.length - 1 : -1;
+    if (to < 0 || to >= marks.length) return;
+    event.preventDefault();
+    marks[at].tabIndex = -1;
+    marks[to].tabIndex = 0;
+    marks[to].focus();
+  });
   container.hidden = inRange.length === 0;
 }
 

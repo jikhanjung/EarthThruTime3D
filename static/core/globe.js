@@ -75,6 +75,7 @@ const PLATE_COLOUR = 0xff62c0;
 // PaleoCoastlines (Kocsis & Scotese 2021): coastlines moved to where marine fossils say
 // the sea reached. Same PALEOMAP frame as the 2016 masks, so drawn without rotation.
 const coastlines = JSON.parse($('globe-coastlines')?.textContent ?? 'null');
+const rangesUrl = JSON.parse($('globe-ranges')?.textContent ?? 'null');
 // Amber vanished against the tan land; this reads on land and on sea, and is not the
 // plate overlay's pink.
 const COASTLINE_COLOUR = 0xff4d1a;
@@ -423,8 +424,8 @@ async function selectStop(value, manual = false, overlayManaged = false, transit
     !place.mapless && place.from.ice_kind === 'analogue' ? L.analogueIce : null,
     !place.mapless && place.from.ice_kind === 'reconstructed' ? L.reconstructedIce : null].filter(Boolean).join(' / ');
   describeEvents($('event-note'), stops, place.value, document.documentElement.lang);
-  requestAnimationFrame(markFoldableNotes);
   queueAddress();
+  requestAnimationFrame(markFoldableNotes);
   const nextLabel = $('globe-age').textContent;
   if (transition) $('globe-age').textContent = displayedLabel;
   // Older than any map there is no source to preview, and leaving the last one up
@@ -1308,12 +1309,12 @@ function globeMaterial() {
         vec3 ground = rise < 0.35 ? mix(low, mid, rise / 0.35) : mix(mid, high, (rise - 0.35) / 0.65);
         return mix(sea, ground, landness);
       }
-      // Surface air temperature as colour, blue at -30 C through pale at 0 to red at
-      // 40 C, the range the maps actually span. Grey holds it over -60..60 C.
-      // Preview: ColorBrewer RdYlBu with stops at -30, -20, -10, -5, 0, 5, 12, 18, 24, 30 and
-      // 40 C, blues below freezing, yellow to red above. Mixed as encoded and decoded after,
-      // as the legend's CSS gradient mixes, so a colour on the globe is the legend's colour;
-      // the old three-stop ramp mixed in linear light and sat up to dE 25 off its legend.
+      // Surface air temperature as colour over -30..40 C, the range the maps actually span
+      // (grey holds it over -60..60 C): ColorBrewer RdYlBu with stops at -30, -20, -10, -5,
+      // 0, 5, 12, 18, 24, 30 and 40 C, blues below freezing, yellow through red above. Mixed
+      // as encoded and decoded after, as the legend's CSS gradient mixes, so a colour on the
+      // globe is the legend's colour; the three-stop ramp before mixed in linear light and sat
+      // up to dE2000 13 off its own legend (devlog wwolf 017).
       vec3 thermal(float celsius) {
         float c = clamp(celsius, -30.0, 40.0);
         vec3 s;
@@ -1356,9 +1357,8 @@ function globeMaterial() {
         return mix(vec3(0.004, 0.400, 0.369), vec3(0.0, 0.235, 0.188), (t - 0.794) / 0.206);
       }
       // One cell of a climate texture: red the cover class times 32, green the square root of
-      // annual precipitation over 8000 mm. Rain is one hue, light to dark, along the cube root,
-      // so a desert's tens of millimetres still show; teal, as blue is the sea's and the rivers'.
-      // The stops are mixed as encoded, which steps evenly to the eye and is what the legend's
+      // annual precipitation over 8000 mm, drawn along the cube root so a desert's tens of
+      // millimetres still show. The stops are mixed as encoded, which is what the legend's
       // gradient does. Under the model's ice there is no rain to show, unless blue marks a
       // real value there (preview: PhanDA snowfall under Krapp's ice at the present).
       vec3 climateColour(vec4 cell, int which) {
@@ -1456,10 +1456,10 @@ function globeMaterial() {
             landness = smoothstep(-width, width, metres);
             distance = metres / 400.0;
           }
-          // Preview: the relief's hill shading under the colour views too, so mountain ranges
-          // read under temperature and modelled climate. Divided by what flat ground gets
-          // (0.749), so level land keeps the legend's colour exactly and only slopes lighten or
-          // darken; the relief-shading selector turns it off (exaggeration 0).
+          // The relief's hill shading under the colour views too, so mountain ranges read
+          // under temperature and modelled climate. Divided by what level ground gets (0.749),
+          // so flat land keeps the legend's colour exactly and only slopes lighten or darken;
+          // the relief-shading selector turns it off at 0.
           if (mode >= 3 && exaggeration > 0.0) {
             terrain = mix(1.0, clamp(shade(uvA, uvB, (surfaceUv.y - 0.5) * 180.0) / 0.749, 0.55, 1.3), landness);
           }
@@ -2684,15 +2684,16 @@ function init() {
     });
   }
   drawTemperatureStrip();
-  // Preview: the colour legends float on the map instead of sitting below the Earth
-  // interior controls in the info panel; the elements move, so their own code still drives them.
+  // The colour legends float on the map instead of sitting below the Earth interior
+  // controls in the info panel, so the key is seen without opening the panel. The elements
+  // move, so their own code still shows, hides and fills them.
   const mapLegend = document.createElement('div');
   mapLegend.className = 'map-legend';
   mapLegend.id = 'map-legend';
   for (const id of ['temp-legend', 'rain-legend', 'veg-legend']) if ($(id)) mapLegend.append($(id));
   $('explorer').append(mapLegend);
-  // Preview: the Earth interior section folds to its heading, folded unless one of its
-  // layers is on; the choice is remembered in this browser.
+  // The Earth interior section folds to its heading: folded unless one of its layers is on,
+  // and a reader's own choice is kept in this browser.
   const interiorPanel = $('interior-panel');
   const interiorTitle = $('interior-title');
   if (interiorPanel && interiorTitle) {
@@ -2716,8 +2717,20 @@ function init() {
       if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); flip(); }
     });
   }
-  // Preview: every explanatory note in the panel folds to its first two lines.
-  for (const note of document.querySelectorAll('#inspector .model-note:not(.hint):not(.pin-panel)')) makeFoldable(note);
+  // Every explanatory note in the panel folds to its first two lines; a click (not on a
+  // link or control inside) or Enter opens it. Folded by CSS line clamp, so the code that
+  // rewrites a note's text keeps working.
+  for (const note of document.querySelectorAll('#inspector .model-note:not(.hint):not(.pin-panel)')) {
+    note.classList.add('foldable', 'folded');
+    note.tabIndex = 0;
+    note.setAttribute('aria-expanded', 'false');
+    const flip = () => note.setAttribute('aria-expanded', String(!note.classList.toggle('folded')));
+    note.addEventListener('click', event => { if (!event.target.closest('a, button, input, select')) flip(); });
+    note.addEventListener('keydown', event => {
+      if (event.target === note && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); flip(); }
+    });
+  }
+  // Dated climate and biotic events as marks over the slider; a mark moves the slider to it.
   setEvents(CLIMATE_EVENTS);
   drawEventMarks($('event-marks'), stops, document.documentElement.lang, index => {
     $('timeline').value = String(index);
@@ -2859,6 +2872,7 @@ function init() {
     $('relief3d').addEventListener('click', () => {
       reliefWanted = !reliefWanted;
       $('relief3d').setAttribute('aria-pressed', String(reliefWanted));
+      // At once, not at the next pan or zoom, which is when followZoom() would.
       updateRelief(zoomFactor());
     });
   }
@@ -2889,6 +2903,7 @@ function init() {
       location.assign(url.href);
     });
   }
+  readViewAddress();
   const askedAge = Number(new URL(location.href).searchParams.get('age'));
   if (new URL(location.href).searchParams.has('age') && Number.isFinite(askedAge)) {
     let nearest = 0;
@@ -2899,16 +2914,98 @@ function init() {
   } else {
     selectFrame(selected);
   }
-  applyViewAddress();
+  // A page opened without an age keeps none until the reader leaves its opening stop; one
+  // opened with an age keeps it, so the link it came from still reloads to the same stop.
+  viewDefaults.age = new URL(location.href).searchParams.has('age')
+    ? null : String(+stops[stop][3].toFixed(4));
+  addressReady = true;
+  for (const type of ['click', 'change', 'input']) document.addEventListener(type, queueAddress);
 }
-// Preview: mountain ranges as triangle marks on the flat maps while the raised-relief switch
-// is on, where the globe's 3D lift has no counterpart. At the present and in the time
-// windows, today's named ranges (Natural Earth, public domain); at a past PaleoDEM stop, the
-// ranges found in that map's own heights. A mark's size steps with the crest height, in
-// screen pixels so it keeps its size at any zoom. Built by scripts/preview_ranges.py.
-// The marks follow the map on screen, not the slider: between two stages each side's marks
-// ride the travel field the shader moves the land by (travelAt, as the overlay lines do)
-// and fade with the same blend.
+// The view in the address, so a link opens the same view. Read once before the first stop
+// is drawn, setting the module's state as the controls would; written back a moment after
+// the view changes, and only where it differs from the page's own defaults, as playback
+// would otherwise rewrite the address several times a second. Pins, the dataset and the
+// time range keep their own parameters.
+// view: globe | mollweide | equalearth | equirect · surface: relief | map | mask | temp | veg | rain
+// shading: 0 | 1 | 5 | 20 · sea: metres · relief, rivers, ice, grid: 0 | 1 · age: Ma
+const viewDefaults = {};
+let addressReady = false;
+let addressTimer = 0;
+function viewState() {
+  return {
+    view: projection, surface, shading: $('shading')?.value ?? null,
+    // In a time window the age sets the level and the slider only shows it, so writing it
+    // would put a number the reader never chose in the address, and carry it to the whole
+    // series when they leave the window.
+    sea: lastPlace?.from?.deglacial || !seaLevelControl ? null : seaLevelControl.value,
+    relief: reliefWanted ? '1' : '0', rivers: riversVisible ? '1' : '0',
+    ice: iceVisible ? '1' : '0', grid: gridVisible ? '1' : '0',
+    currents: currentsMode || null,   // preview
+  };
+}
+function queueAddress() {
+  if (!addressReady) return;
+  clearTimeout(addressTimer);
+  addressTimer = setTimeout(writeViewAddress, 400);
+}
+function writeViewAddress() {
+  const url = new URL(location.href);
+  for (const [key, value] of Object.entries(viewState())) {
+    if (value == null || value === viewDefaults[key]) url.searchParams.delete(key);
+    else url.searchParams.set(key, value);
+  }
+  const age = String(+stops[stop][3].toFixed(4));
+  if (age === viewDefaults.age) url.searchParams.delete('age');
+  else url.searchParams.set('age', age);
+  history.replaceState(null, '', url.href.replace(/%2C/g, ',').replace(/%3B/g, ';'));
+}
+function readViewAddress() {
+  Object.assign(viewDefaults, viewState());
+  const asked = new URL(location.href).searchParams;
+  // Only 0 and 1 are read; anything else is ignored rather than counted as on.
+  const flag = key => (asked.get(key) === '1' ? true : asked.get(key) === '0' ? false : null);
+  const view = asked.get('view');
+  if (view && [...$('projection').options].some(option => option.value === view) && view !== projection) {
+    $('projection').value = view;
+    setProjection(view, false);
+  }
+  const shading = asked.get('shading');
+  if ($('shading') && shading && [...$('shading').options].some(option => option.value === shading)) {
+    $('shading').value = shading;
+    $('shading').dispatchEvent(new Event('change'));
+  }
+  if (seaLevelControl && asked.has('sea') && Number.isFinite(Number(asked.get('sea')))) {
+    seaLevelControl.value = asked.get('sea');
+    showSeaSetting();
+  }
+  if (flag('grid') !== null && flag('grid') !== gridVisible) $('grid').click();
+  if (flag('relief') !== null && flag('relief') !== reliefWanted) $('relief3d')?.click();
+  if (flag('rivers') !== null) riversVisible = flag('rivers');
+  if (flag('ice') !== null) iceVisible = flag('ice');
+  const wanted = asked.get('surface');
+  if (wanted && ['relief', 'map', 'mask', 'temp', 'veg', 'rain'].includes(wanted)) surface = wanted;
+  // Preview: the currents prototypes.
+  const currents = asked.get('currents');
+  if ($('currents') && currents && [...$('currents').options].some(option => option.value === currents)) {
+    $('currents').value = currents;
+    $('currents').dispatchEvent(new Event('change'));
+  }
+  if (surfaceToggle) surfaceToggle.setAttribute('aria-pressed', String(surface === 'mask'));
+}
+// A folded note that fits in its two lines gets no marker and no pointer.
+function markFoldableNotes() {
+  for (const note of document.querySelectorAll('#inspector .model-note.foldable.folded:not([hidden])')) {
+    note.classList.toggle('fits', note.scrollHeight <= note.clientHeight + 1);
+  }
+}
+// Mountain ranges as triangle marks on the flat maps while the raised-relief switch is on,
+// where the globe's 3D lift has no counterpart: today's named ranges at the present and in
+// the time windows, and on a past grid the ranges found in its own heights
+// (scripts/build_mountain_ranges.py). A mark's size steps with the crest height, in screen
+// pixels so it keeps its size at any zoom. The marks follow the map on screen (lastPlace,
+// set once its textures are in), not the slider; between two grids each side's marks ride
+// the travel field the shader moves the land by, as the overlay lines do, and fade with the
+// same blend.
 const RANGE_PIXELS = [[2000, 9], [4000, 13], [Infinity, 17]];
 const RANGE_LIFT = 0.003;
 let rangeLayer = null;
@@ -2940,9 +3037,10 @@ function rangeMaterial() {
   return new THREE.SpriteMaterial({ map: texture, transparent: true, depthTest: false, depthWrite: false, sizeAttenuation: false });
 }
 async function loadRanges() {
+  if (!rangesUrl) return;
   try {
-    const data = await (await fetch(new URL('./mountain-ranges.json', import.meta.url))).json();
-    rangeSets = { present: data.ranges.flatMap((range) => range.marks), ...data.past };
+    const data = await (await fetch(rangesUrl)).json();
+    rangeSets = { present: data.present.flatMap((range) => range.marks), ...data.maps };
     const material = rangeMaterial();
     rangeLayer = new THREE.Group();
     rangeLayer.visible = false;
@@ -2957,14 +3055,14 @@ async function loadRanges() {
     rangeLayer = null;
   }
 }
-// The marks of one side's map: today's named ranges near the present, else that PaleoDEM
-// stage's own; none for a map without heights (the other plate models).
+// The marks of one side's map: today's named ranges near the present, else that grid's
+// own; none for a map without heights.
 function rangeSetOf(frame) {
   if (!frame) return '';
   if (frame.age < 0.2) return 'present';
-  return frame.relief && rangeSets[String(frame.age)] ? String(frame.age) : '';
+  return frame.relief && rangeSets[frame.id] ? frame.id : '';
 }
-// A mark moves by its side's share of the travel field, as the overlay lines do.
+// A mark moves by its side's share of the travel field.
 function fillRanges(group, marks, gap, share) {
   while (group.children.length < marks.length) {
     const sprite = new THREE.Sprite(group.userData.material);
@@ -2988,7 +3086,7 @@ function updateRanges() {
   const place = lastPlace;
   const on = reliefWanted && projection !== 'globe' && place && !place.mapless;
   const setA = on ? rangeSetOf(place.from) : '';
-  // A stop on a stage, or two sides with the same marks, shows one set at full strength.
+  // A stop on a grid, or two sides with the same marks, shows one set at full strength.
   const setB = on && place.blend > 0 && rangeSetOf(place.to) !== setA ? rangeSetOf(place.to) : '';
   rangeLayer.visible = Boolean(setA || setB);
   stage.dataset.ranges = [setA, setB].filter(Boolean).join('>') || 'false';
@@ -3234,76 +3332,6 @@ function makeFoldable(note) {
   note.addEventListener('keydown', event => {
     if (event.target === note && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); flip(); }
   });
-}
-// Preview: a folded note that fits in its two lines gets no marker and no pointer.
-function markFoldableNotes() {
-  for (const note of document.querySelectorAll('#inspector .model-note.foldable.folded:not([hidden])')) {
-    note.classList.toggle('fits', note.scrollHeight <= note.clientHeight + 1);
-  }
-}
-// Preview: the view in the address, so a link opens the same view. Read once after the
-// page is set up, setting the module's state as the controls do; written back whenever the
-// view changes, only where it differs from the page's own defaults. Written a moment after
-// the last change, as playback would otherwise rewrite the address several times a second.
-// view: globe | mollweide | equalearth | equirect · surface: relief | mask | temp | veg | rain
-// shading: 0 | 1 | 5 | 20 · sea: metres · relief, rivers, ice, grid: 0 | 1 · age: Ma
-const viewDefaults = {};
-let addressReady = false;
-let addressTimer = 0;
-function viewState() {
-  return {
-    view: projection, surface, shading: $('shading')?.value ?? null, sea: seaLevelControl?.value ?? null,
-    relief: reliefWanted ? '1' : '0', rivers: riversVisible ? '1' : '0',
-    ice: iceVisible ? '1' : '0', grid: gridVisible ? '1' : '0', currents: currentsMode || 'none',
-  };
-}
-function queueAddress() {
-  if (!addressReady) return;
-  clearTimeout(addressTimer);
-  addressTimer = setTimeout(writeViewAddress, 400);
-}
-function writeViewAddress() {
-  const url = new URL(location.href);
-  for (const [key, value] of Object.entries(viewState())) {
-    if (value == null || value === viewDefaults[key]) url.searchParams.delete(key);
-    else url.searchParams.set(key, value);
-  }
-  url.searchParams.set('age', String(+stops[stop][3].toFixed(4)));
-  history.replaceState(null, '', url.href.replace(/%2C/g, ',').replace(/%3B/g, ';'));
-}
-function applyViewAddress() {
-  Object.assign(viewDefaults, viewState());
-  const asked = new URL(location.href).searchParams;
-  const flag = key => asked.get(key) !== '0' && asked.get(key) !== 'false';
-  const view = asked.get('view');
-  if (view && [...$('projection').options].some(option => option.value === view) && view !== projection) {
-    $('projection').value = view;
-    setProjection(view);
-  }
-  const shading = asked.get('shading');
-  if ($('shading') && shading && [...$('shading').options].some(option => option.value === shading)) {
-    $('shading').value = shading;
-    $('shading').dispatchEvent(new Event('change'));
-  }
-  if (seaLevelControl && asked.has('sea') && Number.isFinite(Number(asked.get('sea')))) {
-    seaLevelControl.value = asked.get('sea');
-    seaLevelControl.dispatchEvent(new Event('input'));
-  }
-  if (asked.has('grid') && flag('grid') !== gridVisible) $('grid').click();
-  if (asked.has('relief') && flag('relief') !== reliefWanted) $('relief3d')?.click();
-  if (asked.has('rivers')) riversVisible = flag('rivers');
-  if (asked.has('ice')) iceVisible = flag('ice');
-  const wanted = asked.get('surface');
-  if (wanted && ['relief', 'mask', 'temp', 'veg', 'rain'].includes(wanted)) surface = wanted;
-  const currents = asked.get('currents');
-  if ($('currents') && currents && [...$('currents').options].some(option => option.value === currents)) {
-    $('currents').value = currents;
-    $('currents').dispatchEvent(new Event('change'));
-  }
-  if (surfaceToggle) surfaceToggle.setAttribute('aria-pressed', String(surface === 'mask'));
-  selectStop(stop, true);
-  addressReady = true;
-  for (const type of ['click', 'change', 'input']) document.addEventListener(type, queueAddress);
 }
 // The inspector floats over the map and folds away. It starts open where there is room
 // beside the sphere, closed on a phone, and a reader's own choice is kept in this browser.

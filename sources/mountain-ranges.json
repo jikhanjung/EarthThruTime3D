@@ -1,0 +1,18 @@
+{
+  "title": "Mountain-range marks for the flat maps: today's named ranges (Natural Earth) and, on each past PaleoDEM grid, the ranges found in its own heights",
+  "retrieved": "2026-09-25",
+  "note": "Natural Earth 10 m physical geography regions (version 5.0.0) carries 222 polygons of feature class Range/mtn with a scale rank (1 the largest) and names in several languages, Korean among them. scripts/build_mountain_ranges.py places marks along the crest of each range of rank 1 or 2 at the present, with heights from the present PaleoDEM grid; the past grids have no named ranges, so their marks come from each grid's own heights by the rule in the script. The PaleoDEM grids are those of sources/paleodem.json, found as scripts/build_paleodem.py finds them.",
+  "assets": [
+    {
+      "role": "ranges",
+      "path": "data/sources/ranges/ne_10m_geography_regions_polys.zip",
+      "url": "https://naciscdn.org/naturalearth/10m/physical/ne_10m_geography_regions_polys.zip",
+      "bytes": 2038519,
+      "sha256": "cb7b9db200284ed1551f20eacc7f3333e9b5f311c19f7cb2670694529f688682",
+      "unzip": "ne_regions",
+      "layer": "ne_10m_geography_regions_polys",
+      "license": "Public domain (Natural Earth terms of use)",
+      "cite": "Natural Earth, 10 m physical geography regions, version 5.0.0, naturalearthdata.com"
+    }
+  ]
+}

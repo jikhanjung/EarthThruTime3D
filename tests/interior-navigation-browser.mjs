@@ -2,6 +2,10 @@ import {chromium, expect as baseExpect} from '@playwright/test';
 const expect = baseExpect.configure({timeout: 30000});
 const browser = await chromium.launch({headless: true, args: ['--enable-unsafe-swiftshader']});
 const base = process.env.VIEWER_URL || 'http://127.0.0.1:8150/';
+// The Earth interior section starts folded to its heading; open it before using its controls.
+const openInterior = async (target) => {
+  if (await target.locator('#interior-panel.folded').count()) await target.locator('#interior-title').click();
+};
 try {
   for (const masks of ['paleoatlas2016', 'paleodem2018']) {
     const page = await browser.newPage({viewport: {width: 1400, height: 1000}, deviceScaleFactor: .75, reducedMotion: 'reduce'});
@@ -24,6 +28,7 @@ try {
     await expect(globe).not.toHaveAttribute('data-pan', '0.0000,0.0000,0.0000');
     await page.locator('#reset').click();
     await expect(globe).toHaveAttribute('data-pan', '0.0000,0.0000,0.0000');
+    await openInterior(page);
     await page.locator('#crust-enabled').check();
     await expect(globe).toHaveAttribute('data-crust', 'ready');
     await page.locator('#mantle-overlay').check();

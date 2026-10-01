@@ -1,4 +1,4 @@
-// Preview: dated climate and biotic events, checked 2026-09-24. Ages on the ICS chart
+// Dated climate and biotic events, checked 2026-09-24 (devlog wwolf 019). Ages on the ICS chart
 // v2024/12 (= GTS2020) where it has them; every DOI resolved through Crossref to the
 // stated first author, year and title. Kinds the sources did not support were left out.
 // Korean names marked * are this list's own translations, not standard terms.
@@ -6,7 +6,7 @@
 // windows step 1 kyr) or lasts longer than the gap between maps.
 export const CLIMATE_EVENTS = [
   { id: 'hirnantian', name: 'Late Ordovician (Hirnantian) glaciation and extinction', name_ko: '오르도비스기 말 빙하기와 대멸종',
-    start_ma: 445.2, end_ma: 443.1, peak_ma: 443.5, kind: ['glaciation', 'cold', 'extinction'],
+    start_ma: 445.2, end_ma: 443.1, kind: ['glaciation', 'cold', 'extinction'],
     what: 'A brief, intense Gondwanan glaciation cooled tropical seas by about 5 °C; two extinction pulses, the second during rapid deglacial warming.',
     what_ko: '곤드와나에 짧고 강한 빙하기가 와 열대 바다가 약 5 °C 식었고, 멸종이 두 번 몰려왔다(두 번째는 빙하가 빠르게 녹을 때).',
     cites: [{ short: 'Finnegan 2011', doi: '10.1126/science.1200803' }, { short: 'Zhang 2025', doi: '10.1126/sciadv.adv6788' }] },
@@ -35,12 +35,12 @@ export const CLIMATE_EVENTS = [
     what: 'Mass extinction synchronous with the first Central Atlantic Magmatic Province basalts, which erupted in four pulses over about 600 kyr, each followed by a CO₂ jump.',
     what_ko: '중앙대서양 마그마 지대(CAMP)의 첫 현무암과 같은 때의 대멸종. 약 60만 년에 걸쳐 네 번 분출했고 그때마다 CO₂가 뛰었다.',
     cites: [{ short: 'Blackburn 2013', doi: '10.1126/science.1234204' }, { short: 'Schaller 2011', doi: '10.1126/science.1199011' }] },
-  { id: 'toae', name: 'Toarcian Oceanic Anoxic Event', name_ko: '토아르절 해양 무산소 사건*',
+  { id: 'toae', name: 'Toarcian Oceanic Anoxic Event', name_ko: '토아르시움절 해양 무산소 사건*',
     start_ma: 183.1, end_ma: 182.5, kind: ['anoxic', 'warm', 'extinction'],
     what: 'An Early Jurassic hyperthermal: Karoo–Ferrar volcanism, a large carbon-isotope excursion, warming, widespread marine anoxia and a second-order extinction.',
     what_ko: '쥐라기 전기의 급온난: 카루–페라 화산 활동, 큰 탄소 동위원소 변화, 온난화, 넓은 바다의 무산소화와 중규모 멸종.',
     cites: [{ short: 'Reolid 2021', doi: '10.1144/sp514-2021-74' }, { short: 'Burgess 2015', doi: '10.1016/j.epsl.2015.01.037' }] },
-  { id: 'oae2', name: 'Cenomanian–Turonian Oceanic Anoxic Event 2', name_ko: '세노마니아절–투로니아절 해양 무산소 사건 (OAE2)*',
+  { id: 'oae2', name: 'Cenomanian–Turonian Oceanic Anoxic Event 2', name_ko: '세노마눔절–투로니아절 해양 무산소 사건 (OAE2)*',
     start_ma: 94.5, end_ma: 93.7, peak_ma: 93.9, kind: ['anoxic', 'warm'],
     what: 'Volcanically triggered burial of black shale under widespread ocean anoxia, interrupted by CO₂ drawdown and over 4 °C of cooling (the Plenus Cold Event).',
     what_ko: '화산 활동으로 시작된 넓은 바다의 무산소화와 검은 셰일 매몰. 중간에 CO₂가 줄며 4 °C 넘게 식은 시기(플레누스 한랭기)가 끼어 있다.',

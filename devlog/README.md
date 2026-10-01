@@ -22,6 +22,7 @@ wwolf는 001부터 셉니다. 그 전의 001–045는 링크와 본문 속 번�
 
 ## 계획
 
+- [jikhanjung P09 — PBDB 화석 산지를 지구본에 (#81), WegenersDream 방식의 개선판](20261001_jikhanjung_P09_pbdb_fossil_localities.md)
 - [wwolf P01 — 위치 핀: 한 지점을 찍고 시간에 따라 따라가기, 가능성 평가](20260919_wwolf_P01_location_pin_feasibility.md)
 - [jikhanjung P08 — 시간 창의 해안선을 빌더의 바다 마스크로 (#59 (c) 1단계)](20260919_jikhanjung_P08_glacial_coast_mask.md)
 - [jikhanjung P07 — CRUST 2.0으로 현재 지구의 지각 두께 표시](20260916_jikhanjung_P07_crust2_visualization.md)
@@ -33,6 +34,17 @@ wwolf는 001부터 셉니다. 그 전의 001–045는 링크와 본문 속 번�
 - [jikhanjung P01 — 시간 범위 선택: 최근 2.5만 년](20260915_jikhanjung_P01_deglacial_time_window.md)
 
 ## 작업 기록
+
+- [jikhanjung 108 — dolfinid 배포 파일 정리 (v0.23.0 이후)](20260929_jikhanjung_108_dolfinid_prune_0230.md)
+- [jikhanjung 107 — v0.23.0 화면 색·배치와 새 표시 레이어 릴리스](20260926_jikhanjung_107_release_0230.md)
+
+- [wwolf 016 — 모형 강수의 색: 사막이 갈색으로 보이게](20260924_wwolf_016_rainfall_colours.md)
+
+- [wwolf 017 — 기온 색: 지구본과 범례가 같은 색, 그리고 색 아래의 산맥](20260924_wwolf_017_temperature_colours.md)
+
+- [wwolf 019 — 시간축의 기후·생물 사건 표시](20260925_wwolf_019_event_markers.md)
+
+- [wwolf 018 — 평면 지도의 산맥 기호: 현재는 이름난 산맥, 과거는 그 격자의 높이에서](20260925_wwolf_018_mountain_marks.md)
 
 - [jikhanjung 106 — v0.22.0 이퀄 어스 투영 릴리스](20260924_jikhanjung_106_release_0220.md)
 
@@ -259,3 +271,7 @@ v0.21.0은 위치 핀을 더한다. 현재의 장소를 PALEOMAP 회전으로 �
 
 v0.22.0은 투영에 이퀄 어스를 더한다. 몰바이데와 같은 정적도이면서 극이 선이라 고위도
 대륙이 덜 눌린다. 자료는 같다(106).
+
+v0.23.0은 강수·기온 색과 범례를 맞추고, 색 화면 아래 산맥 음영, 떠 있는 색 범례와 접히는
+정보 패널, 주소에 담기는 화면 상태, 시간축의 기후·생물 사건, 평면 지도의 산맥 표시를 더한다
+(wwolf 016–019, 107).

@@ -167,7 +167,8 @@ change), OrbitControls pauses until a finger lifts.
 
 Automatic close-up tilt fades in from zoom factor 0.3 to 0.12 for every globe.
 Terrain lift uses the same zoom interval, but only elevation data is displaced.
-The 3D terrain button controls displacement, not navigation. Manual tilt is independent
+The raised-relief button (입체 지형, formerly 3D 지형) controls displacement, not navigation,
+and applies at once when pressed rather than at the next pan or zoom. Manual tilt is independent
 of zoom. Detailed sphere geometry is used at close zoom; flat projections retain
 sheet navigation. `data-relief` reports terrain displacement strength from 0 to 1.
 The plate
@@ -177,6 +178,39 @@ they ride the mountains rather than being buried under them; a line recovers its
 longitude and latitude from the point itself, the inverse of `onSphere()`. Only the
 vertices are lifted, so a long straight segment can still cut through a ridge between
 them.
+
+## Climate and biotic events on the timeline
+
+`static/core/climate-events-data.js` lists 16 dated events (ages from the ICS chart
+v2024/12 = GTS2020, or a finer radiometric or astronomical age where the event has one;
+30 DOIs resolved through Crossref; devlog wwolf 019), and `static/core/climate-events.js`
+draws one mark per event above the slider (`#event-marks`), coloured and lettered by kind so
+colour is not the only cue, at the fractional slider index of its span. The whole timeline
+shows events of 1 Ma and older, a time window only its own. While the slider sits inside an
+event, `#event-note` under it names the event, gives one sentence and the DOIs, and says,
+unless the event is resolved by the page (`snapshot_caveat: false`), that the maps are
+model snapshots spaced wider than the event. A stop covers half the gap to each neighbour,
+so every moment is reported at its nearest stop. Korean names marked `*` in the data are
+the list's own translations and are shown without the mark.
+
+### Mountain marks on the flat maps
+
+On the flat projections the raised-relief button (입체 지형) marks mountain ranges with small shaded
+triangles, sized in three steps by the crest height (below 2000 m, below 4000 m, above)
+and kept at a fixed size on screen. `scripts/build_mountain_ranges.py` writes one file,
+`data/derived/paleodem/mountain-ranges.json`, served at `/globe/ranges.json` and offered
+to the elevation series only. At the present and in the time windows the marks follow the
+crests of Natural Earth's named ranges of scale rank 1–2 (29 ranges, one mark per 2° cell,
+heights from the present grid; `sources/mountain-ranges.json`). A past grid has no named
+ranges, so its marks come from its own heights: a 0.5° block whose top is at least 1000 m
+and stands 900 m above the 20th percentile of the land around it within 6° (sea as 0 m),
+one mark per 3° cell, isolated marks dropped. An absolute height cut tuned on today would
+erase the older, lower grids (at 250 Ma 0.1 % of land is above 2000 m); on the present grid
+the rule reaches 91 % of the named ranges' marks within 300 km (devlog wwolf 018). The
+marks follow the map drawn on screen (`lastPlace`), not the slider, and between two grids
+each side's marks ride `travelAt()` and fade with the blend, as the overlay lines do.
+`data-ranges` names the set or sets shown (`present`, a grid id, or `from>to`) and
+`data-range-marks` their count.
 
 ## Temperature
 
@@ -189,14 +223,19 @@ map within 5 Myr; the atlas prelude has none. It also writes `paleotemp-curve.js
 area-weighted global mean of every map, and the mean each grid was given. The server
 passes the curve to the page and each frame its texture route and mean.
 
-A 기온 toggle switches the surface to a fourth mode: a diverging ramp, blue at −30 °C
-through pale at 0 to red at 40 °C, with the coastline from the distance field drawn as
-a dark line so the continents stay readable. Between stops the two maps are mixed like
+A 기온 toggle switches the surface to a fourth mode: a diverging ramp over −30 to 40 °C,
+ColorBrewer RdYlBu with stops at −30, −20, −10, −5, 0, 5, 12, 18, 24, 30 and 40 °C
+(blues below freezing, yellow through red above), mixed in encoded sRGB as the key's CSS
+gradient is so the globe and the key show one colour per temperature (devlog wwolf 017),
+with the coastline from the distance field drawn as a dark line so the continents stay
+readable. Under the temperature and modelled-climate colours the land takes the relief
+view's hill shading, divided by what level ground gets so flat land keeps the key's colour
+and only slopes change; the 지형 음영 selector sets or removes it. Between stops the two maps are mixed like
 the fields. Above the slider a strip colours every stop by the global mean at its age,
 linear between maps and grey where none reaches, over 5 to 35 °C so an icehouse reads
 blue; the inspector reads out the mean at the current stop, interpolated between the
 neighbouring maps' means when the stop is between them, and adds its difference from
-today's mean. Under the readout a colour key draws the surface ramp with its −30, 0, 20
+today's mean. A colour key floating on the map's top left draws the surface ramp with its −30, 0, 20
 and 40 °C marks, today's global mean as a white tick and the stop's mean as a marker,
 so a colour on the globe can be read against the present. It shows only while the
 temperature surface does; `data-delta` on the key carries the difference for tests.
@@ -233,11 +272,20 @@ with each other. The textures ride the temperature sampler pair, as the two neve
 together and the fragment shader already binds thirteen of the sixteen a GPU must offer.
 They are sampled nearest, since a blend of two class numbers is a third class, so the
 globe shows the source's 0.5° cells as cells. Plant cover is one green hue from sand to
-dark green, with tundra violet and the model's ice near white; rainfall is one teal hue,
-light to dark along the cube root of the year's millimetres so a desert's tens of
-millimetres still show, teal because blue is the sea's and the rivers'. Both sets were
-run through a colour-blindness validator (devlog wwolf 013). The sea keeps its colour and
-the ice and rivers draw on top as ever. A legend under the readout shows while its mode does.
+dark green, with tundra violet and the model's ice near white; rainfall runs dry against
+wet on ColorBrewer's BrBG, brown below 500 mm and teal above, pale at 500 mm, along the
+cube root of the year's millimetres so a desert's tens of millimetres read brown rather than
+near white; teal because blue is the sea's and the rivers'. Both sets were checked for
+colour-blind separation (devlog wwolf 013, rainfall again in wwolf 016). The sea keeps its colour and
+the ice and rivers draw on top as ever. A legend shows while its mode does.
+
+The three colour keys (temperature, vegetation, rainfall) are rendered in the inspector
+and moved at start-up into one box floating on the map's top left (`#map-legend`), so the
+key is on screen without opening the info panel; the box hides when none of them is shown.
+In the inspector the 지구 내부 section folds to its heading (folded unless crust or mantle
+is on; the reader's choice is kept in `localStorage`), and every explanatory note folds to
+two lines by CSS line clamp and opens on click or Enter, so the date and the controls stay
+near the top. A note short enough to fit gets no fold marker.
 
 It is a model, and a statistical emulator of HadCM3 snapshots at that, not a
 reconstruction, and the note says so. Its largest known failure is named on the page: it
@@ -1011,6 +1059,10 @@ Neither flag grants data-use rights. See `sources/README.md`, `LICENSE-DATA.md` 
   go to gitignored `data/screenshots/`.
 - `VIEWER_URL=http://127.0.0.1:8153/ node tests/river-browser.mjs`: river PNG, shader,
   toggle, grid-spacing explanation, mobile layout and both languages (requires a built 0 Ma river field).
+- `VIEWER_URL=http://127.0.0.1:8153/ node tests/view-address-browser.mjs`: the view in the address:
+  a link sets projection, surface, shading and grid before the first draw, the controls write back
+  only what differs from the defaults, the written address reloads to the same view, and values
+  outside the lists are ignored (see docs/site-map.md for the parameters).
 - `VIEWER_URL=http://127.0.0.1:8153/ node tests/climate-browser.mjs`: the modelled climate in
   both windows: the textures load, the two modes exclude each other and give the relief back,
   legends and the Sahara note, stop to stop, mobile layout and both languages (requires
