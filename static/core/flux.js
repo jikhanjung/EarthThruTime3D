@@ -335,7 +335,10 @@ export function createFlux({ config, stage, L, fmt, lang, api }) {
     legend.innerHTML = (speeds ? `<p class="flux-unit">${L.fluxSpeed}</p>` : '') + blocks.join('');
     legend.hidden = !blocks.length;
     const dock = $('map-legend') || stage.parentElement;
-    if (legend.parentElement !== dock) dock.prepend(legend);
+    if (legend.parentElement !== dock) {
+      const head = dock.querySelector('.legend-head');
+      if (head) head.after(legend); else dock.prepend(legend);
+    }
   }
 
   async function sync() {

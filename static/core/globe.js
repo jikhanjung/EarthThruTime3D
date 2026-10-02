@@ -2765,11 +2765,31 @@ function init() {
   // The colour legends float on the map instead of sitting below the Earth interior
   // controls in the info panel, so the key is seen without opening the panel. The elements
   // move, so their own code still shows, hides and fills them.
+  // They dock at the bottom right, above the timeline, under a heading that folds them away;
+  // the inspector stops above them (--legend-space).
   const mapLegend = document.createElement('div');
   mapLegend.className = 'map-legend';
   mapLegend.id = 'map-legend';
+  const legendHead = document.createElement('button');
+  legendHead.type = 'button';
+  legendHead.className = 'legend-head';
+  legendHead.textContent = L.legend;
+  legendHead.setAttribute('aria-expanded', 'true');
+  mapLegend.append(legendHead);
   for (const id of ['temp-legend', 'rain-legend', 'veg-legend']) if ($(id)) mapLegend.append($(id));
-  $('explorer').append(mapLegend);
+  ($('stage-area') || $('explorer')).append(mapLegend);
+  const foldLegend = (folded) => {
+    mapLegend.classList.toggle('folded', folded);
+    legendHead.setAttribute('aria-expanded', String(!folded));
+  };
+  try { foldLegend(localStorage.getItem('earththrutime.legend') === 'folded'); } catch { /* storage blocked */ }
+  legendHead.addEventListener('click', () => {
+    const folded = !mapLegend.classList.contains('folded');
+    foldLegend(folded);
+    try { localStorage.setItem('earththrutime.legend', folded ? 'folded' : 'open'); } catch { /* storage blocked */ }
+  });
+  new ResizeObserver(() => $('explorer')?.style.setProperty('--legend-space',
+    mapLegend.offsetHeight ? `${mapLegend.offsetHeight + 10}px` : '0px')).observe(mapLegend);
   // The Earth interior section folds to its heading: folded unless one of its layers is on,
   // and a reader's own choice is kept in this browser.
   const interiorPanel = $('interior-panel');
@@ -3201,29 +3221,35 @@ function setupInspector() {
     try { localStorage.setItem('earththrutime.inspector', open ? 'open' : 'closed'); } catch { /* storage blocked */ }
   });
 }
-// Settings beyond the essentials sit behind the menu button. The menu stays open while the
-// reader works the map, closes from its button or with Escape, and is kept in this browser.
+// The view settings and layers live in the left panel. On a wide screen it starts open and
+// the globe takes the rest of the width; on a phone it is a drawer the menu button slides in
+// over the map. Either way the button folds it, Escape closes the drawer, and a reader's
+// choice on a wide screen is kept in this browser.
 function setupSettingsMenu() {
+  const panel = $('side-panel');
   const menu = $('settings-menu');
   const toggle = $('settings-toggle');
-  if (!menu || !toggle) return;
-  // The sea-level curve floats in the same corner, so it stacks above the open menu.
-  // On a short screen the menu takes the toolbar's row inside the panel instead, and pushes nothing.
-  const space = () => $('explorer')?.style.setProperty('--menu-space', menu.hidden || menu.offsetTop >= 0 ? '0px' : `${menu.offsetHeight + 8}px`);
-  new ResizeObserver(space).observe(menu);
+  if (!panel || !toggle) return;
+  const drawer = matchMedia('(max-width: 899px)');
   const show = (open, remember = true) => {
-    menu.hidden = !open;
+    panel.hidden = !open;
+    if (menu) menu.hidden = !open;
+    $('explorer')?.classList.toggle('side-open', open);
     toggle.setAttribute('aria-expanded', String(open));
-    space();
-    if (!remember) return;
-    try { localStorage.setItem('earththrutime.settings', open ? 'open' : 'closed'); } catch { /* storage blocked */ }
+    if (!remember || drawer.matches) return;
+    try { localStorage.setItem('earththrutime.side', open ? 'open' : 'closed'); } catch { /* storage blocked */ }
   };
   let remembered = null;
-  try { remembered = localStorage.getItem('earththrutime.settings'); } catch { /* storage blocked */ }
-  show(remembered === 'open', false);
-  toggle.addEventListener('click', () => show(menu.hidden));
+  try { remembered = localStorage.getItem('earththrutime.side'); } catch { /* storage blocked */ }
+  show(drawer.matches ? false : remembered !== 'closed', false);
+  drawer.addEventListener('change', () => show(drawer.matches ? false : remembered !== 'closed', false));
+  toggle.addEventListener('click', () => show(panel.hidden));
   document.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape' && !menu.hidden) show(false);
+    if (event.key === 'Escape' && drawer.matches && !panel.hidden) show(false);
+  });
+  // A tap outside the drawer puts it away, as a phone's drawers do.
+  document.addEventListener('pointerdown', (event) => {
+    if (drawer.matches && !panel.hidden && !panel.contains(event.target) && !toggle.contains(event.target)) show(false);
   });
 }
 setupInspector();
