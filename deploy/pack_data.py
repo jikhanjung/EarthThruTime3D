@@ -131,6 +131,29 @@ def pack_present(staging, files):
                       'sha256': record['sha256'], 'dataset': 'present-earth'})
 
 
+def pack_plates(staging, files):
+    """The plate models the public site may serve. A model whose manifest says
+    `publish: false` (no licence to redistribute: Torsvik & Cocks 2017) never enters the
+    bundle; it stays on the build host, where a local ACCESS_KEY can open it."""
+    (staging / "plates").mkdir()
+    manifests = sorted((BASE_DIR / "sources/plate-models").glob("*.json"))
+    packed = [path.stem for path in manifests if json.loads(path.read_text()).get("publish", True)]
+    if not packed:
+        raise SystemExit("No publishable plate model manifests under sources/plate-models/.")
+    for model in packed:
+        (staging / "plates" / model).mkdir()
+        for name in PLATE_LAYERS + OPTIONAL_PLATE_LAYERS:
+            source = PLATES / model / name
+            if not source.exists():
+                if name in OPTIONAL_PLATE_LAYERS:
+                    continue
+                raise SystemExit(f"Missing plate file: {source}. Run scripts/pack_plates.py.")
+            target = staging / "plates" / model / name
+            shutil.copy2(source, target)
+            files.append({"path": f"plates/{model}/{name}", "bytes": target.stat().st_size,
+                          "sha256": digest(target), "dataset": model})
+
+
 def validate_river_texture(path):
     """Reject old grayscale fields before publishing a bundle for the RGB shader."""
     with path.open("rb") as handle:
@@ -303,22 +326,7 @@ def main():
         files.append({"path": f"paleocoastlines/{name}", "bytes": target.stat().st_size,
                       "sha256": digest(target), "dataset": "paleocoastlines2021"})
 
-    (staging / "plates").mkdir()
-    packed = sorted(path.stem for path in (BASE_DIR / "sources/plate-models").glob("*.json"))
-    if not packed:
-        raise SystemExit("No plate model manifests under sources/plate-models/.")
-    for model in packed:
-        (staging / "plates" / model).mkdir()
-        for name in PLATE_LAYERS + OPTIONAL_PLATE_LAYERS:
-            source = PLATES / model / name
-            if not source.exists():
-                if name in OPTIONAL_PLATE_LAYERS:
-                    continue
-                raise SystemExit(f"Missing plate file: {source}. Run scripts/pack_plates.py.")
-            target = staging / "plates" / model / name
-            shutil.copy2(source, target)
-            files.append({"path": f"plates/{model}/{name}", "bytes": target.stat().st_size,
-                          "sha256": digest(target), "dataset": model})
+    pack_plates(staging, files)
 
     pack_experiments(staging, files)
     pack_crust(staging, files)

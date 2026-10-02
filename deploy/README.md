@@ -158,6 +158,10 @@ sudo certbot certonly --webroot --webroot-path /srv/earththrutime3d/acme \
 않으므로 보고 있던 시대와 시점이 그대로 남는다. 맞으면 세션에 기록해 30일 동안 묻지
 않는다. `ACCESS_KEY`가 비어 있으면 그 모델은 목록에도 나오지 않고 경로도 404다.
 
+**공개 사이트에는 키가 없다**(2026-10-02, 사람이 정했다). 운영 `.env.django`에 `ACCESS_KEY`를 두지 않고,
+`publish: false` 모델은 자료 묶음에도 싣지 않는다(`deploy/pack_data.py`의 `pack_plates`). 키로 여는 길은 개발
+호스트에서 비공개 모델을 비교해 볼 때만 쓴다. 개인정보·소개 쪽의 접근 키 문장은 키가 있을 때만 나온다.
+
 계정이 아니다. 사용자도 없고 키를 가진 사람은 모두 같은 방문자다. 키는 상수 시간으로
 비교하고, 돌아갈 주소는 내부 경로만 받는다.
 
@@ -210,7 +214,7 @@ scripts/present.sh >> logs/present.log 2>&1              # 첫 받기를 손으�
 | `SECRET_KEY` | 50자 이상. 짧거나 비어 있으면 기동 거부 |
 | `ALLOWED_HOSTS` | 명시 필수. 와일드카드 거부 |
 | `DATABASE_PATH` | 이미지 기본 `/var/lib/earththrutime3d/db.sqlite3` |
-| `ACCESS_KEY` | 비공개 자료를 여는 공유 키. 비우면 그 자료를 아예 제공하지 않는다 |
+| `ACCESS_KEY` | 비공개 자료를 여는 공유 키. 비우면 그 자료를 아예 제공하지 않는다. 운영에는 두지 않는다 |
 | `ADMIN_ENABLED` | Django 관리자 경로(`/admin/`). 운영 기본 꺼짐, 개발 기본 켬 |
 | `SCOTESE_VIEWER_ENABLED` | 뷰어 사용 여부 |
 | `SCOTESE_SOURCE_MAPS_PUBLIC` | 원본 지도 제공 여부. 기본 꺼짐 |
