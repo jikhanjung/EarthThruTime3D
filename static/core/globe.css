@@ -311,3 +311,17 @@ summary{cursor:pointer;color:#c9dce2}
 .event-mark:hover,.event-mark:focus-visible{opacity:1;outline:2px solid #fff;z-index:1}
 .event-note{margin:6px 0 0;font-size:.78rem;line-height:1.35;color:var(--muted,#b9c4cf)}
 .event-note p{margin:.2rem 0}.event-note a{color:inherit}
+/* The present-day Earth (jikhanjung P10): particles over the globe, the moment of the data
+   under the age, and the speed legends in the floating legend box. */
+.flux-canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.flux-canvas[hidden]{display:none}
+.flux-when{position:absolute;top:38px;left:18px;z-index:1;margin:0;max-width:calc(100% - 36px);font-size:.72rem;color:#d7e8ee;background:rgba(8,20,30,.55);padding:.15rem .45rem;border-radius:4px;pointer-events:none}
+.flux-legend{margin:0 0 .4rem;font-size:.72rem;color:#d7e8ee}
+.flux-legend .flux-unit{margin:0 0 .2rem;opacity:.75}
+.flux-legend figcaption{margin:.25rem 0 .2rem;font-weight:600}
+.flux-legend ol{display:grid;grid-template-columns:repeat(4,1fr);gap:.1rem .4rem;margin:0;padding:0;list-style:none}
+.flux-legend li{display:flex;align-items:center;gap:.25rem;white-space:nowrap}
+.flux-legend li span{width:12px;height:4px;border-radius:2px;flex:none}
+@media (max-width:899px){
+  .flux-when{top:32px;left:12px;font-size:.66rem}
+}

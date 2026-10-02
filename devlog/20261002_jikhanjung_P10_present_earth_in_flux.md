@@ -3,7 +3,7 @@
 날짜: 2026-10-02 · 기준 버전: v0.23.0 · 참고: GSM(koprifossillab 003·007·008·010–016·018, P02·P03,
 v0.34.0–v0.38.3, 2026-10-01 17:50–21:50 KST), GSM `docs/바람_시각화.md`·`docs/구름_시각화.md`·
 `docs/ECCO2_해류_시각화.md`, GSM wetherilli 086(온 지구 배경), [wwolf P02 — 해류·해수면 온도(#89, 열린 PR)](https://github.com/jikhanjung/EarthThruTime3D/pull/89) ·
-상태: 계획
+상태: 1–5 단계 구현([jikhanjung 109](20261002_jikhanjung_109_present_earth_in_flux.md), #102)
 
 ## 목적
 

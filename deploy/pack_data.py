@@ -105,6 +105,32 @@ def pack_crust(staging, files):
                       'sha256': record['sha256'], 'dataset': 'crust2-earthbyte'})
 
 
+def pack_present(staging, files):
+    """The present-day Earth (jikhanjung P10): only catalogued, verified files, never the
+    raw GRIB, HDF5 or ECCO2 layers. Optional, like the climate series: absent, it is skipped."""
+    source = BASE_DIR / 'data/derived/present-earth'
+    catalogue = source / 'catalogue.json'
+    if not catalogue.exists():
+        print('No present-day Earth catalogue; skipping.')
+        return
+    document = json.loads(catalogue.read_text())
+    if document.get('schema_version') != 1:
+        raise ValueError('Unexpected present-day catalogue')
+    records = [{'file': 'catalogue.json', 'bytes': catalogue.stat().st_size, 'sha256': digest(catalogue)}]
+    for section in ('base', 'weather', 'ocean'):
+        if section not in document:
+            print(f'Present-day section missing: {section}')
+            continue
+        records.extend(document[section]['assets'].values())
+    for record in records:
+        path = verified_experiment_path(source, record)
+        target = staging / 'present-earth' / record['file']
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(path, target)
+        files.append({'path': 'present-earth/' + record['file'], 'bytes': record['bytes'],
+                      'sha256': record['sha256'], 'dataset': 'present-earth'})
+
+
 def validate_river_texture(path):
     """Reject old grayscale fields before publishing a bundle for the RGB shader."""
     with path.open("rb") as handle:
@@ -296,6 +322,7 @@ def main():
 
     pack_experiments(staging, files)
     pack_crust(staging, files)
+    pack_present(staging, files)
     manifest = {"schema_version": 2, "version": version, "files": files,
                 "contains_source_maps": False,
                 "note": ("Derived land fields and piece reports produced by "

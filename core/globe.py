@@ -545,6 +545,24 @@ def viewer_strings():
         "reconstructedIce": _("모델 복원 빙상"),
         "webglFailed": _("3D 화면을 시작하지 못했습니다. WebGL을 지원하는 브라우저에서 하드웨어 가속을 확인해 주세요."),
         "proterozoic": _("원생대"),
+        # The present-day Earth (jikhanjung P10)
+        "satellite": _("위성 영상"),
+        "satelliteGlobe": _("위성 영상 지구본"),
+        "loadingSatellite": _("{period} 위성 영상을 불러오는 중…"),
+        "fluxPresentOnly": _("현재(0 Ma)에서만 볼 수 있습니다"),
+        "fluxWind": _("바람·구름 {time}"),
+        "fluxWindOnly": _("바람 {time}"),
+        "fluxCloudOnly": _("구름 {time}"),
+        "fluxOcean": _("해류 {from}–{to} 평균"),
+        "fluxBase": _("바탕 Blue Marble {epoch}"),
+        "fluxEpoch2004": _("2004년 무렵 합성"),
+        "windLegend10m": _("바람 10 m · GFS 분석 {time}"),
+        "windLegend250hPa": _("바람 250 hPa(제트기류) · GFS 분석 {time}"),
+        "oceanLegend": _("해류 표층 · ECCO2 {from}–{to} 평균"),
+        "cloudLegendSat": _("구름 · GMGSI 위성 적외선 {time}"),
+        "cloudLegendModel": _("구름 · GFS 분석 구름량 {time}"),
+        "fluxSpeed": _("빠르기 (m/s)"),
+        "fluxFailed": _("현재 지구 자료를 불러오지 못했습니다."),
     }
 
 
@@ -933,12 +951,14 @@ def globe(request):
     plan["window"] = window
     from core.mantle import globe_overlay
     from core.crust import globe_config as crust_config
+    from core.present import globe_config as present_config
     stops = timeline(frames, plan, deepest)
     overlay = (globe_overlay() if source in ("paleoatlas2016", "paleodem2018")
                and not window and all(any(abs(stop[3] - age) < 1e-8 for stop in stops) for age in (80, 60, 40, 20, 0)) else None)
     return render(request, "core/home.html",
                   {"frames": frames, "viewer_enabled": enabled(), "mantle_overlay": overlay,
                    "crust": crust_config(),
+                   "present": present_config(),
                    "crust_strings": {
                        "caption": _("CRUST 2.0 · 현재 지각 · 구면 기준 두께 ×{scale}"),
                        "ready": _("CRUST 2.0 · 현재 지구 · 원모델 2° · 위치를 클릭하면 두께를 표시합니다."),

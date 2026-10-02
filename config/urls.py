@@ -5,6 +5,7 @@ from core.views import healthz, language
 from core.access import gate
 from core.mantle import mantle, mantle_asset
 from core.crust import crust_asset
+from core.present import present_asset
 from core.collision import collision, collision_data
 from core.globe import climate_map, ice_mask, ice_low, river_field, river_ice_field, river_low_field, temperature_map, coastline_file, globe, land_field, mountain_ranges, plate_file, source_map
 
@@ -14,6 +15,7 @@ urlpatterns = [
     path('mantle/', mantle, name='mantle'),
     path('mantle/assets/<str:filename>', mantle_asset, name='mantle-asset'),
     path('crust/assets/<str:filename>', crust_asset, name='crust-asset'),
+    path('present/assets/<str:filename>', present_asset, name='present-asset'),
     path('', globe, name='home'),
     path('globe/maps/<slug:map_id>.jpg', source_map, name='globe-map'),
     path('globe/fields/<slug:map_id>.png', land_field, name='globe-field'),

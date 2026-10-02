@@ -43,6 +43,14 @@ citations there are the attribution those licences require.
   measurements, published with attribution; the original images are not distributed.
 - The **Torsvik & Cocks 2017** plate model carries no licence and is not published.
 
+## Present-day Earth
+
+The satellite base (NASA Blue Marble via NASA EOSDIS GIBS), the wind and cloud moment
+(NOAA/NCEP GFS analysis and NOAA/NESDIS GMGSI) and the mean surface currents (ECCO2 cube92,
+NASA JPL/MIT, Menemenlis et al. 2008) are works of US government agencies or NASA-funded
+projects released without restriction; the credits above are requested and kept on screen.
+The PNG and JPEG files this project derives from them are published under the same terms.
+
 ## Source datasets
 
 The archives under `data/sources/` are not part of this repository. Each is pinned
