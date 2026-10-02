@@ -1,12 +1,12 @@
 # EarthThruTime3D Docker 배포
 
-이미지: **`honestjung/earththrutime3d:v0.23.0`**, 플랫폼 `linux/amd64`.
+이미지: **`honestjung/earththrutime3d:v0.24.0`**, 플랫폼 `linux/amd64`.
 `../hanyang3d/deploy`의 Gunicorn·버전 이미지·Compose·상태 확인 구성을 참고했고,
 데이터베이스가 있는 서비스이므로 백업과 복구 단계를 더했다.
 
-2026-09-26 v0.23.0 운영 배포 완료. 이미지 ID:
-`sha256:28f29b11d8e02ed1f41f2084503c797267f1968d8e13bacfa2e4701470b41d5c`.
-배포·백업·공개 화면 검증 결과는 [릴리스 기록](../devlog/20260926_jikhanjung_107_release_0230.md)에 있다.
+2026-10-02 v0.24.0 운영 배포 완료. 이미지 ID:
+`sha256:ccd4276b104eeaa7112366b2666eba4b1092715b30cfb6580486bfbfa079c322`.
+배포·백업·공개 화면 검증 결과는 [릴리스 기록](../devlog/20261002_jikhanjung_110_release_0240.md)에 있다.
 
 ## 운영 주소
 

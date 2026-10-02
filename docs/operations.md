@@ -5,7 +5,16 @@ host. Configuration and procedure live in `deploy/README.md` and `deploy/deploy.
 Builds happen on the development host; the server only loads the image and swaps.
 The shared guides are referenced privately through `.guides`; they are not copied.
 
-Current release: **v0.23.0**, deployed 2026-09-26 (Asia/Seoul). Seven reviewed PRs: the
+Current release: **v0.24.0**, deployed 2026-10-02 (Asia/Seoul). The present-day Earth
+(#102, jikhanjung P10/109): 0 Ma is shown on NASA Blue Marble, with wind (GFS analysis),
+mean surface currents (ECCO2 1992–2018) and clouds (GMGSI / GFS) at 0 Ma only. Wind and
+clouds are one moment pinned in the release PR (2026-10-01 18 UTC), not a live feed; a
+daily refresh is the next step. The runtime bundle has 1,297 files (490,063,522 bytes):
+`present-earth/` (8 files, about 7.1 MB) added to v0.23.0, nothing else changed.
+Image/data hashes, DB backup and public verification are in
+[devlog 110](../devlog/20261002_jikhanjung_110_release_0240.md).
+
+Previous release: v0.23.0, deployed 2026-09-26. Seven reviewed PRs: the
 modelled rainfall reads brown to teal and the temperature ColorBrewer RdYlBu, both
 matching their keys, with hill shading under the colour views (#90, #93); the rivers layer
 is named 잠재 하천 / Potential rivers with a caveat under the rain key (#92); the colour key
@@ -25,8 +34,8 @@ On 2026-09-18 eleven old releases were removed, reclaiming 8,099 MiB
 ([devlog 099](../devlog/20260918_jikhanjung_099_dolfinid_release_cleanup.md)); on
 2026-09-20 v0.18.1 and v0.18.0 (+1,784 MiB,
 [devlog 104](../devlog/20260920_jikhanjung_104_dolfinid_prune_0200.md)); on 2026-09-29
-v0.21.0, v0.20.0 and v0.19.0 (+2,877 MiB, 28 GiB free, 64% used). v0.23.0 now runs with
-v0.22.0 kept as the rollback
+v0.21.0, v0.20.0 and v0.19.0 (+2,877 MiB, 28 GiB free, 64% used). v0.24.0 now runs with
+v0.23.0 and v0.22.0 kept as rollbacks (prune not yet run after v0.24.0)
 ([devlog 108](../devlog/20260929_jikhanjung_108_dolfinid_prune_0230.md)). No database,
 backups, secrets or other projects were pruned.
 
