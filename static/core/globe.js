@@ -2520,6 +2520,7 @@ function init() {
       lonLatAt: (clientX, clientY) => pickLonLat({ clientX, clientY }),
       screenOf: fluxScreen,
       satelliteShown: () => stage.dataset.satellite === 'true',
+      projection: () => projection,
       changed: queueAddress,
     },
   });

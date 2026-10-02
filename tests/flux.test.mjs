@@ -1,6 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {OCEAN, WIND, advance, decodeField, legendSteps, momentText, sampleField, speedBin} from '../static/core/flux.js';
+import {OCEAN, WIND, WIPE_PX, advance, decodeField, legendSteps, momentText, sampleField, speedBin, trailFade} from '../static/core/flux.js';
 
 function field(width, height, fill, centred) {
   const rgba = new Uint8ClampedArray(width * height * 4);
@@ -54,4 +54,16 @@ test('speed bins and the legend share their steps', () => {
 test('the moment is written in UTC first, the visitor clock after', () => {
   assert.match(momentText('2026-10-01T18:00Z', 'en'), /^2026-10-01 18:00 UTC/);
   assert.equal(momentText('2026-10-01T18:00Z', 'not a locale!!').slice(0, 20), '2026-10-01 18:00 UTC');
+});
+
+test('trails fade with the view shift, continuously, down to a wipe', () => {
+  assert.equal(trailFade(WIND.fade, 0), WIND.fade);
+  let last = WIND.fade;
+  for (let moved = 0; moved <= WIPE_PX; moved += 0.05) {
+    const kept = trailFade(WIND.fade, moved);
+    assert.ok(kept <= last + 1e-12, 'never longer for a larger shift');
+    assert.ok(last - kept < 0.03, `no jump at ${moved} px`);
+    last = kept;
+  }
+  assert.ok(trailFade(WIND.fade, WIPE_PX) < 0.01, 'nearly wiped where the wipe takes over');
 });
