@@ -7,7 +7,7 @@ from django.conf import settings
 from django.contrib import admin
 from django.contrib.auth import get_user_model
 from django.db import OperationalError
-from django.test import RequestFactory, TestCase
+from django.test import RequestFactory, TestCase, override_settings
 
 from config.version import VERSION
 from core import globe as globe_module
@@ -44,6 +44,19 @@ class SiteTests(TestCase):
         self.assertEqual(response.status_code, 503)
         self.assertEqual(response.json()["status"], "unhealthy")
         self.assertNotIn("private DB path", response.content.decode())
+
+    def test_admin_route_follows_the_setting(self):
+        import importlib
+        import config.urls
+        try:
+            with override_settings(ADMIN_ENABLED=False):
+                routes = [str(p.pattern) for p in importlib.reload(config.urls).urlpatterns]
+                self.assertNotIn('admin/', routes)
+            with override_settings(ADMIN_ENABLED=True):
+                routes = [str(p.pattern) for p in importlib.reload(config.urls).urlpatterns]
+                self.assertIn('admin/', routes)
+        finally:
+            importlib.reload(config.urls)
 
     def test_admin_requires_superuser(self):
         request = RequestFactory().get("/admin/")

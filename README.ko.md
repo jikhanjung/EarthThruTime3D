@@ -46,7 +46,7 @@ uv를 사용한다면 설치 명령은 `uv pip install --python .venv/bin/python
 - 홈: http://127.0.0.1:8000/
 - 소개: `/about/`, 개인정보: `/privacy/`, 문의: `/contact/`
 - 상태: `/healthz` (버전·DB·마이그레이션·필수 필드, 정보로 현재 바람·구름의 출처와 나이)
-- 관리자: `/admin/` (`.venv/bin/python manage.py createsuperuser`로 계정 생성)
+- 관리자: `/admin/`은 개발 환경에서만(`createsuperuser`로 계정 생성). 운영에는 이 경로가 없다(`ADMIN_ENABLED`)
 
 ```bash
 make check
@@ -87,7 +87,7 @@ Three.js 0.186.0과 MIT 라이선스는 `static/vendor/three/`에 포함됩니�
 ## 구성
 
 - `config/settings/`: 공통·개발·운영 설정. manage.py 기본은 개발, WSGI/ASGI 기본은 운영.
-- `core/`, `templates/`, `static/`: 페이지, 지구본 뷰어, 관리자 접근 제한, 상태 점검.
+- `core/`, `templates/`, `static/`: 페이지, 지구본 뷰어, 접근 키 확인, 상태 점검.
 - `locale/`: 영어 번역(`django.po`). `.mo`는 `scripts/compile_messages.py`로 만들며 Git에서 제외.
 - `scripts/`: 자료 받기·검증, 분할, 이동·고도·기온·해수면·빙하·하천·기후·현재 지구 파생 자료 생성.
 - `sources/`, `annotations/`: 자료 출처 매니페스트와 사람이 붙인 주석.

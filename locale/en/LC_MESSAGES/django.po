@@ -1510,3 +1510,9 @@ msgstr "the elevation series (relief shading, temperature, sea level, ice), pote
 
 msgid "기여 내역은 <a href=\"https://github.com/jikhanjung/EarthThruTime3D/graphs/contributors\" target=\"_blank\" rel=\"noopener\">GitHub</a>과 작업 기록(devlog)에 있습니다."
 msgstr "Contributions are listed on <a href=\"https://github.com/jikhanjung/EarthThruTime3D/graphs/contributors\" target=\"_blank\" rel=\"noopener\">GitHub</a> and in the work log (devlog)."
+
+msgid "이 사이트에는 회원 가입도 로그인도 없습니다. 쿠키는 필요할 때만 씁니다: 언어를 고르면 그 선택을 1년짜리 쿠키에, 비공개 판 모델의 접근 키를 넣으면 그 확인을 이 브라우저의 세션(30일)에 저장하고, 키 입력 양식에는 CSRF 쿠키를 씁니다. 세션은 서버의 데이터베이스에 저장됩니다. 지구본이 쓰는 자료(위성 영상·바람·구름 포함)는 모두 이 서버에서 보내며, 방문자의 브라우저가 다른 곳에 요청하지 않습니다. 서버 실행 시 요청 경로와 오류가 로그에 남을 수 있습니다. 로그 보관 기간은 아직 정하지 않았습니다."
+msgstr "This site has no sign-up and no login. Cookies are set only when needed: choosing a language keeps the choice in a cookie for a year; entering the access key for a private plate model keeps that confirmation in this browser's session for 30 days, and the key form uses a CSRF cookie. Sessions are stored in the server's database. Everything the globe shows (the satellite image, wind and clouds included) is sent from this server; your browser makes no requests elsewhere. Request paths and errors may appear in the server's logs while it runs; how long logs are kept has not been decided yet."
+
+msgid "회원 가입·로그인 기능이 없고 자료 업로드도 받지 않습니다. 쿠키는 언어 선택과 비공개 판 모델의 접근 키 확인에만 씁니다."
+msgstr "There is no sign-up or login, and no uploads are accepted. Cookies are used only for the language choice and for confirming the access key of a private plate model."
