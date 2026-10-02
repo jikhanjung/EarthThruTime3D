@@ -31,3 +31,13 @@
   그날 17:10 UTC 에 2026-10-02 12 UTC 를 받으면 `live` 로 바뀐다.
 - 공개 사이트 `tests/flux-browser.mjs` 통과. 정리: `prune.sh` 로 v0.24.1 을 지웠다(+921 MiB, 32 GiB 여유).
 - 롤백: `bash /srv/earththrutime3d/deploy.sh v0.24.2`. compose 의 새 마운트는 남지만 v0.24.2 는 읽지 않는다.
+
+## 첫 자동 받기 (2026-10-02 17:10 UTC)
+
+- 호스트 cron 이 17:10:01 UTC 에 `present.sh` 를 v0.26.0 의 사본(`refresh from v0.26.0 2026-10-02T16:15Z`)으로 돌려
+  **2026-10-02 12 UTC** 분석과 같은 시의 GMGSI 를 받았다. `status.json`: `result ok`, `last_ok 2026-10-02T17:10Z`.
+- `present-live/`: 지금 시각 넷(`10m-4be437fb269f` 등)과 앞 시각(2026-10-01 12 UTC) 넷이 `previous` 로 함께 있다.
+- 17:23 UTC 공개 `/healthz`: `ok`, `0.26.0`, `present.source = live`, `t = 2026-10-02T12:00Z`, `refresh.result = ok`.
+  첫 쪽의 설정도 `t 2026-10-02T12:00Z, source live`, 정보 패널 안내는 "하루 한 번".
+- 공개 사이트에 `tests/flux-browser.mjs` 통과(시각 줄·범례가 카탈로그의 `t`, 곧 2026-10-02 12:00 UTC 와 같음을 본다).
+- 이 확인은 판 v0.25.0 을 두고 예약한 것이지만, 그사이 v0.26.0 까지 배포되어 판은 0.26.0 이다.
