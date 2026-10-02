@@ -1,17 +1,14 @@
 /* The map is the page, as in a map application: it fills the window and everything floats
    over it. No header band: the title heads the left panel, the language switch floats at the
-   top right. The footer keeps only the copyright and About, at the bottom centre. */
+   top right. The copyright and About close the left panel; the page footer is not shown. */
 body.map-page{height:100vh;height:100dvh;display:flex;flex-direction:column;overflow:hidden}
 .map-page header{position:fixed;top:10px;right:12px;z-index:30;width:auto;max-width:none;margin:0;padding:3px 8px;
                  border:0;border-radius:8px;background:#0b1f28d9;backdrop-filter:blur(6px)}
 .map-page header .brand{display:none}
 .map-page header .lang{margin-left:0}
 .map-page main{max-width:none;width:100%;margin:0;padding:0;flex:1;min-height:0;position:relative}
-.map-page footer{position:fixed;left:50%;right:auto;bottom:0;transform:translateX(-50%);z-index:4;max-width:none;
-                 margin:0;padding:2px 12px;flex-direction:row;align-items:center;gap:12px;border:0;
-                 border-radius:8px 8px 0 0;background:#0a1b21d9;font-size:.68rem;line-height:1.5;white-space:nowrap}
-.map-page footer nav{gap:12px}
-.map-page footer .footer-more{display:none}
+/* The copyright and About sit at the foot of the left panel instead. */
+.map-page footer{display:none}
 .map-page .notice{margin:24px}
 
 /* The left panel (after GSM's): the title, then boxed sections for the view and the layers.
@@ -33,6 +30,8 @@ body.map-page{height:100vh;height:100dvh;display:flex;flex-direction:column;over
 .side-panel .settings-menu{display:flex;flex-wrap:wrap;gap:6px;padding:10px 12px}
 .side-panel .settings-menu[hidden]{display:none}
 .side-panel .settings-menu button{flex:1 1 auto}
+.side-foot{flex:none;margin:0;padding:8px 16px;border-top:1px solid #29434a;font-size:.68rem;color:#8aa3ae}
+.side-foot a{color:#9fbac4}
 .side-toggle{position:absolute;top:10px;left:10px;z-index:7;font-size:1rem;line-height:1.2;padding:7px 12px}
 .stage-area{position:absolute;inset:0}
 @media(min-width:900px){.explorer.side-open .stage-area{left:var(--side-w)}}
@@ -81,23 +80,26 @@ details{border-top:1px solid #2c4650;padding-top:12px}
 summary{cursor:pointer;color:#c9dce2}
 
 /* The timeline: a long bar floating at the foot of the map, the one control kept there. */
-.controls{position:absolute;left:50%;bottom:30px;transform:translateX(-50%);z-index:2;
-          width:min(980px,calc(100% - 24px));padding:10px 16px 8px;background:#0b1f28eb;
+.controls{position:absolute;left:50%;bottom:28px;transform:translateX(-50%);z-index:2;
+          width:min(980px,calc(100% - 24px));padding:6px 12px;background:#0b1f28eb;
           border:1px solid #29434a;border-radius:14px;box-shadow:0 8px 28px #0008;backdrop-filter:blur(6px)}
 .menu-toggle[aria-expanded=true]{background:#88dfcc;color:#0b2228;border-color:#88dfcc}
-/* The play button stays centred on the panel whatever width the age readout takes:
-   equal side columns hold it still. */
-.timeline-top{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:12px;font-size:.82rem}
-.timeline-title{display:flex;align-items:center;gap:8px;min-width:0;justify-self:start}
-.time-steps{display:flex;gap:6px}
-.time-steps button{padding:6px 10px;white-space:nowrap}
-/* The period list shrinks inside its column rather than spilling over the buttons. */
-.time-where{display:flex;align-items:center;gap:10px;justify-self:end;min-width:0;max-width:100%}
-.era-select{width:auto;flex:0 1 auto;min-width:0;max-width:15rem;padding:6px 8px;font-size:.76rem}
+/* One slim row: older, play, newer, then the slider between its two ends, with the
+   temperature strip and the event marks as thin bands on the slider's own width. The time
+   range, step, period menu and event note sit in the left panel's Time box. */
+.timeline{display:grid;grid-template-columns:auto auto minmax(0,1fr) auto;align-items:center;gap:10px}
+.time-steps{display:flex;gap:4px}
+.time-steps .icon-button{min-width:36px;padding:4px 8px;font-size:.95rem;line-height:1.2}
+.timeline-end{font-size:.68rem;color:#95afbb;white-space:nowrap}
+.timeline-track{min-width:0}
+#timeline{display:block;width:100%;margin:2px 0 0;accent-color:#88dfcc;cursor:pointer}
+.time-settings{display:grid;gap:8px;padding:10px 12px}
+.time-settings .sampling-select,.time-settings .era-select{width:100%;max-width:none;padding:8px;font-size:.78rem}
+.time-where{display:flex;align-items:center;gap:8px}
+.time-where .era-select{flex:1 1 auto;min-width:0}
 #frame-number{font-variant-numeric:tabular-nums;color:#88dfcc;font-size:.75rem;white-space:nowrap}
-.sampling-select{width:auto;max-width:100%;padding:4px 6px;font-size:.72rem}
-#timeline{display:block;width:100%;margin:10px 0 4px;accent-color:#88dfcc;cursor:pointer}
-.timeline-labels{display:flex;justify-content:space-between;gap:14px;font-size:.68rem;color:#95afbb}
+.time-span{margin:0;font-size:.7rem;line-height:1.5;color:#95afbb}
+.time-settings .event-note{margin:0}
 #status{position:absolute;top:40%;left:50%;transform:translate(-50%,-50%);z-index:1;background:#112d35ee;border:1px solid #42616b;padding:12px 18px;border-radius:8px;max-width:85%;width:max-content;font-size:.82rem;pointer-events:none}
 #status.loaded{top:auto;bottom:16px;left:20px;transform:none;max-width:1px;max-height:1px;overflow:hidden;clip-path:inset(50%);padding:0;border:0}
 .retry{position:absolute;top:50%;left:50%;transform:translateX(-50%);z-index:1}
@@ -113,27 +115,20 @@ summary{cursor:pointer;color:#c9dce2}
   .inspector{top:84px;left:8px;right:8px;width:auto;max-height:calc(100% - 92px - var(--controls-space,200px) - var(--legend-space,0px));padding:14px}
   .inspector h2{font-size:1.2rem}
   .inspector .age{font-size:1.6rem}
-  .controls{left:8px;right:8px;width:auto;transform:none;bottom:24px;padding:8px 10px 6px}
-  .timeline-top{grid-template-columns:1fr auto;gap:6px 8px;font-size:.74rem}
-  .time-steps{grid-column:1/-1;grid-row:2;justify-self:center}
-  .time-steps button{font-size:.72rem;padding:5px 8px}
-  .era-select{max-width:9.5rem;font-size:.7rem}
-  #frame-number{display:none}
-  .timeline-labels>span:nth-child(2){display:none}
+  .controls{left:8px;right:8px;width:auto;transform:none;bottom:22px;padding:6px 8px}
+  /* The buttons over the slider on a phone; the ends give way to the slider. */
+  .timeline{grid-template-columns:minmax(0,1fr);gap:4px}
+  .time-steps{justify-self:center}
+  .timeline-end{display:none}
   .sea-overlay{left:8px;right:8px;width:auto;bottom:calc(var(--controls-space,200px) + 8px + var(--legend-space,0px));padding:10px 12px 8px}
   .sea-overlay .chart-legend{display:none}
-  .map-page footer{padding:1px 8px;font-size:.62rem;gap:8px}
-  .map-page footer nav{gap:8px}
 }
 
 /* Short viewports, mostly a phone held sideways: the panel gives up its charts and
    labels so the slider and the sphere both stay on screen. */
 @media(max-height:560px){
   .gesture{display:none}
-  .controls{bottom:22px;padding:6px 12px 4px}
-  .time-steps button{padding:4px 8px}
-  #timeline{margin:6px 0 2px}
-  .timeline-labels,.sea-overlay .chart-legend{display:none}
+  .sea-overlay .chart-legend{display:none}
   .sea-overlay #sea-strip{height:40px}
 }
 
@@ -183,7 +178,7 @@ summary{cursor:pointer;color:#c9dce2}
 .model-note .unlock .wrong:not([hidden]){color:#ffb3b3;font-size:.74rem}
 
 /* Global mean temperature strip above the slider: one column per stop. */
-#temp-strip { display: block; width: 100%; height: 10px; border-radius: 3px; margin-bottom: 6px; image-rendering: pixelated; }
+#temp-strip { display: block; width: 100%; height: 6px; border-radius: 3px; margin-bottom: 3px; image-rendering: pixelated; }
 .mean-temp { margin: 0.2rem 0 0.6rem; color: #9fb3bd; font-size: 0.9rem; }
 
 /* Long-term sea level above the slider, and the Pleistocene inset in the inspector. */
