@@ -154,10 +154,20 @@ export function createFlux({ config, stage, L, fmt, lang, api }) {
     const { context, style } = layer;
     if (layer.key !== viewKey) {
       // The view moved: trails from the old view would smear across the new one.
+      // The view moved: trails from the old view would smear across the new one. Each
+      // particle is placed again where the new view puts it, so this frame still draws its
+      // next step; leaving them unplaced blanked every frame of a damped camera's settling,
+      // which read as flicker for seconds after a drag (and while the globe turns).
       layer.key = viewKey;
+      layer.clears = (layer.clears || 0) + 1;
+      stage.dataset[`${layer.name}Clears`] = String(layer.clears);
       context.setTransform(1, 0, 0, 1, 0, 0);
       context.clearRect(0, 0, layer.canvas.width, layer.canvas.height);
-      for (const p of layer.particles) p.x = p.y = null;
+      for (const p of layer.particles) {
+        const screen = api.screenOf(p.lon, p.lat);
+        p.x = screen ? screen[0] : null;
+        p.y = screen ? screen[1] : null;
+      }
       layer.drawn = 0;
     }
     if (reduced && layer.drawn > 60) return;

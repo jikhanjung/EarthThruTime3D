@@ -90,6 +90,10 @@ const surfaceToggle = $('surface');
 const present = JSON.parse($('globe-present')?.textContent ?? 'null');
 const satelliteToggle = $('satellite');
 let satelliteWanted = Boolean(present?.base);
+// Whether the reader picked the continent mask. Without published maps the mask is also the
+// plain surface the viewer falls back to (the default atlas), and that must not keep the
+// present from its photograph; only a chosen mask does.
+let maskChosen = false;
 // Global mean surface temperature per published map, [age, C], oldest first: the
 // area-weighted mean of the Scotese 2021 maps. Empty until the climate build has run.
 const temperatureCurve = JSON.parse($('globe-temperature')?.textContent ?? '[]');
@@ -423,7 +427,7 @@ async function selectStop(value, manual = false, overlayManaged = false, transit
   // the mask) keeps its colours.
   const presentStop = !place.mapless && place.blend === 0 && place.age === 0;
   const satellite = presentStop && satelliteWanted && Boolean(present?.base) && fielded
-    && !heated && !climated && surface !== 'mask';
+    && !heated && !climated && !(surface === 'mask' && maskChosen);
   const anchor = place.mapless ? null : (place.blend > 0.5 ? place.to : place.from);
   $('era').value = selected;
   $('timeline').value = stop;
@@ -463,7 +467,7 @@ async function selectStop(value, manual = false, overlayManaged = false, transit
     : (between ? fmt(L.betweenCount, { age: ageLabel(place) }) : `${selected + 1} / ${frames.length}`);
   if (surfaceToggle) {
     surfaceToggle.disabled = place.mapless || !place.from.field || !place.to.field;
-    surfaceToggle.setAttribute('aria-pressed', String(masked));
+    surfaceToggle.setAttribute('aria-pressed', String(masked && !satellite));
   }
   if (temperatureToggle) temperatureToggle.setAttribute('aria-pressed', String(heated));
   if ($('temp-note')) $('temp-note').hidden = !heated;
@@ -477,7 +481,7 @@ async function selectStop(value, manual = false, overlayManaged = false, transit
   // Decided here, synchronously, so the readout and the shader agree at every stop.
   const seaOffset = seaLevelOffset(place, fielded);
   showSeaLevel(place, seaOffset);
-  $('surface-note').hidden = !masked;
+  $('surface-note').hidden = !masked || satellite;
   $('between-note').hidden = !between;
   if ($('mapless-note')) $('mapless-note').hidden = !place.mapless;
   status.textContent = place.mapless
@@ -1598,7 +1602,9 @@ const RELIEF_DETAIL = [512, 256];
 let reliefWanted = true;
 let reliefDetailed = false;
 function updateRelief(factor) {
-  const able = reliefWanted && projection === 'globe' && uniforms.mode.value >= 2 && uniforms.blank.value < 0.5;
+  // The satellite base lifts by the grid's heights, which only the elevation series has.
+  const able = reliefWanted && projection === 'globe' && uniforms.mode.value >= 2 && uniforms.blank.value < 0.5
+    && (uniforms.mode.value !== 6 || reliefSeries);
   const strength = able ? 1 - THREE.MathUtils.smoothstep(factor, 0.12, 0.3) : 0;
   const was = uniforms.relief.value;
   const detailed = projection === 'globe' && factor < .3;
@@ -2717,6 +2723,7 @@ function init() {
   if (surfaceToggle) {
     surfaceToggle.addEventListener('click', () => {
       surface = surface === 'mask' ? (reliefSeries ? 'relief' : 'map') : 'mask';
+      maskChosen = surface === 'mask';
       surfaceToggle.setAttribute('aria-pressed', String(surface === 'mask'));
       selectStop(stop, true);
     });
@@ -3051,6 +3058,7 @@ function readViewAddress() {
   flux?.restore({ wind: asked.get('wind'), currents: asked.get('currents') === 'flow', clouds: asked.get('clouds') });
   const wanted = asked.get('surface');
   if (wanted && ['relief', 'map', 'mask', 'temp', 'veg', 'rain'].includes(wanted)) surface = wanted;
+  maskChosen = wanted === 'mask';
   if (surfaceToggle) surfaceToggle.setAttribute('aria-pressed', String(surface === 'mask'));
 }
 // A folded note that fits in its two lines gets no marker and no pointer.

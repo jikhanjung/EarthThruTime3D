@@ -36,6 +36,7 @@ wwolf는 001부터 셉니다. 그 전의 001–045는 링크와 본문 속 번�
 
 ## 작업 기록
 
+- [jikhanjung 111 — 현재의 지구 고침: 기본 자료의 위성 영상, 입자 깜박임](20261002_jikhanjung_111_present_default_and_flicker.md)
 - [jikhanjung 110 — v0.24.0 현재의 지구 릴리스](20261002_jikhanjung_110_release_0240.md)
 - [jikhanjung 109 — 현재의 지구: 위성 영상 바탕에 바람·해류·구름](20261002_jikhanjung_109_present_earth_in_flux.md)
 
