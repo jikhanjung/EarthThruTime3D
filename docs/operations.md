@@ -76,7 +76,7 @@ nothing here re-pins the bundle. Procedure: `deploy/README.md`.
   12 weeks, monthly for 12 months and every December for ever) mirrored to the NAS with
   hard links preserved. The data is files, not rows, and is made on the development host, so the mirror
   runs from there rather than from the server. Sessions are not stripped from the
-  snapshot: the database has no user accounts at all, only access-key sessions.
+  snapshot: the database has no user accounts at all.
 - Licence: MIT for the code (`LICENSE`), CC BY 4.0 for the data derived from CC BY
   sources, the unsettled masks under their sources' terms (`LICENSE-DATA.md`).
 - `/healthz`: `ok`/200 requires a reachable database with migration history and, when
@@ -88,7 +88,8 @@ nothing here re-pins the bundle. Procedure: `deploy/README.md`.
   optional climate, ice and plate layers. Bundle hashes are checked at startup.
 - Seed: **(none)**. Geological assets are files described by provenance manifests,
   not database seed rows. The domain invariant is already implemented as default-series
-  field completeness; the database stores only sessions (the plate-model access key).
+  field completeness; the database stores only sessions, and with no `ACCESS_KEY` on the
+  public site (2026-10-02) not even those are created.
 - Admin: Django's admin is not routed in production (`ADMIN_ENABLED`, default off there);
   the production database has no accounts.
 
@@ -127,7 +128,7 @@ nothing here re-pins the bundle. Procedure: `deploy/README.md`.
 ## Still outstanding
 
 - **Restore drill.** Rollback of code is exercised; restoring a database from a snapshot
-  has not been rehearsed. The database holds only access-key sessions,
+  has not been rehearsed. The database holds no accounts and, without an access key, no sessions,
   so this waits until it holds something a reader would miss.
 - **Disk monitoring and backup-failure alerting.** The host was at 89% when the service
   was installed. A failed hourly snapshot is visible in the journal but nothing raises it.

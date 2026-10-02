@@ -58,7 +58,8 @@ freely from earthdynamics.org and carries no licence, only the book's copyright 
 so there is no permission to redistribute it or anything derived from it. Its manifest
 therefore sets `publish: false`: the viewer lists it where `ACCESS_KEY` is set but keeps
 it locked until the key is entered, and where no key is set it is not offered at all and
-its files return 404. Looking at it is one thing and handing it to the open web is
+its files return 404. The public site sets no key, and the release bundle leaves the model
+out entirely (`pack_plates`); the key path is for comparing it on the build host. Looking at it is one thing and handing it to the open web is
 another; publishing it needs the authors' say-so.
 
 ```bash

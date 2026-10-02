@@ -505,6 +505,38 @@ class GlobeTests(TestCase):
                          if model["id"] == "torsvikcocks2017")
             self.assertFalse(entry["locked"])
 
+    def test_the_public_bundle_and_pages_leave_the_private_model_out(self):
+        import tempfile
+        from pathlib import Path
+        from unittest.mock import patch
+        from deploy import pack_data
+        from core import context_processors
+        with tempfile.TemporaryDirectory() as temp:
+            project = Path(temp)
+            (project / 'sources').mkdir()
+            (project / 'sources/plate-models').symlink_to(settings.BASE_DIR / 'sources/plate-models')
+            plates = project / 'plates'
+            for path in (settings.BASE_DIR / 'sources/plate-models').glob('*.json'):
+                (plates / path.stem).mkdir(parents=True)
+                for name in ('rotations.json', 'continents.json'):
+                    (plates / path.stem / name).write_text('{}')
+            files = []
+            (project / 'stage').mkdir()
+            with patch.object(pack_data, 'BASE_DIR', project), patch.object(pack_data, 'PLATES', plates):
+                pack_data.pack_plates(project / 'stage', files)
+            packed = {entry['dataset'] for entry in files}
+            self.assertNotIn('torsvikcocks2017', packed)
+            self.assertIn('merdith2021', packed)
+        context_processors.plate_citations.cache_clear()
+        with self.settings(ACCESS_KEY=""):
+            page = self.client.get('/about/').content.decode()
+            self.assertNotIn('Torsvik', page)
+            self.assertNotIn('접근 키', page)
+            self.assertNotIn('접근 키', self.client.get('/privacy/').content.decode())
+        with self.settings(ACCESS_KEY="a-key-for-the-test"):
+            self.assertIn('접근 키', self.client.get('/privacy/').content.decode())
+            self.assertIn('Torsvik', self.client.get('/about/').content.decode())
+
     def test_the_gate_answers_json_for_the_viewer(self):
         json_headers = {"HTTP_ACCEPT": "application/json"}
         with self.settings(ACCESS_KEY="a-key-for-the-test"):
