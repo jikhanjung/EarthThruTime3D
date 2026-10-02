@@ -52,7 +52,8 @@ install `requirements-processing.txt` as well.
 - About `/about/`, privacy `/privacy/`, contact `/contact/`
 - Health: `/healthz` (version, database, migrations, required fields; the present-day
   weather's source and age for information)
-- Admin: `/admin/` (create an account with `.venv/bin/python manage.py createsuperuser`)
+- Admin: `/admin/` in development only (`createsuperuser` for an account); production
+  leaves the route out (`ADMIN_ENABLED`)
 
 ```bash
 make check
@@ -95,7 +96,7 @@ site needs neither npm nor a CDN; `npm ci && npm run vendor` updates the vendore
 
 - `config/settings/`: common, development and production settings. `manage.py` defaults to
   development, WSGI/ASGI to production.
-- `core/`, `templates/`, `static/`: pages, the globe viewer, admin restriction, health checks.
+- `core/`, `templates/`, `static/`: pages, the globe viewer, the access-key gate, health checks.
 - `locale/`: English translations (`django.po`). `scripts/compile_messages.py` builds the
   `.mo`, which Git ignores.
 - `scripts/`: fetching and verifying sources, segmentation, and the derived motion, elevation,

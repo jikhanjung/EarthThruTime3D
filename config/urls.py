@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib import admin
 from django.urls import path
 from django.views.generic import TemplateView
@@ -35,5 +36,7 @@ urlpatterns = [
     path('contact/', TemplateView.as_view(template_name='core/contact.html'), name='contact'),
     path('healthz', healthz, name='healthz'),
     path('lang/<slug:code>/', language, name='language'),
-    path('admin/', admin.site.urls),
 ]
+# Off in production (settings.ADMIN_ENABLED); on for development.
+if settings.ADMIN_ENABLED:
+    urlpatterns.append(path('admin/', admin.site.urls))

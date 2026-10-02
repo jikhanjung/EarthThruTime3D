@@ -211,6 +211,7 @@ scripts/present.sh >> logs/present.log 2>&1              # 첫 받기를 손으�
 | `ALLOWED_HOSTS` | 명시 필수. 와일드카드 거부 |
 | `DATABASE_PATH` | 이미지 기본 `/var/lib/earththrutime3d/db.sqlite3` |
 | `ACCESS_KEY` | 비공개 자료를 여는 공유 키. 비우면 그 자료를 아예 제공하지 않는다 |
+| `ADMIN_ENABLED` | Django 관리자 경로(`/admin/`). 운영 기본 꺼짐, 개발 기본 켬 |
 | `SCOTESE_VIEWER_ENABLED` | 뷰어 사용 여부 |
 | `SCOTESE_SOURCE_MAPS_PUBLIC` | 원본 지도 제공 여부. 기본 꺼짐 |
 | `MANTLE_DERIVED_DIR` | 이미지 기본 `/runtime/mantle/muller2022-opt1` |
