@@ -9,6 +9,23 @@
 **시간 범위**는 고도 격자에서 "지구의 시간" 옆 선택(전체 시대 / 최근 2.5만 년 / 최근 13만 년)이다.
 빙기 시점의 화면은 "발표된 복원 · 계산한 결과 · 가정"을 캡션과 안내문으로 구분한다.
 
+## 다음 릴리스
+
+소개 쪽에 현재 지구 자료의 출처 ([#110](https://github.com/jikhanjung/EarthThruTime3D/pull/110))
+
+- `/about/`의 자료 출처에 **현재의 지구** 절을 더했다: NASA Blue Marble(EOSDIS GIBS), NOAA/NCEP GFS, NOAA/NESDIS
+  GMGSI, ECCO2 cube92(Menemenlis et al. 2008)와 각 층이 무엇인지(합성 사진, 하루 한 번 받는 분석, 모델 평균).
+  v0.24.0부터 화면에 쓰던 자료인데 소개 쪽에 빠져 있었다.
+
+확인: 헤더의 소개(`/about/`) → "자료 출처" 아래 **현재의 지구**. 영어(`EN`)에서는 "The present-day Earth".
+
+소개 쪽에 기여자, 하단 메뉴에서 맨틀 실험 링크 뺌 ([#110](https://github.com/jikhanjung/EarthThruTime3D/pull/110))
+
+- `/about/`에 **기여자** 절: Jikhan Jung, WWolf와 각자 맡은 부분, GitHub 기여 내역 링크.
+- 모든 쪽 아래의 하단 메뉴에서 **맨틀 모형 실험** 링크를 뺐다. 화면은 `/mantle/`에 그대로 있다.
+
+확인: 아무 쪽의 맨 아래 메뉴가 소개·개인정보·문의 셋이다. `/about/`의 "제작" 아래 **기여자**.
+
 ## v0.25.0 — 2026-10-02
 
 현재의 바람·구름을 하루 한 번 새로 ([#108](https://github.com/jikhanjung/EarthThruTime3D/pull/108), [jikhanjung P11](devlog/20261002_jikhanjung_P11_daily_present_weather.md), [jikhanjung 115](devlog/20261002_jikhanjung_115_daily_present_weather.md))

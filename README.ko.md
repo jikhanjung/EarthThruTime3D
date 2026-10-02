@@ -1,0 +1,123 @@
+# EarthThruTime3D
+
+[English](README.md)
+
+고지리 자료를 바탕으로 지구 역사를 3D로 재구성하는 PaleoBytes 연구 프로젝트입니다.
+첫 목표는 시대별 지표면 시각화이며, 이후 지각 이동·변형과 맨틀 대류로 확장합니다.
+
+현재는 **Django 5.2 + Three.js 고지리 지구본 뷰어**이며
+https://earththrutime.nopeoplestime.info 에서 운영합니다.
+
+- 기본 화면: PALEOMAP PaleoAtlas(2016) 지도 90장(750 Ma~현재)에서 분할한 육지 마스크.
+  지도 사이는 조각을 PALEOMAP 판 회전으로 옮기며 모양을 섞는 보간입니다.
+- 고도 격자 시리즈(`?masks=paleodem2018`): PaleoDEM(Scotese & Wright 2018) 109장에 지형 음영과
+  3D 지형, 지표 기온(Scotese 2021), 해수면 곡선(van der Meer 2022, Spratt & Lisiecki 2016), 빙하,
+  격자 위에서 계산한 잠재 하천.
+- 최근 2.5만 년·13만 년 시간 범위: 시점별 빙상 조각과 모형 식생·강수(Krapp et al. 2021).
+- 현재(0 Ma): NASA Blue Marble 위성 바탕에 바람(NOAA GFS 분석, 10 m·250 hPa), 표층 해류(ECCO2
+  1992–2018 평균), 구름(NOAA/NESDIS GMGSI 또는 GFS)이 움직이는 층. 실시간이 아니며 바람·구름은
+  하루 한 번 새로 받고, 켠 층의 시각을 화면에 적는다. 지각 두께(CRUST 2.0).
+- 판 회전 모델(Merdith 2021, Müller 2022, Cao 2024, Matthews 2016, PALEOMAP 2016) 경계선,
+  PaleoCoastlines(Kocsis & Scotese 2021) 해안선 겹쳐 보기, 시간을 따라 옮겨 가는 위치 핀.
+- 비교용 2002년판 웹 지도 17장(`?masks=scotese2002`).
+- 한국어/영어(KO|EN) 전환.
+
+보간 화면, 모형 자료, 해수면 가정 화면은 관측이나 발표된 복원이 아닙니다. 화면과 문서에서 원본 자료,
+보간 결과, 가정 화면을 구분해 표시합니다. 릴리스별 변경과 화면에서 확인하는 방법은
+[CHANGELOG.md](CHANGELOG.md)에 있습니다. 문제 보고는
+[GitHub Issues](https://github.com/jikhanjung/EarthThruTime3D/issues)에 남겨 주세요.
+
+## 로컬 실행
+
+Python 3.11 이상을 사용합니다. `.venv`는 이 저장소 전용 환경입니다.
+
+```bash
+python3 -m venv .venv
+.venv/bin/python -m pip install -r requirements.txt
+mkdir -p data/db
+.venv/bin/python manage.py migrate
+.venv/bin/python scripts/compile_messages.py   # 영어 번역 .mo 생성
+.venv/bin/python manage.py runserver
+```
+
+uv를 사용한다면 설치 명령은 `uv pip install --python .venv/bin/python -r requirements.txt`입니다.
+자료를 새로 만들 때는 `requirements-processing.txt`도 설치합니다.
+
+- 홈: http://127.0.0.1:8000/
+- 소개: `/about/`, 개인정보: `/privacy/`, 문의: `/contact/`
+- 상태: `/healthz` (버전·DB·마이그레이션·필수 필드, 정보로 현재 바람·구름의 출처와 나이)
+- 관리자: `/admin/` (`.venv/bin/python manage.py createsuperuser`로 계정 생성)
+
+```bash
+make check
+make test
+npm ci
+npm test
+# 개발 서버를 실행한 상태에서 (필요시 npx playwright install chromium):
+npm run test:browser
+```
+
+다른 브라우저 검사는 `VIEWER_URL=http://127.0.0.1:8000/ node tests/<이름>-browser.mjs`로 돌립니다.
+`tests/flux-browser.mjs`는 현재 지구 자료(`data/derived/present-earth`)가 있어야 하고, 이전 검사들은
+0 Ma가 고도 색이라고 가정하므로 `PRESENT_DERIVED_DIR=/nonexistent`로 띄운 서버에 돌립니다.
+[docs/globe-viewer.md](docs/globe-viewer.md) "Verification"을 보세요.
+
+## 지구본 조작
+
+별도 [맨틀 모형 실험](docs/geodynamics.md)은 `/mantle/`에서 Müller 2022 OPT1의
+발표된 3D 표면을 시점별로 보여 줍니다. 로컬 원본·파생 자료 준비 명령은 링크한 문서에 있습니다.
+자체 대류 계산이나 Scotese 지표와의 결합은 아직 구현하지 않았습니다.
+지구본 정보 패널과 맨틀 화면의 **인도–아시아 A–A′ 단면** 버튼은 80 Ma–현재의
+[단면·3D 지표 팝업](docs/india-asia-section.md)을 엽니다. 지각 단축은 별도로 표시한 가정 모형입니다.
+
+홈에서 드래그로 회전, 오른쪽 드래그로 이동, 휠 클릭·Shift 드래그로 기울이고 휠·핀치로 확대합니다.
+지구본·몰바이데·이퀄 어스·정거원통 투영을 고를 수 있고, 평면 지도도 경도를 돌릴 수 있습니다. 시대
+선택 메뉴, 타임라인 슬라이더, 시간 간격(지도마다 몇 단계 또는 몇 Myr마다) 선택, 시대 순서 재생과
+더 과거·더 현재 버튼이 있습니다. ☰ 메뉴에 자동 회전, 격자, 표면·기후 보기, 3D 지형, 빙하, 하천,
+현재 지구의 층, 위치 핀, 해수면 곡선, 판 재구성 겹쳐 보기가 있습니다. 지구본에 키보드 포커스를
+두면 방향키로 회전, `+`/`-`로 확대·축소합니다. 보기는 주소에 남아 링크로 다시 열 수 있습니다.
+
+화면·조작·자료 경로의 목록은 [사이트맵](docs/site-map.md), 변환 구현, 보간 방식과 한계는 [지구본 뷰어 문서](docs/globe-viewer.md), 고지자기 경도 문제는
+[경도 고정 문서](docs/palaeolongitude.md)를 참고하세요.
+
+Three.js 0.186.0과 MIT 라이선스는 `static/vendor/three/`에 포함됩니다.
+일반 실행에는 npm이나 외부 CDN이 필요하지 않습니다. 라이브러리를 갱신할 때
+`npm ci && npm run vendor`로 파일을 동기화합니다.
+
+## 구성
+
+- `config/settings/`: 공통·개발·운영 설정. manage.py 기본은 개발, WSGI/ASGI 기본은 운영.
+- `core/`, `templates/`, `static/`: 페이지, 지구본 뷰어, 관리자 접근 제한, 상태 점검.
+- `locale/`: 영어 번역(`django.po`). `.mo`는 `scripts/compile_messages.py`로 만들며 Git에서 제외.
+- `scripts/`: 자료 받기·검증, 분할, 이동·고도·기온·해수면·빙하·하천·기후·현재 지구 파생 자료 생성.
+- `sources/`, `annotations/`: 자료 출처 매니페스트와 사람이 붙인 주석.
+- `config/version.py`: 앱 이름·브랜드·버전·릴리스 날짜 단일 정의.
+- `deploy/`: 이미지·자료 묶음 빌드와 배포 스크립트. 절차는 [deploy/README.md](deploy/README.md).
+  `deploy/cron/`은 운영 서버의 cron이 도는 것(현재 바람·구름 하루 한 번 받기)이며 컨테이너가 뜰 때마다
+  이미지에서 옮겨집니다. 그 파이썬 의존성은 `requirements-present.txt`입니다.
+- `data/`: Git에서 제외되는 원본·파생 자료와 로컬 SQLite. `media/`도 제외.
+- [설계 방향](docs/architecture.md), [운영 현황](docs/operations.md), 작업 기록은 [devlog](devlog/README.md).
+
+운영 설정은 환경변수를 사용합니다. `.env.example`은 참고용이며 자동으로 읽지 않습니다.
+운영에는 명시적인 비밀키·호스트·영속 DB 경로가 필요합니다. 이미지는 개발 호스트에서 빌드하고
+서버는 버전이 붙은 이미지와 자료 묶음을 검증한 뒤 교체만 합니다.
+설정은 [Django 5.2 배포 체크리스트](https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/)를 참고합니다.
+
+## 공통 가이드
+
+`.guides -> ../devdocs/guides` 상대 심볼릭 링크로 참조하고 Git에서는 제외합니다.
+새 체크아웃에서는 형제 위치에 private devdocs가 있을 때 `ln -s ../devdocs/guides .guides`로 연결합니다.
+가이드 원문은 복사·커밋하지 않습니다.
+
+## 자료와 라이선스
+
+[자료 목록](sources/README.md)에 각 자료의 출처·연대·라이선스·검증 방법을 정리했습니다.
+원본은 `data/sources/`에 로컬 저장하며 Git에서 제외합니다. `scripts/fetch_scotese.py`,
+`scripts/fetch_paleodem.py --manifest sources/<이름>.json` 등으로 고정된 SHA-256과 함께 받습니다.
+PALEOMAP 원본 지도 이미지는 이용 조건을 확인하기 전까지 배포하지 않으며, 운영 이미지와 자료
+묶음에도 넣지 않습니다.
+
+코드는 [MIT 라이선스](LICENSE)입니다. 이 프로젝트가 CC BY 자료에서 만든 파생 자료는 CC BY 4.0이고,
+원본 조건이 확정되지 않은 PaleoAtlas·2002년판 마스크는 원본 조건을 따르며, 현재 지구의 층은 미국 정부·NASA의
+공개 자료에서 만들었습니다. 구분은
+[LICENSE-DATA.md](LICENSE-DATA.md)에 있습니다.
