@@ -37,6 +37,7 @@ wwolf는 001부터 셉니다. 그 전의 001–045는 링크와 본문 속 번�
 
 ## 작업 기록
 
+- [jikhanjung 116 — v0.25.0 현재의 바람·구름 하루 한 번 받기 릴리스](20261002_jikhanjung_116_release_0250.md)
 - [jikhanjung 115 — 현재의 바람·구름을 하루 한 번 새로](20261002_jikhanjung_115_daily_present_weather.md)
 - [jikhanjung 114 — v0.24.2 바람·해류 꼬리 깜박임 고침 릴리스](20261002_jikhanjung_114_release_0242.md)
 - [jikhanjung 113 — 바람·해류 꼬리: 지우지 않고 움직인 만큼 흐리게](20261002_jikhanjung_113_flux_trail_fade.md)
