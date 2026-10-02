@@ -5,7 +5,9 @@ host. Configuration and procedure live in `deploy/README.md` and `deploy/deploy.
 Builds happen on the development host; the server only loads the image and swaps.
 The shared guides are referenced privately through `.guides`; they are not copied.
 
-Current release: **v0.24.2**, deployed 2026-10-02 (Asia/Seoul): particle trails fade with the
+Current release: **v0.25.0**, deployed 2026-10-02 (Asia/Seoul): the host's cron refreshes the
+present-day wind and clouds daily at 17:10 UTC (#108, P11, devlog 115/116; see the section
+below). v0.24.2, the same day: particle trails fade with the
 view's movement instead of flickering long and short after a drag (#106, devlog 113/114). v0.24.1,
 the same day: the satellite base also on
 the default atlas and no particle flicker after a drag (#104, devlog 111/112); code only,
@@ -39,7 +41,7 @@ On 2026-09-18 eleven old releases were removed, reclaiming 8,099 MiB
 2026-09-20 v0.18.1 and v0.18.0 (+1,784 MiB,
 [devlog 104](../devlog/20260920_jikhanjung_104_dolfinid_prune_0200.md)); on 2026-09-29
 v0.21.0, v0.20.0 and v0.19.0 (+2,877 MiB, 28 GiB free, 64% used). on 2026-10-02 v0.22.0 and then
-v0.23.0 (+906 and +907 MiB, 32 GiB free, 59% used). then v0.24.0 (+921 MiB). v0.24.2 now runs with v0.24.1 kept as the rollback
+v0.23.0 (+906 and +907 MiB, 32 GiB free, 59% used). then v0.24.0 and v0.24.1 (+921 MiB each). v0.25.0 now runs with v0.24.2 kept as the rollback
 ([devlog 108](../devlog/20260929_jikhanjung_108_dolfinid_prune_0230.md)). No database,
 backups, secrets or other projects were pruned.
 
