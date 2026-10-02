@@ -9,6 +9,18 @@
 **시간 범위**는 고도 격자에서 "지구의 시간" 옆 선택(전체 시대 / 최근 2.5만 년 / 최근 13만 년)이다.
 빙기 시점의 화면은 "발표된 복원 · 계산한 결과 · 가정"을 캡션과 안내문으로 구분한다.
 
+## 다음 릴리스
+
+현재의 지구 고침 ([#104](https://github.com/jikhanjung/EarthThruTime3D/pull/104), [jikhanjung 111](devlog/20261002_jikhanjung_111_present_default_and_flicker.md))
+
+- **기본 자료(PaleoAtlas 2016)에서도 현재가 위성 영상**이다. v0.24.0은 고도 격자에서만 위성 영상이었고, 기본 화면은
+  대륙 마스크로 남았다. 사람이 대륙 마스크를 고른 때에만 마스크가 위성 영상보다 앞선다.
+- 바람·해류 입자가 **드래그한 뒤 몇 초 동안 깜박이던 것**을 고쳤다. 시점이 조금만 움직여도 그 프레임을 비워 두었는데,
+  이제 입자를 새 시점에 다시 놓고 바로 그린다.
+
+확인: 주소 없이 연 첫 화면(기본 자료) → 현재 · 0 Ma가 위성 사진이고 정보 패널에 대륙 마스크 안내가 없다. ☰ 메뉴
+**바람** "바람 10 m"를 켜고 지구본을 드래그해 놓으면 입자가 끊김 없이 흐른다.
+
 ## v0.24.0 — 2026-10-02
 
 현재의 지구: 위성 영상 바탕에 바람·해류·구름 ([#102](https://github.com/jikhanjung/EarthThruTime3D/pull/102), [jikhanjung P10](devlog/20261002_jikhanjung_P10_present_earth_in_flux.md), [jikhanjung 109](devlog/20261002_jikhanjung_109_present_earth_in_flux.md))

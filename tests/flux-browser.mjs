@@ -91,6 +91,30 @@ try {
   await expect(globe).toHaveAttribute('data-rivers', 'true');
   await expect.poll(() => new URL(page.url()).searchParams.get('sat')).toBe('0');
 
+  // The default atlas, whose plain surface is the mask: the present is still the photograph,
+  // and the mask's note stays hidden. A drag leaves no blank frame while the camera settles.
+  await page.goto(new URL('/?wind=10m', base).href);
+  await expect(globe).toHaveAttribute('data-wind', '10m');
+  await expect(globe).toHaveAttribute('data-surface', 'sat');
+  await expect(page.locator('#surface-note')).toBeHidden();
+  await page.waitForTimeout(1000);
+  const box = await globe.boundingBox();
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(box.x + box.width / 2 + 80, box.y + box.height / 2 + 20, {steps: 6});
+  await page.mouse.up();
+  for (let i = 0; i < 8; i++) {
+    const ink = await page.evaluate(() => {
+      const canvas = document.querySelector('.flux-canvas[data-layer="wind"]');
+      const data = canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height).data;
+      let count = 0;
+      for (let j = 3; j < data.length; j += 64) if (data[j]) count++;
+      return count;
+    });
+    expect(ink).toBeGreaterThan(50);
+    await page.waitForTimeout(120);
+  }
+
   // The address reopens the same view.
   await page.goto(new URL('/?masks=paleodem2018&wind=10m&currents=flow&clouds=model', base).href);
   await expect(globe).toHaveAttribute('aria-busy', 'false');
