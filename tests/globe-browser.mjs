@@ -28,7 +28,8 @@ try {
   expect(stageBox.x).toBeGreaterThanOrEqual(sideBox.x + sideBox.width - 1);
   await expect(page.locator('header .brand')).toBeHidden();
   await expect(page.locator('header .lang')).toBeVisible();
-  await expect(page.locator('footer .footer-more').first()).toBeHidden();
+  await expect(page.locator('footer')).toBeHidden();
+  await expect(page.locator('#side-panel .side-foot a')).toHaveAttribute('href', '/about/');
   await page.locator('#settings-toggle').click();
   await expect(page.locator('#side-panel')).toBeHidden();
   await expect(page.locator('#settings-toggle')).toHaveAttribute('aria-expanded', 'false');
@@ -403,7 +404,7 @@ try {
   await expect(atlas.locator('html')).toHaveAttribute('lang', 'en');
   await expect(atlas.locator('.lang a[aria-current="true"]')).toHaveText('EN');
   await expect(atlas.locator('#period')).toHaveText('Present');
-  await expect(atlas.locator('#play')).toContainText('Play');
+  await expect(atlas.locator('#play')).toHaveAttribute('aria-label', 'Play');
   const englishFrames = await atlas.locator('#globe-frames').textContent().then(JSON.parse);
   expect(englishFrames[englishFrames.length - 1].names.map(n => n.name)).toContain('Africa');
   expect(await atlas.locator('body').textContent()).not.toMatch(/[가-힣]/);

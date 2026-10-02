@@ -164,7 +164,9 @@ function setPlaying(value) {
   playing = value;
   clearTimeout(playTimer);
   $('play').setAttribute('aria-pressed', String(value));
-  $('play').textContent = value ? L.playStop : L.playStart;
+  // An icon, its name for screen readers: ▶ to play, ❚❚ while playing.
+  $('play').textContent = value ? '❚❚' : '▶';
+  $('play').setAttribute('aria-label', value ? L.playStop : L.playStart);
 }
 function scheduleNext() {
   // Playback walks the sub-steps so the change reads as motion, at the same pace per
@@ -2583,10 +2585,9 @@ function init() {
   $('timeline').max = stops.length - 1;
   const oldest = stops[0];
   if ($('timeline-oldest')) {
-    $('timeline-oldest').textContent = oldest[0] < 0
-      ? fmt(L.oldestNoMap, { age: oldest[3] })
-      : timeWindow ? fmt(L.oldestWindow, { age: frames[oldest[0]].deglacial.age_ka })
-        : fmt(L.oldestPast, { age: oldest[3] });
+    // The slider's oldest end is just its age; whether it has a map is said by the caption.
+    $('timeline-oldest').textContent = timeWindow && oldest[0] >= 0
+      ? `${frames[oldest[0]].deglacial.age_ka} ka` : `${oldest[3]} Ma`;
   }
   $('era').addEventListener('change', () => selectFrame(Number($('era').value), true));
   $('timeline').addEventListener('input', () => selectStop(Number($('timeline').value), true));

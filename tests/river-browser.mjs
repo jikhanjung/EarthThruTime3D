@@ -38,6 +38,8 @@ try {
   for (const [window, age] of [['deglacial', 21], ['lastcycle', 70]]) {
     await page.goto(new URL(`/?masks=paleodem2018&window=${window}`, base).href);
     const frames = JSON.parse(await page.locator('#globe-frames').textContent());
+    // On a phone the period menu is in the drawer.
+    if (await page.locator('#era').isHidden()) await page.locator('#settings-toggle').click();
     await page.selectOption('#era', String(frames.findIndex(frame => frame.deglacial?.age_ka === age)));
     await expect(globe).toHaveAttribute('aria-busy', 'false');
     expect(Number(await globe.getAttribute('data-river-low'))).toBeGreaterThan(0);

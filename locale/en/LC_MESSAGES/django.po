@@ -1537,3 +1537,27 @@ msgstr "View"
 
 msgid "레이어"
 msgstr "Layers"
+
+msgid "시간"
+msgstr "Time"
+
+msgid "◀ 과거"
+msgstr "◀ Older"
+
+msgid "▶ 재생"
+msgstr "▶ Play"
+
+msgid "현재 ▶"
+msgstr "Newer ▶"
+
+msgid "더 과거"
+msgstr "Older"
+
+msgid "더 현재"
+msgstr "Newer"
+
+msgid "❚❚ 멈춤"
+msgstr "❚❚ Pause"
+
+msgid "멈춤"
+msgstr "Pause"
