@@ -1,0 +1,7 @@
+# The server's daily wind and cloud refresh (jikhanjung P11): what scripts/fetch_present_weather.py
+# needs on the host. deploy/cron/present.sh builds a venv from this file outside the container;
+# the app image itself does not install it.
+numpy==2.4.6
+pillow==12.3.0
+eccodes==2.49.0
+h5py==3.16.0

@@ -1,0 +1,8 @@
+# EarthThruTime3D host cron (jikhanjung P11). Add to the deploying user's crontab once:
+#
+#   (crontab -l; cat crontab.earththrutime3d) | crontab -
+#
+# The server runs in UTC. 17:10 UTC (02:10 KST) is past the 12 UTC GFS analysis, which reaches
+# NOMADS three and a half to four hours after the cycle. What runs is the copy the container
+# installs into scripts/ at every start, never a checkout. Log: logs/present.log
+10 17 * * * /srv/earththrutime3d/scripts/present.sh >> /srv/earththrutime3d/logs/present.log 2>&1

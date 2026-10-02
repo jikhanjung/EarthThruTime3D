@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
 """Pin one present-day moment of wind and clouds for a release (jikhanjung P10 §3.2).
 
-Usage: .venv/bin/python scripts/fetch_present_weather.py [--cycle YYYYMMDDHH]
+Usage: .venv/bin/python scripts/fetch_present_weather.py [--cycle YYYYMMDDHH | --hour HH]
+       python fetch_present_weather.py --live DIR --hour 12      (the server's daily refresh)
 
-Run in the release PR. Picks the newest NOAA GFS cycle whose analysis (f000) is up on NOMADS
+Run in the release PR for the bundle. With --live, the server's cron (deploy/cron/present.sh,
+jikhanjung P11) writes the same section into DIR instead: the moment before stays one more
+day, nothing is kept of the raw downloads, and DIR/status.json records the run. Picks the newest NOAA GFS cycle whose analysis (f000) is up on NOMADS
 (or --cycle), and at that same hour takes the NOAA/NESDIS GMGSI longwave-IR mosaic, so wind,
 model clouds and satellite clouds all show one moment T. Not a live feed: the screen says
 when T was and that it was taken when the release was built.
@@ -24,6 +27,7 @@ import datetime as dt
 import hashlib
 import io
 import json
+import os
 import re
 import sys
 import urllib.parse
@@ -73,7 +77,14 @@ def gfs_params(cycle):
     return query
 
 
-def recent_cycles(now, count=4):
+def recent_cycles(now, count=4, hour=None):
+    """Cycles to try, newest first. With `hour`, that hour's cycle of the latest day it has
+    begun, then the day before: a fixed hour keeps the daily moment at one time of day."""
+    if hour is not None:
+        today = now.replace(hour=hour, minute=0, second=0, microsecond=0)
+        if today > now:
+            today -= dt.timedelta(days=1)
+        return [(today - dt.timedelta(days=i)).strftime("%Y%m%d%H") for i in range(2)]
     start = now.replace(minute=0, second=0, microsecond=0, hour=now.hour - now.hour % 6)
     return [(start - dt.timedelta(hours=6 * i)).strftime("%Y%m%d%H") for i in range(count)]
 
@@ -226,12 +237,52 @@ def sha(blob):
     return hashlib.sha256(blob).hexdigest()
 
 
+def check(fields, cloud):
+    """Refuse a decoded moment that cannot be right before it replaces a good one."""
+    import numpy as np
+
+    for level, (u, v) in fields.items():
+        speed = np.hypot(u, v)
+        if not np.isfinite(speed).all() or speed.max() > 150 or speed.mean() < 0.5:
+            raise ValueError(f"{level}: implausible wind (max {speed.max():.1f}, mean {speed.mean():.2f} m/s)")
+    if not np.isfinite(cloud).all() or not 0.05 < float(cloud.mean()) < 0.95:
+        raise ValueError(f"implausible cloud cover (mean {float(cloud.mean()):.2f})")
+
+
+def write_status(out, result, note, moment=None):
+    path = Path(out) / "status.json"
+    try:
+        last = json.loads(path.read_text())
+    except (OSError, ValueError):
+        last = {}
+    now = dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%dT%H:%MZ")
+    status = {"at": now, "result": result, "note": note, "t": moment or last.get("t"),
+              "last_ok": now if result == "ok" else last.get("last_ok")}
+    part = path.with_suffix(".json.part")
+    part.write_text(json.dumps(status, ensure_ascii=False, indent=1) + "\n")
+    os.chmod(part, 0o644)
+    os.replace(part, path)
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--cycle", help="GFS cycle YYYYMMDDHH (default: newest with an analysis)")
+    parser.add_argument("--hour", type=int, choices=(0, 6, 12, 18), help="take this cycle of the day")
+    parser.add_argument("--live", metavar="DIR", help="write the server's daily refresh into DIR")
     args = parser.parse_args(argv)
+    if not args.live:
+        return fetch(args)
+    try:
+        moment = fetch(args)
+    except BaseException as error:  # noqa: BLE001 — record any failure, keep the last good moment
+        write_status(args.live, "failed", f"{type(error).__name__}: {error}"[:300])
+        raise
+    write_status(args.live, "ok", "", moment)
 
-    cycles = [args.cycle] if args.cycle else recent_cycles(dt.datetime.now(dt.timezone.utc))
+
+def fetch(args):
+    now = dt.datetime.now(dt.timezone.utc)
+    cycles = [args.cycle] if args.cycle else recent_cycles(now, hour=args.hour)
     grib = None
     for cycle in cycles:
         grib, gfs_url = gfs_download(cycle)
@@ -248,11 +299,13 @@ def main(argv=None):
     if status != 200 or len(sat_blob) < 1_000_000:
         raise SystemExit(f"GMGSI download failed ({status}, {len(sat_blob)} B)")
 
-    RAW.mkdir(parents=True, exist_ok=True)
-    (RAW / f"gfs-{cycle}-f000.grib2").write_bytes(grib)
-    (RAW / key.rsplit("/", 1)[-1]).write_bytes(sat_blob)
+    if not args.live:
+        RAW.mkdir(parents=True, exist_ok=True)
+        (RAW / f"gfs-{cycle}-f000.grib2").write_bytes(grib)
+        (RAW / key.rsplit("/", 1)[-1]).write_bytes(sat_blob)
 
     fields, cloud = gfs_decode(grib)
+    check(fields, cloud)
     files, ranges = {}, {}
     for level, (u, v) in fields.items():
         files[level], ranges[level] = encode_wind(u, v)
@@ -271,11 +324,16 @@ def main(argv=None):
         },
         "retrieved": dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%dT%H:%MZ"),
     }
-    (ROOT / "sources/present_weather.json").write_text(json.dumps(index, ensure_ascii=False, indent=1) + "\n")
-    present_catalogue.write_section("weather", {k: (blob, "png") for k, blob in files.items()}, {
-        "t": index["t"], "wind": index["wind"], "clouds": index["clouds"],
-        "credits": {k: v["credit"] for k, v in index["sources"].items()}})
+    meta = {"t": index["t"], "wind": index["wind"], "clouds": index["clouds"],
+            "credits": {k: v["credit"] for k, v in index["sources"].items()}}
+    blobs = {k: (blob, "png") for k, blob in files.items()}
+    if args.live:
+        present_catalogue.write_section("weather", blobs, meta, out=args.live, keep_previous=True)
+    else:
+        (ROOT / "sources/present_weather.json").write_text(json.dumps(index, ensure_ascii=False, indent=1) + "\n")
+        present_catalogue.write_section("weather", blobs, meta)
     print(index["t"])
+    return index["t"]
 
 
 if __name__ == "__main__":

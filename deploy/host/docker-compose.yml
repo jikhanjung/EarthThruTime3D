@@ -19,6 +19,20 @@ services:
         target: /var/lib/earththrutime3d
         bind:
           create_host_path: false
+      # The daily wind and cloud refresh (jikhanjung P11): the host's cron writes present-live/,
+      # the app only reads it; the container copies the cron's scripts into scripts/ at start.
+      # Both are rebuildable, outside the bundle and the database.
+      - type: bind
+        source: ./present-live
+        target: /present-live
+        read_only: true
+        bind:
+          create_host_path: false
+      - type: bind
+        source: ./scripts
+        target: /cron-scripts
+        bind:
+          create_host_path: false
     read_only: true
     tmpfs:
       - /tmp:rw,noexec,nosuid,size=64m

@@ -1051,7 +1051,9 @@ Earth as it looks and moves (jikhanjung P10, ported from GSM's "Earth in flux" l
 - **The moment on screen**: `#flux-when` under the age lists the moment or period of every
   layer that is on, built from the catalogue's `t` and period only; the legend heads repeat
   it, and the panel's note says the layers are not live. Wind and clouds are one GFS cycle
-  pinned in the release PR; the currents are a 1992–2018 mean.
+  pinned in the release PR, replaced on the server by the day's 12 UTC analysis while the
+  host's daily refresh is fresh (`PRESENT_LIVE_DIR`, under 48 h, newer than the release's;
+  jikhanjung P11); the note says which. The currents are a 1992–2018 mean.
 - **Away from 0 Ma** the controls are disabled, the canvases and cloud shell hidden, and
   `data-flux="unavailable"`. Stage attributes: `data-satellite`, `data-satellite-size`,
   `data-flux`, `data-wind`, `data-currents`, `data-clouds`, `data-flux-when`. Address:

@@ -2,11 +2,12 @@ import hashlib
 import json
 from pathlib import Path
 import tempfile
+from datetime import datetime, timedelta, timezone
 from unittest.mock import patch
 
 from django.test import SimpleTestCase, override_settings
 
-from core.present import globe_config
+from core.present import globe_config, status
 from deploy.pack_data import pack_present
 
 
@@ -116,3 +117,71 @@ class PresentEarthTests(SimpleTestCase):
             (derived / self.data['ocean']['assets']['mean']['file']).write_bytes(b'tampered')
             with self.assertRaises(ValueError):
                 pack_present(project / 'stage2', [])
+
+
+class LivePresentWeatherTests(SimpleTestCase):
+    """The daily moment the host's cron writes (jikhanjung P11)."""
+
+    save = PresentEarthTests.save
+
+    def setUp(self):
+        PresentEarthTests.setUp(self)
+        # The release's moment, older than the daily one written below
+        self.data['weather']['t'] = (datetime.now(timezone.utc) - timedelta(hours=30)).strftime('%Y-%m-%dT%H:00Z')
+        self.save()
+        self.live_temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.live_temp.cleanup)
+        self.live = Path(self.live_temp.name)
+        self.live_override = override_settings(PRESENT_LIVE_DIR=str(self.live))
+        self.live_override.enable()
+        self.addCleanup(self.live_override.disable)
+        self.write_live(datetime.now(timezone.utc) - timedelta(hours=10))
+
+    def write_live(self, when, previous=True):
+        weather = json.loads(json.dumps(self.data['weather']))
+        weather['t'] = when.strftime('%Y-%m-%dT%H:00Z')
+        weather['assets'] = {key: asset(self.live, key, 'png', f'live {key} {when}'.encode())
+                             for key in ('10m', '250hPa', 'cloud-model', 'cloud-sat')}
+        if previous:
+            weather['previous'] = {'assets': {key: asset(self.live, key, 'png', f'old {key}'.encode())
+                                              for key in ('10m', '250hPa', 'cloud-model', 'cloud-sat')}}
+        (self.live / 'catalogue.json').write_text(json.dumps({'schema_version': 1, 'weather': weather}))
+        (self.live / 'status.json').write_text(json.dumps({'at': 'x', 'result': 'ok', 't': weather['t'], 'last_ok': 'x'}))
+        self.live_weather = weather
+
+    def test_a_fresh_daily_moment_replaces_the_release_one(self):
+        config = globe_config()['weather']
+        self.assertEqual(config['source'], 'live')
+        self.assertEqual(config['t'], self.live_weather['t'])
+        live_file = self.live_weather['assets']['10m']['file']
+        self.assertIn(live_file, config['wind']['10m']['url'])
+        self.assertEqual(self.client.get(f'/present/assets/{live_file}').status_code, 200)
+        # The moment before stays servable for a page opened just before the swap
+        old = self.live_weather['previous']['assets']['cloud-sat']['file']
+        self.assertEqual(self.client.get(f'/present/assets/{old}').status_code, 200)
+        # Base and currents still come from the release
+        base = self.data['base']['assets']['4096']['file']
+        self.assertEqual(self.client.get(f'/present/assets/{base}').status_code, 200)
+        health = status()
+        self.assertEqual(health['source'], 'live')
+        self.assertEqual(health['refresh']['result'], 'ok')
+
+    def test_an_old_or_broken_moment_falls_back_to_the_release(self):
+        self.write_live(datetime.now(timezone.utc) - timedelta(hours=49))
+        self.assertEqual(globe_config()['weather']['source'], 'release')
+        self.write_live(datetime.now(timezone.utc) - timedelta(hours=1))
+        (self.live / self.live_weather['assets']['250hPa']['file']).unlink()
+        self.assertEqual(globe_config()['weather']['source'], 'release')
+        (self.live / 'catalogue.json').write_text('{broken')
+        self.assertEqual(globe_config()['weather']['source'], 'release')
+        self.assertEqual(status()['source'], 'release')
+
+    def test_a_moment_not_newer_than_the_release_is_ignored(self):
+        self.write_live(datetime.now(timezone.utc) - timedelta(hours=40))
+        self.assertEqual(globe_config()['weather']['source'], 'release')
+
+    def test_the_page_says_the_moment_is_daily(self):
+        page = self.client.get('/?masks=paleodem2018').content.decode()
+        self.assertIn('하루 한 번', page)
+        english = self.client.get('/?masks=paleodem2018', HTTP_COOKIE='django_language=en').content.decode()
+        self.assertIn('fetched once a day', english)

@@ -9,6 +9,18 @@
 **시간 범위**는 고도 격자에서 "지구의 시간" 옆 선택(전체 시대 / 최근 2.5만 년 / 최근 13만 년)이다.
 빙기 시점의 화면은 "발표된 복원 · 계산한 결과 · 가정"을 캡션과 안내문으로 구분한다.
 
+## 다음 릴리스
+
+현재의 바람·구름을 하루 한 번 새로 ([#108](https://github.com/jikhanjung/EarthThruTime3D/pull/108), [jikhanjung P11](devlog/20261002_jikhanjung_P11_daily_present_weather.md), [jikhanjung 115](devlog/20261002_jikhanjung_115_daily_present_weather.md))
+
+- 0 Ma의 **바람·구름**이 판을 만들 때의 한 시각에 묶여 있지 않고, 운영 서버가 매일 17:10 UTC(한국 02:10)에 받는
+  **그날 12 UTC 분석**으로 바뀐다. 받지 못한 날이 이틀을 넘으면 판에 든 시각으로 물러선다. 해류(평년값)와 위성 바탕은
+  그대로다. 정보 패널의 안내가 "하루 한 번 받는 그날 12 UTC의 분석"으로 바뀌고, 시각 줄은 전처럼 그 시각을 적는다.
+- `/healthz`에 `present`(지금 보이는 출처 live/release, 시각, 나이, 마지막 받기 결과)를 정보로 싣는다.
+
+확인: 첫 화면 → 현재 · 0 Ma → ☰ 메뉴 **바람** → 연대 아래 시각이 그날(또는 전날) 12:00 UTC다. 정보 패널 안내에
+"하루 한 번". `https://earththrutime.nopeoplestime.info/healthz`의 `present.source`가 `live`.
+
 ## v0.24.2 — 2026-10-02
 
 바람·해류 꼬리가 길고 짧게 번갈아 깜박이던 것 ([#106](https://github.com/jikhanjung/EarthThruTime3D/pull/106), [jikhanjung 113](devlog/20261002_jikhanjung_113_flux_trail_fade.md))
