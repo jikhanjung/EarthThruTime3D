@@ -53,6 +53,15 @@ export function sampleField(field, lon, lat) {
   return [at(field.u), at(field.v)];
 }
 
+// Beyond this view shift in one frame the old trails are wiped rather than faded.
+export const WIPE_PX = 40;
+// How much of a trail a frame keeps when the view shifted `moved` px: the layer's own fade
+// at rest, falling continuously with the shift (0.4 px halves the exponent's headroom), so
+// the trail length follows the camera's speed instead of jumping.
+export function trailFade(fade, moved) {
+  return Math.pow(fade, 1 + Math.max(0, moved) / 0.4);
+}
+
 // One step: `k` metres per frame for each m/s, east by u, north by v.
 export function advance(lon, lat, u, v, k) {
   const shrink = Math.max(0.05, Math.cos(lat * Math.PI / 180));
@@ -150,19 +159,46 @@ export function createFlux({ config, stage, L, fmt, lang, api }) {
     }
   }
 
+  // Median screen shift, in px, that the new view gives a sample of placed particles before
+  // they move; Infinity when none is placed.
+  function viewShift(particles) {
+    const shifts = [];
+    const stride = Math.max(1, Math.floor(particles.length / 64));
+    for (let i = 0; i < particles.length; i += stride) {
+      const p = particles[i];
+      if (p.x === null) continue;
+      const screen = api.screenOf(p.lon, p.lat);
+      if (screen) shifts.push(Math.hypot(screen[0] - p.x, screen[1] - p.y));
+    }
+    if (!shifts.length) return Infinity;
+    shifts.sort((a, b) => a - b);
+    return shifts[shifts.length >> 1];
+  }
+
   function step(layer, width, height, box, viewKey, dpr) {
     const { context, style } = layer;
+    let fade = style.fade;
     if (layer.key !== viewKey) {
-      // The view moved: trails from the old view would smear across the new one.
-      // The view moved: trails from the old view would smear across the new one. Each
-      // particle is placed again where the new view puts it, so this frame still draws its
-      // next step; leaving them unplaced blanked every frame of a damped camera's settling,
-      // which read as flicker for seconds after a drag (and while the globe turns).
+      // The view moved, so the trails drawn in the old view sit a little off. How far is
+      // measured, not assumed: the median screen shift of a sample of particles. The trails
+      // then fade faster in proportion (trailFade), short while the view moves fast and
+      // lengthening smoothly as a damped camera settles. Wiping on every change made a
+      // settling camera alternate wiped and kept frames, short and long tails (jikhanjung 113).
+      // A new projection or canvas size, or a jump, still wipes. Every particle is placed
+      // again in the new view, so this frame draws its next step either way.
       layer.key = viewKey;
-      layer.clears = (layer.clears || 0) + 1;
-      stage.dataset[`${layer.name}Clears`] = String(layer.clears);
-      context.setTransform(1, 0, 0, 1, 0, 0);
-      context.clearRect(0, 0, layer.canvas.width, layer.canvas.height);
+      const frame = `${api.projection()}|${width}x${height}`;
+      const moved = viewShift(layer.particles);
+      if (frame !== layer.frame || !(moved < WIPE_PX)) {
+        layer.frame = frame;
+        layer.clears = (layer.clears || 0) + 1;
+        stage.dataset[`${layer.name}Clears`] = String(layer.clears);
+        context.setTransform(1, 0, 0, 1, 0, 0);
+        context.clearRect(0, 0, layer.canvas.width, layer.canvas.height);
+      } else {
+        fade = trailFade(style.fade, moved);
+      }
+      stage.dataset[`${layer.name}Shift`] = Number.isFinite(moved) ? moved.toFixed(2) : '';
       for (const p of layer.particles) {
         const screen = api.screenOf(p.lon, p.lat);
         p.x = screen ? screen[0] : null;
@@ -178,7 +214,7 @@ export function createFlux({ config, stage, L, fmt, lang, api }) {
     layer.particles.length = count;
     context.setTransform(dpr, 0, 0, dpr, 0, 0);
     context.globalCompositeOperation = 'destination-in';
-    context.fillStyle = `rgba(0,0,0,${style.fade})`;
+    context.fillStyle = `rgba(0,0,0,${fade})`;
     context.fillRect(0, 0, width, height);
     context.globalCompositeOperation = 'source-over';
     const k = metresPerPixel * style.px / layer.ref;

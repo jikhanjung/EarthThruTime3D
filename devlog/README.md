@@ -37,6 +37,7 @@ wwolf는 001부터 셉니다. 그 전의 001–045는 링크와 본문 속 번�
 
 ## 작업 기록
 
+- [jikhanjung 113 — 바람·해류 꼬리: 지우지 않고 움직인 만큼 흐리게](20261002_jikhanjung_113_flux_trail_fade.md)
 - [jikhanjung 112 — v0.24.1 현재의 지구 고침 릴리스](20261002_jikhanjung_112_release_0241.md)
 - [jikhanjung 111 — 현재의 지구 고침: 기본 자료의 위성 영상, 입자 깜박임](20261002_jikhanjung_111_present_default_and_flicker.md)
 - [jikhanjung 110 — v0.24.0 현재의 지구 릴리스](20261002_jikhanjung_110_release_0240.md)
