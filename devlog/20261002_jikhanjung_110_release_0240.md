@@ -31,3 +31,4 @@
   꺼짐, 몰바이데, 주소, 영어, 휴대폰, **제3자 요청 0 건**. 공개 `/present/assets/mean-a583f1ad2244.png` 를 내려받아
   빌드 묶음과 sha256 이 같음을 확인했다.
 - 롤백: `bash /srv/earththrutime3d/deploy.sh v0.23.0` (DB 복원 없음). v0.22.0 도 남아 있다.
+- 정리: 배포 뒤 `prune.sh`(KEEP=2)로 v0.22.0 을 지웠다(+906 MiB, 31.9 GiB 여유).
