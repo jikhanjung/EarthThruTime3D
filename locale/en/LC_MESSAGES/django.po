@@ -1528,3 +1528,12 @@ msgstr "Everything the globe shows (the satellite image, wind and clouds include
 
 msgid "회원 가입·로그인 기능이 없고 자료 업로드도 받지 않습니다. 쿠키는 언어 선택에만 씁니다."
 msgstr "There is no sign-up or login, and no uploads are accepted. The only cookie is the language choice."
+
+msgid "범례"
+msgstr "Legend"
+
+msgid "보기"
+msgstr "View"
+
+msgid "레이어"
+msgstr "Layers"

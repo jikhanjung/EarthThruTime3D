@@ -75,9 +75,11 @@ with `PRESENT_DERIVED_DIR=/nonexistent`. See [docs/globe-viewer.md](docs/globe-v
 Drag to turn, right-drag to pan, middle-click or Shift-drag to tilt, wheel or pinch to zoom.
 Projections: globe, Mollweide, Equal Earth and equirectangular; a flat map turns its central
 meridian. The timeline has a period menu, a slider, a step choice (so many steps per map, or
-one every so many Myr), playback, and older/newer buttons. The ☰ menu holds auto-rotate,
-grid, the surface and climate views, 3D terrain, ice, rivers, the present-day layers, pins,
-the sea-level chart and the plate overlays. With keyboard focus on the globe, the arrow keys
+one every so many Myr), playback, and older/newer buttons, in a long bar at the foot. The
+left panel (folded and unfolded with ☰; a drawer on a phone) holds the dataset, projection
+and reset, and the layers: auto-rotate, grid, the surface and climate views, 3D terrain,
+ice, rivers, the present-day layers, pins, the sea-level chart and the plate overlays.
+Legends dock at the bottom right and fold away. With keyboard focus on the globe, the arrow keys
 turn it and `+`/`-` zoom. The view is kept in the address, so a link reopens it.
 
 A separate [mantle model experiment](docs/geodynamics.md) at `/mantle/` shows the published

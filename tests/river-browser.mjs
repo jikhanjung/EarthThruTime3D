@@ -17,13 +17,12 @@ try {
   const globe = page.locator('#globe');
   await expect(globe).toHaveAttribute('data-rivers', 'true');
   await expect(page.locator('#river-note')).toContainText('Grid spacing is not reconstruction accuracy');
-  await page.locator('#settings-toggle').click();
+  if (await page.locator('#settings-menu').isHidden()) await page.locator('#settings-toggle').click();
   await page.locator('#rivers').click();
   await expect(globe).toHaveAttribute('data-rivers', 'false');
   await expect(page.locator('#river-note')).toBeHidden();
   await page.locator('#rivers').click();
   await expect(globe).toHaveAttribute('data-rivers', 'true');
-  await page.locator('#settings-toggle').click();
   await page.locator('#sealevel').fill('-130');
   await expect(globe).toHaveAttribute('data-river-low', '1.00');
   await page.locator('#sealevel').fill('0');

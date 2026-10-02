@@ -943,6 +943,19 @@ roughly a quarter of the raw land pixels at the edges. The inspector states this
 whenever the mode is active. Pre-Mesozoic maps use a different palette and their masks
 capture only the darker core of each landmass; see `devlog/20260912_003_*` for detail.
 
+## Layout
+
+There is no header band (2026-10-02). The left panel holds the title and version, then a
+"View" box (dataset, projection, reset) and a "Layers" box (the former ☰ menu). On a wide
+screen it is open and the globe takes the remaining width (`.explorer.side-open
+.stage-area`); the ☰ button (`#settings-toggle`, `aria-expanded`) folds it and the choice
+is kept in `localStorage`. At 899 px and below it is a drawer over the map, closed at
+first, dismissed by a tap outside or Escape. The language switch floats at the top right
+above the info button; the colour and speed legends dock at the bottom right in one box
+whose heading folds it (`#map-legend`, kept in `localStorage`), and the inspector stops
+above it (`--legend-space`). The timeline stays a long bar at the foot (`.controls`), and
+the footer keeps only the copyright and About at the bottom centre.
+
 ## Panel sizing
 
 The notes about the derived surface and about an interpolated stop appear and disappear

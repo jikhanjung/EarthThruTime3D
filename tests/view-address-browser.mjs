@@ -26,7 +26,7 @@ try {
   await expect(globe).toHaveAttribute('aria-busy', 'false');
   expect([...params().keys()]).toEqual(['masks']);
   await page.selectOption('#projection', 'mollweide');
-  await page.locator('#settings-toggle').click();
+  if (await page.locator('#settings-menu').isHidden()) await page.locator('#settings-toggle').click();
   await page.locator('#rivers').click();
   // Each control resets the 0.4 s debounce, so the projection can land in one write and
   // the switch in the next: poll for both rather than reading straight after the first.

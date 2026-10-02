@@ -563,6 +563,7 @@ def viewer_strings():
         "cloudLegendModel": _("구름 · GFS 분석 구름량 {time}"),
         "fluxSpeed": _("빠르기 (m/s)"),
         "fluxFailed": _("현재 지구 자료를 불러오지 못했습니다."),
+        "legend": _("범례"),
     }
 
 
