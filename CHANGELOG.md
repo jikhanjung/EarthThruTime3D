@@ -9,7 +9,7 @@
 **시간 범위**는 고도 격자에서 "지구의 시간" 옆 선택(전체 시대 / 최근 2.5만 년 / 최근 13만 년)이다.
 빙기 시점의 화면은 "발표된 복원 · 계산한 결과 · 가정"을 캡션과 안내문으로 구분한다.
 
-## 다음 릴리스
+## v0.24.1 — 2026-10-02
 
 현재의 지구 고침 ([#104](https://github.com/jikhanjung/EarthThruTime3D/pull/104), [jikhanjung 111](devlog/20261002_jikhanjung_111_present_default_and_flicker.md))
 
