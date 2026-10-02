@@ -36,6 +36,7 @@ wwolf는 001부터 셉니다. 그 전의 001–045는 링크와 본문 속 번�
 
 ## 작업 기록
 
+- [jikhanjung 110 — v0.24.0 현재의 지구 릴리스](20261002_jikhanjung_110_release_0240.md)
 - [jikhanjung 109 — 현재의 지구: 위성 영상 바탕에 바람·해류·구름](20261002_jikhanjung_109_present_earth_in_flux.md)
 
 - [jikhanjung 108 — dolfinid 배포 파일 정리 (v0.23.0 이후)](20260929_jikhanjung_108_dolfinid_prune_0230.md)
