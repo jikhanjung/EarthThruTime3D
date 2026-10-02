@@ -2,7 +2,7 @@
 
 날짜: 2026-10-02 · 기준 버전: v0.24.1 · 앞: [jikhanjung P10](20261002_jikhanjung_P10_present_earth_in_flux.md)·
 [109](20261002_jikhanjung_109_present_earth_in_flux.md) · 참고: GSM koprifossillab 005·013(`hourly.sh`, cron, `/healthz/`) ·
-상태: 계획
+상태: 계획 — §4 정함
 
 ## 목적
 
@@ -29,15 +29,21 @@ v0.24 의 바람·구름은 판(release)을 만들 때 받은 한 시각에 고�
 
 ## 2. 설계
 
-### 2.1 받는 곳 — 서버에서 도는 받기 전용 컨테이너
+### 2.1 받는 곳 — 호스트 cron 이 컨테이너가 깔아 둔 스크립트를 호스트 venv 로 (GSM 방식)
 
-`deploy/Dockerfile.fetch` 로 **받기 전용 이미지** `honestjung/earththrutime3d-fetch:vX.Y.Z` 를 판마다 같이 굽는다.
-`python:3.12-slim` + `requirements-present.txt`(numpy·Pillow·eccodes·h5py 를 판에 고정) + `scripts/fetch_present_weather.py`·
-`scripts/present_catalogue.py` 만 담는다. 앱 이미지와 같은 판 번호를 달아 짝을 맞춘다.
+사람이 정했다(2026-10-02): "fetch 용 컨테이너를 따로 올리는 것보다 /srv/EarthThruTime3D 아래 scripts 디렉토리 만들어서
+ETT 컨테이너에서 cron 용 스크립트 복사해서 host 에서 cron 돌리고 container 실행 시킬 때 이미지 안에 들어있을 스크립트
+변경사항 반영하게 해줘. cron 스크립트용 venv 는 호스트에 따로 만들어야지."
 
-호스트 타이머 `earththrutime3d-present.timer` 가 하루 한 번 `present.sh` 를 부르고, `present.sh` 가 그 이미지를
-`docker run --rm --read-only` 로 한 번 돌린다. 쓰는 자리는 `/srv/earththrutime3d/present-live/` 하나만 bind 한다.
-UID 10001, `--cap-drop ALL`, `/tmp` tmpfs. 원자료는 컨테이너의 tmpfs 에서 풀고 버린다(남기지 않는다).
+- 이미지에 cron 이 쓸 것을 함께 싣는다: `scripts/fetch_present_weather.py`·`scripts/present_catalogue.py`,
+  `requirements-present.txt`(numpy·Pillow·eccodes·h5py 를 고정), `deploy/cron/*.sh`(`install.sh`·`present.sh`).
+- **컨테이너가 뜰 때마다** entrypoint 가 `install.sh` 로 그것들을 `/srv/earththrutime3d/scripts/`(compose 로 쓰기 가능하게
+  마운트)에 옮긴다. 판을 올리면 cron 이 도는 코드도 그 판이 된다. 자리가 없거나 쓸 수 없으면 건너뛴다 — 화면은 뜬다.
+  운영 경로는 소문자 `/srv/earththrutime3d` 다.
+- **venv 는 호스트가 따로 만든다** — `/srv/earththrutime3d/cron-venv/`(호스트 사용자 소유). `scripts/` 는 컨테이너(UID
+  10001)가 쓰는 자리라 venv 를 그 안에 두지 않는다. `present.sh` 가 호스트 파이썬 판과 `requirements-present.txt` 의
+  지문을 `cron-venv/.stamp` 에 적어, 바뀌면 다음 차례에 다시 만든다(GSM `run.sh` 와 같다, flock 으로 겹침 막음).
+- 호스트 사용자 crontab 한 줄이 `present.sh` 를 부른다. 원자료(GRIB2·HDF5)는 임시 디렉터리에서 풀고 버린다.
 
 ### 2.2 쓰는 자리와 바꿔 끼우기 — `present-live/`
 
@@ -68,9 +74,8 @@ present-live/
 
 ### 2.4 시각과 이웃 예절
 
-- 하루 한 번 **00 UTC 주기의 분석**을 받는다. NOMADS 에 주기 뒤 약 3.5–4 시간에 올라오므로 타이머는 **05:10 UTC**
-  (14:10 KST), `RandomizedDelaySec=10min`, `Persistent=true`. 00 UTC 가 아직 없으면 가장 새 주기로 물러선다(스크립트가
-  이미 그렇게 한다). GMGSI 는 같은 시.
+- 하루 한 번 **12 UTC 주기의 분석**을 **17:10 UTC(02:10 KST)** 에 받는다(사람이 정했다). NOMADS 에 주기 뒤 약
+  3.5–4 시간에 올라온다. 그날 12 UTC 가 아직 없으면 가장 새 주기로 물러선다. GMGSI 는 같은 시.
 - 요청은 하루에 NOMADS 1 번 + S3 목록 1 번 + 파일 1 번. 실패하면 그날은 쉬고 다음 날 다시(재시도 3 번까지만).
 
 ### 2.5 자료 안전·운영
@@ -79,37 +84,30 @@ present-live/
   제외), `prune.sh` 가 건드리지 않으며, 코드 롤백은 이 자리를 건드리지 않는다. 지우면 다음 받기까지 묶음의 시각이 보일
   뿐이다. 운영 DB·비밀·판 묶음은 이 작업과 무관하다.
 - 롤백: 앞 판으로 되돌려도 compose 의 마운트는 남는다 — 앞 판의 앱은 `PRESENT_LIVE_DIR` 를 모르니 마운트를 무시한다.
-- 타이머·서비스 파일은 호스트 묶음(`deploy/host/`)에 넣고, 설치(`sudo systemctl enable --now`)는 배포 때 한 번 한다.
+- cron 한 줄(`deploy/host/crontab.earththrutime3d`)과 처음 한 번 할 일(`scripts/`·`present-live/`·`cron-venv/` 만들기 —
+  `scripts/` 는 UID 10001 이 쓰도록 `sudo install -d -o 10001`)을 `deploy/README.md` 에 적는다.
 - egress: 하루 한 번 주소가 바뀌어 켠 사람의 브라우저가 하루에 한 번 새로 받는다(바람 0.8 MB·구름 0.6 MB 남짓).
 
 ## 3. 단계 (PR 하나씩)
 
-1. **받기 스크립트** — `--out`, 검사, 앞 시각 남기기, `status.json`, `requirements-present.txt`, `Dockerfile.fetch`.
-   `build.sh` 가 두 이미지를 굽고 내보낸다. 화면 변화 없음.
+1. **받기 스크립트** — `--out`, `--hour 12`, 검사, 앞 시각 남기기, `status.json`, `requirements-present.txt`,
+   `deploy/cron/install.sh`·`present.sh`, 이미지에 싣고 entrypoint 가 옮기기. 화면 변화 없음.
 2. **앱** — `PRESENT_LIVE_DIR`, 새것/묶음 고르기, 두 자리 내주기, 안내문 둘, `/healthz` 정보, 시험(새것·오래된 것·깨진 것·
    앞 시각 주소). CHANGELOG.
-3. **호스트** — compose 마운트, `present.sh`, 타이머·서비스, `deploy/README.md`·`docs/operations.md`. 판 v0.25.0 으로 배포하고
-   타이머를 켠 뒤 다음 날 05:10 UTC 의 첫 받기를 확인한다.
+3. **호스트** — compose 마운트(`scripts/` 쓰기, `present-live/` 읽기 전용), crontab 한 줄, `deploy/README.md`·
+   `docs/operations.md`. 판 v0.25.0 으로 배포하고 그날 17:10 UTC 의 첫 받기를 확인한다.
 
-## 4. 정할 것
+## 4. 정한 것 (2026-10-02)
 
-**(가) 받는 곳.** (1) 서버의 받기 전용 컨테이너(위 설계). (2) 서버 호스트의 venv(GSM 방식 — `install.sh` 가 컨테이너
-시작 때 코드를 호스트로 베낀다). (3) 개발 호스트 m710q 가 받아 rsync 로 올린다(04:20 오프사이트 백업 옆).
-**추천 (1)** — 운영이 집의 개발 호스트에 기대지 않고, 의존성이 판마다 이미지로 고정되며, 호스트에 파이썬 패키지를 깔지
-않는다. (3) 은 가장 빠르지만 개발 호스트가 꺼진 날 멈추고, 운영에 매일 밀어 넣는 길이 생긴다.
-
-**(나) 하루 중 언제.** 00 UTC 분석을 05:10 UTC(14:10 KST)에. 또는 12 UTC 분석을 17:10 UTC(02:10 KST)에.
-**추천 00 UTC** — 한국 낮에 새것이 된다.
-
-**(다) 얼마나 오래되면 묶음으로 물러서나.** 48 시간(이틀 연속 실패). **추천 48 시간.**
-
-**(라) 나중에 하루 한 번보다 자주?** GSM 처럼 6 시간·매시로 늘리는 것은 같은 틀에서 타이머만 바꾸면 된다. 지금은
-요청대로 하루 한 번.
+- **(가) 받는 곳** — 받기 전용 컨테이너(처음 추천) 대신 **호스트 cron + 컨테이너가 옮긴 스크립트 + 호스트 venv**(§2.1).
+- **(나) 시각** — **12 UTC 분석, 17:10 UTC(02:10 KST)**.
+- **(다) 묶음으로 물러서는 나이** — 48 시간(추천대로, 따로 말이 없었다).
+- (라) 더 자주 — 지금은 하루 한 번.
 
 ## 5. 확인하는 법
 
 - 개발 호스트: `present-live/` 를 임시 자리로 두고 받기 컨테이너를 돌려 카탈로그·파일·`status.json` 을 본다. 일부러 깬
   카탈로그·49 시간 전 `t`·앞 시각 주소로 앱 시험.
-- 운영: 타이머를 켠 다음 날 `systemctl list-timers`·`journalctl -u earththrutime3d-present` 로 05:10 UTC 받기 성공,
-  공개 화면의 시각 줄이 그날 00 UTC, `/healthz` 의 `present_live.source = live`. 받기를 멈춰 두고 48 시간 뒤 `bundle` 로
+- 운영: cron 을 건 날 `logs/present.log`·`present-live/status.json` 으로 17:10 UTC 받기 성공,
+  공개 화면의 시각 줄이 그날 12 UTC, `/healthz` 의 `present_live.source = live`. 받기를 멈춰 두고 48 시간 뒤 `bundle` 로
   물러서는 것은 개발 호스트 시험으로 대신한다.
