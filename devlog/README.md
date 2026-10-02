@@ -37,6 +37,7 @@ wwolf는 001부터 셉니다. 그 전의 001–045는 링크와 본문 속 번�
 
 ## 작업 기록
 
+- [jikhanjung 118 — v0.25.2 운영에서 관리자 경로 빼기, 개인정보 안내 고침 릴리스](20261002_jikhanjung_118_release_0252.md)
 - [jikhanjung 117 — v0.25.1 소개 쪽의 출처·기여자, 하단 메뉴 정리 릴리스](20261002_jikhanjung_117_release_0251.md)
 - [jikhanjung 116 — v0.25.0 현재의 바람·구름 하루 한 번 받기 릴리스](20261002_jikhanjung_116_release_0250.md)
 - [jikhanjung 115 — 현재의 바람·구름을 하루 한 번 새로](20261002_jikhanjung_115_daily_present_weather.md)
