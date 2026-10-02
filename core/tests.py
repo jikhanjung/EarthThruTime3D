@@ -533,6 +533,13 @@ class GlobeTests(TestCase):
             self.assertNotIn('Torsvik', page)
             self.assertNotIn('접근 키', page)
             self.assertNotIn('접근 키', self.client.get('/privacy/').content.decode())
+            # Nothing on the public pages sets a cookie: no key form, so no CSRF token
+            with self.settings(SCOTESE_VIEWER_ENABLED=True):
+                for path in ('/', '/about/', '/privacy/'):
+                    self.client.cookies.clear()
+                    response = self.client.get(path)
+                    self.assertNotIn('csrftoken', response.cookies, path)
+                    self.assertNotIn('id="plate-unlock"', response.content.decode())
         with self.settings(ACCESS_KEY="a-key-for-the-test"):
             self.assertIn('접근 키', self.client.get('/privacy/').content.decode())
             self.assertIn('Torsvik', self.client.get('/about/').content.decode())
