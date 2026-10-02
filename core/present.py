@@ -4,7 +4,14 @@ and clouds, and the mean surface currents (jikhanjung P10).
 Built by scripts/fetch_bluemarble.py, scripts/fetch_present_weather.py and
 scripts/build_ecco2_mean.py into one directory with one catalogue. Each section stands on its
 own: a missing or invalid section hides only its own controls.
+
+The weather section may also come from PRESENT_LIVE_DIR, where the host's cron writes a new
+moment once a day (jikhanjung P11). It is used while it is valid, newer than the release's own
+moment and no older than LIVE_MAX_AGE; otherwise the release's moment stands. Its previous
+moment's files stay servable for pages opened just before a swap.
 """
+from datetime import datetime, timedelta, timezone
+import json
 from pathlib import Path
 import re
 
@@ -22,10 +29,21 @@ SECTIONS = {
     "ocean": ({"mean"}, "image/png"),
 }
 _MOMENT = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}Z$")
+#: Older than this, the daily moment yields to the release's own (two missed refreshes)
+LIVE_MAX_AGE = timedelta(hours=48)
 
 
 def directory():
     return Path(settings.PRESENT_DERIVED_DIR)
+
+
+def live_directory():
+    path = getattr(settings, "PRESENT_LIVE_DIR", None)
+    return Path(path) if path else None
+
+
+def moment(text):
+    return datetime.strptime(text, "%Y-%m-%dT%H:%MZ").replace(tzinfo=timezone.utc)
 
 
 def _range(pair):
@@ -35,15 +53,19 @@ def _range(pair):
     return pair
 
 
-def _section(name, data):
+def _assets(name, assets, root):
     keys, _ = SECTIONS[name]
-    assets = data["assets"]
     if set(assets) != keys:
         raise ValueError(f"Unexpected {name} assets")
     for key, item in assets.items():
         validate_asset(item)
-        if not item["file"].startswith(f"{key}-") or not (directory() / item["file"]).is_file():
+        if not item["file"].startswith(f"{key}-") or not (root / item["file"]).is_file():
             raise ValueError(f"Missing {name} asset")
+
+
+def _section(name, data, root=None):
+    root = root or directory()
+    _assets(name, data["assets"], root)
     if name == "weather":
         if not _MOMENT.match(data["t"]):
             raise ValueError("Invalid moment")
@@ -57,11 +79,39 @@ def _section(name, data):
         _range(data["v"])
         if (data["width"], data["height"]) != (1440, 720):
             raise ValueError("Unexpected ocean grid")
-    return data
+    return {**data, "root": root}
+
+
+def _live_weather(release):
+    """The daily moment, or None when it is missing, broken, not newer than `release`'s or
+    older than LIVE_MAX_AGE."""
+    root = live_directory()
+    if root is None:
+        return None
+    try:
+        document = read_json(root / "catalogue.json")
+        if document["schema_version"] != 1:
+            raise ValueError("Unknown live catalogue")
+        data = _section("weather", document["weather"], root)
+        when = moment(data["t"])
+        if release and when <= moment(release["t"]):
+            return None
+        if datetime.now(timezone.utc) - when > LIVE_MAX_AGE:
+            return None
+        previous = data.get("previous", {}).get("assets")
+        if previous:
+            try:
+                _assets("weather", previous, root)
+            except DATA_ERRORS:
+                data = {key: value for key, value in data.items() if key != "previous"}
+        return {**data, "source": "live"}
+    except DATA_ERRORS:
+        return None
 
 
 def catalogue():
-    """{section: data} for every valid section; empty when there is nothing to show."""
+    """{section: data} for every valid section; empty when there is nothing to show. Each
+    carries `root`, the directory its files are in."""
     if not settings.SCOTESE_VIEWER_ENABLED:
         return {}
     try:
@@ -77,7 +127,30 @@ def catalogue():
                 found[name] = _section(name, document[name])
         except DATA_ERRORS:
             continue
+    if "weather" in found:
+        found["weather"] = {**found["weather"], "source": "release"}
+    live = _live_weather(found.get("weather"))
+    if live:
+        found["weather"] = live
     return found
+
+
+def status():
+    """For /healthz, information only: which moment the wind and clouds show and how the
+    last daily refresh went. Never a reason to call the site unhealthy."""
+    weather = catalogue().get("weather")
+    if not weather:
+        return None
+    report = {"source": weather["source"], "t": weather["t"],
+              "age_h": round((datetime.now(timezone.utc) - moment(weather["t"])).total_seconds() / 3600, 1)}
+    root = live_directory()
+    if root is not None:
+        try:
+            last = json.loads((root / "status.json").read_text())
+            report["refresh"] = {key: last.get(key) for key in ("at", "result", "t", "last_ok", "note")}
+        except (OSError, ValueError):
+            report["refresh"] = None
+    return report
 
 
 def _url(item):
@@ -97,7 +170,7 @@ def globe_config():
     if "weather" in data:
         weather = data["weather"]
         config["weather"] = {
-            "t": weather["t"],
+            "t": weather["t"], "source": weather["source"],
             "wind": {level: {"url": _url(weather["assets"][level]), **weather["wind"][level]}
                      for level in ("10m", "250hPa")},
             "clouds": {kind: _url(weather["assets"][f"cloud-{kind}"]) for kind in ("sat", "model")},
@@ -115,7 +188,8 @@ def globe_config():
 @require_safe
 def present_asset(request, filename):
     for name, data in catalogue().items():
-        for item in data["assets"].values():
+        listed = list(data["assets"].values()) + list(data.get("previous", {}).get("assets", {}).values())
+        for item in listed:
             if item["file"] == filename:
-                return asset_response(request, directory(), item, filename, SECTIONS[name][1])
+                return asset_response(request, data["root"], item, filename, SECTIONS[name][1])
     raise Http404

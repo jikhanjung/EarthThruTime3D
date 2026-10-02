@@ -1489,3 +1489,6 @@ msgstr "Wind is the NOAA GFS 0.25° analysis (10 m, 250 hPa); a particle's colou
 
 msgid "해류는 ECCO2 cube92 해양 모델의 표층(5 m) 유속을 %(first)s–%(last)s년 달마다 한 장씩, 모두 %(n)s장을 평균한 것입니다. 관측이 아니라 모델이며, 평균이라 소용돌이는 지워지고 큰 흐름만 남습니다. 발트해는 모델에 없습니다."
 msgstr "The currents are the surface (5 m) velocity of the ECCO2 cube92 ocean model, one snapshot a month over %(first)s–%(last)s, %(n)s in all, averaged. A model, not an observation; the averaging removes the eddies and leaves the large flows. The Baltic Sea is not in the model."
+
+msgid "현재 지구의 바람·해류·구름은 실시간이 아닙니다. 바람과 구름은 하루 한 번(한국 시각 새벽 2시 무렵) 받는 그날 12 UTC의 분석이고, 그 시각은 지구본 아래와 범례에 적혀 있습니다. 해류는 여러 해의 평균입니다. 메뉴(☰)에서 켜고 끕니다."
+msgstr "The present-day wind, currents and clouds are not live. Wind and clouds are the day's 12 UTC analysis, fetched once a day (around 17:10 UTC); the time is written under the globe and in the legend. The currents are a mean over many years. Turn them on and off in the menu (☰)."

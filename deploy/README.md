@@ -161,6 +161,34 @@ sudo certbot certonly --webroot --webroot-path /srv/earththrutime3d/acme \
 계정이 아니다. 사용자도 없고 키를 가진 사람은 모두 같은 방문자다. 키는 상수 시간으로
 비교하고, 돌아갈 주소는 내부 경로만 받는다.
 
+## 현재 바람·구름의 하루 한 번 받기 (jikhanjung P11)
+
+판 묶음의 바람·구름 시각과 별도로, 호스트 cron이 매일 17:10 UTC(02:10 KST)에 그날 12 UTC GFS 분석과 같은 시의
+GMGSI를 `present-live/`에 받는다. 앱은 그것이 온전하고 판의 시각보다 새롭고 48시간 안이면 쓰고, 아니면 판의 시각으로
+물러선다. `/healthz`의 `present`(정보만, 상태를 바꾸지 않는다)에 지금 보이는 출처·시각과 마지막 받기 결과가 있다.
+
+- `scripts/`: 컨테이너가 **뜰 때마다** 이미지 안의 `present.sh`·받기 코드·`requirements-present.txt`를 옮긴다
+  (`deploy/cron/install.sh`). cron이 도는 것은 늘 배포된 판의 코드다.
+- `cron-venv/`: 호스트 사용자가 소유하는 venv. `present.sh`가 호스트 파이썬 판과 requirements의 지문이 바뀌면 다시
+  만든다(약 300 MB). `scripts/`는 컨테이너(UID 10001)가 쓰는 자리라 venv를 그 안에 두지 않는다.
+- `present-live/`: 받은 것(현재·바로 앞 시각, 약 5 MB)과 `status.json`. 컨테이너에는 읽기 전용으로 붙는다.
+- `logs/present.log`: cron 출력.
+
+처음 한 번(v0.25.0 배포 전에):
+
+```bash
+cd /srv/earththrutime3d
+sudo install -d -o 10001 -g "$(id -gn)" -m 2775 scripts   # 컨테이너가 쓴다
+mkdir -p present-live logs
+tar -xzf ~/earththrutime3d-release/earththrutime3d-host-<버전>.tar.gz -C /srv/earththrutime3d   # compose 마운트
+bash deploy.sh <버전>                                    # 컨테이너가 scripts/ 를 채운다
+(crontab -l; grep -v '^#' crontab.earththrutime3d) | crontab -
+scripts/present.sh >> logs/present.log 2>&1              # 첫 받기를 손으로 한 번
+```
+
+`present-live/`·`cron-venv/`는 다시 만들 수 있으므로 백업하지 않고, `prune.sh`·롤백도 건드리지 않는다. 지우면 다음
+받기까지 판의 시각이 보일 뿐이다. 앞 판으로 되돌려도 compose의 마운트는 남지만 앞 판의 앱은 그것을 읽지 않는다.
+
 ## 백업
 
 `backup.sh`는 일회용 컨테이너에서 sqlite3의 backup API로 스냅샷을 뜨고 무결성을 검사한다.

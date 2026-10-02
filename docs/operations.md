@@ -43,6 +43,17 @@ v0.23.0 (+906 and +907 MiB, 32 GiB free, 59% used). then v0.24.0 (+921 MiB). v0.
 ([devlog 108](../devlog/20260929_jikhanjung_108_dolfinid_prune_0230.md)). No database,
 backups, secrets or other projects were pruned.
 
+## Second writable path: the daily present-day weather
+
+Since v0.25.0 the host's cron writes one moment of wind and clouds a day into
+`/srv/earththrutime3d/present-live/` (jikhanjung P11), outside the immutable release bundle and
+the database. The container mounts it read-only and falls back to the bundle's own moment when
+it is missing, broken, not newer, or older than 48 hours. The cron runs the release's scripts,
+copied by the container into `scripts/` at every start, with a host venv in `cron-venv/`. These
+three directories are rebuildable: not backed up, not touched by `prune.sh` or a rollback, and
+never written by the container except `scripts/`. The bundle-pinning rule (P09) is unchanged:
+nothing here re-pins the bundle. Procedure: `deploy/README.md`.
+
 ## Adopted now
 
 - Django 5.2 dependencies pinned; separate development and production settings.

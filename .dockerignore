@@ -18,6 +18,9 @@
 !locale/
 !locale/**
 !scripts/compile_messages.py
+!scripts/fetch_present_weather.py
+!scripts/present_catalogue.py
+!requirements-present.txt
 **/__pycache__/**
 **/*.pyc
 **/.env

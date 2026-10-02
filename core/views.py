@@ -27,9 +27,10 @@ def healthz(request):
     status = "ok" if ready and served else "unhealthy"
     if status == "ok" and settings.INTEGRITY_SENTINEL.exists():
         status = "degraded"
+    from core.present import status as present_status
     return JsonResponse({"status": status, "version": VERSION,
                          "database": ready, "schema_ready": ready,
-                         "fields": bundle},
+                         "fields": bundle, "present": present_status()},
                         status=200 if ready and served else 503)
 
 

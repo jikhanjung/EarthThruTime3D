@@ -146,6 +146,9 @@ CRUST_DERIVED_DIR = Path(os.environ.get(
 # currents (jikhanjung P10). Optional; a missing section hides its own controls.
 PRESENT_DERIVED_DIR = Path(os.environ.get(
     'PRESENT_DERIVED_DIR', PALEODEM_DERIVED_DIR.parent / 'present-earth'))
+# Where the host's cron writes the daily wind and cloud moment (jikhanjung P11); unset, the
+# release's own moment is all there is.
+PRESENT_LIVE_DIR = os.environ.get('PRESENT_LIVE_DIR') or None
 INDIA_ASIA_DERIVED_DIR = Path(os.environ.get(
     'INDIA_ASIA_DERIVED_DIR', BASE_DIR / 'data' / 'derived' / 'india-asia'))
 

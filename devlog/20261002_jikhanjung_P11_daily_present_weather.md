@@ -2,7 +2,7 @@
 
 날짜: 2026-10-02 · 기준 버전: v0.24.1 · 앞: [jikhanjung P10](20261002_jikhanjung_P10_present_earth_in_flux.md)·
 [109](20261002_jikhanjung_109_present_earth_in_flux.md) · 참고: GSM koprifossillab 005·013(`hourly.sh`, cron, `/healthz/`) ·
-상태: 계획 — §4 정함
+상태: 구현([jikhanjung 115](20261002_jikhanjung_115_daily_present_weather.md), #108)
 
 ## 목적
 
