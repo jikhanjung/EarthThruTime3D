@@ -126,6 +126,9 @@ nothing here re-pins the bundle. Procedure: `deploy/README.md`.
   so this waits until it holds something a reader would miss.
 - **Disk monitoring and backup-failure alerting.** The host was at 89% when the service
   was installed. A failed hourly snapshot is visible in the journal but nothing raises it.
+- **Daily refresh alerting.** A failed present-day fetch is recorded in
+  `present-live/status.json` and `/healthz` reports it, but nothing raises it; after 48 hours
+  the site quietly shows the release's own moment again.
 - **Social preview metadata and a touch icon.** The shell has a favicon only.
 - HSTS stays at one day with subdomain inclusion and preload off, which `check --deploy`
   reports as two warnings. That is deliberate until the domain set is settled.

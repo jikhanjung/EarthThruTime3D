@@ -21,5 +21,9 @@
   distinguishable. A 10,000-year display tick is not a claim of scientific accuracy.
 - Production runs on the dolfinid host (`deploy/README.md`). Changes to deployment must
   keep the data safety contract and deploy verbs described in `docs/operations.md`.
+- The host's cron runs the copy of `deploy/cron/` and the present-day fetch scripts that the
+  container installs into `/srv/earththrutime3d/scripts/` at every start. Change them here and
+  release; never edit them on the host. `present-live/` is the only data written outside the
+  bundle and the database.
 - Never write a running production SQLite database from the host, replace a live
   database, overwrite production secrets, or mix operational records into seeds.
