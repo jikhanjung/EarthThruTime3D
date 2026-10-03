@@ -12,6 +12,7 @@ SCOTESE_VIEWER_ENABLED = os.environ.get("SCOTESE_VIEWER_ENABLED", "false").lower
 # is why the attribution and the licence link stay on the page either way.
 SCOTESE_SOURCE_MAPS_PUBLIC = os.environ.get(
     "SCOTESE_SOURCE_MAPS_PUBLIC", "false").lower() == "true"
+ADMIN_ENABLED = os.environ.get("ADMIN_ENABLED", "false").lower() == "true"
 SECRET_KEY = os.environ.get("SECRET_KEY", "")
 ALLOWED_HOSTS = [h.strip() for h in os.environ.get("ALLOWED_HOSTS", "").split(",") if h.strip()]
 if len(SECRET_KEY) < 50 or SECRET_KEY.startswith("django-insecure-"):

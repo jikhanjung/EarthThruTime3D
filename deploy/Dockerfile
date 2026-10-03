@@ -16,6 +16,8 @@ ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 \
     MANTLE_DERIVED_DIR=/runtime/mantle/muller2022-opt1 \
     INDIA_ASIA_DERIVED_DIR=/runtime/india-asia \
     PLATE_MODEL_DIR=/runtime/plates \
+    PRESENT_LIVE_DIR=/present-live \
+    PRESENT_SCRIPTS_DIR=/cron-scripts \
     DATABASE_PATH=/var/lib/earththrutime3d/db.sqlite3 \
     STATIC_ROOT=/app/staticfiles \
     MEDIA_ROOT=/app/media \
@@ -35,6 +37,9 @@ COPY annotations/ annotations/
 COPY deploy/ deploy/
 COPY locale/ locale/
 COPY scripts/compile_messages.py scripts/compile_messages.py
+# Not run in the image: copied out to the host's cron at start (deploy/cron/install.sh).
+COPY scripts/fetch_present_weather.py scripts/present_catalogue.py scripts/
+COPY requirements-present.txt ./
 COPY manage.py ./
 # Collect at build time: the running container has a read-only root filesystem, and a
 # build-time failure is better than a first-request one.

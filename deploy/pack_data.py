@@ -105,6 +105,55 @@ def pack_crust(staging, files):
                       'sha256': record['sha256'], 'dataset': 'crust2-earthbyte'})
 
 
+def pack_present(staging, files):
+    """The present-day Earth (jikhanjung P10): only catalogued, verified files, never the
+    raw GRIB, HDF5 or ECCO2 layers. Optional, like the climate series: absent, it is skipped."""
+    source = BASE_DIR / 'data/derived/present-earth'
+    catalogue = source / 'catalogue.json'
+    if not catalogue.exists():
+        print('No present-day Earth catalogue; skipping.')
+        return
+    document = json.loads(catalogue.read_text())
+    if document.get('schema_version') != 1:
+        raise ValueError('Unexpected present-day catalogue')
+    records = [{'file': 'catalogue.json', 'bytes': catalogue.stat().st_size, 'sha256': digest(catalogue)}]
+    for section in ('base', 'weather', 'ocean'):
+        if section not in document:
+            print(f'Present-day section missing: {section}')
+            continue
+        records.extend(document[section]['assets'].values())
+    for record in records:
+        path = verified_experiment_path(source, record)
+        target = staging / 'present-earth' / record['file']
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(path, target)
+        files.append({'path': 'present-earth/' + record['file'], 'bytes': record['bytes'],
+                      'sha256': record['sha256'], 'dataset': 'present-earth'})
+
+
+def pack_plates(staging, files):
+    """The plate models the public site may serve. A model whose manifest says
+    `publish: false` (no licence to redistribute: Torsvik & Cocks 2017) never enters the
+    bundle; it stays on the build host, where a local ACCESS_KEY can open it."""
+    (staging / "plates").mkdir()
+    manifests = sorted((BASE_DIR / "sources/plate-models").glob("*.json"))
+    packed = [path.stem for path in manifests if json.loads(path.read_text()).get("publish", True)]
+    if not packed:
+        raise SystemExit("No publishable plate model manifests under sources/plate-models/.")
+    for model in packed:
+        (staging / "plates" / model).mkdir()
+        for name in PLATE_LAYERS + OPTIONAL_PLATE_LAYERS:
+            source = PLATES / model / name
+            if not source.exists():
+                if name in OPTIONAL_PLATE_LAYERS:
+                    continue
+                raise SystemExit(f"Missing plate file: {source}. Run scripts/pack_plates.py.")
+            target = staging / "plates" / model / name
+            shutil.copy2(source, target)
+            files.append({"path": f"plates/{model}/{name}", "bytes": target.stat().st_size,
+                          "sha256": digest(target), "dataset": model})
+
+
 def validate_river_texture(path):
     """Reject old grayscale fields before publishing a bundle for the RGB shader."""
     with path.open("rb") as handle:
@@ -277,25 +326,11 @@ def main():
         files.append({"path": f"paleocoastlines/{name}", "bytes": target.stat().st_size,
                       "sha256": digest(target), "dataset": "paleocoastlines2021"})
 
-    (staging / "plates").mkdir()
-    packed = sorted(path.stem for path in (BASE_DIR / "sources/plate-models").glob("*.json"))
-    if not packed:
-        raise SystemExit("No plate model manifests under sources/plate-models/.")
-    for model in packed:
-        (staging / "plates" / model).mkdir()
-        for name in PLATE_LAYERS + OPTIONAL_PLATE_LAYERS:
-            source = PLATES / model / name
-            if not source.exists():
-                if name in OPTIONAL_PLATE_LAYERS:
-                    continue
-                raise SystemExit(f"Missing plate file: {source}. Run scripts/pack_plates.py.")
-            target = staging / "plates" / model / name
-            shutil.copy2(source, target)
-            files.append({"path": f"plates/{model}/{name}", "bytes": target.stat().st_size,
-                          "sha256": digest(target), "dataset": model})
+    pack_plates(staging, files)
 
     pack_experiments(staging, files)
     pack_crust(staging, files)
+    pack_present(staging, files)
     manifest = {"schema_version": 2, "version": version, "files": files,
                 "contains_source_maps": False,
                 "note": ("Derived land fields and piece reports produced by "

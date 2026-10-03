@@ -17,15 +17,23 @@ try {
   await page.goto(legacy);
   const globe = page.locator('#globe');
   await expect(globe).toHaveAttribute('data-frame', 'scotese-000');
-  // Only the essentials sit in the toolbar, which fits without scrolling; the rest opens
-  // from the menu, which Escape closes and this browser remembers.
-  expect(await page.locator('.globe-toolbar').evaluate((node) => node.scrollWidth <= node.clientWidth)).toBe(true);
-  await expect(page.locator('#settings-menu')).toBeHidden();
-  await expect(page.locator('#settings-menu #grid')).toHaveCount(1);
+  // The view settings and layers sit in the left panel, open on a wide screen with the globe
+  // beside it; the menu button folds it, the globe then takes the whole width, and this
+  // browser remembers. No header band: the title heads the panel, the language floats.
+  await expect(page.locator('#side-panel')).toBeVisible();
+  await expect(page.locator('#settings-menu #grid')).toBeVisible();
+  await expect(page.locator('#side-panel .side-title')).toBeVisible();
+  const sideBox = await page.locator('#side-panel').boundingBox();
+  const stageBox = await page.locator('#globe').boundingBox();
+  expect(stageBox.x).toBeGreaterThanOrEqual(sideBox.x + sideBox.width - 1);
+  await expect(page.locator('header .brand')).toBeHidden();
+  await expect(page.locator('header .lang')).toBeVisible();
+  await expect(page.locator('footer')).toBeHidden();
+  await expect(page.locator('#side-panel .side-foot a')).toHaveAttribute('href', '/about/');
   await page.locator('#settings-toggle').click();
-  await expect(page.locator('#settings-menu')).toBeVisible();
-  await page.keyboard.press('Escape');
-  await expect(page.locator('#settings-menu')).toBeHidden();
+  await expect(page.locator('#side-panel')).toBeHidden();
+  await expect(page.locator('#settings-toggle')).toHaveAttribute('aria-expanded', 'false');
+  expect((await page.locator('#globe').boundingBox()).x).toBeLessThan(2);
   await page.locator('#settings-toggle').click();
   await expect(page.locator('#settings-toggle')).toHaveAttribute('aria-expanded', 'true');
   await mkdir('data/screenshots', {recursive:true});
@@ -299,7 +307,15 @@ try {
   await page.locator('#era').selectOption('16');
   await expect(globe).toHaveAttribute('data-frame','scotese-000');
   await page.setViewportSize({width:390,height:844});
+  // On a phone the panel is a drawer, closed at first, that the menu button slides in over
+  // the map and a tap on the map puts away.
+  await expect(page.locator('#side-panel')).toBeHidden();
+  await page.locator('#settings-toggle').click();
+  await expect(page.locator('#side-panel')).toBeVisible();
+  expect((await page.locator('#side-panel').boundingBox()).width).toBeLessThanOrEqual(351);
   await page.locator('#reset').click();
+  await page.mouse.click(375, 420);
+  await expect(page.locator('#side-panel')).toBeHidden();
   await page.screenshot({path:'data/screenshots/globe-mobile.png',fullPage:true});
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   // A phone is all map: the panel fills the screen under the header, the control panel
@@ -315,20 +331,17 @@ try {
     await page.locator('#info-toggle').click();
   }
   await expect(page.locator('.inspector')).toBeHidden();
-  // The controls stay on one row; a second row would cover the sphere.
-  expect((await phone('.globe-toolbar')).height).toBeLessThan(52);
-  expect(await page.locator('.globe-toolbar').evaluate((node) => node.scrollWidth <= node.clientWidth)).toBe(true);
   // Sideways on the same phone the slider must still be reachable without scrolling.
   await page.setViewportSize({width:844,height:390});
   await expect(globe).toHaveAttribute('aria-busy', 'false');
   const short = await phone('.timeline');
   expect(short.y + short.height).toBeLessThanOrEqual(390);
-  // There the open menu takes the toolbar's row inside the panel rather than covering the sphere.
+  // There the drawer still fits the screen and scrolls inside.
+  await page.locator('#settings-toggle').click();
   await expect(page.locator('#settings-menu')).toBeVisible();
-  const shortMenu = await phone('#settings-menu');
-  const shortControls = await phone('.controls');
-  expect(shortMenu.y).toBeGreaterThanOrEqual(shortControls.y);
-  expect(shortMenu.y + shortMenu.height).toBeLessThanOrEqual(shortControls.y + shortControls.height);
+  const shortDrawer = await phone('#side-panel');
+  expect(shortDrawer.y + shortDrawer.height).toBeLessThanOrEqual(390);
+  await page.locator('#settings-toggle').click();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await page.screenshot({path:'data/screenshots/globe-landscape.png',fullPage:true});
   console.log('Phone layout passed');
@@ -348,7 +361,7 @@ try {
   atlas.setDefaultTimeout(20000);
   atlas.on('pageerror', error => errors.push(error.message));
   await atlas.goto(base);
-  await atlas.locator('#settings-toggle').click();
+  if (await atlas.locator('#settings-menu').isHidden()) await atlas.locator('#settings-toggle').click();
   const atlasGlobe = atlas.locator('#globe');
   await expect(atlasGlobe).toHaveAttribute('data-frame', 'paleoatlas-000');
   await expect(atlasGlobe).toHaveAttribute('aria-busy', 'false');
@@ -391,7 +404,7 @@ try {
   await expect(atlas.locator('html')).toHaveAttribute('lang', 'en');
   await expect(atlas.locator('.lang a[aria-current="true"]')).toHaveText('EN');
   await expect(atlas.locator('#period')).toHaveText('Present');
-  await expect(atlas.locator('#play')).toContainText('Play');
+  await expect(atlas.locator('#play')).toHaveAttribute('aria-label', 'Play');
   const englishFrames = await atlas.locator('#globe-frames').textContent().then(JSON.parse);
   expect(englishFrames[englishFrames.length - 1].names.map(n => n.name)).toContain('Africa');
   expect(await atlas.locator('body').textContent()).not.toMatch(/[가-힣]/);
@@ -529,7 +542,7 @@ try {
   await dem.goto(new URL('?masks=paleodem2018', base).href);
   // The elevation series has the most controls, and its toolbar still fits.
   expect(await dem.locator('.globe-toolbar').evaluate((node) => node.scrollWidth <= node.clientWidth)).toBe(true);
-  await dem.locator('#settings-toggle').click();
+  if (await dem.locator('#settings-menu').isHidden()) await dem.locator('#settings-toggle').click();
   const demGlobe = dem.locator('#globe');
   const demFrames = await dem.locator('#globe-frames').textContent().then(JSON.parse);
   if (!demFrames.some(frame => frame.relief)) {
@@ -588,9 +601,6 @@ try {
     const demControls = await dem.locator('.controls').boundingBox();
     expect(seaBox.y + seaBox.height).toBeLessThanOrEqual(demControls.y);
     await dem.screenshot({path:'data/screenshots/globe-elevation-sea-curve.png'});
-    // With the menu open too, the curve stacks above it rather than under it.
-    const menuBox = await dem.locator('#settings-menu').boundingBox();
-    expect(seaBox.y + seaBox.height).toBeLessThanOrEqual(menuBox.y + 1);
     // On a laptop-width window the curve and the open inspector do not overlap.
     await dem.setViewportSize({width: 1000, height: 800});
     if (await dem.locator('#info-toggle').getAttribute('aria-expanded') !== 'true') await dem.locator('#info-toggle').click();

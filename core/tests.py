@@ -7,7 +7,7 @@ from django.conf import settings
 from django.contrib import admin
 from django.contrib.auth import get_user_model
 from django.db import OperationalError
-from django.test import RequestFactory, TestCase
+from django.test import RequestFactory, TestCase, override_settings
 
 from config.version import VERSION
 from core import globe as globe_module
@@ -44,6 +44,19 @@ class SiteTests(TestCase):
         self.assertEqual(response.status_code, 503)
         self.assertEqual(response.json()["status"], "unhealthy")
         self.assertNotIn("private DB path", response.content.decode())
+
+    def test_admin_route_follows_the_setting(self):
+        import importlib
+        import config.urls
+        try:
+            with override_settings(ADMIN_ENABLED=False):
+                routes = [str(p.pattern) for p in importlib.reload(config.urls).urlpatterns]
+                self.assertNotIn('admin/', routes)
+            with override_settings(ADMIN_ENABLED=True):
+                routes = [str(p.pattern) for p in importlib.reload(config.urls).urlpatterns]
+                self.assertIn('admin/', routes)
+        finally:
+            importlib.reload(config.urls)
 
     def test_admin_requires_superuser(self):
         request = RequestFactory().get("/admin/")
@@ -491,6 +504,45 @@ class GlobeTests(TestCase):
             entry = next(model for model in self.client.get('/').context['plates']
                          if model["id"] == "torsvikcocks2017")
             self.assertFalse(entry["locked"])
+
+    def test_the_public_bundle_and_pages_leave_the_private_model_out(self):
+        import tempfile
+        from pathlib import Path
+        from unittest.mock import patch
+        from deploy import pack_data
+        from core import context_processors
+        with tempfile.TemporaryDirectory() as temp:
+            project = Path(temp)
+            (project / 'sources').mkdir()
+            (project / 'sources/plate-models').symlink_to(settings.BASE_DIR / 'sources/plate-models')
+            plates = project / 'plates'
+            for path in (settings.BASE_DIR / 'sources/plate-models').glob('*.json'):
+                (plates / path.stem).mkdir(parents=True)
+                for name in ('rotations.json', 'continents.json'):
+                    (plates / path.stem / name).write_text('{}')
+            files = []
+            (project / 'stage').mkdir()
+            with patch.object(pack_data, 'BASE_DIR', project), patch.object(pack_data, 'PLATES', plates):
+                pack_data.pack_plates(project / 'stage', files)
+            packed = {entry['dataset'] for entry in files}
+            self.assertNotIn('torsvikcocks2017', packed)
+            self.assertIn('merdith2021', packed)
+        context_processors.plate_citations.cache_clear()
+        with self.settings(ACCESS_KEY=""):
+            page = self.client.get('/about/').content.decode()
+            self.assertNotIn('Torsvik', page)
+            self.assertNotIn('접근 키', page)
+            self.assertNotIn('접근 키', self.client.get('/privacy/').content.decode())
+            # Nothing on the public pages sets a cookie: no key form, so no CSRF token
+            with self.settings(SCOTESE_VIEWER_ENABLED=True):
+                for path in ('/', '/about/', '/privacy/'):
+                    self.client.cookies.clear()
+                    response = self.client.get(path)
+                    self.assertNotIn('csrftoken', response.cookies, path)
+                    self.assertNotIn('id="plate-unlock"', response.content.decode())
+        with self.settings(ACCESS_KEY="a-key-for-the-test"):
+            self.assertIn('접근 키', self.client.get('/privacy/').content.decode())
+            self.assertIn('Torsvik', self.client.get('/about/').content.decode())
 
     def test_the_gate_answers_json_for_the_viewer(self):
         json_headers = {"HTTP_ACCEPT": "application/json"}

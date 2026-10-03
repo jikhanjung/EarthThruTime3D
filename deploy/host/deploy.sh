@@ -9,7 +9,7 @@ version=${1:-}
 [[ "$version" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo 'Usage: bash deploy.sh vX.Y.Z'; exit 1; }
 [[ -f .env.django ]] || { echo 'Prepare .env.django first.'; exit 1; }
 [[ -f "data/$version/manifest.json" ]] || { echo "Prepare data/$version first."; exit 1; }
-mkdir -p db backups
+mkdir -p db backups present-live scripts logs
 docker image inspect "honestjung/earththrutime3d:$version" >/dev/null
 
 # Validate the exact immutable image and data pair before touching the running service.

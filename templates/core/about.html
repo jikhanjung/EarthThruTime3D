@@ -5,8 +5,14 @@
 <h1>{% trans "프로젝트 소개" %}</h1>
 <p>{% blocktrans %}{{ app_name }}는 시대별 고지리 자료를 바탕으로 과거 지구의 모습을 3차원으로 탐색하려는 연구 프로젝트입니다. 초기 목표는 표면 재구성이며, 지각 변형과 맨틀 대류는 이후 단계입니다.{% endblocktrans %}</p>
 <h2>{% trans "제작" %}</h2><p>{{ vendor }} · {% trans "지구과학 연구 도구" %}</p>
+<h2>{% trans "기여자" %}</h2>
+<ul class="contributors">
+<li><a href="https://github.com/jikhanjung" target="_blank" rel="noopener">Jikhan Jung</a> — {% trans "프로젝트 책임. 지도 분할과 시점 사이 보간, 판 모델 겹쳐 보기, 맨틀·인도–아시아 단면 실험, 현재의 지구, 배포와 운영" %}</li>
+<li><a href="https://github.com/wwolf" target="_blank" rel="noopener">WWolf</a> — {% trans "고도 격자 시리즈(지형 음영·기온·해수면·빙하), 잠재 하천, 최근 빙기 시간 범위와 모형 기후, 위치 핀, 색 범례, 산맥·사건 표시" %}</li>
+</ul>
+<p>{% blocktrans %}기여 내역은 <a href="https://github.com/jikhanjung/EarthThruTime3D/graphs/contributors" target="_blank" rel="noopener">GitHub</a>과 작업 기록(devlog)에 있습니다.{% endblocktrans %}</p>
 <h2>{% trans "버전" %}</h2><p>v{{ version }} · {% blocktrans %}업데이트 {{ release_date }}{% endblocktrans %}</p>
-<h2>{% trans "문의" %}</h2><p><a href="{% url 'contact' %}">{% trans "문제 보고 안내" %}</a> · <a href="https://github.com/jikhanjung/EarthThruTime3D" target="_blank" rel="noopener">GitHub</a></p>
+<h2>{% trans "문의" %}</h2><p><a href="{% url 'contact' %}">{% trans "문제 보고 안내" %}</a> · <a href="{% url 'privacy' %}">{% trans "개인정보" %}</a> · <a href="https://github.com/jikhanjung/EarthThruTime3D" target="_blank" rel="noopener">GitHub</a></p>
 <h2>{% trans "자료 출처" %}</h2>
 <p>Laske, G., Masters, G., &amp; Reif, C. (2000). <em>CRUST 2.0: A new global crustal model at 2×2 degrees.</em> IGPP, UC San Diego. <a href="https://www.earthbyte.org/webdav/ftp/earthbyte/GPlates/GPlates2.3_GeoData/Rasters/Crustal_Thickness.zip">EarthByte GPlates 2.3</a> · CC BY 4.0. {% trans "현재 지구 두께의 표시용 재표본화" %}.</p>
 <p>Scotese, C. R., 2016. PALEOMAP PaleoAtlas for GPlates and the PaleoData Plotter Program. PALEOMAP Project (<a href="http://www.scotese.com" target="_blank" rel="noopener">www.scotese.com</a>). <a href="https://doi.org/10.5281/zenodo.10251792" target="_blank" rel="noopener">doi:10.5281/zenodo.10251792</a></p>
@@ -27,10 +33,15 @@
 <p>Kocsis, A. T. &amp; Scotese, C. R. (2021). Mapping paleocoastlines and continental flooding during the Phanerozoic. <em>Earth-Science Reviews</em> 213, 103463. <a href="https://doi.org/10.5281/zenodo.4297693" target="_blank" rel="noopener">doi:10.5281/zenodo.4297693</a>, CC BY 4.0.</p>
 <p>{% trans "'화석으로 고친 해안선' 겹쳐 보기는 이 PaleoCoastlines 자료입니다. PALEOMAP 해안선을 Paleobiology Database의 해양 화석이 가리키는 최대 해침선까지 옮긴 것으로, 0~535 Ma의 81개 시점이 있고 화면의 나이에서 가장 가까운 시점을 그립니다." %}</p>
 <p>{% trans "시점 사이 화면은 두 시점을 보간한 중간 형태입니다. 대륙은 그 아래 PALEOMAP 판의 회전을 따라 옮기고 모양은 두 시점을 섞은 것이라, 관측도 발표된 복원도 아닙니다." %}</p>
+<h2>{% trans "현재의 지구" %}</h2>
+<p>NASA Earth Observatory, <em>Blue Marble</em> (shaded relief and bathymetry), served by <a href="https://nasa-gibs.github.io/gibs-api-docs/" target="_blank" rel="noopener">NASA EOSDIS GIBS</a>. NASA imagery, no copyright.</p>
+<p>NOAA/NCEP <a href="https://www.nco.ncep.noaa.gov/pmb/products/gfs/" target="_blank" rel="noopener">Global Forecast System (GFS)</a> 0.25° analysis; NOAA/NESDIS <a href="https://registry.opendata.aws/noaa-gmgsi/" target="_blank" rel="noopener">Global Mosaic of Geostationary Satellite Imagery (GMGSI)</a>, longwave infrared. US government works, public domain.</p>
+<p>Menemenlis, D. et al. (2008). ECCO2: High resolution global ocean and sea ice data synthesis. <em>Mercator Ocean Quarterly Newsletter</em> 31, 13–21. ECCO2 cube92 (NASA JPL/MIT), from the <a href="https://data.nas.nasa.gov/ecco/" target="_blank" rel="noopener">NASA NAS data portal</a>.</p>
+<p>{% trans "현재(0 Ma)의 위성 바탕은 2004년 무렵의 구름 없는 합성 사진입니다. 바람과 구름은 실시간이 아니라 하루 한 번 받는 GFS 분석과 같은 시각의 위성 적외선 합성이고, 해류는 ECCO2 해양 모델 표층(5 m) 유속의 1992–2018년 평균입니다. 관측이 아니라 모델이며 평균이라 소용돌이는 지워졌습니다. 이 자료들은 미국 정부·NASA의 공개 자료이며, 이 프로젝트가 만든 텍스처도 같은 조건을 따릅니다." %}</p>
 <h2>{% trans "판 재구성 자료" %}</h2>
 <p>{% blocktrans %}지구본에서 <strong>판 재구성</strong>을 켜면 회전 모델로 같은 시각의 대륙을 재구성해 겹쳐 그립니다. 위 지도 분할 결과와는 출처도 방법도 다르므로, 두 선이 어긋나는 것은 두 모델이 다르기 때문입니다.{% endblocktrans %}</p>
 {% for model in plate_citations %}<p>{{ model.citation }}<br>{% trans "기준틀" %}: {{ model.frame }} · <a href="{{ model.license_url }}" target="_blank" rel="noopener">{{ model.license }}</a></p>
 {% endfor %}<p>{% trans "두 모델은 상대 운동이 사실상 같고 절대 기준틀이 다릅니다. 저자들은 기후와 관련된 해석에는 고지자기 기준틀을 쓰라고 하며, 두 모델 모두 태평양 열점 운동이나 500만 년 이하의 분석에는 적합하지 않다고 밝히고 있습니다." %}</p>
 <h2>{% trans "라이선스" %}</h2><p>{% blocktrans %}코드는 <a href="https://github.com/jikhanjung/EarthThruTime3D/blob/main/LICENSE" target="_blank" rel="noopener">MIT 라이선스</a>입니다. 이 프로젝트가 CC BY 자료에서 만든 파생 자료(고도·기온·빙하 텍스처, 해수면 곡선, 이동장, 해안선·판 자료)는 <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a>이며, 원본 자료의 조건이 확정되지 않은 PaleoAtlas(2016)와 2002년판 마스크는 그 원본의 조건을 따릅니다. 자세한 구분은 <a href="https://github.com/jikhanjung/EarthThruTime3D/blob/main/LICENSE-DATA.md" target="_blank" rel="noopener">LICENSE-DATA.md</a>에 있습니다. 3D 렌더링에는 MIT 라이선스의 Three.js를 사용합니다.{% endblocktrans %}</p>
-<h2>{% trans "개인정보" %}</h2><p>{% trans "현재 공개 회원가입이나 자료 업로드 기능은 없습니다. 관리자 계정과 로그인 세션은 실행 환경의 데이터베이스에 저장됩니다." %} <a href="{% url 'privacy' %}">{% trans "자세한 안내" %}</a></p>
+<h2>{% trans "개인정보" %}</h2><p>{% if access_key_enabled %}{% trans "회원 가입·로그인 기능이 없고 자료 업로드도 받지 않습니다. 쿠키는 언어 선택과 비공개 판 모델의 접근 키 확인에만 씁니다." %}{% else %}{% trans "회원 가입·로그인 기능이 없고 자료 업로드도 받지 않습니다. 쿠키는 언어 선택에만 씁니다." %}{% endif %} <a href="{% url 'privacy' %}">{% trans "자세한 안내" %}</a></p>
 {% endblock %}

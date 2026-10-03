@@ -5,6 +5,8 @@ set -eu
 python manage.py check
 python manage.py migrate --noinput
 python /app/deploy/verify_bundle.py
+# The host's daily refresh runs this release's scripts (jikhanjung P11); never fatal.
+sh /app/deploy/cron/install.sh || echo "cron scripts: install failed; serving anyway"
 exec gunicorn config.wsgi:application --bind 0.0.0.0:8000 \
     --workers "${GUNICORN_WORKERS:-2}" --worker-class gthread --threads "${GUNICORN_THREADS:-4}" \
     --timeout 60 --max-requests 1000 --max-requests-jitter 100 \

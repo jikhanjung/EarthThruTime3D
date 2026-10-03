@@ -142,6 +142,17 @@ MANTLE_DERIVED_DIR = Path(os.environ.get(
     'MANTLE_DERIVED_DIR', BASE_DIR / 'data' / 'derived' / 'mantle' / 'muller2022-opt1'))
 CRUST_DERIVED_DIR = Path(os.environ.get(
     'CRUST_DERIVED_DIR', PALEODEM_DERIVED_DIR.parent / 'crust'))
+# Django's admin. No one has an account on the running site and nothing is administered
+# there, so production leaves the route out (a login page nobody uses is only surface);
+# development keeps it.
+ADMIN_ENABLED = os.environ.get('ADMIN_ENABLED', 'true').lower() == 'true'
+# The present-day Earth: satellite base, one pinned moment of wind and clouds, mean
+# currents (jikhanjung P10). Optional; a missing section hides its own controls.
+PRESENT_DERIVED_DIR = Path(os.environ.get(
+    'PRESENT_DERIVED_DIR', PALEODEM_DERIVED_DIR.parent / 'present-earth'))
+# Where the host's cron writes the daily wind and cloud moment (jikhanjung P11); unset, the
+# release's own moment is all there is.
+PRESENT_LIVE_DIR = os.environ.get('PRESENT_LIVE_DIR') or None
 INDIA_ASIA_DERIVED_DIR = Path(os.environ.get(
     'INDIA_ASIA_DERIVED_DIR', BASE_DIR / 'data' / 'derived' / 'india-asia'))
 

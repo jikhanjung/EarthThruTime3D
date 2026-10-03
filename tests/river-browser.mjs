@@ -17,13 +17,12 @@ try {
   const globe = page.locator('#globe');
   await expect(globe).toHaveAttribute('data-rivers', 'true');
   await expect(page.locator('#river-note')).toContainText('Grid spacing is not reconstruction accuracy');
-  await page.locator('#settings-toggle').click();
+  if (await page.locator('#settings-menu').isHidden()) await page.locator('#settings-toggle').click();
   await page.locator('#rivers').click();
   await expect(globe).toHaveAttribute('data-rivers', 'false');
   await expect(page.locator('#river-note')).toBeHidden();
   await page.locator('#rivers').click();
   await expect(globe).toHaveAttribute('data-rivers', 'true');
-  await page.locator('#settings-toggle').click();
   await page.locator('#sealevel').fill('-130');
   await expect(globe).toHaveAttribute('data-river-low', '1.00');
   await page.locator('#sealevel').fill('0');
@@ -39,6 +38,8 @@ try {
   for (const [window, age] of [['deglacial', 21], ['lastcycle', 70]]) {
     await page.goto(new URL(`/?masks=paleodem2018&window=${window}`, base).href);
     const frames = JSON.parse(await page.locator('#globe-frames').textContent());
+    // On a phone the period menu is in the drawer.
+    if (await page.locator('#era').isHidden()) await page.locator('#settings-toggle').click();
     await page.selectOption('#era', String(frames.findIndex(frame => frame.deglacial?.age_ka === age)));
     await expect(globe).toHaveAttribute('aria-busy', 'false');
     expect(Number(await globe.getAttribute('data-river-low'))).toBeGreaterThan(0);

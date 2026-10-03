@@ -1399,3 +1399,165 @@ msgstr "Blue lines are potential water paths drawn from the terrain alone, whate
 
 msgid "기후·생물 사건"
 msgstr "Climate and biotic events"
+
+msgid "위성 영상"
+msgstr "Satellite image"
+
+msgid "바람"
+msgstr "Wind"
+
+msgid "바람 끔"
+msgstr "Wind off"
+
+msgid "바람 10 m"
+msgstr "Wind 10 m"
+
+msgid "바람 250 hPa (제트기류)"
+msgstr "Wind 250 hPa (jet stream)"
+
+msgid "해류"
+msgstr "Currents"
+
+msgid "구름"
+msgstr "Clouds"
+
+msgid "구름 끔"
+msgstr "Clouds off"
+
+msgid "위성 구름"
+msgstr "Satellite clouds"
+
+msgid "모형 구름"
+msgstr "Model clouds"
+
+msgid "위성 영상 지구본"
+msgstr "satellite globe"
+
+msgid "{period} 위성 영상을 불러오는 중…"
+msgstr "Loading the {period} satellite image…"
+
+msgid "현재(0 Ma)에서만 볼 수 있습니다"
+msgstr "Available at the present (0 Ma) only"
+
+msgid "바람·구름 {time}"
+msgstr "Wind and clouds {time}"
+
+msgid "바람 {time}"
+msgstr "Wind {time}"
+
+msgid "구름 {time}"
+msgstr "Clouds {time}"
+
+msgid "해류 {from}–{to} 평균"
+msgstr "Currents {from}–{to} mean"
+
+msgid "바탕 Blue Marble {epoch}"
+msgstr "Base Blue Marble {epoch}"
+
+msgid "2004년 무렵 합성"
+msgstr "composite of about 2004"
+
+msgid "바람 10 m · GFS 분석 {time}"
+msgstr "Wind 10 m · GFS analysis {time}"
+
+msgid "바람 250 hPa(제트기류) · GFS 분석 {time}"
+msgstr "Wind 250 hPa (jet stream) · GFS analysis {time}"
+
+msgid "해류 표층 · ECCO2 {from}–{to} 평균"
+msgstr "Surface currents · ECCO2 {from}–{to} mean"
+
+msgid "구름 · GMGSI 위성 적외선 {time}"
+msgstr "Clouds · GMGSI satellite infrared {time}"
+
+msgid "구름 · GFS 분석 구름량 {time}"
+msgstr "Clouds · GFS analysis cloud cover {time}"
+
+msgid "빠르기 (m/s)"
+msgstr "Speed (m/s)"
+
+msgid "현재 지구 자료를 불러오지 못했습니다."
+msgstr "The present-day Earth data could not be loaded."
+
+msgid "현재(0 Ma)는 위성 영상으로 보여 줍니다. NASA Blue Marble(지형 음영·바다 깊이, 2004년 무렵 합성)을 <a href=\"https://nasa-gibs.github.io/gibs-api-docs/\" target=\"_blank\" rel=\"noopener\">NASA EOSDIS GIBS</a>에서 받아 이 서버에서 내보냅니다. 오늘 찍은 사진이 아니며 구름을 걷어 낸 합성입니다. 빙하는 사진에 담긴 것을 그대로 보여 주고, 해안선은 고도 격자의 것과 몇 칸 어긋날 수 있습니다. 메뉴(☰)의 '위성 영상'을 끄면 고도 색으로 돌아갑니다."
+msgstr "The present (0 Ma) is shown as a satellite image: NASA Blue Marble (shaded relief and bathymetry, a composite of about 2004), fetched from <a href=\"https://nasa-gibs.github.io/gibs-api-docs/\" target=\"_blank\" rel=\"noopener\">NASA EOSDIS GIBS</a> and served from this server. It is not a photograph of today but a cloud-free composite. The ice is the ice in the photograph, and its coastline can sit a few cells off the elevation grid's. Turn off 'Satellite image' in the menu (☰) to return to the elevation colours."
+
+msgid "현재 지구의 바람·해류·구름은 실시간이 아닙니다. 바람과 구름은 이 판(v%(version)s)을 만들 때 받은 한 시각이고, 그 시각은 지구본 아래와 범례에 적혀 있습니다. 해류는 여러 해의 평균입니다. 메뉴(☰)에서 켜고 끕니다."
+msgstr "The present-day wind, currents and clouds are not live. Wind and clouds are one moment fetched when this release (v%(version)s) was built; the time is written under the globe and in the legend. The currents are a mean over many years. Turn them on and off in the menu (☰)."
+
+msgid "바람은 NOAA GFS 0.25° 분석(10 m, 250 hPa)이고 입자의 색은 빠르기입니다. 위성 구름은 NOAA/NESDIS GMGSI 정지궤도 위성 적외선 합성으로, 위도 72.7° 너머는 비어 있고 차가운 땅이 구름처럼 보일 수 있습니다. 모형 구름은 같은 GFS 분석의 전체 구름량입니다."
+msgstr "Wind is the NOAA GFS 0.25° analysis (10 m, 250 hPa); a particle's colour is its speed. Satellite clouds are the NOAA/NESDIS GMGSI geostationary infrared mosaic: empty beyond 72.7° latitude, and cold ground can look like cloud. Model clouds are the total cloud cover of the same GFS analysis."
+
+msgid "해류는 ECCO2 cube92 해양 모델의 표층(5 m) 유속을 %(first)s–%(last)s년 달마다 한 장씩, 모두 %(n)s장을 평균한 것입니다. 관측이 아니라 모델이며, 평균이라 소용돌이는 지워지고 큰 흐름만 남습니다. 발트해는 모델에 없습니다."
+msgstr "The currents are the surface (5 m) velocity of the ECCO2 cube92 ocean model, one snapshot a month over %(first)s–%(last)s, %(n)s in all, averaged. A model, not an observation; the averaging removes the eddies and leaves the large flows. The Baltic Sea is not in the model."
+
+msgid "현재 지구의 바람·해류·구름은 실시간이 아닙니다. 바람과 구름은 하루 한 번(한국 시각 새벽 2시 무렵) 받는 그날 12 UTC의 분석이고, 그 시각은 지구본 아래와 범례에 적혀 있습니다. 해류는 여러 해의 평균입니다. 메뉴(☰)에서 켜고 끕니다."
+msgstr "The present-day wind, currents and clouds are not live. Wind and clouds are the day's 12 UTC analysis, fetched once a day (around 17:10 UTC); the time is written under the globe and in the legend. The currents are a mean over many years. Turn them on and off in the menu (☰)."
+
+msgid "현재의 지구"
+msgstr "The present-day Earth"
+
+msgid "현재(0 Ma)의 위성 바탕은 2004년 무렵의 구름 없는 합성 사진입니다. 바람과 구름은 실시간이 아니라 하루 한 번 받는 GFS 분석과 같은 시각의 위성 적외선 합성이고, 해류는 ECCO2 해양 모델 표층(5 m) 유속의 1992–2018년 평균입니다. 관측이 아니라 모델이며 평균이라 소용돌이는 지워졌습니다. 이 자료들은 미국 정부·NASA의 공개 자료이며, 이 프로젝트가 만든 텍스처도 같은 조건을 따릅니다."
+msgstr "The satellite base at the present (0 Ma) is a cloud-free composite of about 2004. Wind and clouds are not live: they are a GFS analysis fetched once a day and the satellite infrared mosaic of the same hour. The currents are the 1992–2018 mean of the ECCO2 ocean model's surface (5 m) velocity: a model, not an observation, and averaging removes the eddies. These are open data of the US government and NASA, and the textures this project makes from them follow the same terms."
+
+msgid "기여자"
+msgstr "Contributors"
+
+msgid "프로젝트 책임. 지도 분할과 시점 사이 보간, 판 모델 겹쳐 보기, 맨틀·인도–아시아 단면 실험, 현재의 지구, 배포와 운영"
+msgstr "project lead: map segmentation and interpolation between stops, plate-model overlays, the mantle and India–Asia section experiments, the present-day Earth, deployment and operations"
+
+msgid "고도 격자 시리즈(지형 음영·기온·해수면·빙하), 잠재 하천, 최근 빙기 시간 범위와 모형 기후, 위치 핀, 색 범례, 산맥·사건 표시"
+msgstr "the elevation series (relief shading, temperature, sea level, ice), potential rivers, the time windows of the last glacial cycle and modelled climate, location pins, colour keys, mountain and event marks"
+
+msgid "기여 내역은 <a href=\"https://github.com/jikhanjung/EarthThruTime3D/graphs/contributors\" target=\"_blank\" rel=\"noopener\">GitHub</a>과 작업 기록(devlog)에 있습니다."
+msgstr "Contributions are listed on <a href=\"https://github.com/jikhanjung/EarthThruTime3D/graphs/contributors\" target=\"_blank\" rel=\"noopener\">GitHub</a> and in the work log (devlog)."
+
+msgid "이 사이트에는 회원 가입도 로그인도 없습니다. 쿠키는 필요할 때만 씁니다: 언어를 고르면 그 선택을 1년짜리 쿠키에, 비공개 판 모델의 접근 키를 넣으면 그 확인을 이 브라우저의 세션(30일)에 저장하고, 키 입력 양식에는 CSRF 쿠키를 씁니다. 세션은 서버의 데이터베이스에 저장됩니다. 지구본이 쓰는 자료(위성 영상·바람·구름 포함)는 모두 이 서버에서 보내며, 방문자의 브라우저가 다른 곳에 요청하지 않습니다. 서버 실행 시 요청 경로와 오류가 로그에 남을 수 있습니다. 로그 보관 기간은 아직 정하지 않았습니다."
+msgstr "This site has no sign-up and no login. Cookies are set only when needed: choosing a language keeps the choice in a cookie for a year; entering the access key for a private plate model keeps that confirmation in this browser's session for 30 days, and the key form uses a CSRF cookie. Sessions are stored in the server's database. Everything the globe shows (the satellite image, wind and clouds included) is sent from this server; your browser makes no requests elsewhere. Request paths and errors may appear in the server's logs while it runs; how long logs are kept has not been decided yet."
+
+msgid "회원 가입·로그인 기능이 없고 자료 업로드도 받지 않습니다. 쿠키는 언어 선택과 비공개 판 모델의 접근 키 확인에만 씁니다."
+msgstr "There is no sign-up or login, and no uploads are accepted. Cookies are used only for the language choice and for confirming the access key of a private plate model."
+
+msgid "이 사이트에는 회원 가입도 로그인도 없습니다. 언어를 고르면 그 선택을 1년짜리 쿠키에 저장합니다. 다른 쿠키는 쓰지 않습니다."
+msgstr "This site has no sign-up and no login. Choosing a language keeps the choice in a cookie for a year; no other cookies are set."
+
+msgid "이 실행 환경에는 비공개 판 모델을 여는 접근 키가 있습니다. 키를 넣으면 그 확인을 이 브라우저의 세션(30일)에 저장하고, 키 입력 양식에는 CSRF 쿠키를 씁니다. 세션은 서버의 데이터베이스에 저장됩니다."
+msgstr "This deployment has an access key that opens a private plate model. Entering it keeps that confirmation in this browser's session for 30 days, and the key form uses a CSRF cookie. Sessions are stored in the server's database."
+
+msgid "지구본이 쓰는 자료(위성 영상·바람·구름 포함)는 모두 이 서버에서 보내며, 방문자의 브라우저가 다른 곳에 요청하지 않습니다. 서버 실행 시 요청 경로와 오류가 로그에 남을 수 있습니다. 로그 보관 기간은 아직 정하지 않았습니다."
+msgstr "Everything the globe shows (the satellite image, wind and clouds included) is sent from this server; your browser makes no requests elsewhere. Request paths and errors may appear in the server's logs while it runs; how long logs are kept has not been decided yet."
+
+msgid "회원 가입·로그인 기능이 없고 자료 업로드도 받지 않습니다. 쿠키는 언어 선택에만 씁니다."
+msgstr "There is no sign-up or login, and no uploads are accepted. The only cookie is the language choice."
+
+msgid "범례"
+msgstr "Legend"
+
+msgid "보기"
+msgstr "View"
+
+msgid "레이어"
+msgstr "Layers"
+
+msgid "시간"
+msgstr "Time"
+
+msgid "◀ 과거"
+msgstr "◀ Older"
+
+msgid "▶ 재생"
+msgstr "▶ Play"
+
+msgid "현재 ▶"
+msgstr "Newer ▶"
+
+msgid "더 과거"
+msgstr "Older"
+
+msgid "더 현재"
+msgstr "Newer"
+
+msgid "❚❚ 멈춤"
+msgstr "❚❚ Pause"
+
+msgid "멈춤"
+msgstr "Pause"

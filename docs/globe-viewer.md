@@ -943,6 +943,19 @@ roughly a quarter of the raw land pixels at the edges. The inspector states this
 whenever the mode is active. Pre-Mesozoic maps use a different palette and their masks
 capture only the darker core of each landmass; see `devlog/20260912_003_*` for detail.
 
+## Layout
+
+There is no header band (2026-10-02). The left panel holds the title and version, then a
+"View" box (dataset, projection, reset) and a "Layers" box (the former ☰ menu). On a wide
+screen it is open and the globe takes the remaining width (`.explorer.side-open
+.stage-area`); the ☰ button (`#settings-toggle`, `aria-expanded`) folds it and the choice
+is kept in `localStorage`. At 899 px and below it is a drawer over the map, closed at
+first, dismissed by a tap outside or Escape. The language switch floats at the top right
+above the info button; the colour and speed legends dock at the bottom right in one box
+whose heading folds it (`#map-legend`, kept in `localStorage`), and the inspector stops
+above it (`--legend-space`). The timeline stays a long bar at the foot (`.controls`), and
+the footer keeps only the copyright and About at the bottom centre.
+
 ## Panel sizing
 
 The notes about the derived surface and about an interpolated stop appear and disappear
@@ -1025,6 +1038,47 @@ depend on the reference frame, but the models still differ: within about 20 % ba
 quantify per pair. The address carries `pin=lon,lat;lon,lat` in present-day coordinates
 while the toggle is on, and a link with pins switches it on.
 
+## Present-day Earth
+
+At the present stop (0 Ma, not a stop between it and the past) the globe can show today's
+Earth as it looks and moves (jikhanjung P10, ported from GSM's "Earth in flux" layers).
+
+- **Satellite base** (`mode 6`, `satMap`): NASA Blue Marble, 4096×2048 by default and the
+  8192×4096 image once the view is close and the GPU allows 16384-texel textures. It is the
+  default surface at 0 Ma; the menu's **Satellite image** (`sat=0`) returns to the elevation
+  colours. A colour view the reader chose (temperature, climate, mask) keeps its colours.
+  The photograph carries its own ice and rivers, so the ice overlay and the computed rivers
+  are not drawn over it. Its coastline can sit a few cells off the elevation grid's.
+- **Wind and currents** (`static/core/flux.js`): particles on two 2D canvases beside the
+  WebGL canvas. Each moves in longitude and latitude through a baked u/v field
+  (`decodeField`/`sampleField`/`advance`) and is placed by the page (`pointAt` and the drawn
+  camera); points behind the globe are hidden, and a particle that would jump more than
+  60 px (the dateline on a flat map) draws no segment. Trails fade each frame and are
+  cleared when the view moves. Colours, lifetimes and speeds are GSM's: wind warm and thin
+  (reference 12 m/s at 10 m, 45 m/s at 250 hPa), currents teal and slow (0.3 m/s, lower
+  than GSM's 0.5 because a mean is slower than a day). Particles ride the surface flat, so
+  raised 3D terrain does not hide them. With reduced motion they stop after 60 frames.
+- **Clouds**: a shell at 1.006 on the globe (just in front of a flat sheet) sharing the
+  surface geometry and its `locate()` (`LOCATE_GLSL`), white at the opacity baked into the
+  texture. Satellite clouds (GMGSI) are empty beyond ±72.7°; model clouds are GFS total cover.
+- **The moment on screen**: `#flux-when` under the age lists the moment or period of every
+  layer that is on, built from the catalogue's `t` and period only; the legend heads repeat
+  it, and the panel's note says the layers are not live. Wind and clouds are one GFS cycle
+  pinned in the release PR, replaced on the server by the day's 12 UTC analysis while the
+  host's daily refresh is fresh (`PRESENT_LIVE_DIR`, under 48 h, newer than the release's;
+  jikhanjung P11); the note says which. The currents are a 1992–2018 mean.
+- **Away from 0 Ma** the controls are disabled, the canvases and cloud shell hidden, and
+  `data-flux="unavailable"`. Stage attributes: `data-satellite`, `data-satellite-size`,
+  `data-flux`, `data-wind`, `data-currents`, `data-clouds`, `data-flux-when`. Address:
+  `sat=0`, `wind=10m|250hPa`, `currents=flow`, `clouds=sat|model`.
+- **Encoding**: u and v are stored over `-M·128/127 .. M`, so code 128 is exactly zero
+  and still water stays still (wwolf on #89).
+
+Data and serving: `core/present.py` validates each catalogue section on its own (a bad
+section hides only its controls) and serves files named `<key>-<sha12>` through
+`asset_response` (SHA-256 verified, immutable). `deploy/pack_data.py` ships the catalogued
+files only. Sources and scripts: `sources/README.md`.
+
 ## Runtime and data boundaries
 
 Three.js modules and their MIT license are vendored locally using `npm run vendor`.
@@ -1057,6 +1111,11 @@ Neither flag grants data-use rights. See `sources/README.md`, `LICENSE-DATA.md` 
   recovery. Elevation, climate, sea-level and terrain checks run when the elevation
   series is built; the script reports that section as skipped otherwise. Screenshots
   go to gitignored `data/screenshots/`.
+- `VIEWER_URL=… node tests/flux-browser.mjs` with `data/derived/present-earth` built: the
+  satellite base, each layer, the moment on screen, gating away from 0 Ma, flat maps, the
+  address, English, a phone and no third-party requests. The older suites assume the
+  elevation colours at 0 Ma; run them against a server started with
+  `PRESENT_DERIVED_DIR=/nonexistent`.
 - `VIEWER_URL=http://127.0.0.1:8153/ node tests/river-browser.mjs`: river PNG, shader,
   toggle, grid-spacing explanation, mobile layout and both languages (requires a built 0 Ma river field).
 - `VIEWER_URL=http://127.0.0.1:8153/ node tests/view-address-browser.mjs`: the view in the address:

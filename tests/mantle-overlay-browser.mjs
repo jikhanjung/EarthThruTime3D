@@ -1,6 +1,8 @@
 import {chromium,expect} from '@playwright/test';
 const browser=await chromium.launch({headless:true,args:['--enable-unsafe-swiftshader']});
 const base=process.env.VIEWER_URL||'http://127.0.0.1:8150/';
+// The Earth interior section starts folded to its heading (#94); open it before using its controls.
+const openInterior=async target=>{if(await target.locator('#interior-panel.folded').count())await target.locator('#interior-title').click();};
 try {
  const page=await browser.newPage({locale:'ko-KR',viewport:{width:1200,height:950},reducedMotion:'reduce'});
  const errors=[],requests=[];
@@ -12,6 +14,7 @@ try {
  const ready=async age=>{await expect(globe).toHaveAttribute('data-mantle-overlay','ready',{timeout:30000});await expect(globe).toHaveAttribute('data-mantle-age',String(age));};
  await expect(globe).toHaveAttribute('aria-busy','false');expect(requests).toEqual([]);
  const initial=await page.locator('#timeline').inputValue();
+ await openInterior(page);
  await page.selectOption('#projection','equirect');await toggle.check();await ready(0);await page.selectOption('#mantle-age','80');await ready(80);
  expect(requests.length).toBe(4);
  await expect(page.locator('#overlay-core')).toBeChecked();
@@ -82,6 +85,7 @@ try {
  await failedSurface.route('**/globe/fields/paleodem-0800.png',r=>r.fulfill({status:503}));
  await failedSurface.goto(new URL('/?masks=paleodem2018',base).href);
  await expect(failedSurface.locator('#globe')).toHaveAttribute('aria-busy','false');
+ await openInterior(failedSurface);
  await failedSurface.locator('#mantle-overlay').check();
  await expect(failedSurface.locator('#globe')).toHaveAttribute('data-mantle-overlay','ready');
  await failedSurface.selectOption('#mantle-age','80');

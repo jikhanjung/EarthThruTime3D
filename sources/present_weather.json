@@ -1,0 +1,75 @@
+{
+ "t": "2026-10-01T18:00Z",
+ "wind": {
+  "levels": [
+   "10m",
+   "250hPa"
+  ],
+  "width": 1440,
+  "height": 721,
+  "10m": {
+   "u": [
+    -40.24944881889764,
+    39.935
+   ],
+   "v": [
+    -44.30311811023622,
+    43.957
+   ]
+  },
+  "250hPa": {
+   "u": [
+    -86.27401574803149,
+    85.6
+   ],
+   "v": [
+    -72.44296062992126,
+    71.877
+   ]
+  }
+ },
+ "clouds": {
+  "model": {
+   "width": 1440,
+   "height": 721
+  },
+  "sat": {
+   "width": 1800,
+   "height": 900,
+   "limit_deg": 72.7
+  }
+ },
+ "files": {
+  "10m": {
+   "bytes": 783608,
+   "sha256": "9dcddee45a92175f1dbb26907e7cd1f5949ca4030ca3f033208d63411ae002ba"
+  },
+  "250hPa": {
+   "bytes": 695080,
+   "sha256": "c6179a5348f4bdcbbfe129ebdfe9a8f10b4eab904d18cfe060ef4cd25cb8adee"
+  },
+  "cloud-model": {
+   "bytes": 515989,
+   "sha256": "5342fd83182284351c55aac253320824e22b6bc04203eef1a37390882a96b200"
+  },
+  "cloud-sat": {
+   "bytes": 647394,
+   "sha256": "26fa7cd62dd3158cddb7e3c650f26f61f3749b86cbc2ef857738079ca73e1cd3"
+  }
+ },
+ "sources": {
+  "gfs": {
+   "url": "https://nomads.ncep.noaa.gov/cgi-bin/filter_gfs_0p25.pl?dir=%2Fgfs.20261001%2F18%2Fatmos&file=gfs.t18z.pgrb2.0p25.f000&var_UGRD=on&var_VGRD=on&var_TCDC=on&lev_entire_atmosphere=on&lev_10_m_above_ground=on&lev_250_mb=on",
+   "bytes": 4445447,
+   "sha256": "fcc84f6fc552b60cc23ede1b88adc61743358b6ef5d9f7f826ddb60e9c904ac7",
+   "credit": "NOAA/NCEP GFS 0.25° analysis (public domain)"
+  },
+  "gmgsi": {
+   "url": "https://noaa-gmgsi-pds.s3.amazonaws.com/GMGSI_LW/2026/10/01/18/GLOBCOMPLIR_v3r0_blend_s202610011800000_e202610011809599_c202610011834067.nc",
+   "bytes": 7514195,
+   "sha256": "7e96d2193e9220e80e10a16cf2de3a133481cd2662fa9ea4155bcd338b4a3d57",
+   "credit": "NOAA/NESDIS GMGSI — geostationary IR mosaic (public domain)"
+  }
+ },
+ "retrieved": "2026-10-02T00:01Z"
+}

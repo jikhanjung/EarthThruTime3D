@@ -17,7 +17,7 @@
 !deploy/**
 !locale/
 !locale/**
-!scripts/compile_messages.py
+!requirements-present.txt
 **/__pycache__/**
 **/*.pyc
 **/.env
@@ -37,3 +37,8 @@ docs/
 tests/
 scripts/
 .guides
+# After `scripts/`, or that line wins and these reach the image as empty files (so
+# compile_messages.py had been empty in every image, and the .mo came from the checkout).
+!scripts/compile_messages.py
+!scripts/fetch_present_weather.py
+!scripts/present_catalogue.py

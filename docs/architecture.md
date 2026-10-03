@@ -16,8 +16,11 @@ present), the 17 Scotese web maps of 2002 for comparison, and the PaleoDEM eleva
 grids with temperature, sea-level and ice layers. Between maps, pieces travel with the
 PALEOMAP rotation of the plate beneath them while their shapes blend; plate polygons
 from several rotation models and PaleoCoastlines can be overlaid. Every source has a
-pinned provenance manifest in `sources/`. No deformation model or solver has been
-implemented. See `globe-viewer.md`.
+pinned provenance manifest in `sources/`. The present day can also be shown as it looks and
+moves: a satellite base with wind, mean surface currents and clouds. The one exception to
+pinning is that layer's wind and clouds, which the server refreshes daily outside the
+release bundle (`docs/operations.md`), with the time always on screen. No deformation model
+or solver has been implemented. See `globe-viewer.md`.
 
 ## Proposed boundaries
 

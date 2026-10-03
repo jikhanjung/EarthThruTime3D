@@ -1,12 +1,12 @@
 # EarthThruTime3D Docker 배포
 
-이미지: **`honestjung/earththrutime3d:v0.23.0`**, 플랫폼 `linux/amd64`.
+이미지: **`honestjung/earththrutime3d:v0.26.0`**, 플랫폼 `linux/amd64`.
 `../hanyang3d/deploy`의 Gunicorn·버전 이미지·Compose·상태 확인 구성을 참고했고,
 데이터베이스가 있는 서비스이므로 백업과 복구 단계를 더했다.
 
-2026-09-26 v0.23.0 운영 배포 완료. 이미지 ID:
-`sha256:28f29b11d8e02ed1f41f2084503c797267f1968d8e13bacfa2e4701470b41d5c`.
-배포·백업·공개 화면 검증 결과는 [릴리스 기록](../devlog/20260926_jikhanjung_107_release_0230.md)에 있다.
+2026-10-03 v0.26.0 운영 배포 완료. 이미지 ID:
+`sha256:d45f7b76c936b92c5766a69db6a86c66d1c9a510c4563484d055733cf143e510`.
+배포·백업·공개 화면 검증 결과는 [릴리스 기록](../devlog/20261003_jikhanjung_121_release_0260.md)에 있다.
 
 ## 운영 주소
 
@@ -58,6 +58,7 @@ CC BY 자료의 파생물과 원본 조건이 확정되지 않은 마스크를 �
   - OPT1 맨틀 51시점과 인도–아시아 5시점 단면·3D 지표, 각 카탈로그 및 gzip 표현.
     실험 데이터는 누락·해시 불일치·시점 누락 시 패킹을 거부한다.
   - CRUST 2.0 현재 지각 두께 카탈로그·바이너리·gzip 3개. 원본 압축 파일은 제외한다.
+  - 현재 지구(jikhanjung P10): Blue Marble 바탕 2장, 판을 만들 때 받은 GFS 바람 2장·구름 2장, ECCO2 해류 평균 1장과 카탈로그(약 8 MB). 원본 GRIB2·HDF5·ECCO2 층은 제외한다. 판 PR에서 `scripts/fetch_present_weather.py`로 바람·구름 시각을 새로 고정한다.
   경로·크기·SHA-256을 `manifest.json`에 기록한다. v0.23.0 릴리스에는 고도 시리즈와
   빙하 마스크 57장, 빙상 조각 80장, 모형 기후 131장, 산맥 표시 1개, 12비트 0 Ma 고도 텍스처가 포함됐다. 정확한 파일 목록은 릴리스 묶음의 매니페스트를 따른다.
 - 컨테이너: Gunicorn, UID/GID `10001`, 읽기 전용 루트, 쓰기 가능한 곳은 DB 볼륨과 `/tmp`뿐.
@@ -157,8 +158,40 @@ sudo certbot certonly --webroot --webroot-path /srv/earththrutime3d/acme \
 않으므로 보고 있던 시대와 시점이 그대로 남는다. 맞으면 세션에 기록해 30일 동안 묻지
 않는다. `ACCESS_KEY`가 비어 있으면 그 모델은 목록에도 나오지 않고 경로도 404다.
 
+**공개 사이트에는 키가 없다**(2026-10-02, 사람이 정했다). 운영 `.env.django`에 `ACCESS_KEY`를 두지 않고,
+`publish: false` 모델은 자료 묶음에도 싣지 않는다(`deploy/pack_data.py`의 `pack_plates`). 키로 여는 길은 개발
+호스트에서 비공개 모델을 비교해 볼 때만 쓴다. 개인정보·소개 쪽의 접근 키 문장은 키가 있을 때만 나온다.
+
 계정이 아니다. 사용자도 없고 키를 가진 사람은 모두 같은 방문자다. 키는 상수 시간으로
 비교하고, 돌아갈 주소는 내부 경로만 받는다.
+
+## 현재 바람·구름의 하루 한 번 받기 (jikhanjung P11)
+
+판 묶음의 바람·구름 시각과 별도로, 호스트 cron이 매일 17:10 UTC(02:10 KST)에 그날 12 UTC GFS 분석과 같은 시의
+GMGSI를 `present-live/`에 받는다. 앱은 그것이 온전하고 판의 시각보다 새롭고 48시간 안이면 쓰고, 아니면 판의 시각으로
+물러선다. `/healthz`의 `present`(정보만, 상태를 바꾸지 않는다)에 지금 보이는 출처·시각과 마지막 받기 결과가 있다.
+
+- `scripts/`: 컨테이너가 **뜰 때마다** 이미지 안의 `present.sh`·받기 코드·`requirements-present.txt`를 옮긴다
+  (`deploy/cron/install.sh`). cron이 도는 것은 늘 배포된 판의 코드다.
+- `cron-venv/`: 호스트 사용자가 소유하는 venv. `present.sh`가 호스트 파이썬 판과 requirements의 지문이 바뀌면 다시
+  만든다(약 300 MB). `scripts/`는 컨테이너(UID 10001)가 쓰는 자리라 venv를 그 안에 두지 않는다.
+- `present-live/`: 받은 것(현재·바로 앞 시각, 약 5 MB)과 `status.json`. 컨테이너에는 읽기 전용으로 붙는다.
+- `logs/present.log`: cron 출력.
+
+처음 한 번(v0.25.0 배포 전에):
+
+```bash
+cd /srv/earththrutime3d
+sudo install -d -o 10001 -g "$(id -gn)" -m 2775 scripts   # 컨테이너가 쓴다
+mkdir -p present-live logs
+tar -xzf ~/earththrutime3d-release/earththrutime3d-host-<버전>.tar.gz -C /srv/earththrutime3d   # compose 마운트
+bash deploy.sh <버전>                                    # 컨테이너가 scripts/ 를 채운다
+(crontab -l; grep -v '^#' crontab.earththrutime3d) | crontab -
+scripts/present.sh >> logs/present.log 2>&1              # 첫 받기를 손으로 한 번
+```
+
+`present-live/`·`cron-venv/`는 다시 만들 수 있으므로 백업하지 않고, `prune.sh`·롤백도 건드리지 않는다. 지우면 다음
+받기까지 판의 시각이 보일 뿐이다. 앞 판으로 되돌려도 compose의 마운트는 남지만 앞 판의 앱은 그것을 읽지 않는다.
 
 ## 백업
 
@@ -181,12 +214,14 @@ sudo certbot certonly --webroot --webroot-path /srv/earththrutime3d/acme \
 | `SECRET_KEY` | 50자 이상. 짧거나 비어 있으면 기동 거부 |
 | `ALLOWED_HOSTS` | 명시 필수. 와일드카드 거부 |
 | `DATABASE_PATH` | 이미지 기본 `/var/lib/earththrutime3d/db.sqlite3` |
-| `ACCESS_KEY` | 비공개 자료를 여는 공유 키. 비우면 그 자료를 아예 제공하지 않는다 |
+| `ACCESS_KEY` | 비공개 자료를 여는 공유 키. 비우면 그 자료를 아예 제공하지 않는다. 운영에는 두지 않는다 |
+| `ADMIN_ENABLED` | Django 관리자 경로(`/admin/`). 운영 기본 꺼짐, 개발 기본 켬 |
 | `SCOTESE_VIEWER_ENABLED` | 뷰어 사용 여부 |
 | `SCOTESE_SOURCE_MAPS_PUBLIC` | 원본 지도 제공 여부. 기본 꺼짐 |
 | `MANTLE_DERIVED_DIR` | 이미지 기본 `/runtime/mantle/muller2022-opt1` |
 | `CRUST_DERIVED_DIR` | 기본 `/runtime/crust` (PaleoDEM 자료 디렉터리의 형제 경로) |
 | `INDIA_ASIA_DERIVED_DIR` | 이미지 기본 `/runtime/india-asia` |
+| `PRESENT_DERIVED_DIR` | 기본 `/runtime/present-earth` (PaleoDEM 자료 디렉터리의 형제 경로) |
 | `SCOTESE_DERIVED_DIR` | 컨테이너 기본 `/runtime/segmentation` |
 | `SCOTESE_VIEWER_STEPS` | 지도 사이 눈금 수. 1·2·4·8·16·32 |
 | `SCOTESE_VIEWER_INTERVAL_MA` | 대신 몇 백만 년마다 눈금을 둘지 |

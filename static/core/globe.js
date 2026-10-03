@@ -13,9 +13,11 @@ import { createMantleOverlay } from './mantle-overlay.js';
 import { createMantleScene, CUT_UNIFORMS, CUT_SURFACE } from './mantle-scene.js';
 import { createCrust, CRUST_GLSL } from './crust.js';
 import { createInteriorControls } from './interior-controls.js';
+import { createFlux } from './flux.js';
 let interior = null;
 let mantleOverlay = null;
 let crust = null;
+let flux = null;
 
 const $ = (id) => document.getElementById(id);
 const frames = JSON.parse($('globe-frames').textContent);
@@ -83,6 +85,15 @@ const coastlineData = new Map();
 let coastlineLayer;
 let coastlineKey = '';
 const surfaceToggle = $('surface');
+// The present-day Earth (jikhanjung P10): a satellite base at 0 Ma, and over it the pinned
+// moment of wind and clouds and the mean currents. Null when the bundle has none of it.
+const present = JSON.parse($('globe-present')?.textContent ?? 'null');
+const satelliteToggle = $('satellite');
+let satelliteWanted = Boolean(present?.base);
+// Whether the reader picked the continent mask. Without published maps the mask is also the
+// plain surface the viewer falls back to (the default atlas), and that must not keep the
+// present from its photograph; only a chosen mask does.
+let maskChosen = false;
 // Global mean surface temperature per published map, [age, C], oldest first: the
 // area-weighted mean of the Scotese 2021 maps. Empty until the climate build has run.
 const temperatureCurve = JSON.parse($('globe-temperature')?.textContent ?? '[]');
@@ -153,7 +164,9 @@ function setPlaying(value) {
   playing = value;
   clearTimeout(playTimer);
   $('play').setAttribute('aria-pressed', String(value));
-  $('play').textContent = value ? L.playStop : L.playStart;
+  // An icon, its name for screen readers: ▶ to play, ❚❚ while playing.
+  $('play').textContent = value ? '❚❚' : '▶';
+  $('play').setAttribute('aria-label', value ? L.playStop : L.playStart);
 }
 function scheduleNext() {
   // Playback walks the sub-steps so the change reads as motion, at the same pace per
@@ -347,6 +360,14 @@ function loadData(key, url, filter = null) {
     return texture;
   });
 }
+// The present's satellite base: the 4096 photograph, or the 8192 one close in where the GPU
+// holds it. Decoded to bytes like every field, and coloured by the shader's own sRGB decode.
+let satelliteDetail = false;
+function loadSatellite() {
+  const size = satelliteDetail && renderer.capabilities.maxTextureSize >= 16384 ? '8192' : '4096';
+  stage.dataset.satelliteSize = size;
+  return loadData(`satellite:${size}`, present.base.urls[size]);
+}
 async function loadSurface(frame) {
   if ((surface !== 'map' || !frame.url) && frame.field) return loadField(frame);
   return loadMap(frame);
@@ -403,6 +424,12 @@ async function selectStop(value, manual = false, overlayManaged = false, transit
   const relief = !heated && !climated && ['relief', 'temp', 'veg', 'rain'].includes(surface) && fielded
     && Boolean(place.from.relief) && Boolean(place.to.relief);
   const masked = !relief && !heated && !climated && fielded && (surface === 'mask' || !sourceMapsPublic);
+  // The present itself, not a stop between it and the past: the satellite photograph stands
+  // in for the plain surface there. A colour view the reader chose (temperature, climate,
+  // the mask) keeps its colours.
+  const presentStop = !place.mapless && place.blend === 0 && place.age === 0;
+  const satellite = presentStop && satelliteWanted && Boolean(present?.base) && fielded
+    && !heated && !climated && !(surface === 'mask' && maskChosen);
   const anchor = place.mapless ? null : (place.blend > 0.5 ? place.to : place.from);
   $('era').value = selected;
   $('timeline').value = stop;
@@ -416,7 +443,7 @@ async function selectStop(value, manual = false, overlayManaged = false, transit
     ? L.olderThanMaps
     : (between ? `${place.from.title} → ${place.to.title}` : place.from.title);
   $('globe-age').textContent = [periodLabel(place), ageLabel(place),
-    place.mapless ? null : (masked ? L.mask : relief ? L.relief : heated ? L.temperature : climateLabel),
+    place.mapless ? null : (satellite ? L.satellite : masked ? L.mask : relief ? L.relief : heated ? L.temperature : climateLabel),
     place.mapless ? L.noMap : (between ? L.interpolated : null),
     !place.mapless && place.from.ice_kind === 'analogue' ? L.analogueIce : null,
     !place.mapless && place.from.ice_kind === 'reconstructed' ? L.reconstructedIce : null].filter(Boolean).join(' / ');
@@ -442,7 +469,7 @@ async function selectStop(value, manual = false, overlayManaged = false, transit
     : (between ? fmt(L.betweenCount, { age: ageLabel(place) }) : `${selected + 1} / ${frames.length}`);
   if (surfaceToggle) {
     surfaceToggle.disabled = place.mapless || !place.from.field || !place.to.field;
-    surfaceToggle.setAttribute('aria-pressed', String(masked));
+    surfaceToggle.setAttribute('aria-pressed', String(masked && !satellite));
   }
   if (temperatureToggle) temperatureToggle.setAttribute('aria-pressed', String(heated));
   if ($('temp-note')) $('temp-note').hidden = !heated;
@@ -456,12 +483,12 @@ async function selectStop(value, manual = false, overlayManaged = false, transit
   // Decided here, synchronously, so the readout and the shader agree at every stop.
   const seaOffset = seaLevelOffset(place, fielded);
   showSeaLevel(place, seaOffset);
-  $('surface-note').hidden = !masked;
+  $('surface-note').hidden = !masked || satellite;
   $('between-note').hidden = !between;
   if ($('mapless-note')) $('mapless-note').hidden = !place.mapless;
   status.textContent = place.mapless
     ? fmt(L.loadingPlates, { age: ageLabel(place) })
-    : fmt(masked ? L.loadingMask : relief ? L.loadingRelief : heated ? L.loadingTemperature : climated ? L.loadingClimate : L.loadingMap, { period: periodLabel(place) });
+    : fmt(satellite ? L.loadingSatellite : masked ? L.loadingMask : relief ? L.loadingRelief : heated ? L.loadingTemperature : climated ? L.loadingClimate : L.loadingMap, { period: periodLabel(place) });
   status.hidden = false;
   status.classList.remove('loaded');
   $('retry').hidden = true;
@@ -492,6 +519,7 @@ async function selectStop(value, manual = false, overlayManaged = false, transit
       const low = sliced ? (sliced === 'from' ? stateA : stateB).low : null;
       const riversA = riverChoice(place.from, seaOffset);
       const riversB = riverChoice(place.to, seaOffset);
+      const photograph = satellite ? loadSatellite() : null;
       const [first, second, warmA, warmB, iceA, iceB, low0, low1, riverA, riverB, riverLowA, riverLowB, preparedOverlay] = await Promise.all([
         loadSurface(place.from), loadSurface(place.to),
         // The climate textures ride the temperature pair, as the two never show together
@@ -508,14 +536,18 @@ async function selectStop(value, manual = false, overlayManaged = false, transit
         transition && showPlates() && !locked() ? loadPlateModel() : null,
         transition && $('coastline')?.checked && coastlineEntry(place.age)
           ? loadCoastline(coastlineEntry(place.age)) : null]);
+      const satMap = await photograph;
       if (ticket !== request || (transition && !transition.isCurrent())) return;
       commitOverlay = preparedOverlay;
+      uniforms.satMap.value = satMap;
       uniforms.surfaceA.value = first;
       uniforms.surfaceB.value = second;
       uniforms.tempA.value = warmA;
       uniforms.tempB.value = warmB;
       applyIce(iceA, iceB);
-      applyRivers(riverA, riverB, riverLowA, riverLowB, [riversA.t, riversB.t]);
+      // The photograph shows the rivers there are; the computed network would only cover them.
+      if (satellite) applyRivers(null, null, null, null, [0, 0]);
+      else applyRivers(riverA, riverB, riverLowA, riverLowB, [riversA.t, riversB.t]);
       // The age of the ice the rivers run off, where they do: each side's own, mixed by the blend.
       const iced = [riversA, riversB].filter(choice => choice.age != null);
       stage.dataset.riverIce = iced.length ? (iced.length === 1 ? iced[0].age : riversA.age + (riversB.age - riversA.age) * place.blend).toFixed(1) : '';
@@ -543,7 +575,7 @@ async function selectStop(value, manual = false, overlayManaged = false, transit
       uniforms.blend.value = place.blend;
       uniforms.blank.value = 0;
     }
-    uniforms.mode.value = heated ? 3 : climated ? (surface === 'veg' ? 4 : 5) : relief ? 2 : masked ? 1 : 0;
+    uniforms.mode.value = satellite ? 6 : heated ? 3 : climated ? (surface === 'veg' ? 4 : 5) : relief ? 2 : masked ? 1 : 0;
     if (!place.mapless) {
       uniforms.texel.value.set(1 / uniforms.surfaceA.value.image.width, 1 / uniforms.surfaceA.value.image.height);
       uniforms.vegetation.value = vegetationAt(place.age);
@@ -558,9 +590,18 @@ async function selectStop(value, manual = false, overlayManaged = false, transit
     $('globe-age').textContent = nextLabel;
     lastPlace = place;
     crust?.frame(place.age);
+    stage.dataset.satellite = String(satellite);
+    satelliteToggle?.setAttribute('aria-pressed', String(satelliteWanted));
+    if (satelliteToggle) {
+      satelliteToggle.disabled = !presentStop;
+      satelliteToggle.title = presentStop ? '' : L.fluxPresentOnly;
+    }
+    if ($('satellite-note')) $('satellite-note').hidden = !satellite;
+    flux?.setPresent(presentStop);
+    flux?.refresh();
     // Names go on any surface without lettering of its own: the mask, and on the
     // elevation series the relief and the temperature; a photographed map has its own.
-    showNames(place, !place.mapless && (masked || relief || heated || climated));
+    showNames(place, !place.mapless && (satellite || masked || relief || heated || climated));
     await updatePlates(place, ticket);
     if (ticket !== request) return;
     await updatePins(place, ticket);
@@ -570,15 +611,15 @@ async function selectStop(value, manual = false, overlayManaged = false, transit
     stage.dataset.frame = place.mapless ? 'none' : place.from.id;
     stage.dataset.blend = place.blend.toFixed(2);
     stage.dataset.mapless = String(place.mapless);
-    stage.dataset.surface = place.mapless ? 'none' : heated ? 'temp' : climated ? surface : relief ? 'relief' : masked ? 'mask' : 'map';
+    stage.dataset.surface = place.mapless ? 'none' : satellite ? 'sat' : heated ? 'temp' : climated ? surface : relief ? 'relief' : masked ? 'mask' : 'map';
     stage.setAttribute('aria-label', place.mapless
       ? fmt(L.maplessLabel, { age: ageLabel(place) })
       : fmt(L.globeLabel, { period: periodLabel(place), age: ageLabel(place),
-                            surface: masked ? L.maskGlobe : relief ? L.reliefGlobe : heated ? L.temperatureGlobe : climated ? (surface === 'veg' ? L.vegetationGlobe : L.rainfallGlobe) : L.globe, between: between ? L.betweenSuffix : '' }));
+                            surface: satellite ? L.satelliteGlobe : masked ? L.maskGlobe : relief ? L.reliefGlobe : heated ? L.temperatureGlobe : climated ? (surface === 'veg' ? L.vegetationGlobe : L.rainfallGlobe) : L.globe, between: between ? L.betweenSuffix : '' }));
     stage.setAttribute('aria-busy', 'false');
     status.textContent = place.mapless
       ? fmt(L.shownPlates, { age: ageLabel(place) })
-      : fmt(L.shownSurface, { period: periodLabel(place), surface: masked ? L.mask : relief ? L.relief : heated ? L.temperature : climateLabel || L.globe,
+      : fmt(L.shownSurface, { period: periodLabel(place), surface: satellite ? L.satellite : masked ? L.mask : relief ? L.relief : heated ? L.temperature : climateLabel || L.globe,
                               between: between ? L.shownBetween : '' });
     status.classList.add('loaded');
     scheduleNext();
@@ -1166,6 +1207,50 @@ function terrainLineMaterial(colour, opacity) {
       }`,
   });
 }
+// Where on the equirectangular fields a fragment looks; the clouds share it (flux.js).
+// Needs `vUv`, `projection`, `meridian`, `PI` and the Equal Earth constants.
+const LOCATE_GLSL = `
+      ${EQUAL_EARTH_GLSL}
+      // Where on the equirectangular fields this fragment looks. On the sphere the
+      // geometry already carries that; on a sheet the projection has to be undone,
+      // which is also what decides whether a fragment is on the map at all.
+      bool locate(out vec2 found) {
+        if (projection == 0) { found = vUv; return true; }
+        // A flat sheet turns about the pole: sample the fields at the longitude the sheet's
+        // centre meridian puts under this fragment. The textures wrap in longitude.
+        if (projection == 1) { found = vec2(fract(vUv.x + meridian / 360.0), vUv.y); return true; }
+        float x = vUv.x * 2.0 - 1.0;
+        float y = vUv.y * 2.0 - 1.0;
+        if (projection == 3) {
+          // Equal Earth undone: Newton on theta, which the y polynomial is monotonic in,
+          // then the longitude the paper's x gives. Outside the outline the longitude runs
+          // past the antimeridian, which is what discards the corners.
+          float target = y * ${EQUAL_EARTH_Y};
+          float theta = target;
+          for (int i = 0; i < 8; i++) {
+            float t2 = theta * theta;
+            float t6 = t2 * t2 * t2;
+            theta -= (theta * (EE_A1 + EE_A2 * t2 + EE_A3 * t6 + EE_A4 * t6 * t2) - target)
+                     / (EE_A1 + 3.0 * EE_A2 * t2 + 7.0 * EE_A3 * t6 + 9.0 * EE_A4 * t6 * t2);
+          }
+          float sine = 2.0 * sin(theta) / EE_ROOT3;
+          if (abs(sine) > 1.0) return false;
+          float t2 = theta * theta;
+          float t6 = t2 * t2 * t2;
+          float slope = EE_A1 + 3.0 * EE_A2 * t2 + 7.0 * EE_A3 * t6 + 9.0 * EE_A4 * t6 * t2;
+          float lambda = 3.0 * x * ${EQUAL_EARTH_X} * slope / (2.0 * EE_ROOT3 * cos(theta));
+          if (abs(lambda) > PI) return false;
+          found = vec2(fract(lambda / (2.0 * PI) + 0.5 + meridian / 360.0), asin(sine) / PI + 0.5);
+          return true;
+        }
+        if (x * x + y * y > 1.0) return false;
+        float theta = asin(clamp(y, -1.0, 1.0));
+        float latitude = asin(clamp((2.0 * theta + sin(2.0 * theta)) / PI, -1.0, 1.0));
+        float longitude = PI * x / max(cos(theta), 1e-6);
+        if (abs(longitude) > PI) return false;
+        found = vec2(fract(longitude / (2.0 * PI) + 0.5 + meridian / 360.0), latitude / PI + 0.5);
+        return true;
+      }`;
 function globeMaterial() {
   const linear = (rgb) => new THREE.Color().setRGB(
     rgb[0] / 255, rgb[1] / 255, rgb[2] / 255, THREE.SRGBColorSpace);
@@ -1177,6 +1262,8 @@ function globeMaterial() {
     mantleCamera: { value: new THREE.Vector3() },
     surfaceA: { value: null }, surfaceB: { value: null },
     tempA: { value: null }, tempB: { value: null },
+    // NASA Blue Marble, the present's satellite base (mode 6).
+    satMap: { value: null },
     iceA: { value: null }, iceB: { value: null },
     // Which of the two bound ice masks exist; a missing one counts as no ice.
     iceWeight: { value: new THREE.Vector2(0, 0) },
@@ -1242,6 +1329,7 @@ function globeMaterial() {
       uniform sampler2D surfaceB;
       uniform sampler2D tempA;
       uniform sampler2D tempB;
+      uniform sampler2D satMap;
       uniform sampler2D iceA;
       uniform sampler2D iceB;
       uniform vec2 iceWeight;
@@ -1271,7 +1359,6 @@ function globeMaterial() {
       uniform vec3 land;
       uniform vec3 ocean;
       const float PI = 3.141592653589793;
-      ${EQUAL_EARTH_GLSL}
       uniform int projection;
       uniform float meridian;
       uniform int motionCount;
@@ -1373,46 +1460,7 @@ function globeMaterial() {
         vec3 light = normalize(vec3(-0.6, 0.6, 0.55));
         return 0.45 + 0.55 * clamp(dot(normal, light), 0.0, 1.0);
       }
-      // Where on the equirectangular fields this fragment looks. On the sphere the
-      // geometry already carries that; on a sheet the projection has to be undone,
-      // which is also what decides whether a fragment is on the map at all.
-      bool locate(out vec2 found) {
-        if (projection == 0) { found = vUv; return true; }
-        // A flat sheet turns about the pole: sample the fields at the longitude the sheet's
-        // centre meridian puts under this fragment. The textures wrap in longitude.
-        if (projection == 1) { found = vec2(fract(vUv.x + meridian / 360.0), vUv.y); return true; }
-        float x = vUv.x * 2.0 - 1.0;
-        float y = vUv.y * 2.0 - 1.0;
-        if (projection == 3) {
-          // Equal Earth undone: Newton on theta, which the y polynomial is monotonic in,
-          // then the longitude the paper's x gives. Outside the outline the longitude runs
-          // past the antimeridian, which is what discards the corners.
-          float target = y * ${EQUAL_EARTH_Y};
-          float theta = target;
-          for (int i = 0; i < 8; i++) {
-            float t2 = theta * theta;
-            float t6 = t2 * t2 * t2;
-            theta -= (theta * (EE_A1 + EE_A2 * t2 + EE_A3 * t6 + EE_A4 * t6 * t2) - target)
-                     / (EE_A1 + 3.0 * EE_A2 * t2 + 7.0 * EE_A3 * t6 + 9.0 * EE_A4 * t6 * t2);
-          }
-          float sine = 2.0 * sin(theta) / EE_ROOT3;
-          if (abs(sine) > 1.0) return false;
-          float t2 = theta * theta;
-          float t6 = t2 * t2 * t2;
-          float slope = EE_A1 + 3.0 * EE_A2 * t2 + 7.0 * EE_A3 * t6 + 9.0 * EE_A4 * t6 * t2;
-          float lambda = 3.0 * x * ${EQUAL_EARTH_X} * slope / (2.0 * EE_ROOT3 * cos(theta));
-          if (abs(lambda) > PI) return false;
-          found = vec2(fract(lambda / (2.0 * PI) + 0.5 + meridian / 360.0), asin(sine) / PI + 0.5);
-          return true;
-        }
-        if (x * x + y * y > 1.0) return false;
-        float theta = asin(clamp(y, -1.0, 1.0));
-        float latitude = asin(clamp((2.0 * theta + sin(2.0 * theta)) / PI, -1.0, 1.0));
-        float longitude = PI * x / max(cos(theta), 1e-6);
-        if (abs(longitude) > PI) return false;
-        found = vec2(fract(longitude / (2.0 * PI) + 0.5 + meridian / 360.0), latitude / PI + 0.5);
-        return true;
-      }
+      ${LOCATE_GLSL}
       void main() {
         ${CUT_SURFACE}
         vec2 surfaceUv;
@@ -1453,7 +1501,11 @@ function globeMaterial() {
           if (mode >= 3 && exaggeration > 0.0) {
             terrain = mix(1.0, clamp(shade(uvA, uvB, (surfaceUv.y - 0.5) * 180.0) / 0.749, 0.55, 1.3), landness);
           }
-          if (mode == 3) {
+          if (mode == 6) {
+            // The present only, so no travel and no blend: the photograph as it is. Its own
+            // shading already shows the relief, and its ice is the ice of the photograph.
+            colour = decode(texture2D(satMap, surfaceUv).rgb);
+          } else if (mode == 3) {
             float celsius = mix(texture2D(tempA, uvA).r, texture2D(tempB, uvB).r, blend) * 120.0 - 60.0;
             // The coastline as a dark line, so the continents stay readable under colour.
             float coast = 1.0 - smoothstep(0.0, 0.008, abs(distance));
@@ -1492,7 +1544,7 @@ function globeMaterial() {
         }
         // Ice over whatever is beneath: grounded ice near-opaque white, floating shelf
         // ice paler, since a shelf rests on ocean the grid still shows as ocean.
-        if (blank < 0.5 && mode >= 1 && (iceWeight.x + iceWeight.y) > 0.0) {
+        if (blank < 0.5 && mode >= 1 && mode != 6 && (iceWeight.x + iceWeight.y) > 0.0) {
           vec2 shiftIce = travel(vec2((surfaceUv.x - 0.5) * 360.0, (surfaceUv.y - 0.5) * 180.0));
           vec2 offsetIce = vec2(shiftIce.x / 360.0, shiftIce.y / 180.0);
           vec2 uvIceA = surfaceUv - blend * offsetIce;
@@ -1552,7 +1604,9 @@ const RELIEF_DETAIL = [512, 256];
 let reliefWanted = true;
 let reliefDetailed = false;
 function updateRelief(factor) {
-  const able = reliefWanted && projection === 'globe' && uniforms.mode.value >= 2 && uniforms.blank.value < 0.5;
+  // The satellite base lifts by the grid's heights, which only the elevation series has.
+  const able = reliefWanted && projection === 'globe' && uniforms.mode.value >= 2 && uniforms.blank.value < 0.5
+    && (uniforms.mode.value !== 6 || reliefSeries);
   const strength = able ? 1 - THREE.MathUtils.smoothstep(factor, 0.12, 0.3) : 0;
   const was = uniforms.relief.value;
   const detailed = projection === 'globe' && factor < .3;
@@ -1609,6 +1663,13 @@ function followZoom() {
   controls.rotateSpeed = Math.max(0.05, factor);
   controls.zoomSpeed = projection === 'globe' ? Math.max(0.1, Math.sqrt(factor)) : 1;
   updateRelief(factor);
+  // Close in, the satellite base swaps to its 8192 photograph once, and keeps it.
+  if (factor < 0.35 && !satelliteDetail && stage.dataset.satellite === 'true') {
+    satelliteDetail = true;
+    loadSatellite().then((texture) => {
+      if (uniforms.mode.value === 6) uniforms.satMap.value = texture;
+    }, (error) => console.error(error));
+  }
   if (Math.abs(factor - nameFactor) < 0.005) return;
   nameFactor = factor;
   stage.dataset.zoom = factor.toFixed(2);
@@ -1889,6 +1950,29 @@ function pickLonLat(event) {
   if (!ray.intersectPlane(new THREE.Plane(new THREE.Vector3(0, 0, 1), 0), hit)) return null;
   const place = PROJECTIONS[projection].unplace(hit.x, hit.y);
   return place && [((place[0] + meridian + 540) % 360) - 180, place[1]];
+}
+// Where a longitude and latitude land on the canvas, in CSS pixels, for the flux particles;
+// null behind the globe. Particles ride the drawn surface flat, as picking does.
+let fluxView = null;
+const fluxPoint = new THREE.Vector3();
+const fluxNormal = new THREE.Vector3();
+function fluxScreen(longitude, latitude) {
+  const view = fluxView || camera;
+  fluxPoint.copy(pointAt(longitude, latitude, 0.002)).applyMatrix4(earth.matrixWorld);
+  if (projection === 'globe') {
+    fluxNormal.copy(view.position).sub(fluxPoint);
+    if (fluxNormal.dot(fluxPoint) <= 0) return null;
+  }
+  fluxPoint.project(view);
+  if (fluxPoint.z > 1) return null;
+  const box = renderer.domElement;
+  return [(fluxPoint.x + 1) / 2 * box.clientWidth, (1 - fluxPoint.y) / 2 * box.clientHeight];
+}
+// Anything that moves the drawn view: the particles' trails are cleared when it changes.
+function fluxKey(view) {
+  const numbers = [...view.matrixWorld.elements, ...view.projectionMatrix.elements, ...earth.matrixWorld.elements,
+    meridian, renderer.domElement.clientWidth, renderer.domElement.clientHeight];
+  return projection + numbers.map((n) => n.toFixed(5)).join(',');
 }
 function pinSprite(index) {
   const size = 96;
@@ -2430,6 +2514,18 @@ function init() {
     lift: { uniforms: LIFT_UNIFORMS_GLSL, travel: TRAVEL_GLSL, metres: METRES_GLSL, lift: LIFT_GLSL },
     cut: { uniforms: CUT_UNIFORMS, surface: CUT_SURFACE },
   });
+  flux = createFlux({
+    config: present, stage, L, fmt, lang: document.documentElement.lang,
+    api: {
+      earth, uniforms, surfaceMesh, locateGLSL: LOCATE_GLSL,
+      loadTexture: (key, url) => loadData(key, url),
+      lonLatAt: (clientX, clientY) => pickLonLat({ clientX, clientY }),
+      screenOf: fluxScreen,
+      satelliteShown: () => stage.dataset.satellite === 'true',
+      projection: () => projection,
+      changed: queueAddress,
+    },
+  });
   const observer = new ResizeObserver(fitCamera);
   observer.observe(stage);
   // The control panel changes height with the layers on show, which moves the framing.
@@ -2463,6 +2559,10 @@ function init() {
       earth.worldToLocal(uniforms.mantleCamera.value);
     }
     renderer.render(scene, view);
+    if (flux) {
+      fluxView = view;
+      flux.frame(fluxKey(view));
+    }
   });
   renderer.domElement.addEventListener('webglcontextlost', (event) => {
     event.preventDefault();
@@ -2485,10 +2585,9 @@ function init() {
   $('timeline').max = stops.length - 1;
   const oldest = stops[0];
   if ($('timeline-oldest')) {
-    $('timeline-oldest').textContent = oldest[0] < 0
-      ? fmt(L.oldestNoMap, { age: oldest[3] })
-      : timeWindow ? fmt(L.oldestWindow, { age: frames[oldest[0]].deglacial.age_ka })
-        : fmt(L.oldestPast, { age: oldest[3] });
+    // The slider's oldest end is just its age; whether it has a map is said by the caption.
+    $('timeline-oldest').textContent = timeWindow && oldest[0] >= 0
+      ? `${frames[oldest[0]].deglacial.age_ka} ka` : `${oldest[3]} Ma`;
   }
   $('era').addEventListener('change', () => selectFrame(Number($('era').value), true));
   $('timeline').addEventListener('input', () => selectStop(Number($('timeline').value), true));
@@ -2626,6 +2725,7 @@ function init() {
   if (surfaceToggle) {
     surfaceToggle.addEventListener('click', () => {
       surface = surface === 'mask' ? (reliefSeries ? 'relief' : 'map') : 'mask';
+      maskChosen = surface === 'mask';
       surfaceToggle.setAttribute('aria-pressed', String(surface === 'mask'));
       selectStop(stop, true);
     });
@@ -2644,6 +2744,12 @@ function init() {
                   [uniforms.riverLowT.value.x, uniforms.riverLowT.value.y]);
     });
   }
+  if (satelliteToggle) {
+    satelliteToggle.addEventListener('click', () => {
+      satelliteWanted = !satelliteWanted;
+      selectStop(stop, true);
+    });
+  }
   if (temperatureToggle) {
     temperatureToggle.addEventListener('click', () => {
       surface = surface === 'temp' ? 'relief' : 'temp';
@@ -2660,11 +2766,31 @@ function init() {
   // The colour legends float on the map instead of sitting below the Earth interior
   // controls in the info panel, so the key is seen without opening the panel. The elements
   // move, so their own code still shows, hides and fills them.
+  // They dock at the bottom right, above the timeline, under a heading that folds them away;
+  // the inspector stops above them (--legend-space).
   const mapLegend = document.createElement('div');
   mapLegend.className = 'map-legend';
   mapLegend.id = 'map-legend';
+  const legendHead = document.createElement('button');
+  legendHead.type = 'button';
+  legendHead.className = 'legend-head';
+  legendHead.textContent = L.legend;
+  legendHead.setAttribute('aria-expanded', 'true');
+  mapLegend.append(legendHead);
   for (const id of ['temp-legend', 'rain-legend', 'veg-legend']) if ($(id)) mapLegend.append($(id));
-  $('explorer').append(mapLegend);
+  ($('stage-area') || $('explorer')).append(mapLegend);
+  const foldLegend = (folded) => {
+    mapLegend.classList.toggle('folded', folded);
+    legendHead.setAttribute('aria-expanded', String(!folded));
+  };
+  try { foldLegend(localStorage.getItem('earththrutime.legend') === 'folded'); } catch { /* storage blocked */ }
+  legendHead.addEventListener('click', () => {
+    const folded = !mapLegend.classList.contains('folded');
+    foldLegend(folded);
+    try { localStorage.setItem('earththrutime.legend', folded ? 'folded' : 'open'); } catch { /* storage blocked */ }
+  });
+  new ResizeObserver(() => $('explorer')?.style.setProperty('--legend-space',
+    mapLegend.offsetHeight ? `${mapLegend.offsetHeight + 10}px` : '0px')).observe(mapLegend);
   // The Earth interior section folds to its heading: folded unless one of its layers is on,
   // and a reader's own choice is kept in this browser.
   const interiorPanel = $('interior-panel');
@@ -2893,6 +3019,7 @@ function init() {
 // time range keep their own parameters.
 // view: globe | mollweide | equalearth | equirect · surface: relief | map | mask | temp | veg | rain
 // shading: 0 | 1 | 5 | 20 · sea: metres · relief, rivers, ice, grid: 0 | 1 · age: Ma
+// sat: 0 | 1 (the present's satellite base) · wind: 10m | 250hPa · currents: flow · clouds: sat | model
 const viewDefaults = {};
 let addressReady = false;
 let addressTimer = 0;
@@ -2905,6 +3032,9 @@ function viewState() {
     sea: lastPlace?.from?.deglacial || !seaLevelControl ? null : seaLevelControl.value,
     relief: reliefWanted ? '1' : '0', rivers: riversVisible ? '1' : '0',
     ice: iceVisible ? '1' : '0', grid: gridVisible ? '1' : '0',
+    sat: present?.base ? (satelliteWanted ? '1' : '0') : null,
+    wind: flux?.state().wind ?? null, currents: flux?.state().currents ? 'flow' : null,
+    clouds: flux?.state().clouds ?? null,
   };
 }
 function queueAddress() {
@@ -2946,8 +3076,11 @@ function readViewAddress() {
   if (flag('relief') !== null && flag('relief') !== reliefWanted) $('relief3d')?.click();
   if (flag('rivers') !== null) riversVisible = flag('rivers');
   if (flag('ice') !== null) iceVisible = flag('ice');
+  if (flag('sat') !== null && present?.base) satelliteWanted = flag('sat');
+  flux?.restore({ wind: asked.get('wind'), currents: asked.get('currents') === 'flow', clouds: asked.get('clouds') });
   const wanted = asked.get('surface');
   if (wanted && ['relief', 'map', 'mask', 'temp', 'veg', 'rain'].includes(wanted)) surface = wanted;
+  maskChosen = wanted === 'mask';
   if (surfaceToggle) surfaceToggle.setAttribute('aria-pressed', String(surface === 'mask'));
 }
 // A folded note that fits in its two lines gets no marker and no pointer.
@@ -3089,29 +3222,35 @@ function setupInspector() {
     try { localStorage.setItem('earththrutime.inspector', open ? 'open' : 'closed'); } catch { /* storage blocked */ }
   });
 }
-// Settings beyond the essentials sit behind the menu button. The menu stays open while the
-// reader works the map, closes from its button or with Escape, and is kept in this browser.
+// The view settings and layers live in the left panel. On a wide screen it starts open and
+// the globe takes the rest of the width; on a phone it is a drawer the menu button slides in
+// over the map. Either way the button folds it, Escape closes the drawer, and a reader's
+// choice on a wide screen is kept in this browser.
 function setupSettingsMenu() {
+  const panel = $('side-panel');
   const menu = $('settings-menu');
   const toggle = $('settings-toggle');
-  if (!menu || !toggle) return;
-  // The sea-level curve floats in the same corner, so it stacks above the open menu.
-  // On a short screen the menu takes the toolbar's row inside the panel instead, and pushes nothing.
-  const space = () => $('explorer')?.style.setProperty('--menu-space', menu.hidden || menu.offsetTop >= 0 ? '0px' : `${menu.offsetHeight + 8}px`);
-  new ResizeObserver(space).observe(menu);
+  if (!panel || !toggle) return;
+  const drawer = matchMedia('(max-width: 899px)');
   const show = (open, remember = true) => {
-    menu.hidden = !open;
+    panel.hidden = !open;
+    if (menu) menu.hidden = !open;
+    $('explorer')?.classList.toggle('side-open', open);
     toggle.setAttribute('aria-expanded', String(open));
-    space();
-    if (!remember) return;
-    try { localStorage.setItem('earththrutime.settings', open ? 'open' : 'closed'); } catch { /* storage blocked */ }
+    if (!remember || drawer.matches) return;
+    try { localStorage.setItem('earththrutime.side', open ? 'open' : 'closed'); } catch { /* storage blocked */ }
   };
   let remembered = null;
-  try { remembered = localStorage.getItem('earththrutime.settings'); } catch { /* storage blocked */ }
-  show(remembered === 'open', false);
-  toggle.addEventListener('click', () => show(menu.hidden));
+  try { remembered = localStorage.getItem('earththrutime.side'); } catch { /* storage blocked */ }
+  show(drawer.matches ? false : remembered !== 'closed', false);
+  drawer.addEventListener('change', () => show(drawer.matches ? false : remembered !== 'closed', false));
+  toggle.addEventListener('click', () => show(panel.hidden));
   document.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape' && !menu.hidden) show(false);
+    if (event.key === 'Escape' && drawer.matches && !panel.hidden) show(false);
+  });
+  // A tap outside the drawer puts it away, as a phone's drawers do.
+  document.addEventListener('pointerdown', (event) => {
+    if (drawer.matches && !panel.hidden && !panel.contains(event.target) && !toggle.contains(event.target)) show(false);
   });
 }
 setupInspector();

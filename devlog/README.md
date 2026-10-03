@@ -22,6 +22,8 @@ wwolf는 001부터 셉니다. 그 전의 001–045는 링크와 본문 속 번�
 
 ## 계획
 
+- [jikhanjung P11 — 현재의 바람·구름을 하루 한 번 새로](20261002_jikhanjung_P11_daily_present_weather.md)
+- [jikhanjung P10 — 현재의 지구: 위성 영상 바탕에 바람·해류·구름 (GSM "움직이는 지구" 옮기기)](20261002_jikhanjung_P10_present_earth_in_flux.md)
 - [jikhanjung P09 — PBDB 화석 산지를 지구본에 (#81), WegenersDream 방식의 개선판](20261001_jikhanjung_P09_pbdb_fossil_localities.md)
 - [wwolf P02 — 해류와 해수면 온도: 현재에서 캄브리아기까지](20260923_wwolf_P02_ocean_currents.md)
 - [wwolf P01 — 위치 핀: 한 지점을 찍고 시간에 따라 따라가기, 가능성 평가](20260919_wwolf_P01_location_pin_feasibility.md)
@@ -35,6 +37,20 @@ wwolf는 001부터 셉니다. 그 전의 001–045는 링크와 본문 속 번�
 - [jikhanjung P01 — 시간 범위 선택: 최근 2.5만 년](20260915_jikhanjung_P01_deglacial_time_window.md)
 
 ## 작업 기록
+
+- [jikhanjung 121 — v0.26.0 화면 배치(왼쪽 패널·얇은 타임라인) 릴리스](20261003_jikhanjung_121_release_0260.md)
+- [jikhanjung 120 — 화면 배치: 왼쪽 세로 패널, 위쪽 띠 없앰, 범례는 오른쪽 아래](20261002_jikhanjung_120_left_panel_layout.md)
+- [jikhanjung 119 — v0.25.3 공개 사이트에서 접근 키와 비공개 판 모델 빼기 릴리스](20261002_jikhanjung_119_release_0253.md)
+- [jikhanjung 118 — v0.25.2 운영에서 관리자 경로 빼기, 개인정보 안내 고침 릴리스](20261002_jikhanjung_118_release_0252.md)
+- [jikhanjung 117 — v0.25.1 소개 쪽의 출처·기여자, 하단 메뉴 정리 릴리스](20261002_jikhanjung_117_release_0251.md)
+- [jikhanjung 116 — v0.25.0 현재의 바람·구름 하루 한 번 받기 릴리스](20261002_jikhanjung_116_release_0250.md)
+- [jikhanjung 115 — 현재의 바람·구름을 하루 한 번 새로](20261002_jikhanjung_115_daily_present_weather.md)
+- [jikhanjung 114 — v0.24.2 바람·해류 꼬리 깜박임 고침 릴리스](20261002_jikhanjung_114_release_0242.md)
+- [jikhanjung 113 — 바람·해류 꼬리: 지우지 않고 움직인 만큼 흐리게](20261002_jikhanjung_113_flux_trail_fade.md)
+- [jikhanjung 112 — v0.24.1 현재의 지구 고침 릴리스](20261002_jikhanjung_112_release_0241.md)
+- [jikhanjung 111 — 현재의 지구 고침: 기본 자료의 위성 영상, 입자 깜박임](20261002_jikhanjung_111_present_default_and_flicker.md)
+- [jikhanjung 110 — v0.24.0 현재의 지구 릴리스](20261002_jikhanjung_110_release_0240.md)
+- [jikhanjung 109 — 현재의 지구: 위성 영상 바탕에 바람·해류·구름](20261002_jikhanjung_109_present_earth_in_flux.md)
 
 - [jikhanjung 108 — dolfinid 배포 파일 정리 (v0.23.0 이후)](20260929_jikhanjung_108_dolfinid_prune_0230.md)
 - [jikhanjung 107 — v0.23.0 화면 색·배치와 새 표시 레이어 릴리스](20260926_jikhanjung_107_release_0230.md)

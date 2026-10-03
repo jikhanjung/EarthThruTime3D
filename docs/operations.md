@@ -5,7 +5,30 @@ host. Configuration and procedure live in `deploy/README.md` and `deploy/deploy.
 Builds happen on the development host; the server only loads the image and swaps.
 The shared guides are referenced privately through `.guides`; they are not copied.
 
-Current release: **v0.23.0**, deployed 2026-09-26 (Asia/Seoul). Seven reviewed PRs: the
+Current release: **v0.26.0**, deployed 2026-10-03 (Asia/Seoul): the layout moves to a left
+panel (title, view, time, layers; a drawer on phones), no header band, legends docked at the
+bottom right and a one-row timeline (#118, #119, devlog 120/121); code only. v0.25.4, the
+day before: no access key on the public
+site, the unlicensed Torsvik & Cocks 2017 model out of the bundle (1,295 files), and no cookie
+on any public page (#114, #116, devlog 119). v0.25.2, the same day: no admin route in production
+and privacy text that matches what is stored (#112, devlog 118). v0.25.1, the same day: the About page credits the
+present-day data and lists contributors, the footer drops the mantle link (#110, devlog 117).
+v0.25.0, the same day: the host's cron refreshes the
+present-day wind and clouds daily at 17:10 UTC (#108, P11, devlog 115/116; see the section
+below). v0.24.2, the same day: particle trails fade with the
+view's movement instead of flickering long and short after a drag (#106, devlog 113/114). v0.24.1,
+the same day: the satellite base also on
+the default atlas and no particle flicker after a drag (#104, devlog 111/112); code only,
+the bundle is v0.24.0's. v0.24.0, the same day, brought the present-day Earth
+(#102, jikhanjung P10/109): 0 Ma is shown on NASA Blue Marble, with wind (GFS analysis),
+mean surface currents (ECCO2 1992–2018) and clouds (GMGSI / GFS) at 0 Ma only. Wind and
+clouds are one moment pinned in the release PR (2026-10-01 18 UTC), not a live feed; a
+daily refresh is planned in P11. The runtime bundle has 1,297 files (490,063,522 bytes):
+`present-earth/` (8 files, about 7.1 MB) added to v0.23.0, nothing else changed.
+Image/data hashes, DB backup and public verification are in
+[devlog 110](../devlog/20261002_jikhanjung_110_release_0240.md).
+
+Previous release: v0.23.0, deployed 2026-09-26. Seven reviewed PRs: the
 modelled rainfall reads brown to teal and the temperature ColorBrewer RdYlBu, both
 matching their keys, with hill shading under the colour views (#90, #93); the rivers layer
 is named 잠재 하천 / Potential rivers with a caveat under the rain key (#92); the colour key
@@ -25,10 +48,21 @@ On 2026-09-18 eleven old releases were removed, reclaiming 8,099 MiB
 ([devlog 099](../devlog/20260918_jikhanjung_099_dolfinid_release_cleanup.md)); on
 2026-09-20 v0.18.1 and v0.18.0 (+1,784 MiB,
 [devlog 104](../devlog/20260920_jikhanjung_104_dolfinid_prune_0200.md)); on 2026-09-29
-v0.21.0, v0.20.0 and v0.19.0 (+2,877 MiB, 28 GiB free, 64% used). v0.23.0 now runs with
-v0.22.0 kept as the rollback
+v0.21.0, v0.20.0 and v0.19.0 (+2,877 MiB, 28 GiB free, 64% used). on 2026-10-02 v0.22.0 and then
+v0.23.0 (+906 and +907 MiB, 32 GiB free, 59% used). then v0.24.0 and v0.24.1 (+921 MiB each). then v0.24.2, v0.25.0, v0.25.1 and v0.25.2 (+921 MiB each). then v0.25.3 (+921 MiB). v0.26.0 now runs with v0.25.4 kept as the rollback
 ([devlog 108](../devlog/20260929_jikhanjung_108_dolfinid_prune_0230.md)). No database,
 backups, secrets or other projects were pruned.
+
+## Second writable path: the daily present-day weather
+
+Since v0.25.0 the host's cron writes one moment of wind and clouds a day into
+`/srv/earththrutime3d/present-live/` (jikhanjung P11), outside the immutable release bundle and
+the database. The container mounts it read-only and falls back to the bundle's own moment when
+it is missing, broken, not newer, or older than 48 hours. The cron runs the release's scripts,
+copied by the container into `scripts/` at every start, with a host venv in `cron-venv/`. These
+three directories are rebuildable: not backed up, not touched by `prune.sh` or a rollback, and
+never written by the container except `scripts/`. The bundle-pinning rule (P09) is unchanged:
+nothing here re-pins the bundle. Procedure: `deploy/README.md`.
 
 ## Adopted now
 
@@ -47,7 +81,7 @@ backups, secrets or other projects were pruned.
   12 weeks, monthly for 12 months and every December for ever) mirrored to the NAS with
   hard links preserved. The data is files, not rows, and is made on the development host, so the mirror
   runs from there rather than from the server. Sessions are not stripped from the
-  snapshot: the database has no user accounts, only the administrator's.
+  snapshot: the database has no user accounts at all.
 - Licence: MIT for the code (`LICENSE`), CC BY 4.0 for the data derived from CC BY
   sources, the unsettled masks under their sources' terms (`LICENSE-DATA.md`).
 - `/healthz`: `ok`/200 requires a reachable database with migration history and, when
@@ -59,7 +93,10 @@ backups, secrets or other projects were pruned.
   optional climate, ice and plate layers. Bundle hashes are checked at startup.
 - Seed: **(none)**. Geological assets are files described by provenance manifests,
   not database seed rows. The domain invariant is already implemented as default-series
-  field completeness; the database stores Django administrative/session state.
+  field completeness; the database stores only sessions, and with no `ACCESS_KEY` on the
+  public site (2026-10-02) not even those are created.
+- Admin: Django's admin is not routed in production (`ADMIN_ENABLED`, default off there);
+  the production database has no accounts.
 
 ## Adopted at the 2026-09-12 deployment
 
@@ -96,10 +133,13 @@ backups, secrets or other projects were pruned.
 ## Still outstanding
 
 - **Restore drill.** Rollback of code is exercised; restoring a database from a snapshot
-  has not been rehearsed. The database holds only administrator accounts and sessions,
+  has not been rehearsed. The database holds no accounts and, without an access key, no sessions,
   so this waits until it holds something a reader would miss.
 - **Disk monitoring and backup-failure alerting.** The host was at 89% when the service
   was installed. A failed hourly snapshot is visible in the journal but nothing raises it.
+- **Daily refresh alerting.** A failed present-day fetch is recorded in
+  `present-live/status.json` and `/healthz` reports it, but nothing raises it; after 48 hours
+  the site quietly shows the release's own moment again.
 - **Social preview metadata and a touch icon.** The shell has a favicon only.
 - HSTS stays at one day with subdomain inclusion and preload off, which `check --deploy`
   reports as two warnings. That is deliberate until the domain set is settled.

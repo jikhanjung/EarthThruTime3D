@@ -10,3 +10,6 @@ netCDF4==1.7.4
 openpyxl==3.1.5
 # scripts/build_ice.py reads the Natural Earth shapefiles.
 pyshp==3.1.6
+# scripts/fetch_present_weather.py decodes the GFS GRIB2 and the GMGSI HDF5.
+eccodes==2.49.0
+h5py==3.16.0
