@@ -1,0 +1,16 @@
+{
+  "title": "NOAA Global Drifter Program annual-mean surface velocity, 1-degree subset: the observed reference for scoring present-day currents (wwolf P02 step 1)",
+  "retrieved": "2026-09-28",
+  "note": "Laurindo, Mariano & Lumpkin (2017) climatology at 0.25 degrees, read through AOML's ERDDAP and thinned to every fourth point, so the 1-degree points sit on cell centres of the 0.25-degree grid (ECCO2's too). U and V in m/s at 15 m (drogued drifters), 72.875S-84.875N; cells without drifter data are missing. Used only by scripts/score_currents.py to score the ECCO2 mean the site draws at 0 Ma (and FOAM's 0 Ma run) in devlog wwolf 020; nothing is built from it or shipped. ERDDAP writes the request time into the file's history attribute, so a fresh download differs from this SHA-256 in that attribute only: compare U and V, not the bytes.",
+  "assets": [
+    {
+      "role": "drifters",
+      "path": "data/sources/currents/drifter_annualmeans_1deg.nc",
+      "url": "https://erddap.aoml.noaa.gov/gdp/erddap/griddap/drifter_annualmeans.nc?U[(-179.875):4:(179.875)][(-72.875):4:(84.875)],V[(-179.875):4:(179.875)][(-72.875):4:(84.875)]",
+      "bytes": 918148,
+      "sha256": "aa1958648811c1083a6efeaf3c213a7bed16140c0a42b750e9a9ea3213623be9",
+      "license": "CC BY 4.0 (the file's license attribute)",
+      "cite": "Laurindo, L. C., Mariano, A. J., & Lumpkin, R. (2017). An improved near-surface velocity climatology for the global ocean from drifter observations. Deep-Sea Research I, 124, 73-92. doi:10.1016/j.dsr.2017.04.009. Data: NOAA Global Drifter Program, https://www.aoml.noaa.gov/phod/gdp/"
+    }
+  ]
+}

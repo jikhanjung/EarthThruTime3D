@@ -2518,8 +2518,7 @@ function init() {
     cut: { uniforms: CUT_UNIFORMS, surface: CUT_SURFACE },
   });
   flux = createFlux({
-    // The past currents need the particles even where the present-day data is not built.
-    config: present ?? (pastCurrentsBuilt || circulationUrl ? {} : null), stage, L, fmt, lang: document.documentElement.lang,
+    config: present, stage, L, fmt, lang: document.documentElement.lang,
     api: {
       earth, uniforms, surfaceMesh, locateGLSL: LOCATE_GLSL,
       loadTexture: (key, url) => loadData(key, url),

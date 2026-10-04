@@ -320,7 +320,11 @@ it is a live feed: the screen names the moment or period of each layer.
   the Menemenlis et al. (2008) citation requested, are as GSM's review read them from NASA's
   Earth science data policy (GSM `docs/ECCO_V4_해류.md` §3); the Earthdata policy page refused
   an automated read on 2026-10-02, so they are to be confirmed by hand before relying on
-  more than citation. wwolf (#89) scores the mean against the NOAA drifter annual mean.
+  more than citation.
+- **Drifter reference** — `drifters.json` pins a 1° subset of the NOAA Global Drifter Program
+  annual means (Laurindo, Mariano & Lumpkin 2017; CC BY 4.0) from AOML's ERDDAP. Only
+  `scripts/score_currents.py` reads it, to score the ECCO2 mean against observation (devlog
+  wwolf 020); nothing is built from it or shipped.
 
 ## Past surface currents
 

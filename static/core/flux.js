@@ -119,8 +119,11 @@ export function momentText(iso, lang) {
   return local && !/UTC$/.test(local) ? `${utc} (${local})` : utc;
 }
 
-export function createFlux({ config, stage, L, fmt, lang, api }) {
-  if (!config) return null;
+export function createFlux({ config: present, stage, L, fmt, lang, api }) {
+  // `present` is the present-day bundle, or null where it is not built; the past currents
+  // still need the particles then, and the circulation schematic the currents select.
+  if (!present && !api.pastCurrents && !api.circulation) return null;
+  const config = present ?? {};
   const $ = (id) => document.getElementById(id);
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
   // `past`: the drawn stop's own currents when it is not the present, from the page.
@@ -380,8 +383,8 @@ export function createFlux({ config, stage, L, fmt, lang, api }) {
   }
 
   async function sync() {
-    // The present's own layers need the present-day bundle; the circulation schematic does not.
-    const on = state.present && Boolean(config.base || config.weather || config.ocean);
+    // The present's own layers come only from the present-day bundle.
+    const on = state.present && Boolean(present);
     const past = on ? null : state.past;
     for (const control of [windSelect, cloudSelect]) {
       if (!control) continue;
