@@ -48,6 +48,9 @@ try {
   // The sections are drawn once opened.
   await legend.locator('summary').click();
   await expect(legend.locator('canvas')).toHaveCount(2);
+  // Screen readers get each section's title, which is drawn on the canvas.
+  await expect(legend.getByRole('img', {name: /^대서양.*Sv/})).toHaveCount(1);
+  await expect(legend.getByRole('img', {name: /^인도양·태평양.*Sv/})).toHaveCount(1);
   for (const section of [0, 1]) {
     const {red, blue} = await tinted(`#circulation-legend canvas[data-section="${section}"]`);
     expect(red).toBeGreaterThan(500);

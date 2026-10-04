@@ -214,6 +214,11 @@ export function createCirculation({ url, earth, stage, L, fmt }) {
       + `</ul><p class="belt-note">${L.beltCross}</p><details><summary>${L.sectionsHead}</summary>`
       + basins.map((_, index) => `<canvas data-section="${index}"></canvas>`).join('')
       + `<p class="belt-note">${L.sectionsCaption}</p></details>`;
+    // The title is drawn on the canvas, so screen readers get it as the canvas's name.
+    for (const canvas of legend.querySelectorAll('canvas')) {
+      canvas.setAttribute('role', 'img');
+      canvas.setAttribute('aria-label', sectionTitle(basins[canvas.dataset.section], L, fmt));
+    }
     // The sections are drawn once opened, when the canvas has its width.
     const details = legend.querySelector('details');
     details.addEventListener('toggle', () => {
