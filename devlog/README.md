@@ -25,6 +25,7 @@ wwolf는 001부터 셉니다. 그 전의 001–045는 링크와 본문 속 번�
 - [jikhanjung P11 — 현재의 바람·구름을 하루 한 번 새로](20261002_jikhanjung_P11_daily_present_weather.md)
 - [jikhanjung P10 — 현재의 지구: 위성 영상 바탕에 바람·해류·구름 (GSM "움직이는 지구" 옮기기)](20261002_jikhanjung_P10_present_earth_in_flux.md)
 - [jikhanjung P09 — PBDB 화석 산지를 지구본에 (#81), WegenersDream 방식의 개선판](20261001_jikhanjung_P09_pbdb_fossil_localities.md)
+- [wwolf P02 — 해류와 해수면 온도: 현재에서 캄브리아기까지](20260923_wwolf_P02_ocean_currents.md)
 - [wwolf P01 — 위치 핀: 한 지점을 찍고 시간에 따라 따라가기, 가능성 평가](20260919_wwolf_P01_location_pin_feasibility.md)
 - [jikhanjung P08 — 시간 창의 해안선을 빌더의 바다 마스크로 (#59 (c) 1단계)](20260919_jikhanjung_P08_glacial_coast_mask.md)
 - [jikhanjung P07 — CRUST 2.0으로 현재 지구의 지각 두께 표시](20260916_jikhanjung_P07_crust2_visualization.md)
@@ -37,6 +38,7 @@ wwolf는 001부터 셉니다. 그 전의 001–045는 링크와 본문 속 번�
 
 ## 작업 기록
 
+- [wwolf 020 — ECCO2 평균 해류를 부표 관측과 비교 (P02 1단계)](20261003_wwolf_020_ecco2_drifter_check.md)
 - [jikhanjung 121 — v0.26.0 화면 배치(왼쪽 패널·얇은 타임라인) 릴리스](20261003_jikhanjung_121_release_0260.md)
 - [jikhanjung 120 — 화면 배치: 왼쪽 세로 패널, 위쪽 띠 없앰, 범례는 오른쪽 아래](20261002_jikhanjung_120_left_panel_layout.md)
 - [jikhanjung 119 — v0.25.3 공개 사이트에서 접근 키와 비공개 판 모델 빼기 릴리스](20261002_jikhanjung_119_release_0253.md)
