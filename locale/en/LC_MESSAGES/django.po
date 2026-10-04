@@ -1561,3 +1561,21 @@ msgstr "❚❚ Pause"
 
 msgid "멈춤"
 msgstr "Pause"
+
+msgid "해류 FOAM 모형 {run} Ma 실행"
+msgstr "Currents: FOAM model, {run} Ma run"
+
+msgid "해류 표층 · FOAM 모형 {run} Ma 실행 (CO₂ 고정, 지리만 바뀜)"
+msgstr "Surface currents · FOAM model, {run} Ma run (CO₂ fixed, only the geography changes)"
+
+msgid "이 시점에는 해류 자료가 없습니다"
+msgstr "No currents for this time"
+
+msgid "과거의 해류는 FOAM 해양–대기 결합 모형을 2천만 년마다 돌린 결과 가운데 가장 가까운 실행의 표층(10 m) 연평균입니다. 모든 실행이 CO₂ 2240 ppm, 오늘의 태양, 원 궤도, 바위 사막인 땅으로 같고 대륙 배치만 다르므로, 그 시대의 기후가 아니라 대륙 배치가 해류에 주는 효과를 보여 줍니다. 오늘의 관측과 견주면 큰 순환의 방향은 대체로 맞지만, 2.8° 격자라 멕시코 만류 같은 서안 경계류와 남극 순환류가 아주 약합니다. 해안은 이 지도의 것을 따르고, 모형에서 육지인 곳은 가까운 모형 바다의 흐름을 이어 붙였습니다. 두 시점 사이에서는 가까운 쪽의 흐름을 대륙과 함께 옮깁니다."
+msgstr "Past currents are the surface (10 m) annual mean of the nearest run of the FOAM coupled ocean–atmosphere model, run every 20 million years. Every run has the same CO₂ (2240 ppm), today's Sun, a circular orbit and rocky-desert land; only the arrangement of the continents changes. So they show what the continents do to the currents, not the climate of each period. Against today's observations the large-scale circulation mostly points the right way, but on its 2.8° grid western boundary currents such as the Gulf Stream, and the Antarctic Circumpolar Current, are very weak. The coasts are this map's own; where the model has land, the flow of the nearest model sea is carried in. Between two times the nearer one's flow moves with the continents."
+
+msgid "과거의 해류"
+msgstr "Past currents"
+
+msgid "고도 격자의 과거 시점에서 켜는 해류는 FOAM 해양–대기 결합 모형을 Scotese & Wright(2018) 지리 위에서 2천만 년마다 돌린 결과입니다. 모든 실행의 CO₂·태양·궤도·땅의 덮개가 같고 대륙 배치만 다르므로, 그 시대의 기후가 아니라 대륙 배치가 해류에 주는 효과를 보여 줍니다. 시점마다 가장 가까운 실행의 표층 연평균을 그 시점 지도의 바다에 맞춰 이 프로젝트가 옮겼습니다."
+msgstr "The currents shown at past times of the elevation series come from the FOAM coupled ocean–atmosphere model, run every 20 million years on the Scotese & Wright (2018) geographies. Every run has the same CO₂, Sun, orbit and land cover and only the arrangement of the continents changes, so they show what the continents do to the currents, not each period's climate. This project took the surface annual mean of the nearest run for each time and fitted it to that time's sea."

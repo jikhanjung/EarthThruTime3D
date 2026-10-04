@@ -276,6 +276,19 @@ def rivers_path(item):
     return derived_path(item, "rivers.png")
 
 
+def currents_path(item):
+    """Past surface currents from the nearest FOAM run on the grid's own sea, built by
+    scripts/build_past_currents.py; none for the present, which keeps the ECCO2 mean."""
+    return derived_path(item, "currents.png")
+
+
+def currents_catalogue():
+    """Each grid's FOAM run and u/v ranges as scripts/build_past_currents.py wrote them beside
+    the fields, with the source to credit. Empty until built."""
+    path = Path(settings.PALEODEM_DERIVED_DIR) / "currents.json"
+    return json.loads(path.read_text()) if path.exists() else {"maps": {}}
+
+
 def rivers_low_path(item):
     """The same drainage routed with the sea at the grid's lowest slider level; only where the
     slider reaches below the datum."""
@@ -556,6 +569,10 @@ def viewer_strings():
         "windLegend10m": _("바람 10 m · GFS 분석 {time}"),
         "windLegend250hPa": _("바람 250 hPa(제트기류) · GFS 분석 {time}"),
         "oceanLegend": _("해류 표층 · ECCO2 {from}–{to} 평균"),
+        # Past surface currents (wwolf P02 step 3)
+        "fluxOceanPast": _("해류 FOAM 모형 {run} Ma 실행"),
+        "oceanLegendPast": _("해류 표층 · FOAM 모형 {run} Ma 실행 (CO₂ 고정, 지리만 바뀜)"),
+        "currentsUnavailable": _("이 시점에는 해류 자료가 없습니다"),
         "cloudLegendSat": _("구름 · GMGSI 위성 적외선 {time}"),
         "cloudLegendModel": _("구름 · GFS 분석 구름량 {time}"),
         "fluxSpeed": _("빠르기 (m/s)"),
@@ -877,12 +894,14 @@ def globe(request):
     climate = {"curve": [], "stops": {}}
     sea = {"long": [], "pleistocene": [], "stops": {}}
     kinds = {"grids": {}, "sheets": {}, "lows": {}, "model_levels": []}
+    flows = {"maps": {}}
     if enabled():
         document = catalogue(source)
         if source == "paleodem2018":
             climate = temperature_curve()
             sea = sealevel_curve()
             kinds = ice_sources()
+            flows = currents_catalogue()
         if source == "scotese2002":
             entries = [(item, _(korean), item["image_label"],
                         BOUNDS[item["id"].removeprefix("scotese-")],
@@ -930,6 +949,12 @@ def globe(request):
                            # two, in the what-if and in the time windows alike.
                            "rivers_ice": (rivers_ice_of(item)
                                           if source == "paleodem2018" and rivers_path(item).exists() else None),
+                           # Past surface currents for the present-day particles (P10): the
+                           # nearest FOAM run, its ranges, on the grid's own sea; only where built.
+                           "currents": (dict(flows["maps"][item["id"]],
+                                             url=reverse("globe-currents", args=[item["id"]]))
+                                        if item["id"] in flows["maps"] and currents_path(item).exists()
+                                        else None),
                            "field": (reverse("globe-field", args=[item["id"]])
                                      if field_path(item).exists() else None),
                            "names": landmass_names(pieces_by_frame[item["id"]]),
@@ -1002,6 +1027,7 @@ def globe(request):
                    "sealevel_available": bool(sea["long"]),
                    "ice_available": any(frame.get("ice") for frame in frames),
                    "rivers_available": any(frame.get("rivers") for frame in frames),
+                   "currents_available": any(frame.get("currents") for frame in frames),
                    "rivers_ice_available": any(frame.get("rivers_ice") for frame in frames),
                    "fields_available": any(frame["field"] for frame in frames)})
 
@@ -1065,6 +1091,22 @@ def river_field(request, map_id):
         file = rivers_path(item).open("rb")
     except FileNotFoundError:
         raise Http404("River field not generated") from None
+    response = FileResponse(file, content_type="image/png")
+    response["Cache-Control"] = "private, max-age=3600"
+    return response
+
+
+@require_safe
+def current_field(request, map_id):
+    if not enabled():
+        raise Http404
+    item = find_map(map_id)
+    if item is None:
+        raise Http404
+    try:
+        file = currents_path(item).open("rb")
+    except FileNotFoundError:
+        raise Http404("Current field not generated") from None
     response = FileResponse(file, content_type="image/png")
     response["Cache-Control"] = "private, max-age=3600"
     return response

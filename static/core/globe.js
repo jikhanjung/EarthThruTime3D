@@ -597,7 +597,9 @@ async function selectStop(value, manual = false, overlayManaged = false, transit
       satelliteToggle.title = presentStop ? '' : L.fluxPresentOnly;
     }
     if ($('satellite-note')) $('satellite-note').hidden = !satellite;
-    flux?.setPresent(presentStop);
+    // Without the present-day bundle the present has no layers of its own to offer.
+    flux?.setPresent(presentStop && Boolean(present));
+    flux?.setPast(presentStop ? null : pastCurrents(place));
     flux?.refresh();
     // Names go on any surface without lettering of its own: the mask, and on the
     // elevation series the relief and the temperature; a photographed map has its own.
@@ -2515,7 +2517,8 @@ function init() {
     cut: { uniforms: CUT_UNIFORMS, surface: CUT_SURFACE },
   });
   flux = createFlux({
-    config: present, stage, L, fmt, lang: document.documentElement.lang,
+    // The past currents need the particles even where the present-day data is not built.
+    config: present ?? (pastCurrentsBuilt ? {} : null), stage, L, fmt, lang: document.documentElement.lang,
     api: {
       earth, uniforms, surfaceMesh, locateGLSL: LOCATE_GLSL,
       loadTexture: (key, url) => loadData(key, url),
@@ -2524,6 +2527,7 @@ function init() {
       satelliteShown: () => stage.dataset.satellite === 'true',
       projection: () => projection,
       changed: queueAddress,
+      pastCurrents: pastCurrentsBuilt,
     },
   });
   const observer = new ResizeObserver(fitCamera);
@@ -3152,6 +3156,23 @@ function rangeSetOf(frame) {
   if (!frame) return '';
   if (frame.age < 0.2) return 'present';
   return frame.relief && rangeSets[frame.id] ? frame.id : '';
+}
+// The past currents for the particles (wwolf P02 step 3): the field of the nearer of the two
+// stops being drawn, moved with the map by its share of the travel field, as the mountain
+// marks are, so the flow keeps to the coast on screen. None for the present, which keeps the
+// ECCO2 mean, nor where a stop has no field.
+const pastCurrentsBuilt = frames.some((frame) => frame.currents);
+function pastCurrents(place) {
+  if (place.mapless) return null;
+  const near = place.blend < 0.5 ? place.from : place.to;
+  if (!near?.currents) return null;
+  const share = near === place.from ? place.blend : place.blend - 1;
+  const gap = share ? motions[frames.indexOf(place.from)] ?? [] : [];
+  const shift = share && gap.length ? (lon, lat) => {
+    const [east, north] = travelAt(lon, lat, gap);
+    return [share * east, share * north];
+  } : null;
+  return { ...near.currents, key: `${near.id}:${share.toFixed(3)}`, shift };
 }
 // A mark moves by its side's share of the travel field.
 function fillRanges(group, marks, gap, share) {
