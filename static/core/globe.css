@@ -320,6 +320,12 @@ summary{cursor:pointer;color:#c9dce2}
 .flux-legend ol{display:grid;grid-template-columns:repeat(auto-fill,minmax(82px,1fr));gap:.1rem .4rem;margin:0;padding:0;list-style:none}
 .flux-legend li{display:flex;align-items:center;gap:.25rem;white-space:nowrap}
 .flux-legend li span{width:12px;height:4px;border-radius:2px;flex:none}
+.circulation-legend ul{display:grid;gap:.12rem;margin:0;padding:0;list-style:none}
+.circulation-legend li span{width:16px;height:5px}
+.circulation-legend .belt-mark{width:16px;flex:none;text-align:center;font-size:.72rem;line-height:1}
+.circulation-legend .belt-note{margin:.25rem 0 0;opacity:.8}
+.circulation-legend summary{margin-top:.3rem;cursor:pointer;font-weight:600}
+.circulation-legend canvas{display:block;width:100%;height:110px;margin-top:.3rem}
 @media (max-width:899px){
   .flux-when{top:40px;font-size:.66rem}
   /* The panel is a drawer over the map; the globe keeps the whole screen. */

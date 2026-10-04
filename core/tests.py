@@ -776,6 +776,29 @@ class PaleodemTests(TestCase):
         self.assertEqual(b''.join(served.streaming_content), b'png')
         self.assertFalse(self.client.get('/').context['currents_available'])
 
+    def test_circulation_is_offered_only_where_built(self):
+        for item in globe_module.series_items('paleodem2018'):
+            self.build(item)
+        response = self.client.get('/', {'masks': 'paleodem2018'})
+        self.assertIsNone(response.context['circulation_url'])
+        self.assertNotContains(response, 'value="conveyor"')
+        self.assertNotContains(response, 'id="circulation-note"')
+        self.assertEqual(self.client.get('/globe/circulation.json').status_code, 404)
+        built = {'lines': [], 'marks': [], 'sections': []}
+        Path(self.dem.name, 'circulation.json').write_text(json.dumps(built))
+        response = self.client.get('/', {'masks': 'paleodem2018'})
+        self.assertEqual(response.context['circulation_url'], '/globe/circulation.json')
+        # The currents select is there for the schematic alone, without any current field.
+        for needle in ('id="currents"', 'value="conveyor"', 'id="circulation-note"', 'id="globe-circulation"',
+                       'doi.org/10.5670/oceanog.1991.07', 'psl.noaa.gov'):
+            self.assertContains(response, needle)
+        self.assertNotContains(response, 'value="flow"')
+        served = self.client.get('/globe/circulation.json')
+        self.assertEqual(served.status_code, 200)
+        self.assertEqual(json.loads(b''.join(served.streaming_content)), built)
+        # Only the elevation series, whose present grid the schematic was checked against.
+        self.assertIsNone(self.client.get('/').context['circulation_url'])
+
     def test_river_fields_are_offered_only_where_built(self):
         for item in globe_module.series_items('paleodem2018'):
             self.build(item)

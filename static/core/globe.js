@@ -14,6 +14,7 @@ import { createMantleScene, CUT_UNIFORMS, CUT_SURFACE } from './mantle-scene.js'
 import { createCrust, CRUST_GLSL } from './crust.js';
 import { createInteriorControls } from './interior-controls.js';
 import { createFlux } from './flux.js';
+import { BELT_COLOURS, buildBelt, drawSection } from './circulation.js';
 let interior = null;
 let mantleOverlay = null;
 let crust = null;
@@ -75,6 +76,7 @@ const PLATE_COLOUR = 0xff62c0;
 // the sea reached. Same PALEOMAP frame as the 2016 masks, so drawn without rotation.
 const coastlines = JSON.parse($('globe-coastlines')?.textContent ?? 'null');
 const rangesUrl = JSON.parse($('globe-ranges')?.textContent ?? 'null');
+const circulationUrl = JSON.parse($('globe-circulation')?.textContent ?? 'null');
 // Amber vanished against the tan land; this reads on land and on sea, and is not the
 // plate overlay's pink.
 const COASTLINE_COLOUR = 0xff4d1a;
@@ -597,8 +599,7 @@ async function selectStop(value, manual = false, overlayManaged = false, transit
       satelliteToggle.title = presentStop ? '' : L.fluxPresentOnly;
     }
     if ($('satellite-note')) $('satellite-note').hidden = !satellite;
-    // Without the present-day bundle the present has no layers of its own to offer.
-    flux?.setPresent(presentStop && Boolean(present));
+    flux?.setPresent(presentStop);
     flux?.setPast(presentStop ? null : pastCurrents(place));
     flux?.refresh();
     // Names go on any surface without lettering of its own: the mask, and on the
@@ -2518,7 +2519,7 @@ function init() {
   });
   flux = createFlux({
     // The past currents need the particles even where the present-day data is not built.
-    config: present ?? (pastCurrentsBuilt ? {} : null), stage, L, fmt, lang: document.documentElement.lang,
+    config: present ?? (pastCurrentsBuilt || circulationUrl ? {} : null), stage, L, fmt, lang: document.documentElement.lang,
     api: {
       earth, uniforms, surfaceMesh, locateGLSL: LOCATE_GLSL,
       loadTexture: (key, url) => loadData(key, url),
@@ -2528,6 +2529,7 @@ function init() {
       projection: () => projection,
       changed: queueAddress,
       pastCurrents: pastCurrentsBuilt,
+      circulation: circulationUrl ? { show: showCirculation } : null,
     },
   });
   const observer = new ResizeObserver(fitCamera);
@@ -2556,6 +2558,7 @@ function init() {
     updateNameVisibility();
     updatePinVisibility();
     updateRanges();
+    updateCirculation();
     const view = tiltedView();
     if (uniforms.mantleCutaway.value > .5 || uniforms.crustCutaway.value > .5 || uniforms.mantleSurfaceOpacity.value < 1) {
       earth.updateWorldMatrix(true,false);
@@ -3023,7 +3026,7 @@ function init() {
 // time range keep their own parameters.
 // view: globe | mollweide | equalearth | equirect · surface: relief | map | mask | temp | veg | rain
 // shading: 0 | 1 | 5 | 20 · sea: metres · relief, rivers, ice, grid: 0 | 1 · age: Ma
-// sat: 0 | 1 (the present's satellite base) · wind: 10m | 250hPa · currents: flow · clouds: sat | model
+// sat: 0 | 1 (the present's satellite base) · wind: 10m | 250hPa · currents: flow | conveyor · clouds: sat | model
 const viewDefaults = {};
 let addressReady = false;
 let addressTimer = 0;
@@ -3037,7 +3040,7 @@ function viewState() {
     relief: reliefWanted ? '1' : '0', rivers: riversVisible ? '1' : '0',
     ice: iceVisible ? '1' : '0', grid: gridVisible ? '1' : '0',
     sat: present?.base ? (satelliteWanted ? '1' : '0') : null,
-    wind: flux?.state().wind ?? null, currents: flux?.state().currents ? 'flow' : null,
+    wind: flux?.state().wind ?? null, currents: flux?.state().currents ?? null,
     clouds: flux?.state().clouds ?? null,
   };
 }
@@ -3081,7 +3084,7 @@ function readViewAddress() {
   if (flag('rivers') !== null) riversVisible = flag('rivers');
   if (flag('ice') !== null) iceVisible = flag('ice');
   if (flag('sat') !== null && present?.base) satelliteWanted = flag('sat');
-  flux?.restore({ wind: asked.get('wind'), currents: asked.get('currents') === 'flow', clouds: asked.get('clouds') });
+  flux?.restore({ wind: asked.get('wind'), currents: asked.get('currents'), clouds: asked.get('clouds') });
   const wanted = asked.get('surface');
   if (wanted && ['relief', 'map', 'mask', 'temp', 'veg', 'rain'].includes(wanted)) surface = wanted;
   maskChosen = wanted === 'mask';
@@ -3173,6 +3176,83 @@ function pastCurrents(place) {
     return [share * east, share * north];
   } : null;
   return { ...near.currents, key: `${near.id}:${share.toFixed(3)}`, shift };
+}
+// The present-day circulation schematic (wwolf P02 step 5): the conveyor belt drawn from the
+// literature and the GODAS overturning sections behind it (scripts/build_circulation.py), shown
+// while the currents select is on "conveyor" at the present. Placed on the projection like the
+// overlay lines, and rebuilt when the projection or a flat map's centre moves.
+let circulationData = null;
+let circulationShown = false;
+let circulationGroup = null;
+let circulationKey = '';
+let circulationLegend = null;
+function showCirculation(on) {
+  circulationShown = on;
+  if (on && !circulationData) loadCirculation();
+  if ($('circulation-note')) $('circulation-note').hidden = !on;
+  showCirculationLegend();
+}
+async function loadCirculation() {
+  try {
+    circulationData = await (await fetch(circulationUrl)).json();
+  } catch (error) {
+    console.error(error);
+  }
+  showCirculationLegend();
+}
+function updateCirculation() {
+  const on = Boolean(circulationShown && circulationData);
+  const key = on ? (projection === 'globe' ? 'globe' : `${projection}:${meridian}`) : '';
+  if (key === circulationKey) return;
+  circulationKey = key;
+  if (circulationGroup) {
+    earth.remove(circulationGroup);
+    circulationGroup.traverse((part) => { part.geometry?.dispose(); part.material?.dispose(); });
+    circulationGroup = null;
+  }
+  stage.dataset.circulation = on ? String(circulationData.lines.length) : '';
+  if (!on) return;
+  const relative = (lon) => ((lon - meridian + 540) % 360) - 180;
+  const seam = (...lons) => projection !== 'globe'
+    && Math.max(...lons.map(relative)) - Math.min(...lons.map(relative)) > 90;
+  circulationGroup = buildBelt(circulationData, (lon, lat) => pointAt(lon, lat, 0.0025), seam);
+  earth.add(circulationGroup);
+}
+function showCirculationLegend() {
+  if (!circulationLegend) {
+    circulationLegend = document.createElement('figure');
+    circulationLegend.className = 'flux-legend circulation-legend';
+    circulationLegend.id = 'circulation-legend';
+    const dock = $('map-legend') || stage.parentElement;
+    const head = dock.querySelector('.legend-head');
+    if (head) head.after(circulationLegend); else dock.prepend(circulationLegend);
+  }
+  circulationLegend.hidden = !(circulationShown && circulationData);
+  if (circulationLegend.hidden || circulationLegend.dataset.built) return;
+  circulationLegend.dataset.built = 'true';
+  const line = (colour, text) => `<li><span style="background:${colour}"></span>${text}</li>`;
+  const mark = (glyph, colour, text) => `<li><b class="belt-mark" style="color:${colour}">${glyph}</b>${text}</li>`;
+  const sections = circulationData.sections;
+  circulationLegend.innerHTML = `<figcaption>${L.circulationLegend}</figcaption><ul>`
+    + line(BELT_COLOURS.surface, L.beltSurface) + line(BELT_COLOURS.deep, L.beltDeep)
+    + line(BELT_COLOURS.bottom, L.beltBottom) + mark('▼', '#6f9be8', L.beltSink)
+    + mark('▲', BELT_COLOURS.surface, L.beltRise)
+    + line(`linear-gradient(90deg,${BELT_COLOURS.bottom},transparent)`, L.beltFade)
+    + `</ul><p class="belt-note">${L.beltCross}</p><details><summary>${L.sectionsHead}</summary>`
+    + sections.map((_, index) => `<canvas data-section="${index}"></canvas>`).join('')
+    + `<p class="belt-note">${L.sectionsCaption}</p></details>`;
+  // The sections are drawn once they are opened, when the canvas has its width.
+  const details = circulationLegend.querySelector('details');
+  details.addEventListener('toggle', () => {
+    if (!details.open) return;
+    for (const canvas of details.querySelectorAll('canvas')) {
+      const section = sections[canvas.dataset.section];
+      drawSection(canvas, section, fmt(L.sectionTitle, {
+        basin: section.basin === 'atlantic' ? L.basinAtlantic : L.basinIndoPacific,
+        red: Math.round(section.red), blue: Math.round(section.blue),
+      }));
+    }
+  });
 }
 // A mark moves by its side's share of the travel field.
 function fillRanges(group, marks, gap, share) {

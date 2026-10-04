@@ -1,0 +1,45 @@
+{
+  "title": "NCEP GODAS ocean reanalysis, monthly northward velocity 2016-2020: the present-day overturning sections beside the circulation schematic (wwolf P02 step 5)",
+  "retrieved": "2026-09-25",
+  "record": "https://psl.noaa.gov/data/gridded/data.godas.html",
+  "license": "NOAA PSL distributes the files freely and asks for an acknowledgement: 'data provided by the NOAA PSL, Boulder, Colorado, USA, from their website at https://psl.noaa.gov' (the dataset page's usage and citation section, read 2026-10-03).",
+  "cite": "Behringer, D. W. & Xue, Y. (2004). Evaluation of the global ocean data assimilation system at NCEP: the Pacific Ocean. Eighth Symposium on Integrated Observing and Assimilation Systems for Atmosphere, Oceans, and Land Surface, AMS 84th Annual Meeting. GODAS data provided by the NOAA PSL, Boulder, Colorado, USA, from their website at https://psl.noaa.gov.",
+  "note": "vcur: monthly northward velocity in m/s on 40 levels from 5 m to 4478 m, 1/3 degree in latitude by 1 degree in longitude, 74S-65N. scripts/build_circulation.py averages the five years and integrates the Atlantic and Indo-Pacific overturning north of 32S. GODAS stops at 65N, so the Nordic Seas, where much deep water forms, are outside the sections.",
+  "assets": [
+    {
+      "role": "vcur-2016",
+      "path": "data/sources/godas/vcur.2016.nc",
+      "url": "https://downloads.psl.noaa.gov/Datasets/godas/vcur.2016.nc",
+      "bytes": 117523462,
+      "sha256": "7365df4fd7894b67b2c6af48dc8f18d49b51a21388a02f11d265bf34a190342a"
+    },
+    {
+      "role": "vcur-2017",
+      "path": "data/sources/godas/vcur.2017.nc",
+      "url": "https://downloads.psl.noaa.gov/Datasets/godas/vcur.2017.nc",
+      "bytes": 117524932,
+      "sha256": "c5f66bd318c22b0b85638825aa7dfb3550c05f6a14ac574ddb589f592c89e2e2"
+    },
+    {
+      "role": "vcur-2018",
+      "path": "data/sources/godas/vcur.2018.nc",
+      "url": "https://downloads.psl.noaa.gov/Datasets/godas/vcur.2018.nc",
+      "bytes": 117482948,
+      "sha256": "66f6b47401930d9a1ef4269d446150523ed95e156eed2bc4ba61b80b64d53776"
+    },
+    {
+      "role": "vcur-2019",
+      "path": "data/sources/godas/vcur.2019.nc",
+      "url": "https://downloads.psl.noaa.gov/Datasets/godas/vcur.2019.nc",
+      "bytes": 117272404,
+      "sha256": "b2c0e98130978113bd308a6f65bb5e662c4c8bf58c02f43e897471a431942a15"
+    },
+    {
+      "role": "vcur-2020",
+      "path": "data/sources/godas/vcur.2020.nc",
+      "url": "https://downloads.psl.noaa.gov/Datasets/godas/vcur.2020.nc",
+      "bytes": 131176844,
+      "sha256": "4dea3c02c2a6bb50830adf8ac2b6112c882d96820e57fe1d0c31a71f3beb3e0b"
+    }
+  ]
+}
