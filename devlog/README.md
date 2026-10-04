@@ -37,6 +37,7 @@ wwolf는 001부터 셉니다. 그 전의 001–045는 링크와 본문 속 번�
 
 ## 작업 기록
 
+- [wwolf 021 — 과거의 해류: FOAM 실행을 현재의 입자로](20261003_wwolf_021_past_currents.md)
 - [jikhanjung 121 — v0.26.0 화면 배치(왼쪽 패널·얇은 타임라인) 릴리스](20261003_jikhanjung_121_release_0260.md)
 - [jikhanjung 120 — 화면 배치: 왼쪽 세로 패널, 위쪽 띠 없앰, 범례는 오른쪽 아래](20261002_jikhanjung_120_left_panel_layout.md)
 - [jikhanjung 119 — v0.25.3 공개 사이트에서 접근 키와 비공개 판 모델 빼기 릴리스](20261002_jikhanjung_119_release_0253.md)

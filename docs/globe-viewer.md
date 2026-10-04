@@ -1067,8 +1067,9 @@ Earth as it looks and moves (jikhanjung P10, ported from GSM's "Earth in flux" l
   pinned in the release PR, replaced on the server by the day's 12 UTC analysis while the
   host's daily refresh is fresh (`PRESENT_LIVE_DIR`, under 48 h, newer than the release's;
   jikhanjung P11); the note says which. The currents are a 1992–2018 mean.
-- **Away from 0 Ma** the controls are disabled, the canvases and cloud shell hidden, and
-  `data-flux="unavailable"`. Stage attributes: `data-satellite`, `data-satellite-size`,
+- **Away from 0 Ma** wind and clouds are disabled and the cloud shell hidden; the currents
+  switch stays on a past stop of the elevation series that has a field (Past surface
+  currents, below), otherwise it is disabled too and `data-flux="unavailable"`. Stage attributes: `data-satellite`, `data-satellite-size`,
   `data-flux`, `data-wind`, `data-currents`, `data-clouds`, `data-flux-when`. Address:
   `sat=0`, `wind=10m|250hPa`, `currents=flow`, `clouds=sat|model`.
 - **Encoding**: u and v are stored over `-M·128/127 .. M`, so code 128 is exactly zero
@@ -1078,6 +1079,37 @@ Data and serving: `core/present.py` validates each catalogue section on its own 
 section hides only its controls) and serves files named `<key>-<sha12>` through
 `asset_response` (SHA-256 verified, immutable). `deploy/pack_data.py` ships the catalogued
 files only. Sources and scripts: `sources/README.md`.
+
+## Past surface currents
+
+On a past stop of the elevation series the currents switch draws the same particles through
+the stop's own field (wwolf P02 step 3). The fields come from Pohl's FOAM runs (Pohl et al.
+2022, Zenodo 5780097, CC BY 4.0): 28 coupled runs every 20 Myr on the Scotese & Wright
+geographies with CO₂ 2240 ppm, the Sun, the orbit and the land cover fixed, so they show what
+the continents do to the currents, not each period's climate. At 0 Ma FOAM points the right
+way in 73 % of the drifter cells but has almost no western boundary currents or Antarctic
+Circumpolar Current (devlog wwolf 020); the panel's `#foam-note` says so.
+
+- **Build** (`scripts/build_past_currents.py`): every stop older than the present takes the
+  top level's (−10 m) annual mean of the nearest run, the younger on a tie, filled over the
+  model's land from its nearest sea and interpolated to 1° cells. B is the stop's own sea
+  (cells where most of the grid lies below 0 m), so a particle lives and dies by the coast the
+  page draws, not FOAM's 2.8° one; `currents.json` records each stop's run, ranges and the share
+  of its sea carried in from the nearest model sea (median 3.6 %, at most 18 %). Same encoding
+  as the present (symmetric ranges, code 128 is zero), so `decodeField` reads it unchanged.
+- **Serving**: `frame.currents` (`{run_ma, u, v, carried, url}`) where the field and its row are
+  built; `/globe/currents/<id>.png`; `currents_available` shows the switch and the note even
+  where the present-day data is not built.
+- **Between two stops** (`pastCurrents` in `globe.js`): the nearer stop's field, moved with the
+  map by its share of the travel field like the mountain marks. `warpField` builds the moved
+  copy once per drawn place (each 1° cell looks up where the travel brings it from), so the
+  particles sample it as cheaply as a stop's own field. Tying the field to the slider instead
+  would let the flow run ahead of the continents.
+- **On screen**: `#flux-when` names the run ("FOAM model, 100 Ma run"), the legend adds that CO₂
+  is fixed, the speed scale is the present's (0.3 m/s), so FOAM's weak currents look weak.
+  Stage attributes: `data-flux="past"`, `data-currents`, `data-currents-run`,
+  `data-currents-warp` (the warp key between stops, empty on a stop). The address keeps
+  `currents=flow` at every age. The time windows have no past field.
 
 ## Runtime and data boundaries
 
@@ -1116,6 +1148,10 @@ Neither flag grants data-use rights. See `sources/README.md`, `LICENSE-DATA.md` 
   address, English, a phone and no third-party requests. The older suites assume the
   elevation colours at 0 Ma; run them against a server started with
   `PRESENT_DERIVED_DIR=/nonexistent`.
+- `VIEWER_URL=… node tests/past-currents-browser.mjs` with the past current fields built: a
+  past stop's particles, the run named under the age and in the legend, the note, the nearest
+  run and its tie rule, the field moving with the map between stops, a flat map, the address,
+  the time windows and no third-party requests. The present-day data is not needed.
 - `VIEWER_URL=http://127.0.0.1:8153/ node tests/river-browser.mjs`: river PNG, shader,
   toggle, grid-spacing explanation, mobile layout and both languages (requires a built 0 Ma river field).
 - `VIEWER_URL=http://127.0.0.1:8153/ node tests/view-address-browser.mjs`: the view in the address:
