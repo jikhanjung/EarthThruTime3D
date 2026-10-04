@@ -597,8 +597,7 @@ async function selectStop(value, manual = false, overlayManaged = false, transit
       satelliteToggle.title = presentStop ? '' : L.fluxPresentOnly;
     }
     if ($('satellite-note')) $('satellite-note').hidden = !satellite;
-    // Without the present-day bundle the present has no layers of its own to offer.
-    flux?.setPresent(presentStop && Boolean(present));
+    flux?.setPresent(presentStop);
     flux?.setPast(presentStop ? null : pastCurrents(place));
     flux?.refresh();
     // Names go on any surface without lettering of its own: the mask, and on the
@@ -2517,8 +2516,7 @@ function init() {
     cut: { uniforms: CUT_UNIFORMS, surface: CUT_SURFACE },
   });
   flux = createFlux({
-    // The past currents need the particles even where the present-day data is not built.
-    config: present ?? (pastCurrentsBuilt ? {} : null), stage, L, fmt, lang: document.documentElement.lang,
+    config: present, stage, L, fmt, lang: document.documentElement.lang,
     api: {
       earth, uniforms, surfaceMesh, locateGLSL: LOCATE_GLSL,
       loadTexture: (key, url) => loadData(key, url),
