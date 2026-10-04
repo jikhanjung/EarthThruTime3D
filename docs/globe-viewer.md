@@ -1111,6 +1111,40 @@ Circumpolar Current (devlog wwolf 020); the panel's `#foam-note` says so.
   `data-currents-warp` (the warp key between stops, empty on a stop). The address keeps
   `currents=flow` at every age. The time windows have no past field.
 
+## Circulation schematic
+
+The currents switch is a select: off, `flow` (the particles, present or past) or `conveyor`,
+the present's circulation schematic (wwolf P02 step 5). `flux.js` owns the select and its
+state; for `conveyor` it draws no particles and tells the page through
+`api.circulation.show(on)`, which `globe.js` answers. The schematic needs no present-day
+bundle: flux keeps "the stop is the present" apart from "the bundle has layers".
+
+- **What it is**: the textbook conveyor belt drawn after the literature, not traced from data
+  (Broecker 1991; Rahmstorf 2002; bottom-water sources after Orsi et al. 1999 and Ohshima et
+  al. 2013; the Indian Ocean's shallow cell after Schott et al. 2002). Warm surface water
+  (orange), North Atlantic Deep Water (blue) and Antarctic Bottom Water (purple, fading out
+  as it mixes upward) as ribbons, ▼ where water sinks and ▲ where a drawn deep limb rises.
+  Arrowheads run along the lines, none at an end: every line ends at a mark or on another
+  line, except the bottom water. `#circulation-note` says it is a drawing and that most deep
+  water rises in the Southern Ocean (Marshall & Speer 2012), which no line shows.
+- **Build** (`scripts/build_circulation.py`): the waypoints smoothed into curves (Catmull-Rom,
+  a point about every 60 km); the build stops if any point lies on the present grid's land.
+  Beside them the Atlantic and Indo-Pacific overturning north of 32°S from the NCEP GODAS
+  reanalysis's 2016–2020 northward velocity (`sources/godas.json`): Atlantic 15 Sv red / 10 Sv
+  blue, Indo-Pacific 9 / 20 Sv. One file, `circulation.json`, about 170 KB.
+- **Serving**: `/globe/circulation.json`; `circulation_url` on the elevation series where the
+  file is built, which adds the `conveyor` option, the note and the data link.
+- **Drawing** (`static/core/circulation.js`, `updateCirculation` in `globe.js`): ribbons on
+  the current projection at a small lift, rebuilt when the projection or a flat map's centre
+  moves, triangles across a flat map's seam left out. Drawn while the stop is the present
+  (also the 0 ka stop of the time windows); away from it the select keeps the choice and the
+  belt stands down.
+- **Legend**: the keys, and the two sections in a closed `<details>`, drawn on a canvas when
+  opened (red: the loop sinking in the north; blue: the one sinking in the south; contours
+  every 4 Sv with arrows along the flow). GODAS ends at 65°N and about 4.5 km depth, so the
+  Nordic Seas and the deepest floor are not in them.
+- **Address**: `currents=conveyor`; a value the select does not offer is ignored.
+
 ## Runtime and data boundaries
 
 Three.js modules and their MIT license are vendored locally using `npm run vendor`.
@@ -1152,6 +1186,10 @@ Neither flag grants data-use rights. See `sources/README.md`, `LICENSE-DATA.md` 
   past stop's particles, the run named under the age and in the legend, the note, the nearest
   run and its tie rule, the field moving with the map between stops, a flat map, the address,
   the time windows and no third-party requests. The present-day data is not needed.
+- `VIEWER_URL=… node tests/circulation-browser.mjs` with `circulation.json` built: the
+  schematic at the present on the globe and a flat map, its legend and sections, the note, the
+  address, standing down at a past stop (whose particles stay selectable), the time windows'
+  0 ka, an invalid value and no third-party requests. The present-day data is not needed.
 - `VIEWER_URL=http://127.0.0.1:8153/ node tests/river-browser.mjs`: river PNG, shader,
   toggle, grid-spacing explanation, mobile layout and both languages (requires a built 0 Ma river field).
 - `VIEWER_URL=http://127.0.0.1:8153/ node tests/view-address-browser.mjs`: the view in the address:

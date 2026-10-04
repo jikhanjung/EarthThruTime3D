@@ -573,6 +573,21 @@ def viewer_strings():
         "fluxOceanPast": _("해류 FOAM 모형 {run} Ma 실행"),
         "oceanLegendPast": _("해류 표층 · FOAM 모형 {run} Ma 실행 (CO₂ 고정, 지리만 바뀜)"),
         "currentsUnavailable": _("이 시점에는 해류 자료가 없습니다"),
+        # The present-day circulation schematic (wwolf P02 step 5)
+        "circulationPresentOnly": _("순환 모식도는 오늘의 바다만 그립니다"),
+        "circulationLegend": _("순환 모식도 · 오늘 (문헌을 따라 그린 그림)"),
+        "beltSurface": _("표층의 따뜻한 물"),
+        "beltDeep": _("북대서양 심층수 (약 1.5–4 km)"),
+        "beltBottom": _("남극 저층수 (바닥, 약 4 km 아래)"),
+        "beltSink": _("가라앉는 곳: 주황 선이 끝나고 파랑·보라 선이 시작"),
+        "beltRise": _("솟는 곳: 파랑 선이 끝나고 주황 선이 시작"),
+        "beltFade": _("흐려지며 끝남: 위의 물과 서서히 섞임"),
+        "beltCross": _("선이 겹치는 곳은 깊이가 다릅니다(보라가 파랑 아래)."),
+        "sectionsHead": _("뒤집힘 순환 단면 · GODAS 2016–2020 평균"),
+        "sectionsCaption": _("위도(오른쪽이 북)와 깊이. 빨강은 북쪽에서 가라앉아 깊은 곳으로 남하하는 고리, 파랑은 남쪽에서 가라앉아 바닥으로 북상하는 고리. 등치선 간격 4 Sv, 화살표는 흐름 방향."),
+        "sectionTitle": _("{basin} · 빨강 {red} Sv · 파랑 {blue} Sv"),
+        "basinAtlantic": _("대서양"),
+        "basinIndoPacific": _("인도양·태평양"),
         "cloudLegendSat": _("구름 · GMGSI 위성 적외선 {time}"),
         "cloudLegendModel": _("구름 · GFS 분석 구름량 {time}"),
         "fluxSpeed": _("빠르기 (m/s)"),
@@ -1019,6 +1034,8 @@ def globe(request):
                    # Mountain-range marks for the flat maps; the elevation series only.
                    "ranges_url": (reverse("globe-ranges") if source == "paleodem2018"
                                   and mountain_ranges_path().exists() else None),
+                   "circulation_url": (reverse("globe-circulation") if source == "paleodem2018"
+                                       and circulation_path().exists() else None),
                    "temperature_curve": climate["curve"],
                    "temperature_available": any(frame.get("temp") for frame in frames),
                    "climate_available": any(frame.get("climate") for frame in frames),
@@ -1205,6 +1222,27 @@ def mountain_ranges(request):
         file = mountain_ranges_path().open("rb")
     except FileNotFoundError:
         raise Http404("Mountain ranges not built") from None
+    response = FileResponse(file, content_type="application/json")
+    response["Cache-Control"] = "public, max-age=86400"
+    return response
+
+
+def circulation_path():
+    """The present-day circulation schematic and overturning sections, written by
+    scripts/build_circulation.py."""
+    return Path(settings.PALEODEM_DERIVED_DIR) / "circulation.json"
+
+
+@require_safe
+def circulation(request):
+    """The circulation schematic of the present (wwolf P02 step 5): the textbook conveyor belt
+    and the GODAS overturning sections behind it, one file."""
+    if not enabled():
+        raise Http404
+    try:
+        file = circulation_path().open("rb")
+    except FileNotFoundError:
+        raise Http404("Circulation not built") from None
     response = FileResponse(file, content_type="application/json")
     response["Cache-Control"] = "public, max-age=86400"
     return response

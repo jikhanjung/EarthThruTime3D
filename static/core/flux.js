@@ -124,7 +124,7 @@ export function createFlux({ config, stage, L, fmt, lang, api }) {
   const $ = (id) => document.getElementById(id);
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
   // `past`: the drawn stop's own currents when it is not the present, from the page.
-  const state = { present: false, past: null, wind: null, currents: false, clouds: null };
+  const state = { present: false, past: null, wind: null, currents: null, clouds: null };
   let warp = { key: '', base: null, field: null };
   const fields = new Map();
   const layers = {};
@@ -323,7 +323,10 @@ export function createFlux({ config, stage, L, fmt, lang, api }) {
   api.earth.add(cloudMesh);
 
   // ── controls ──────────────────────────────────────────────────────
-  const windSelect = $('wind-layer'), currentToggle = $('currents'), cloudSelect = $('cloud-layer');
+  const windSelect = $('wind-layer'), currentSelect = $('currents'), cloudSelect = $('cloud-layer');
+  // The currents select: '' off, 'flow' the particles, 'conveyor' the present's circulation
+  // schematic, which the page draws (api.circulation); the particles are only 'flow'.
+  const flowOn = () => state.currents === 'flow';
   const legend = document.createElement('figure');
   legend.className = 'flux-legend';
   legend.id = 'flux-legend';
@@ -340,33 +343,33 @@ export function createFlux({ config, stage, L, fmt, lang, api }) {
   function momentUtc() { const t = config.weather?.t ?? ''; return t && `${t.slice(0, 10)} ${t.slice(11, 16)} UTC`; }
 
   function describe(past) {
-    if (past) return state.currents && layers.ocean.field ? fmt(L.fluxOceanPast, { run: past.run_ma }) : '';
+    if (past) return flowOn() && layers.ocean.field ? fmt(L.fluxOceanPast, { run: past.run_ma }) : '';
     const parts = [];
     const time = moment();
     if (state.wind && state.clouds) parts.push(fmt(L.fluxWind, { time }));
     else if (state.wind) parts.push(fmt(L.fluxWindOnly, { time }));
     else if (state.clouds) parts.push(fmt(L.fluxCloudOnly, { time }));
-    if (state.currents && config.ocean) parts.push(fmt(L.fluxOcean, { from: config.ocean.period[0], to: config.ocean.period[1] }));
+    if (flowOn() && config.ocean) parts.push(fmt(L.fluxOcean, { from: config.ocean.period[0], to: config.ocean.period[1] }));
     if (api.satelliteShown() && config.base) parts.push(fmt(L.fluxBase, { epoch: L.fluxEpoch2004 }));
     return parts.join(' · ');
   }
 
   function showLegend(past) {
     const blocks = [];
-    if (past && state.currents && layers.ocean.field) {
+    if (past && flowOn() && layers.ocean.field) {
       blocks.push(legendBlock(fmt(L.oceanLegendPast, { run: past.run_ma }), OCEAN, OCEAN.ref));
     }
     if (state.present && state.wind) {
       blocks.push(legendBlock(fmt(state.wind === '10m' ? L.windLegend10m : L.windLegend250hPa, { time: momentUtc() }),
         WIND, WIND.ref[state.wind]));
     }
-    if (state.present && state.currents && config.ocean) {
+    if (state.present && flowOn() && config.ocean) {
       blocks.push(legendBlock(fmt(L.oceanLegend, { from: config.ocean.period[0], to: config.ocean.period[1] }), OCEAN, OCEAN.ref));
     }
     if (state.present && state.clouds) {
       blocks.push(`<figcaption>${fmt(state.clouds === 'sat' ? L.cloudLegendSat : L.cloudLegendModel, { time: momentUtc() })}</figcaption>`);
     }
-    const speeds = (state.present && (state.wind || state.currents)) || (past && state.currents);
+    const speeds = (state.present && (state.wind || flowOn())) || (past && flowOn());
     legend.innerHTML = (speeds ? `<p class="flux-unit">${L.fluxSpeed}</p>` : '') + blocks.join('');
     legend.hidden = !blocks.length;
     const dock = $('map-legend') || stage.parentElement;
@@ -377,19 +380,29 @@ export function createFlux({ config, stage, L, fmt, lang, api }) {
   }
 
   async function sync() {
-    const on = state.present;
+    // The present's own layers need the present-day bundle; the circulation schematic does not.
+    const on = state.present && Boolean(config.base || config.weather || config.ocean);
     const past = on ? null : state.past;
     for (const control of [windSelect, cloudSelect]) {
       if (!control) continue;
       control.disabled = !on;
       control.title = on ? '' : L.fluxPresentOnly;
     }
-    if (currentToggle) {
-      const ocean = Boolean((on && config.ocean) || past);
-      currentToggle.disabled = !ocean;
-      currentToggle.title = ocean ? '' : L.currentsUnavailable;
+    if (currentSelect) {
+      const flow = Boolean((on && config.ocean) || past);
+      const belt = Boolean(state.present && api.circulation);
+      currentSelect.disabled = !(flow || belt);
+      currentSelect.title = flow || belt ? '' : L.currentsUnavailable;
+      for (const option of currentSelect.options) {
+        if (option.value === 'flow') option.disabled = !flow;
+        if (option.value === 'conveyor') {
+          option.disabled = !belt;
+          option.title = belt ? '' : L.circulationPresentOnly;
+        }
+      }
+      currentSelect.value = state.currents || '';
     }
-    currentToggle?.setAttribute('aria-pressed', String(state.currents));
+    api.circulation?.show(state.present && state.currents === 'conveyor');
     // Wind
     const wind = on && state.wind && config.weather ? config.weather.wind[state.wind] : null;
     layers.wind.field = null;
@@ -401,12 +414,12 @@ export function createFlux({ config, stage, L, fmt, lang, api }) {
     }
     // Currents
     layers.ocean.field = null;
-    if (on && state.currents && config.ocean) {
+    if (on && flowOn() && config.ocean) {
       try {
         layers.ocean.field = await loadField('ocean', config.ocean.url, config.ocean, true);
         layers.ocean.ref = OCEAN.ref;
       } catch (error) { console.error(error); }
-    } else if (past && state.currents) {
+    } else if (past && flowOn()) {
       // Same speed scale as the present, so a weak model current looks weak beside it.
       try {
         const base = await loadField(`ocean:${past.url}`, past.url, past, true);
@@ -447,13 +460,13 @@ export function createFlux({ config, stage, L, fmt, lang, api }) {
       when.hidden = !text;
     }
     stage.dataset.fluxWhen = text;
-    if ($('flux-note')) $('flux-note').hidden = !(on && (state.wind || state.currents || state.clouds || api.satelliteShown()));
-    if ($('foam-note')) $('foam-note').hidden = !(past && state.currents && layers.ocean.field);
+    if ($('flux-note')) $('flux-note').hidden = !(on && (state.wind || flowOn() || state.clouds || api.satelliteShown()));
+    if ($('foam-note')) $('foam-note').hidden = !(past && flowOn() && layers.ocean.field);
     api.changed();
   }
 
   windSelect?.addEventListener('change', () => { state.wind = windSelect.value || null; sync(); });
-  currentToggle?.addEventListener('click', () => { state.currents = !state.currents; sync(); });
+  currentSelect?.addEventListener('change', () => { state.currents = currentSelect.value || null; sync(); });
   cloudSelect?.addEventListener('change', () => { state.clouds = cloudSelect.value || null; sync(); });
 
   return {
@@ -470,7 +483,9 @@ export function createFlux({ config, stage, L, fmt, lang, api }) {
     state: () => ({ wind: state.wind, currents: state.currents, clouds: state.clouds }),
     restore({ wind, currents, clouds }) {
       if (wind && config.weather?.wind[wind]) state.wind = wind;
-      if (currents && (config.ocean || api.pastCurrents)) state.currents = true;
+      if (currents === 'flow' && (config.ocean || api.pastCurrents)) state.currents = 'flow';
+      if (currents === 'conveyor' && api.circulation) state.currents = 'conveyor';
+      if (currentSelect) currentSelect.value = state.currents || '';
       if (clouds && config.weather?.clouds[clouds]) state.clouds = clouds;
       if (windSelect) windSelect.value = state.wind || '';
       if (cloudSelect) cloudSelect.value = state.clouds || '';

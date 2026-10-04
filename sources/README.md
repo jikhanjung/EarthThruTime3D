@@ -336,6 +336,16 @@ on 1° cells of the stop's own sea, in the present-day currents' form; the prese
 ECCO2 mean. `scripts/score_currents.py` measures FOAM's 0 Ma run against the drifters (devlog
 wwolf 020).
 
+## Present-day overturning sections
+
+`godas.json` pins five years (2016–2020) of the **NCEP GODAS** reanalysis's monthly northward
+velocity (`vcur`, 40 levels to 4,478 m, 1/3° × 1°, 74°S–65°N; NOAA PSL, free with an
+acknowledgement requested; Behringer & Xue 2004). `scripts/fetch_paleodem.py --manifest
+sources/godas.json` fetches and verifies them (0.6 GB). `scripts/build_circulation.py`
+integrates the Atlantic and Indo-Pacific overturning north of 32°S for the legend of the
+circulation schematic, and writes the schematic itself (drawn after Broecker 1991 and
+Rahmstorf 2002, every point checked to lie in the present grid's sea) into the same file.
+
 ## Present-day crustal thickness
 
 `crust/crust2.json` pins the EarthByte GPlates 2.3 distribution of **CRUST 2.0**:

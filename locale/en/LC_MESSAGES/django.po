@@ -1579,3 +1579,66 @@ msgstr "Past currents"
 
 msgid "고도 격자의 과거 시점에서 켜는 해류는 FOAM 해양–대기 결합 모형을 Scotese & Wright(2018) 지리 위에서 2천만 년마다 돌린 결과입니다. 모든 실행의 CO₂·태양·궤도·땅의 덮개가 같고 대륙 배치만 다르므로, 그 시대의 기후가 아니라 대륙 배치가 해류에 주는 효과를 보여 줍니다. 시점마다 가장 가까운 실행의 표층 연평균을 그 시점 지도의 바다에 맞춰 이 프로젝트가 옮겼습니다."
 msgstr "The currents shown at past times of the elevation series come from the FOAM coupled ocean–atmosphere model, run every 20 million years on the Scotese & Wright (2018) geographies. Every run has the same CO₂, Sun, orbit and land cover and only the arrangement of the continents changes, so they show what the continents do to the currents, not each period's climate. This project took the surface annual mean of the nearest run for each time and fitted it to that time's sea."
+
+msgid "순환 모식도는 오늘의 바다만 그립니다"
+msgstr "The circulation schematic shows today's ocean only"
+
+msgid "순환 모식도 · 오늘 (문헌을 따라 그린 그림)"
+msgstr "Circulation schematic · today (drawn after the literature)"
+
+msgid "표층의 따뜻한 물"
+msgstr "Warm surface water"
+
+msgid "북대서양 심층수 (약 1.5–4 km)"
+msgstr "North Atlantic Deep Water (about 1.5–4 km)"
+
+msgid "남극 저층수 (바닥, 약 4 km 아래)"
+msgstr "Antarctic Bottom Water (on the sea floor, below about 4 km)"
+
+msgid "가라앉는 곳: 주황 선이 끝나고 파랑·보라 선이 시작"
+msgstr "Sinks: an orange line ends, a blue or purple line starts"
+
+msgid "솟는 곳: 파랑 선이 끝나고 주황 선이 시작"
+msgstr "Rises: a blue line ends, an orange line starts"
+
+msgid "흐려지며 끝남: 위의 물과 서서히 섞임"
+msgstr "Fading end: mixes slowly into the water above"
+
+msgid "선이 겹치는 곳은 깊이가 다릅니다(보라가 파랑 아래)."
+msgstr "Where lines cross they are at different depths (purple runs under blue)."
+
+msgid "뒤집힘 순환 단면 · GODAS 2016–2020 평균"
+msgstr "Overturning sections · GODAS 2016–2020 mean"
+
+msgid "위도(오른쪽이 북)와 깊이. 빨강은 북쪽에서 가라앉아 깊은 곳으로 남하하는 고리, 파랑은 남쪽에서 가라앉아 바닥으로 북상하는 고리. 등치선 간격 4 Sv, 화살표는 흐름 방향."
+msgstr "Latitude (north to the right) and depth. Red: the loop that sinks in the north and returns south at depth; blue: the loop that sinks in the south and comes north along the floor. Contours every 4 Sv, arrows along the flow."
+
+msgid "{basin} · 빨강 {red} Sv · 파랑 {blue} Sv"
+msgstr "{basin} · red {red} Sv · blue {blue} Sv"
+
+msgid "대서양"
+msgstr "Atlantic"
+
+msgid "인도양·태평양"
+msgstr "Indo-Pacific"
+
+msgid "해류 끔"
+msgstr "Currents off"
+
+msgid "해류 표층 흐름"
+msgstr "Surface flow"
+
+msgid "순환 모식도"
+msgstr "Circulation schematic"
+
+msgid "순환 모식도는 자료에서 추적한 것이 아니라 교과서의 \"컨베이어 벨트\"를 문헌을 따라 손으로 그린 그림입니다. 북대서양(노르웨이해·래브라도해)에서 가라앉은 물은 아메리카를 따라 남하해 남극 순환류를 타고 인도양과 태평양으로 갑니다. 남극 저층수는 해빙이 얼 때 남는 차고 짠 물이 웨델해·로스해·아델리 해안·다른리곶에서 가라앉아 바닥을 따라 북상하며, 위의 물과 서서히 섞이므로 끝이 흐려집니다(녹은 물이 아니라 어는 물입니다). 실제로 깊은 물은 대부분 남극해에서 넓고 느리게 솟아오르는데, 이것은 선으로 그릴 수 없습니다."
+msgstr "The circulation schematic is not traced from data: it is the textbook \"conveyor belt\" drawn by hand after the literature. Water that sinks in the North Atlantic (the Nordic and Labrador Seas) runs south along the Americas, joins the Antarctic Circumpolar Current and goes on into the Indian and Pacific Oceans. Antarctic Bottom Water, the cold, salty water left behind when sea ice freezes, sinks in the Weddell and Ross Seas, off the Adélie coast and at Cape Darnley and spreads north along the sea floor; it mixes slowly into the water above, so its lines fade out (it is freezing water, not meltwater). Most deep water actually rises in the Southern Ocean, slowly and over a wide area, which no line can show."
+
+msgid "범례의 단면은 그림 뒤의 자료입니다: NCEP GODAS 재분석의 2016–2020년 북향 유속으로 계산한 대서양과 인도양·태평양의 뒤집힘 순환(남위 32도 북쪽). GODAS는 북위 65도와 수심 약 4.5 km에서 끝나므로 노르웨이해와 가장 깊은 바닥은 단면에 없습니다."
+msgstr "The sections in the legend are the data behind the picture: the Atlantic and Indo-Pacific overturning north of 32°S, computed from the NCEP GODAS reanalysis's 2016–2020 northward velocity. GODAS ends at 65°N and at about 4.5 km depth, so the Nordic Seas and the deepest floor are not in the sections."
+
+msgid "GODAS 자료: NOAA PSL, Boulder, Colorado, USA, https://psl.noaa.gov"
+msgstr "GODAS data: NOAA PSL, Boulder, Colorado, USA, https://psl.noaa.gov"
+
+msgid "순환 모식도는 이 프로젝트가 문헌(Broecker 1991, Rahmstorf 2002 등)을 따라 그린 그림이고, 그 옆의 뒤집힘 순환 단면은 GODAS 재분석의 2016–2020년 북향 유속으로 계산했습니다."
+msgstr "The circulation schematic is this project's drawing after the literature (Broecker 1991, Rahmstorf 2002 and others); the overturning sections beside it are computed from the GODAS reanalysis's 2016–2020 northward velocity."
