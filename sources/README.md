@@ -343,12 +343,16 @@ wwolf 020).
 ## Present-day overturning sections
 
 `godas.json` pins five years (2016–2020) of the **NCEP GODAS** reanalysis's monthly northward
-velocity (`vcur`, 40 levels to 4,478 m, 1/3° × 1°, 74°S–65°N; NOAA PSL, free with an
-acknowledgement requested; Behringer & Xue 2004). `scripts/fetch_paleodem.py --manifest
-sources/godas.json` fetches and verifies them (0.6 GB). `scripts/build_circulation.py`
-integrates the Atlantic and Indo-Pacific overturning north of 32°S for the legend of the
-circulation schematic, and writes the schematic itself (drawn after Broecker 1991 and
-Rahmstorf 2002, every point checked to lie in the present grid's sea) into the same file.
+velocity (`vcur`, 40 levels to 4,478 m, 1/3° × 1°, 74°S–65°N with wet cells to 64°N; NOAA
+PSL, free with an acknowledgement requested; Behringer et al. 1998, Behringer & Xue 2004).
+`scripts/fetch_paleodem.py --manifest sources/godas.json` fetches and verifies them (0.6 GB).
+`scripts/build_circulation.py` integrates the Atlantic (joined across Greenwich) and
+Indo-Pacific overturning north of 32°S for the legend of the circulation schematic, reading
+its numbers at stated latitudes (the Atlantic's upper cell at 26.5°N, where RAPID measures
+it; the bottom water below 2 km at 30°S). It writes the schematic itself into the same file:
+drawn after Broecker 1991 and Rahmstorf 2002, every 5 km of every line checked against the
+present 6-minute grid's land and the present ice mask (`build_ice.py` first), and every line
+end checked to reach a mark or another line.
 
 ## Present-day crustal thickness
 

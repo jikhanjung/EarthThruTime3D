@@ -784,13 +784,13 @@ class PaleodemTests(TestCase):
         self.assertNotContains(response, 'value="conveyor"')
         self.assertNotContains(response, 'id="circulation-note"')
         self.assertEqual(self.client.get('/globe/circulation.json').status_code, 404)
-        built = {'lines': [], 'marks': [], 'sections': []}
+        built = {'schematic': {'lines': [], 'marks': []}, 'sections': {'basins': []}}
         Path(self.dem.name, 'circulation.json').write_text(json.dumps(built))
         response = self.client.get('/', {'masks': 'paleodem2018'})
         self.assertEqual(response.context['circulation_url'], '/globe/circulation.json')
         # The currents select is there for the schematic alone, without any current field.
         for needle in ('id="currents"', 'value="conveyor"', 'id="circulation-note"', 'id="globe-circulation"',
-                       'doi.org/10.5670/oceanog.1991.07', 'psl.noaa.gov'):
+                       'doi.org/10.5670/oceanog.1991.07', 'doi.org/10.1029/2025GL115055', 'psl.noaa.gov'):
             self.assertContains(response, needle)
         self.assertNotContains(response, 'value="flow"')
         served = self.client.get('/globe/circulation.json')

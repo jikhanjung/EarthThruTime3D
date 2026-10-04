@@ -321,8 +321,11 @@ summary{cursor:pointer;color:#c9dce2}
 .flux-legend li{display:flex;align-items:center;gap:.25rem;white-space:nowrap}
 .flux-legend li span{width:12px;height:4px;border-radius:2px;flex:none}
 .circulation-legend ul{display:grid;gap:.12rem;margin:0;padding:0;list-style:none}
-.circulation-legend li span{width:16px;height:5px}
-.circulation-legend .belt-mark{width:16px;flex:none;text-align:center;font-size:.72rem;line-height:1}
+/* Sentence-length keys wrap, unlike the speed labels the flux legend's rows were made for. */
+.circulation-legend li{white-space:normal;align-items:flex-start}
+.circulation-legend li span{width:16px;height:5px;margin-top:.4em}
+.circulation-legend .belt-mark{width:16px;flex:none;text-align:center;font-size:.72rem;line-height:1.3;
+  text-shadow:0 0 1px #f4f7f8,0 0 1px #f4f7f8,0 0 1px #f4f7f8}
 .circulation-legend .belt-note{margin:.25rem 0 0;opacity:.8}
 .circulation-legend summary{margin-top:.3rem;cursor:pointer;font-weight:600}
 .circulation-legend canvas{display:block;width:100%;height:110px;margin-top:.3rem}

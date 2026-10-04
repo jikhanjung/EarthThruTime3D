@@ -14,11 +14,13 @@ import { createMantleScene, CUT_UNIFORMS, CUT_SURFACE } from './mantle-scene.js'
 import { createCrust, CRUST_GLSL } from './crust.js';
 import { createInteriorControls } from './interior-controls.js';
 import { createFlux } from './flux.js';
-import { BELT_COLOURS, buildBelt, drawSection } from './circulation.js';
+import { createCirculation } from './circulation.js';
 let interior = null;
 let mantleOverlay = null;
 let crust = null;
 let flux = null;
+// The present's circulation schematic (circulation.js), where its file is built.
+let circulation = null;
 
 const $ = (id) => document.getElementById(id);
 const frames = JSON.parse($('globe-frames').textContent);
@@ -599,6 +601,7 @@ async function selectStop(value, manual = false, overlayManaged = false, transit
       satelliteToggle.title = presentStop ? '' : L.fluxPresentOnly;
     }
     if ($('satellite-note')) $('satellite-note').hidden = !satellite;
+    circulation?.setStop(presentStop);
     flux?.setPresent(presentStop);
     flux?.setPast(presentStop ? null : pastCurrents(place));
     flux?.refresh();
@@ -2517,6 +2520,7 @@ function init() {
     lift: { uniforms: LIFT_UNIFORMS_GLSL, travel: TRAVEL_GLSL, metres: METRES_GLSL, lift: LIFT_GLSL },
     cut: { uniforms: CUT_UNIFORMS, surface: CUT_SURFACE },
   });
+  if (circulationUrl) circulation = createCirculation({ url: circulationUrl, earth, stage, L, fmt });
   flux = createFlux({
     config: present, stage, L, fmt, lang: document.documentElement.lang,
     api: {
@@ -2528,7 +2532,7 @@ function init() {
       projection: () => projection,
       changed: queueAddress,
       pastCurrents: pastCurrentsBuilt,
-      circulation: circulationUrl ? { show: showCirculation } : null,
+      circulation,
     },
   });
   const observer = new ResizeObserver(fitCamera);
@@ -2557,7 +2561,11 @@ function init() {
     updateNameVisibility();
     updatePinVisibility();
     updateRanges();
-    updateCirculation();
+    // The belt would show through a cut-away or see-through surface, as the overlay lines would
+    // without their own shader; it steps aside then.
+    circulation?.frame({ key: projection === 'globe' ? 'globe' : `${projection}:${meridian}`, projection, meridian,
+      place: pointAt, hidden: uniforms.mantleCutaway.value > .5 || uniforms.crustCutaway.value > .5
+        || uniforms.mantleSurfaceOpacity.value < 1 });
     const view = tiltedView();
     if (uniforms.mantleCutaway.value > .5 || uniforms.crustCutaway.value > .5 || uniforms.mantleSurfaceOpacity.value < 1) {
       earth.updateWorldMatrix(true,false);
@@ -3175,83 +3183,6 @@ function pastCurrents(place) {
     return [share * east, share * north];
   } : null;
   return { ...near.currents, key: `${near.id}:${share.toFixed(3)}`, shift };
-}
-// The present-day circulation schematic (wwolf P02 step 5): the conveyor belt drawn from the
-// literature and the GODAS overturning sections behind it (scripts/build_circulation.py), shown
-// while the currents select is on "conveyor" at the present. Placed on the projection like the
-// overlay lines, and rebuilt when the projection or a flat map's centre moves.
-let circulationData = null;
-let circulationShown = false;
-let circulationGroup = null;
-let circulationKey = '';
-let circulationLegend = null;
-function showCirculation(on) {
-  circulationShown = on;
-  if (on && !circulationData) loadCirculation();
-  if ($('circulation-note')) $('circulation-note').hidden = !on;
-  showCirculationLegend();
-}
-async function loadCirculation() {
-  try {
-    circulationData = await (await fetch(circulationUrl)).json();
-  } catch (error) {
-    console.error(error);
-  }
-  showCirculationLegend();
-}
-function updateCirculation() {
-  const on = Boolean(circulationShown && circulationData);
-  const key = on ? (projection === 'globe' ? 'globe' : `${projection}:${meridian}`) : '';
-  if (key === circulationKey) return;
-  circulationKey = key;
-  if (circulationGroup) {
-    earth.remove(circulationGroup);
-    circulationGroup.traverse((part) => { part.geometry?.dispose(); part.material?.dispose(); });
-    circulationGroup = null;
-  }
-  stage.dataset.circulation = on ? String(circulationData.lines.length) : '';
-  if (!on) return;
-  const relative = (lon) => ((lon - meridian + 540) % 360) - 180;
-  const seam = (...lons) => projection !== 'globe'
-    && Math.max(...lons.map(relative)) - Math.min(...lons.map(relative)) > 90;
-  circulationGroup = buildBelt(circulationData, (lon, lat) => pointAt(lon, lat, 0.0025), seam);
-  earth.add(circulationGroup);
-}
-function showCirculationLegend() {
-  if (!circulationLegend) {
-    circulationLegend = document.createElement('figure');
-    circulationLegend.className = 'flux-legend circulation-legend';
-    circulationLegend.id = 'circulation-legend';
-    const dock = $('map-legend') || stage.parentElement;
-    const head = dock.querySelector('.legend-head');
-    if (head) head.after(circulationLegend); else dock.prepend(circulationLegend);
-  }
-  circulationLegend.hidden = !(circulationShown && circulationData);
-  if (circulationLegend.hidden || circulationLegend.dataset.built) return;
-  circulationLegend.dataset.built = 'true';
-  const line = (colour, text) => `<li><span style="background:${colour}"></span>${text}</li>`;
-  const mark = (glyph, colour, text) => `<li><b class="belt-mark" style="color:${colour}">${glyph}</b>${text}</li>`;
-  const sections = circulationData.sections;
-  circulationLegend.innerHTML = `<figcaption>${L.circulationLegend}</figcaption><ul>`
-    + line(BELT_COLOURS.surface, L.beltSurface) + line(BELT_COLOURS.deep, L.beltDeep)
-    + line(BELT_COLOURS.bottom, L.beltBottom) + mark('▼', '#6f9be8', L.beltSink)
-    + mark('▲', BELT_COLOURS.surface, L.beltRise)
-    + line(`linear-gradient(90deg,${BELT_COLOURS.bottom},transparent)`, L.beltFade)
-    + `</ul><p class="belt-note">${L.beltCross}</p><details><summary>${L.sectionsHead}</summary>`
-    + sections.map((_, index) => `<canvas data-section="${index}"></canvas>`).join('')
-    + `<p class="belt-note">${L.sectionsCaption}</p></details>`;
-  // The sections are drawn once they are opened, when the canvas has its width.
-  const details = circulationLegend.querySelector('details');
-  details.addEventListener('toggle', () => {
-    if (!details.open) return;
-    for (const canvas of details.querySelectorAll('canvas')) {
-      const section = sections[canvas.dataset.section];
-      drawSection(canvas, section, fmt(L.sectionTitle, {
-        basin: section.basin === 'atlantic' ? L.basinAtlantic : L.basinIndoPacific,
-        red: Math.round(section.red), blue: Math.round(section.blue),
-      }));
-    }
-  });
 }
 // A mark moves by its side's share of the travel field.
 function fillRanges(group, marks, gap, share) {

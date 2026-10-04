@@ -327,8 +327,8 @@ export function createFlux({ config: present, stage, L, fmt, lang, api }) {
 
   // ── controls ──────────────────────────────────────────────────────
   const windSelect = $('wind-layer'), currentSelect = $('currents'), cloudSelect = $('cloud-layer');
-  // The currents select: '' off, 'flow' the particles, 'conveyor' the present's circulation
-  // schematic, which the page draws (api.circulation); the particles are only 'flow'.
+  // The currents select: '' off, 'flow' the particles, 'conveyor' the circulation schematic,
+  // which api.circulation draws and says where it is available; the particles are only 'flow'.
   const flowOn = () => state.currents === 'flow';
   const legend = document.createElement('figure');
   legend.className = 'flux-legend';
@@ -391,21 +391,28 @@ export function createFlux({ config: present, stage, L, fmt, lang, api }) {
       control.disabled = !on;
       control.title = on ? '' : L.fluxPresentOnly;
     }
+    // A choice kept for a stop that cannot draw it (the schematic away from the present, the
+    // particles where no field is built) stays selected, and says why.
+    let unavailable = '';
     if (currentSelect) {
       const flow = Boolean((on && config.ocean) || past);
-      const belt = Boolean(state.present && api.circulation);
+      const belt = Boolean(api.circulation?.available());
       currentSelect.disabled = !(flow || belt);
-      currentSelect.title = flow || belt ? '' : L.currentsUnavailable;
       for (const option of currentSelect.options) {
-        if (option.value === 'flow') option.disabled = !flow;
+        if (option.value === 'flow') {
+          option.disabled = !flow;
+          option.title = flow ? '' : L.currentsUnavailable;
+        }
         if (option.value === 'conveyor') {
           option.disabled = !belt;
           option.title = belt ? '' : L.circulationPresentOnly;
         }
       }
       currentSelect.value = state.currents || '';
+      unavailable = currentSelect.selectedOptions[0]?.disabled ? currentSelect.selectedOptions[0].title : '';
+      currentSelect.title = flow || belt ? unavailable : L.currentsUnavailable;
     }
-    api.circulation?.show(state.present && state.currents === 'conveyor');
+    api.circulation?.show(state.currents === 'conveyor');
     // Wind
     const wind = on && state.wind && config.weather ? config.weather.wind[state.wind] : null;
     layers.wind.field = null;
@@ -457,7 +464,7 @@ export function createFlux({ config: present, stage, L, fmt, lang, api }) {
     stage.dataset.currents = String(Boolean(layers.ocean.field));
     stage.dataset.clouds = cloudMesh.visible ? state.clouds : '';
     showLegend(past);
-    const text = on ? describe() : past ? describe(past) : '';
+    const text = (on ? describe() : past ? describe(past) : '') || unavailable;
     if (when) {
       when.textContent = text;
       when.hidden = !text;
