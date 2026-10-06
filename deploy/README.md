@@ -8,6 +8,10 @@
 `sha256:d45f7b76c936b92c5766a69db6a86c66d1c9a510c4563484d055733cf143e510`.
 배포·백업·공개 화면 검증 결과는 [릴리스 기록](../devlog/20261003_jikhanjung_121_release_0260.md)에 있다.
 
+2026-10-07 호스트 `backup.sh`만 교체했다(이미지·자료는 v0.26.0 그대로, 13cede0: 보관 24개,
+무결성 실패 시 `INTEGRITY_FAIL` 표식). 앞 판은 `/srv/earththrutime3d/backup.sh.prev`. 교체 직후
+수동 실행 rc=0(스냅샷 15개, 표식 없음), `/healthz` `ok`. 보관 개수는 매시간 하나씩 늘어 24개에서 멈춘다.
+
 ## 운영 주소
 
 2026-09-12 dolfinid에 배포했다.
