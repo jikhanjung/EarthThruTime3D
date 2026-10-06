@@ -8,7 +8,11 @@
 # safe way to copy a database that has writers attached.
 set -euo pipefail
 cd "$(dirname "$0")"
-keep=${KEEP:-14}
+# The timer runs this hourly, but m710q pulls only the newest snapshot once a day (04:20,
+# system-operation/m710q/backup-earththrutime.sh). The kept window must outlast that pull
+# interval, or a missed or late pull finds nothing it has not already lost:
+# KEEP x 1 h >= 24 h. 24 matches ScoreMate and fsis.
+keep=${KEEP:-24}
 tag=${1:-$(grep -oP '(?<=^IMAGE_TAG=).*' .env 2>/dev/null || true)}
 [[ -n "$tag" ]] || { echo 'No image tag: pass one or deploy first.' >&2; exit 1; }
 [[ -f db/db.sqlite3 ]] || { echo 'No database yet; nothing to back up.'; exit 0; }
@@ -27,6 +31,9 @@ from pathlib import Path
 live = Path("/var/lib/earththrutime3d/db.sqlite3")
 store = Path("/var/lib/earththrutime3d-backups")
 target = store / time.strftime("db-%Y%m%dT%H%M%SZ.sqlite3", time.gmtime())
+# Beside the database, where settings.INTEGRITY_SENTINEL points: while it exists /healthz
+# answers degraded.
+sentinel = live.parent / "INTEGRITY_FAIL"
 
 source = sqlite3.connect(f"file:{live}?mode=ro", uri=True)
 copy = sqlite3.connect(target)
@@ -36,17 +43,38 @@ copy.close()
 source.close()
 
 # A snapshot that fails its integrity check is worse than none, because it would be
-# trusted. Refuse it rather than keep it.
+# trusted. Take it out of the db-*.sqlite3 set that the offsite pull and the prune below
+# read, raise the sentinel, and stop before pruning: the older snapshots are now the
+# restore candidates. The first failed copy stays as evidence under a name nothing globs;
+# later ones are dropped so an hourly failure does not fill the disk.
 check = sqlite3.connect(f"file:{target}?mode=ro", uri=True)
-result = check.execute("PRAGMA integrity_check").fetchone()[0]
-check.close()
-if result != "ok":
-    target.unlink(missing_ok=True)
-    raise SystemExit(f"Integrity check failed: {result}")
+try:
+    problems = [row[0] for row in check.execute("PRAGMA integrity_check")]
+except sqlite3.DatabaseError as error:
+    problems = [f"integrity_check could not run: {error}"]
+finally:
+    check.close()
+if problems != ["ok"]:
+    evidence = store / target.name.replace(".sqlite3", "-INTEGRITY_FAIL.corrupt")
+    if any(store.glob("*-INTEGRITY_FAIL.corrupt")):
+        target.unlink(missing_ok=True)
+    else:
+        target.replace(evidence)
+    stamp = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+    sentinel.write_text("\n".join([
+        f"{stamp} backup.sh: PRAGMA integrity_check failed: {problems[0]}",
+        "/healthz stays degraded while this file exists; pruning is suspended.",
+        "The older backups/db-*.sqlite3 are the restore candidates. The next passing",
+        "check removes this file.",
+        "",
+        *problems[:20],
+    ]) + "\n")
+    raise SystemExit(f"Integrity check failed: {problems[0]}")
+sentinel.unlink(missing_ok=True)
 print(f"Backed up to {target.name} ({target.stat().st_size} bytes)")
 
 # Prune only after a verified new snapshot exists, and never below one kept copy.
-keep = max(1, int(os.environ.get("KEEP", "14")))
+keep = max(1, int(os.environ.get("KEEP", "24")))
 snapshots = sorted(store.glob("db-*.sqlite3"), key=lambda path: path.name, reverse=True)
 for stale in snapshots[keep:]:
     stale.unlink()
