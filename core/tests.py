@@ -747,6 +747,35 @@ class PaleodemTests(TestCase):
         self.assertEqual(served.status_code, 200)
         self.assertEqual(json.loads(b''.join(served.streaming_content)), {'present': [], 'maps': {}})
 
+    def test_past_currents_are_offered_only_where_built(self):
+        for item in globe_module.series_items('paleodem2018'):
+            self.build(item)
+        response = self.client.get('/', {'masks': 'paleodem2018'})
+        self.assertTrue(all(frame['currents'] is None for frame in response.context['frames']))
+        self.assertFalse(response.context['currents_available'])
+        self.assertNotContains(response, 'id="currents"')
+        self.assertNotContains(response, 'id="foam-note"')
+        past = next(item for item in globe_module.catalogue('paleodem2018')['maps'] if item['age_ma'] == 100)
+        self.assertEqual(self.client.get(f"/globe/currents/{past['id']}.png").status_code, 404)
+        globe_module.currents_path(past).write_bytes(b'png')
+        # A field without its row in the catalogue is not offered: its ranges are unknown.
+        response = self.client.get('/', {'masks': 'paleodem2018'})
+        self.assertFalse(response.context['currents_available'])
+        row = {'run_ma': 100, 'u': [-0.503937, 0.5], 'v': [-0.201575, 0.2], 'carried': 0.04}
+        Path(self.dem.name, 'currents.json').write_text(json.dumps({'maps': {past['id']: row}}))
+        response = self.client.get('/', {'masks': 'paleodem2018'})
+        frames = {frame['id']: frame for frame in response.context['frames']}
+        self.assertEqual(frames[past['id']]['currents'], dict(row, url=f"/globe/currents/{past['id']}.png"))
+        self.assertIsNone(frames['paleoatlas-600']['currents'])
+        self.assertTrue(response.context['currents_available'])
+        for needle in ('id="currents"', 'id="foam-note"', 'id="flux-when"', 'doi.org/10.1038/s41586-022-05018-z',
+                       'doi.org/10.5281/zenodo.5780097'):
+            self.assertContains(response, needle)
+        served = self.client.get(f"/globe/currents/{past['id']}.png")
+        self.assertEqual(served.status_code, 200)
+        self.assertEqual(b''.join(served.streaming_content), b'png')
+        self.assertFalse(self.client.get('/').context['currents_available'])
+
     def test_river_fields_are_offered_only_where_built(self):
         for item in globe_module.series_items('paleodem2018'):
             self.build(item)

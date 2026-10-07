@@ -64,10 +64,12 @@ try {
   await expect(page.locator('#flux-when')).not.toContainText('–');
   await expect(globe).toHaveAttribute('data-clouds', '');
 
-  // Away from the present everything stands down, and comes back.
+  // Away from the present everything stands down, and comes back. Where the bundle has the
+  // past current fields the stop offers its own currents (data-flux="past"), switched off here.
   await page.locator('#older').click();
   await expect(globe).toHaveAttribute('aria-busy', 'false');
-  await expect(globe).toHaveAttribute('data-flux', 'unavailable');
+  await expect(globe).toHaveAttribute('data-flux', /^(unavailable|past)$/);
+  await expect(globe).toHaveAttribute('data-currents', 'false');
   await expect(globe).not.toHaveAttribute('data-surface', 'sat');
   await expect(page.locator('#flux-when')).toBeHidden();
   await expect(page.locator('#wind-layer')).toBeDisabled();

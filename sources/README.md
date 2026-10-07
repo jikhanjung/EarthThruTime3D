@@ -326,6 +326,20 @@ it is a live feed: the screen names the moment or period of each layer.
   `scripts/score_currents.py` reads it, to score the ECCO2 mean against observation (devlog
   wwolf 020); nothing is built from it or shipped.
 
+## Past surface currents
+
+`foam-currents.json` pins the ocean files of **Pohl's FOAM runs** (Zenodo
+doi:10.5281/zenodo.5780097, CC BY 4.0; Pohl, Ridgwell, Stockey, Thomazo, Keane, Vennin &
+Scotese 2022, *Nature* 608, 523–527, whose data statement points to the record): 28 coupled
+runs every 20 Myr from 540 to 0 Ma on the Scotese & Wright (2018) geographies, all at CO₂
+2240 ppm with the Sun, orbit and land cover fixed, so they show what the continents do, not
+each period's climate. `scripts/fetch_paleodem.py --manifest sources/foam-currents.json`
+fetches and verifies them (3.5 GB). `scripts/build_past_currents.py` gives each PaleoDEM stop
+older than the present the top level's annual mean of the nearest run (the younger on a tie),
+on 1° cells of the stop's own sea, in the present-day currents' form; the present keeps the
+ECCO2 mean. `scripts/score_currents.py` measures FOAM's 0 Ma run against the drifters (devlog
+wwolf 020).
+
 ## Present-day crustal thickness
 
 `crust/crust2.json` pins the EarthByte GPlates 2.3 distribution of **CRUST 2.0**:
