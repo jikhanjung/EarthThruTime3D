@@ -33,7 +33,7 @@ try {
   const moment = `${present.weather.t.slice(0, 10)} ${present.weather.t.slice(11, 16)} UTC`;
   await menu();
   await page.selectOption('#wind-layer', '250hPa');
-  await page.locator('#currents').click();
+  await page.selectOption('#currents', 'flow');
   await page.selectOption('#cloud-layer', 'sat');
   await expect(globe).toHaveAttribute('data-wind', '250hPa');
   await expect(globe).toHaveAttribute('data-currents', 'true');
@@ -60,7 +60,7 @@ try {
 
   // One layer off: its moment leaves the caption.
   await page.selectOption('#cloud-layer', '');
-  await page.locator('#currents').click();
+  await page.selectOption('#currents', '');
   await expect(page.locator('#flux-when')).not.toContainText('–');
   await expect(globe).toHaveAttribute('data-clouds', '');
 

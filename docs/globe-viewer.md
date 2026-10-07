@@ -1071,7 +1071,7 @@ Earth as it looks and moves (jikhanjung P10, ported from GSM's "Earth in flux" l
   switch stays on a past stop of the elevation series that has a field (Past surface
   currents, below), otherwise it is disabled too and `data-flux="unavailable"`. Stage attributes: `data-satellite`, `data-satellite-size`,
   `data-flux`, `data-wind`, `data-currents`, `data-clouds`, `data-flux-when`. Address:
-  `sat=0`, `wind=10m|250hPa`, `currents=flow`, `clouds=sat|model`.
+  `sat=0`, `wind=10m|250hPa`, `currents=flow|conveyor`, `clouds=sat|model`.
 - **Encoding**: u and v are stored over `-M·128/127 .. M`, so code 128 is exactly zero
   and still water stays still (wwolf on #89).
 
@@ -1082,7 +1082,7 @@ files only. Sources and scripts: `sources/README.md`.
 
 ## Past surface currents
 
-On a past stop of the elevation series the currents switch draws the same particles through
+On a past stop of the elevation series the currents select's `flow` draws the same particles through
 the stop's own field (wwolf P02 step 3). The fields come from Pohl's FOAM runs (Pohl et al.
 2022, Zenodo 5780097, CC BY 4.0): 28 coupled runs every 20 Myr on the Scotese & Wright
 geographies with CO₂ 2240 ppm, the Sun, the orbit and the land cover fixed, so they show what
@@ -1110,6 +1110,57 @@ Circumpolar Current (devlog wwolf 020); the panel's `#foam-note` says so.
   Stage attributes: `data-flux="past"`, `data-currents`, `data-currents-run`,
   `data-currents-warp` (the warp key between stops, empty on a stop). The address keeps
   `currents=flow` at every age. The time windows have no past field.
+
+## Circulation schematic
+
+The currents control is a select: off, `flow` (the particles, present or past) or `conveyor`,
+the present's circulation schematic (wwolf P02 step 5). `flux.js` owns the select and its
+state, and only forwards the choice: `api.circulation.show(chosen)`. Everything else is
+`createCirculation` in `static/core/circulation.js`: when the schematic is available
+(`setStop(present)`, the present for now), loading, the meshes, the legend and
+`#circulation-note`. flux asks it `available()` to enable the option; a kept choice that a stop
+cannot draw stays selected, and its reason is the select's title and the caption under the age.
+The schematic needs no present-day bundle.
+
+- **What it is**: the textbook conveyor belt drawn after the literature, not traced from data
+  (Broecker 1991; Rahmstorf 2002; bottom-water sources after Orsi et al. 1999 and Ohshima et
+  al. 2013). Warm surface water (orange), North Atlantic Deep Water (blue) and Antarctic
+  Bottom Water (purple, fading out as it mixes upward) as ribbons, ▼ where water sinks and ▲
+  where the textbook belt has deep water rise; the Arabian Sea ▲ returns south as the Indian
+  Ocean's shallow cell does (Schott et al. 2002, for that return only). Arrowheads run along
+  the lines, none at an end. `#circulation-note` says it is a drawing, that the bottom water
+  is mostly made by freezing, and that most deep water rises in the Southern Ocean (Marshall &
+  Speer 2012), which no line shows.
+- **Build** (`scripts/build_circulation.py`): the waypoints smoothed into curves (Catmull-Rom,
+  a point about every 60 km). The build stops if any line, sampled every 5 km, crosses the
+  present 6-minute grid's land or the present ice mask (grounded or shelf; under Antarctica
+  the grid is bedrock), or if a line other than the bottom water ends more than 150 km from a
+  mark or another line. Beside them the Atlantic and Indo-Pacific overturning north of 32°S
+  from the NCEP GODAS reanalysis's 2016–2020 northward velocity (`sources/godas.json`); the
+  basins are labelled across GODAS's 0°/360° edge so the Atlantic keeps its part east of
+  Greenwich, and the latitude smoothing counts only rows inside the basin. The numbers are
+  read at stated latitudes, not taken as the section's extremes (GODAS has strong, doubtful
+  deep cells at the equator): the Atlantic's upper cell at 26.5°N, where RAPID measures it
+  (GODAS 10.1 Sv against RAPID's 17.0 Sv, 2004–2023; McCarthy et al. 2025), and the bottom
+  water below 2 km at 30°S (Atlantic 1.6 Sv, Indo-Pacific 1.6 Sv). One file,
+  `circulation.json` (about 170 KB): `schematic` (lines, marks, the DOIs it is drawn after,
+  CC BY 4.0) and `sections` (the GODAS source and acknowledgement, the basins).
+- **Serving**: `/globe/circulation.json`; `circulation_url` on the elevation series where the
+  file is built, which adds the `conveyor` option, the note and the data link.
+- **Drawing**: the triangles are built once in degrees and share one material; when the
+  projection or a flat map's centre moves only their positions are written again. A triangle
+  across a flat map's edge folds to a point, and a mark across it moves whole to one side.
+  The belt steps aside while the surface is cut away or see-through (the mantle overlay),
+  where it would show through from the far side. Drawn at the present (also the time windows'
+  0 ka); away from it the belt stands down.
+- **Legend**: the keys, and the two sections in a closed `<details>`, drawn on a canvas when
+  opened (red: the loop sinking in the north; blue: the opposite; contours every 4 Sv with
+  arrows along the flow). GODAS's wet cells end at 64°N and about 4.5 km depth, so the Nordic
+  Seas and the deepest floor are not in them. A failed load says so in the legend.
+- **Address**: `currents=conveyor`; a value the select does not offer is ignored.
+- **Stage attributes**: `data-circulation` (the number of lines drawn, empty when none,
+  `error` after a failed load), `data-circulation-marks` (marks drawn) and `data-circulation-shown`
+  (whether the belt is on screen; false while the surface is cut away or see-through).
 
 ## Runtime and data boundaries
 
@@ -1152,6 +1203,12 @@ Neither flag grants data-use rights. See `sources/README.md`, `LICENSE-DATA.md` 
   past stop's particles, the run named under the age and in the legend, the note, the nearest
   run and its tie rule, the field moving with the map between stops, a flat map, the address,
   the time windows and no third-party requests. The present-day data is not needed.
+- `VIEWER_URL=… node tests/circulation-browser.mjs` with `circulation.json` and the past
+  current fields built: the schematic at the present on the globe and a flat map (all eight
+  marks), its legend and drawn sections, the note, the address, standing down at a past stop
+  with its reason shown (whose particles stay selectable), the time windows' 0 ka, an invalid
+  value, a failed load, the English legend inside its box and no third-party requests. The
+  present-day data is not needed.
 - `VIEWER_URL=http://127.0.0.1:8153/ node tests/river-browser.mjs`: river PNG, shader,
   toggle, grid-spacing explanation, mobile layout and both languages (requires a built 0 Ma river field).
 - `VIEWER_URL=http://127.0.0.1:8153/ node tests/view-address-browser.mjs`: the view in the address:

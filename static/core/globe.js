@@ -14,10 +14,13 @@ import { createMantleScene, CUT_UNIFORMS, CUT_SURFACE } from './mantle-scene.js'
 import { createCrust, CRUST_GLSL } from './crust.js';
 import { createInteriorControls } from './interior-controls.js';
 import { createFlux } from './flux.js';
+import { createCirculation } from './circulation.js';
 let interior = null;
 let mantleOverlay = null;
 let crust = null;
 let flux = null;
+// The present's circulation schematic (circulation.js), where its file is built.
+let circulation = null;
 
 const $ = (id) => document.getElementById(id);
 const frames = JSON.parse($('globe-frames').textContent);
@@ -75,6 +78,7 @@ const PLATE_COLOUR = 0xff62c0;
 // the sea reached. Same PALEOMAP frame as the 2016 masks, so drawn without rotation.
 const coastlines = JSON.parse($('globe-coastlines')?.textContent ?? 'null');
 const rangesUrl = JSON.parse($('globe-ranges')?.textContent ?? 'null');
+const circulationUrl = JSON.parse($('globe-circulation')?.textContent ?? 'null');
 // Amber vanished against the tan land; this reads on land and on sea, and is not the
 // plate overlay's pink.
 const COASTLINE_COLOUR = 0xff4d1a;
@@ -597,6 +601,7 @@ async function selectStop(value, manual = false, overlayManaged = false, transit
       satelliteToggle.title = presentStop ? '' : L.fluxPresentOnly;
     }
     if ($('satellite-note')) $('satellite-note').hidden = !satellite;
+    circulation?.setStop(presentStop);
     flux?.setPresent(presentStop);
     flux?.setPast(presentStop ? null : pastCurrents(place));
     flux?.refresh();
@@ -2515,6 +2520,7 @@ function init() {
     lift: { uniforms: LIFT_UNIFORMS_GLSL, travel: TRAVEL_GLSL, metres: METRES_GLSL, lift: LIFT_GLSL },
     cut: { uniforms: CUT_UNIFORMS, surface: CUT_SURFACE },
   });
+  if (circulationUrl) circulation = createCirculation({ url: circulationUrl, earth, stage, L, fmt });
   flux = createFlux({
     config: present, stage, L, fmt, lang: document.documentElement.lang,
     api: {
@@ -2526,6 +2532,7 @@ function init() {
       projection: () => projection,
       changed: queueAddress,
       pastCurrents: pastCurrentsBuilt,
+      circulation,
     },
   });
   const observer = new ResizeObserver(fitCamera);
@@ -2554,6 +2561,11 @@ function init() {
     updateNameVisibility();
     updatePinVisibility();
     updateRanges();
+    // The belt would show through a cut-away or see-through surface, as the overlay lines would
+    // without their own shader; it steps aside then.
+    circulation?.frame({ key: projection === 'globe' ? 'globe' : `${projection}:${meridian}`, projection, meridian,
+      place: pointAt, hidden: uniforms.mantleCutaway.value > .5 || uniforms.crustCutaway.value > .5
+        || uniforms.mantleSurfaceOpacity.value < 1 });
     const view = tiltedView();
     if (uniforms.mantleCutaway.value > .5 || uniforms.crustCutaway.value > .5 || uniforms.mantleSurfaceOpacity.value < 1) {
       earth.updateWorldMatrix(true,false);
@@ -3021,7 +3033,7 @@ function init() {
 // time range keep their own parameters.
 // view: globe | mollweide | equalearth | equirect · surface: relief | map | mask | temp | veg | rain
 // shading: 0 | 1 | 5 | 20 · sea: metres · relief, rivers, ice, grid: 0 | 1 · age: Ma
-// sat: 0 | 1 (the present's satellite base) · wind: 10m | 250hPa · currents: flow · clouds: sat | model
+// sat: 0 | 1 (the present's satellite base) · wind: 10m | 250hPa · currents: flow | conveyor · clouds: sat | model
 const viewDefaults = {};
 let addressReady = false;
 let addressTimer = 0;
@@ -3035,7 +3047,7 @@ function viewState() {
     relief: reliefWanted ? '1' : '0', rivers: riversVisible ? '1' : '0',
     ice: iceVisible ? '1' : '0', grid: gridVisible ? '1' : '0',
     sat: present?.base ? (satelliteWanted ? '1' : '0') : null,
-    wind: flux?.state().wind ?? null, currents: flux?.state().currents ? 'flow' : null,
+    wind: flux?.state().wind ?? null, currents: flux?.state().currents ?? null,
     clouds: flux?.state().clouds ?? null,
   };
 }
@@ -3079,7 +3091,7 @@ function readViewAddress() {
   if (flag('rivers') !== null) riversVisible = flag('rivers');
   if (flag('ice') !== null) iceVisible = flag('ice');
   if (flag('sat') !== null && present?.base) satelliteWanted = flag('sat');
-  flux?.restore({ wind: asked.get('wind'), currents: asked.get('currents') === 'flow', clouds: asked.get('clouds') });
+  flux?.restore({ wind: asked.get('wind'), currents: asked.get('currents'), clouds: asked.get('clouds') });
   const wanted = asked.get('surface');
   if (wanted && ['relief', 'map', 'mask', 'temp', 'veg', 'rain'].includes(wanted)) surface = wanted;
   maskChosen = wanted === 'mask';

@@ -253,6 +253,14 @@ def pack_elevation(dem, dem_source, staging, files):
         files.append({"path": "paleodem/mountain-ranges.json",
                       "bytes": (staging / "paleodem" / ranges.name).stat().st_size,
                       "sha256": digest(staging / "paleodem" / ranges.name), "dataset": "paleodem2018"})
+    # The present-day circulation schematic and GODAS overturning sections (NOAA PSL), by
+    # scripts/build_circulation.py; optional like the rivers.
+    belt = dem_source / "circulation.json"
+    if belt.exists():
+        shutil.copy2(belt, staging / "paleodem" / belt.name)
+        files.append({"path": "paleodem/circulation.json",
+                      "bytes": (staging / "paleodem" / belt.name).stat().st_size,
+                      "sha256": digest(staging / "paleodem" / belt.name), "dataset": "paleodem2018"})
     # Past surface currents from FOAM's nearest run (Pohl et al. 2022, CC BY 4.0), one field per
     # grid and their ranges, by scripts/build_past_currents.py; optional like the rivers.
     flows = dem_source / "currents.json"
