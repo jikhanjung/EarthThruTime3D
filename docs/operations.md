@@ -122,8 +122,12 @@ nothing here re-pins the bundle. Procedure: `deploy/README.md`.
   touched: the manifest version must match the image and every file's size and SHA-256
   must match. A mismatched pair refuses to start.
 - Pre-deploy and hourly snapshots, taken with sqlite3's backup API from a throwaway
-  container, integrity-checked, and discarded if the check fails. Pruning happens only
-  after a verified new snapshot exists and never below one kept copy.
+  container and integrity-checked. A failed copy leaves the `db-*.sqlite3` set (the first
+  one is kept as `*-INTEGRITY_FAIL.corrupt` evidence), writes the `INTEGRITY_FAIL` sentinel
+  beside the database (first line: UTC time and reason) so `/healthz` reports `degraded`,
+  and suspends pruning; the next passing check removes the sentinel. Pruning happens only
+  after a verified new snapshot exists and never below one kept copy. 24 hourly copies
+  are kept by default, so the window covers the once-a-day offsite pull.
 - Code rollback and data restore stay separate: no deploy path writes to `db/`.
 - Secrets are provisioned in `.env.django` on the host at 600, never in the image.
 - The PALEOMAP originals are excluded from the image, the bundle and the server. The
@@ -136,7 +140,8 @@ nothing here re-pins the bundle. Procedure: `deploy/README.md`.
   has not been rehearsed. The database holds no accounts and, without an access key, no sessions,
   so this waits until it holds something a reader would miss.
 - **Disk monitoring and backup-failure alerting.** The host was at 89% when the service
-  was installed. A failed hourly snapshot is visible in the journal but nothing raises it.
+  was installed. A failed hourly snapshot is visible in the journal; only an integrity
+  failure reaches `/healthz` (as `degraded`), and nothing pages on either.
 - **Daily refresh alerting.** A failed present-day fetch is recorded in
   `present-live/status.json` and `/healthz` reports it, but nothing raises it; after 48 hours
   the site quietly shows the release's own moment again.
