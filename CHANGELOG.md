@@ -9,6 +9,10 @@
 **시간 범위**는 고도 격자에서 "지구의 시간" 옆 선택(전체 시대 / 최근 2.5만 년 / 최근 13만 년)이다.
 빙기 시점의 화면은 "발표된 복원 · 계산한 결과 · 가정"을 캡션과 안내문으로 구분한다.
 
+## v0.26.1 — 2026-10-23
+
+보안 재빌드: 갱신된 `python:3.12-slim`(ca-certificates 20250419+deb13u1)으로 다시 빌드해, 침해된 emSign ECC Root CA - G3 를 더 이상 신뢰하지 않는다(GHSA-6q48-6c7w-9gw2). 화면·기능 변경은 없다.
+
 ## v0.26.0 — 2026-10-03
 
 화면 배치: 왼쪽 세로 패널, 위쪽 띠 없앰, 범례는 오른쪽 아래 ([#118](https://github.com/jikhanjung/EarthThruTime3D/pull/118), [#119](https://github.com/jikhanjung/EarthThruTime3D/pull/119), [jikhanjung 120](devlog/20261002_jikhanjung_120_left_panel_layout.md))
