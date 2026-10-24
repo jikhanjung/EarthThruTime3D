@@ -28,6 +28,10 @@
 두 시점 사이로 슬라이더를 두면 해안을 따라 흐름이 함께 옮겨 간다. 투영 **이퀄 어스**에서도 같다.
 주소에는 어느 시대에서나 `currents=flow`.
 
+## v0.26.1 — 2026-10-23
+
+보안 재빌드: 갱신된 `python:3.12-slim`(ca-certificates 20250419+deb13u1)으로 다시 빌드해, 침해된 emSign ECC Root CA - G3 를 더 이상 신뢰하지 않는다(GHSA-6q48-6c7w-9gw2). 화면·기능 변경은 없다.
+
 ## v0.26.0 — 2026-10-03
 
 화면 배치: 왼쪽 세로 패널, 위쪽 띠 없앰, 범례는 오른쪽 아래 ([#118](https://github.com/jikhanjung/EarthThruTime3D/pull/118), [#119](https://github.com/jikhanjung/EarthThruTime3D/pull/119), [jikhanjung 120](devlog/20261002_jikhanjung_120_left_panel_layout.md))
