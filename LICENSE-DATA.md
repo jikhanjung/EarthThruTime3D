@@ -8,11 +8,11 @@ code, and its terms follow the sources it was made from. Three groups.
 The files this project computes from CC BY sources are released under
 [Creative Commons Attribution 4.0](https://creativecommons.org/licenses/by/4.0/):
 
-- the elevation, temperature, modelled climate, ice and potential-drainage textures, the sea-level curves and the motion
-  fields of the elevation series (from Scotese & Wright 2018, Scotese 2021, van der
+- the elevation, temperature, modelled climate, ice, potential-drainage and past surface-current textures, the sea-level
+  curves and the motion fields of the elevation series (from Scotese & Wright 2018, Scotese 2021, van der
   Meer et al. 2022, Spratt & Lisiecki 2016, Natural Earth, Dalton et al. 2023,
-  Hughes et al. 2016, Gowan et al. 2021, Messager et al. 2016 (HydroLAKES), Krapp et al. 2021 and the
-  PALEOMAP rotation model);
+  Hughes et al. 2016, Gowan et al. 2021, Messager et al. 2016 (HydroLAKES), Krapp et al. 2021,
+  Pohl et al. 2022 (FOAM) and the PALEOMAP rotation model);
 - the packed coastlines (from Kocsis & Scotese 2021);
 - the present-day CRUST 2.0 thickness display grid (Laske, Masters & Reif 2000,
   EarthByte GPlates 2.3 distribution, whose bundled License.txt states CC BY 4.0;

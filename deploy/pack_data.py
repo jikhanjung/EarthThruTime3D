@@ -253,6 +253,17 @@ def pack_elevation(dem, dem_source, staging, files):
         files.append({"path": "paleodem/mountain-ranges.json",
                       "bytes": (staging / "paleodem" / ranges.name).stat().st_size,
                       "sha256": digest(staging / "paleodem" / ranges.name), "dataset": "paleodem2018"})
+    # Past surface currents from FOAM's nearest run (Pohl et al. 2022, CC BY 4.0), one field per
+    # grid and their ranges, by scripts/build_past_currents.py; optional like the rivers.
+    flows = dem_source / "currents.json"
+    if flows.exists():
+        for flow in [flows] + sorted(dem_source.glob("paleodem-*-currents.png")):
+            shutil.copy2(flow, staging / "paleodem" / flow.name)
+            entry = {"path": f"paleodem/{flow.name}", "bytes": (staging / "paleodem" / flow.name).stat().st_size,
+                     "sha256": digest(staging / "paleodem" / flow.name)}
+            entry.update({"map_id": flow.name.removesuffix("-currents.png")} if flow.suffix == ".png"
+                         else {"dataset": "paleodem2018"})
+            files.append(entry)
     # Where each mask came from, written by the same script; optional like the masks.
     kinds = dem_source / "ice-sources.json"
     if kinds.exists():

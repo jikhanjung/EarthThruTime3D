@@ -5,6 +5,8 @@
 //
 // None of it is live. Wind and clouds are one moment pinned when the release was built, the
 // currents a 1992–2018 mean; the caption under the age says which, whenever a layer is on.
+// On a past stop of the elevation series the currents are FOAM's nearest run (wwolf P02),
+// in the same baked form; wind and clouds stay with the present.
 import * as THREE from 'three';
 
 const EARTH_RADIUS = 6371000;
@@ -53,6 +55,33 @@ export function sampleField(field, lon, lat) {
   return [at(field.u), at(field.v)];
 }
 
+// A field moved with the map between two stops: each cell takes the value the field holds
+// where the map's travel brings it from, `shift(lon, lat)` degrees east and north (the share
+// of the travel field the mountain marks move by), sea included, so the particles keep to the
+// coast the page draws. Built once per place, not per particle.
+export function warpField(field, shift) {
+  const { width, height, centred } = field;
+  const cells = width / 360;
+  const half = centred ? 0.5 / cells : 0;
+  const values = { ...field, sea: null };
+  const u = new Float32Array(width * height), v = new Float32Array(width * height);
+  const sea = field.sea ? new Uint8Array(width * height) : null;
+  for (let row = 0; row < height; row++) {
+    const lat = 90 - half - row / cells;
+    for (let col = 0; col < width; col++) {
+      const lon = -180 + half + col / cells;
+      const [east, north] = shift(lon, lat);
+      const fromLon = ((lon - east + 540) % 360) - 180;
+      const fromLat = Math.max(-90 + half, Math.min(90 - half, lat - north));
+      const index = row * width + col;
+      const flow = sampleField(values, fromLon, fromLat);
+      if (flow) [u[index], v[index]] = flow;
+      if (sea) sea[index] = sampleField(field, fromLon, fromLat) ? 1 : 0;
+    }
+  }
+  return { u, v, sea, width, height, centred };
+}
+
 // Beyond this view shift in one frame the old trails are wiped rather than faded.
 export const WIPE_PX = 40;
 // How much of a trail a frame keeps when the view shifted `moved` px: the layer's own fade
@@ -90,11 +119,16 @@ export function momentText(iso, lang) {
   return local && !/UTC$/.test(local) ? `${utc} (${local})` : utc;
 }
 
-export function createFlux({ config, stage, L, fmt, lang, api }) {
-  if (!config) return null;
+export function createFlux({ config: present, stage, L, fmt, lang, api }) {
+  // `present` is the present-day bundle, or null where it is not built; the past currents
+  // still need the particles then.
+  if (!present && !api.pastCurrents) return null;
+  const config = present ?? {};
   const $ = (id) => document.getElementById(id);
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const state = { present: false, wind: null, currents: false, clouds: null };
+  // `past`: the drawn stop's own currents when it is not the present, from the page.
+  const state = { present: false, past: null, wind: null, currents: false, clouds: null };
+  let warp = { key: '', base: null, field: null };
   const fields = new Map();
   const layers = {};
   let fluxTime = 0;
@@ -308,7 +342,8 @@ export function createFlux({ config, stage, L, fmt, lang, api }) {
   // The legend heads keep UTC alone; the caption under the age carries the local clock too.
   function momentUtc() { const t = config.weather?.t ?? ''; return t && `${t.slice(0, 10)} ${t.slice(11, 16)} UTC`; }
 
-  function describe() {
+  function describe(past) {
+    if (past) return state.currents && layers.ocean.field ? fmt(L.fluxOceanPast, { run: past.run_ma }) : '';
     const parts = [];
     const time = moment();
     if (state.wind && state.clouds) parts.push(fmt(L.fluxWind, { time }));
@@ -319,8 +354,11 @@ export function createFlux({ config, stage, L, fmt, lang, api }) {
     return parts.join(' · ');
   }
 
-  function showLegend() {
+  function showLegend(past) {
     const blocks = [];
+    if (past && state.currents && layers.ocean.field) {
+      blocks.push(legendBlock(fmt(L.oceanLegendPast, { run: past.run_ma }), OCEAN, OCEAN.ref));
+    }
     if (state.present && state.wind) {
       blocks.push(legendBlock(fmt(state.wind === '10m' ? L.windLegend10m : L.windLegend250hPa, { time: momentUtc() }),
         WIND, WIND.ref[state.wind]));
@@ -331,7 +369,7 @@ export function createFlux({ config, stage, L, fmt, lang, api }) {
     if (state.present && state.clouds) {
       blocks.push(`<figcaption>${fmt(state.clouds === 'sat' ? L.cloudLegendSat : L.cloudLegendModel, { time: momentUtc() })}</figcaption>`);
     }
-    const speeds = state.present && (state.wind || state.currents);
+    const speeds = (state.present && (state.wind || state.currents)) || (past && state.currents);
     legend.innerHTML = (speeds ? `<p class="flux-unit">${L.fluxSpeed}</p>` : '') + blocks.join('');
     legend.hidden = !blocks.length;
     const dock = $('map-legend') || stage.parentElement;
@@ -342,11 +380,18 @@ export function createFlux({ config, stage, L, fmt, lang, api }) {
   }
 
   async function sync() {
-    const on = state.present;
-    for (const control of [windSelect, currentToggle, cloudSelect]) {
+    // The present's own layers come only from the present-day bundle.
+    const on = state.present && Boolean(present);
+    const past = on ? null : state.past;
+    for (const control of [windSelect, cloudSelect]) {
       if (!control) continue;
       control.disabled = !on;
       control.title = on ? '' : L.fluxPresentOnly;
+    }
+    if (currentToggle) {
+      const ocean = Boolean((on && config.ocean) || past);
+      currentToggle.disabled = !ocean;
+      currentToggle.title = ocean ? '' : L.currentsUnavailable;
     }
     currentToggle?.setAttribute('aria-pressed', String(state.currents));
     // Wind
@@ -363,6 +408,16 @@ export function createFlux({ config, stage, L, fmt, lang, api }) {
     if (on && state.currents && config.ocean) {
       try {
         layers.ocean.field = await loadField('ocean', config.ocean.url, config.ocean, true);
+        layers.ocean.ref = OCEAN.ref;
+      } catch (error) { console.error(error); }
+    } else if (past && state.currents) {
+      // Same speed scale as the present, so a weak model current looks weak beside it.
+      try {
+        const base = await loadField(`ocean:${past.url}`, past.url, past, true);
+        if (past.shift && (warp.key !== past.key || warp.base !== base)) {
+          warp = { key: past.key, base, field: warpField(base, past.shift) };
+        }
+        layers.ocean.field = past.shift ? warp.field : base;
         layers.ocean.ref = OCEAN.ref;
       } catch (error) { console.error(error); }
     }
@@ -383,18 +438,21 @@ export function createFlux({ config, stage, L, fmt, lang, api }) {
       }
     }
     cloudMesh.visible = Boolean(cloudUrl && cloudUniforms.cloudMap.value);
-    stage.dataset.flux = on ? 'ready' : 'unavailable';
+    stage.dataset.flux = on ? 'ready' : past ? 'past' : 'unavailable';
+    stage.dataset.currentsRun = past && layers.ocean.field ? String(past.run_ma) : '';
+    stage.dataset.currentsWarp = past && layers.ocean.field && past.shift ? past.key : '';
     stage.dataset.wind = layers.wind.field ? state.wind : '';
     stage.dataset.currents = String(Boolean(layers.ocean.field));
     stage.dataset.clouds = cloudMesh.visible ? state.clouds : '';
-    showLegend();
-    const text = on ? describe() : '';
+    showLegend(past);
+    const text = on ? describe() : past ? describe(past) : '';
     if (when) {
       when.textContent = text;
       when.hidden = !text;
     }
     stage.dataset.fluxWhen = text;
     if ($('flux-note')) $('flux-note').hidden = !(on && (state.wind || state.currents || state.clouds || api.satelliteShown()));
+    if ($('foam-note')) $('foam-note').hidden = !(past && state.currents && layers.ocean.field);
     api.changed();
   }
 
@@ -407,11 +465,16 @@ export function createFlux({ config, stage, L, fmt, lang, api }) {
     setPresent(present) {
       state.present = present;
     },
+    // The drawn stop's past currents, or null: { url, u, v, run_ma, key, shift }, where
+    // `shift` moves the field with the map between two stops (null on a stop).
+    setPast(past) {
+      state.past = past;
+    },
     refresh: sync,
     state: () => ({ wind: state.wind, currents: state.currents, clouds: state.clouds }),
     restore({ wind, currents, clouds }) {
       if (wind && config.weather?.wind[wind]) state.wind = wind;
-      if (currents && config.ocean) state.currents = true;
+      if (currents && (config.ocean || api.pastCurrents)) state.currents = true;
       if (clouds && config.weather?.clouds[clouds]) state.clouds = clouds;
       if (windSelect) windSelect.value = state.wind || '';
       if (cloudSelect) cloudSelect.value = state.clouds || '';

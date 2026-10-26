@@ -1,0 +1,206 @@
+{
+  "title": "FOAM coupled ocean-atmosphere runs every 20 Myr, 540-0 Ma: surface currents for the past maps (wwolf P02 step 3)",
+  "retrieved": "2026-09-22",
+  "record": "https://doi.org/10.5281/zenodo.5780097",
+  "license": "CC BY 4.0 (Zenodo record metadata)",
+  "cite": "Pohl, A., Ridgwell, A., Stockey, R. G., Thomazo, C., Keane, A., Vennin, E. & Scotese, C. R. (2022). Continental configuration controls ocean oxygenation during the Phanerozoic. Nature, 608, 523-527. doi:10.1038/s41586-022-05018-z. Data: Pohl, A., Phanerozoic global climatic fields simulated using the FOAM ocean-atmosphere general circulation model, Zenodo, doi:10.5281/zenodo.5780097.",
+  "note": "The ocean component of each run: monthly U, V in m/s on 24 levels from -5300 m up to -10 m of a 128x128 grid (2.8 x 1.4 degrees). All runs share CO2 2240 ppm, a 1368 W/m2 Sun, a circular orbit at minimum obliquity and rocky-desert land; only the Scotese & Wright (2018) geography changes, so the currents show what the continents do, not each period's climate. The paper's data availability statement points to this record (concept doi:10.5281/zenodo.5780096). scripts/build_past_currents.py takes the top level's annual mean of the slice nearest each PaleoDEM stop.",
+  "assets": [
+    {
+      "role": "ocean-0ma",
+      "path": "data/sources/foam/0rd_1368W_EccN_ocean_2240ppm.nc",
+      "url": "https://zenodo.org/api/records/5780097/files/0rd_1368W_EccN_ocean_2240ppm.nc/content",
+      "bytes": 124268380,
+      "sha256": "1ad577e7197bfc59c7d57aa9bd6d9893bd3ec3a02839eceea6a7a46bbac027f9"
+    },
+    {
+      "role": "ocean-20ma",
+      "path": "data/sources/foam/20rd_1368W_EccN_ocean_2240ppm.nc",
+      "url": "https://zenodo.org/api/records/5780097/files/20rd_1368W_EccN_ocean_2240ppm.nc/content",
+      "bytes": 124268384,
+      "sha256": "8a3e122a26cce31628db88447a2f760ea662632f973aebb4e61304eb6bddbea9"
+    },
+    {
+      "role": "ocean-40ma",
+      "path": "data/sources/foam/40rd_1368W_EccN_ocean_2240ppm.nc",
+      "url": "https://zenodo.org/api/records/5780097/files/40rd_1368W_EccN_ocean_2240ppm.nc/content",
+      "bytes": 124268384,
+      "sha256": "1c9d2fef60fc706186a607f026d423a29c28ace78b9599886e643d7d8815dd82"
+    },
+    {
+      "role": "ocean-60ma",
+      "path": "data/sources/foam/60rd_1368W_EccN_ocean_2240ppm.nc",
+      "url": "https://zenodo.org/api/records/5780097/files/60rd_1368W_EccN_ocean_2240ppm.nc/content",
+      "bytes": 124268384,
+      "sha256": "f0c2cc2098988df627d83c21fa31b9459e7f94bfe73d4cb06d81f9dad3e5d0f5"
+    },
+    {
+      "role": "ocean-80ma",
+      "path": "data/sources/foam/80rd_1368W_EccN_ocean_2240ppm.nc",
+      "url": "https://zenodo.org/api/records/5780097/files/80rd_1368W_EccN_ocean_2240ppm.nc/content",
+      "bytes": 124268384,
+      "sha256": "ea7df891d8e558766026ce6771a2ff99af4e63636a0ee2a32f4fc25406010da1"
+    },
+    {
+      "role": "ocean-100ma",
+      "path": "data/sources/foam/100rd_1368W_EccN_ocean_2240ppm.nc",
+      "url": "https://zenodo.org/api/records/5780097/files/100rd_1368W_EccN_ocean_2240ppm.nc/content",
+      "bytes": 124268384,
+      "sha256": "33aa9a0edc70d9415733aae58b3933f00b0d98c95a0e763f86dde0cf1f5a2cb0"
+    },
+    {
+      "role": "ocean-120ma",
+      "path": "data/sources/foam/120rd_1368W_EccN_ocean_2240ppm.nc",
+      "url": "https://zenodo.org/api/records/5780097/files/120rd_1368W_EccN_ocean_2240ppm.nc/content",
+      "bytes": 124268384,
+      "sha256": "5b8cf98034e8e1e9d9b1cbd2173beb161bb0d1331bb7279e3b5de028fe6ed486"
+    },
+    {
+      "role": "ocean-140ma",
+      "path": "data/sources/foam/140rd_1368W_EccN_ocean_2240ppm.nc",
+      "url": "https://zenodo.org/api/records/5780097/files/140rd_1368W_EccN_ocean_2240ppm.nc/content",
+      "bytes": 124268384,
+      "sha256": "febb7f5dc81a83786d3f4838a0739deb04caf4431d6d1b52c61c3e8a51fb03e1"
+    },
+    {
+      "role": "ocean-160ma",
+      "path": "data/sources/foam/160rd_1368W_EccN_ocean_2240ppm.nc",
+      "url": "https://zenodo.org/api/records/5780097/files/160rd_1368W_EccN_ocean_2240ppm.nc/content",
+      "bytes": 124268384,
+      "sha256": "56b6148cfc87174cfcbf52b10ffc8e193d80ed112b3cb17d8b12ed927a2b5f66"
+    },
+    {
+      "role": "ocean-180ma",
+      "path": "data/sources/foam/180rd_1368W_EccN_ocean_2240ppm.nc",
+      "url": "https://zenodo.org/api/records/5780097/files/180rd_1368W_EccN_ocean_2240ppm.nc/content",
+      "bytes": 124268384,
+      "sha256": "0daded925b1afad656970867443a9a5299c30a6c87dededf027d17fa5b76dc80"
+    },
+    {
+      "role": "ocean-200ma",
+      "path": "data/sources/foam/200rd_1368W_EccN_ocean_2240ppm.nc",
+      "url": "https://zenodo.org/api/records/5780097/files/200rd_1368W_EccN_ocean_2240ppm.nc/content",
+      "bytes": 124268384,
+      "sha256": "f28f037705c665a4373fa38f0f18edb1855d5c2a14fcd08d8b75cef754616497"
+    },
+    {
+      "role": "ocean-220ma",
+      "path": "data/sources/foam/220rd_1368W_EccN_ocean_2240ppm.nc",
+      "url": "https://zenodo.org/api/records/5780097/files/220rd_1368W_EccN_ocean_2240ppm.nc/content",
+      "bytes": 124268384,
+      "sha256": "d30c59f4f1ab9952b83e4251e56a510eaf0a8392d9e5489fcf5c10b69009f4a2"
+    },
+    {
+      "role": "ocean-240ma",
+      "path": "data/sources/foam/240rd_1368W_EccN_ocean_2240ppm.nc",
+      "url": "https://zenodo.org/api/records/5780097/files/240rd_1368W_EccN_ocean_2240ppm.nc/content",
+      "bytes": 124268384,
+      "sha256": "dd4bc64b4bfe420083182a674df7d3d0efabcbaa3f0ca05e68c491348d6d46d4"
+    },
+    {
+      "role": "ocean-260ma",
+      "path": "data/sources/foam/260rd_1368W_EccN_ocean_2240ppm.nc",
+      "url": "https://zenodo.org/api/records/5780097/files/260rd_1368W_EccN_ocean_2240ppm.nc/content",
+      "bytes": 124268384,
+      "sha256": "c2c247bcee76b20aa0a5246b602594d470cb2d5248950e44944747264dfe5de8"
+    },
+    {
+      "role": "ocean-280ma",
+      "path": "data/sources/foam/280rd_1368W_EccN_ocean_2240ppm.nc",
+      "url": "https://zenodo.org/api/records/5780097/files/280rd_1368W_EccN_ocean_2240ppm.nc/content",
+      "bytes": 124268384,
+      "sha256": "338c1863f673b59f36ae555c39ac1724bd8bea15421adfd186f3d09a07e253ea"
+    },
+    {
+      "role": "ocean-300ma",
+      "path": "data/sources/foam/300rd_1368W_EccN_ocean_2240ppm.nc",
+      "url": "https://zenodo.org/api/records/5780097/files/300rd_1368W_EccN_ocean_2240ppm.nc/content",
+      "bytes": 124268384,
+      "sha256": "62a62eec3d73003de8862303addf5c643c83c19fd53c95709891a6dd92519ba0"
+    },
+    {
+      "role": "ocean-320ma",
+      "path": "data/sources/foam/320rd_1368W_EccN_ocean_2240ppm.nc",
+      "url": "https://zenodo.org/api/records/5780097/files/320rd_1368W_EccN_ocean_2240ppm.nc/content",
+      "bytes": 124268384,
+      "sha256": "988c61de9a3216088402630df6542291854036c740c09e5ba8eb40d0b0480432"
+    },
+    {
+      "role": "ocean-340ma",
+      "path": "data/sources/foam/340rd_1368W_EccN_ocean_2240ppm.nc",
+      "url": "https://zenodo.org/api/records/5780097/files/340rd_1368W_EccN_ocean_2240ppm.nc/content",
+      "bytes": 124268384,
+      "sha256": "807fd5dc2c8a14d4b6d5112494e0178d86daea02291a42a7a1d2de5589271958"
+    },
+    {
+      "role": "ocean-360ma",
+      "path": "data/sources/foam/360rd_1368W_EccN_ocean_2240ppm.nc",
+      "url": "https://zenodo.org/api/records/5780097/files/360rd_1368W_EccN_ocean_2240ppm.nc/content",
+      "bytes": 124268384,
+      "sha256": "a2f252d4a41a1ff82c9f7c9eaccdaa72333163f2551f09629d85a0de024512e9"
+    },
+    {
+      "role": "ocean-380ma",
+      "path": "data/sources/foam/380rd_1368W_EccN_ocean_2240ppm.nc",
+      "url": "https://zenodo.org/api/records/5780097/files/380rd_1368W_EccN_ocean_2240ppm.nc/content",
+      "bytes": 124268384,
+      "sha256": "56923609cea0b89b5a0fed25403a74c6eb61e8e54a1e025e83983e971ca1a2fb"
+    },
+    {
+      "role": "ocean-400ma",
+      "path": "data/sources/foam/400rd_1368W_EccN_ocean_2240ppm.nc",
+      "url": "https://zenodo.org/api/records/5780097/files/400rd_1368W_EccN_ocean_2240ppm.nc/content",
+      "bytes": 124268384,
+      "sha256": "dd5ca2e34a8f0b0cd09df5376abeefe9897d98d78220354b07004a0c6c426dd4"
+    },
+    {
+      "role": "ocean-420ma",
+      "path": "data/sources/foam/420rd_1368W_EccN_ocean_2240ppm.nc",
+      "url": "https://zenodo.org/api/records/5780097/files/420rd_1368W_EccN_ocean_2240ppm.nc/content",
+      "bytes": 124268384,
+      "sha256": "6ba30a4cab39e2182687a69a994d64dd03ab593c74e9120af3678a1818769998"
+    },
+    {
+      "role": "ocean-440ma",
+      "path": "data/sources/foam/440rd_1368W_EccN_ocean_2240ppm.nc",
+      "url": "https://zenodo.org/api/records/5780097/files/440rd_1368W_EccN_ocean_2240ppm.nc/content",
+      "bytes": 124268384,
+      "sha256": "de0c77ec46fcebd9a683443df4a4dfbea63eaf2f579cb4387add6c1f700b944b"
+    },
+    {
+      "role": "ocean-460ma",
+      "path": "data/sources/foam/460rd_1368W_EccN_ocean_2240ppm.nc",
+      "url": "https://zenodo.org/api/records/5780097/files/460rd_1368W_EccN_ocean_2240ppm.nc/content",
+      "bytes": 124268384,
+      "sha256": "073b073a5b845da910dbdc37b7844eb500d047fb19109d7d3f28bd599ba07773"
+    },
+    {
+      "role": "ocean-480ma",
+      "path": "data/sources/foam/480rd_1368W_EccN_ocean_2240ppm.nc",
+      "url": "https://zenodo.org/api/records/5780097/files/480rd_1368W_EccN_ocean_2240ppm.nc/content",
+      "bytes": 124268384,
+      "sha256": "d3db3ba3511b1265c164883e1f52a05e326f27f0342c450db3df6f752443e3da"
+    },
+    {
+      "role": "ocean-500ma",
+      "path": "data/sources/foam/500rd_1368W_EccN_ocean_2240ppm.nc",
+      "url": "https://zenodo.org/api/records/5780097/files/500rd_1368W_EccN_ocean_2240ppm.nc/content",
+      "bytes": 124268384,
+      "sha256": "5cd817ec9d79a33a9eb3d039ee85f10612b003129e64d03045e668b893519ab4"
+    },
+    {
+      "role": "ocean-520ma",
+      "path": "data/sources/foam/520rd_1368W_EccN_ocean_2240ppm.nc",
+      "url": "https://zenodo.org/api/records/5780097/files/520rd_1368W_EccN_ocean_2240ppm.nc/content",
+      "bytes": 124268384,
+      "sha256": "b69e054f662caebcc772a125a321a0f2db3f563b5355d2daa5b576e65f50aca1"
+    },
+    {
+      "role": "ocean-540ma",
+      "path": "data/sources/foam/540rd_1368W_EccN_ocean_2240ppm.nc",
+      "url": "https://zenodo.org/api/records/5780097/files/540rd_1368W_EccN_ocean_2240ppm.nc/content",
+      "bytes": 124268384,
+      "sha256": "afac593d8fb0488c509ad11330e89e378cf3589b191da8457f3b66edf7b8e7f9"
+    }
+  ]
+}
