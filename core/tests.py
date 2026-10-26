@@ -578,10 +578,13 @@ class PaleodemTests(TestCase):
     def setUp(self):
         self.dem = TemporaryDirectory()
         self.atlas = TemporaryDirectory()
+        # No present-day bundle either, so a host that has built one (the release host) sees the same page.
+        self.present = TemporaryDirectory()
         self.addCleanup(self.dem.cleanup)
         self.addCleanup(self.atlas.cleanup)
+        self.addCleanup(self.present.cleanup)
         override = self.settings(SCOTESE_VIEWER_ENABLED=True, PALEODEM_DERIVED_DIR=self.dem.name,
-                                 PALEOATLAS_DERIVED_DIR=self.atlas.name)
+                                 PALEOATLAS_DERIVED_DIR=self.atlas.name, PRESENT_DERIVED_DIR=self.present.name)
         override.enable()
         self.addCleanup(override.disable)
 
