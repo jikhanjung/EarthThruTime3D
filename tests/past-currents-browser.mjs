@@ -30,7 +30,7 @@ try {
   await expect(globe).toHaveAttribute('data-currents-run', '100');
   await expect(globe).toHaveAttribute('data-currents-warp', '');
   await expect(page.locator('#currents')).toBeEnabled();
-  await expect(page.locator('#currents')).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.locator('#currents')).toHaveValue('flow');
   await expect(page.locator('#flux-when')).toContainText('FOAM');
   await expect(page.locator('#flux-when')).toContainText('100');
   await expect(page.locator('#flux-legend')).toContainText('FOAM');

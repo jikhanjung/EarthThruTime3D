@@ -50,6 +50,11 @@ The satellite base (NASA Blue Marble via NASA EOSDIS GIBS), the wind and cloud m
 NASA JPL/MIT, Menemenlis et al. 2008) are works of US government agencies or NASA-funded
 projects released without restriction; the credits above are requested and kept on screen.
 The PNG and JPEG files this project derives from them are published under the same terms.
+The overturning sections beside the circulation schematic are computed from the NCEP GODAS
+reanalysis, which NOAA PSL distributes freely, asking for the acknowledgement "data provided by
+the NOAA PSL, Boulder, Colorado, USA, from their website at https://psl.noaa.gov", kept on
+screen; the sections are published under the same terms. The schematic itself is this
+project's drawing after the cited literature, under CC BY 4.0.
 
 ## Source datasets
 
