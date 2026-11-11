@@ -19,7 +19,7 @@ image="honestjung/earththrutime3d:$version"
 
 revision=$(git rev-parse --short HEAD)
 if [[ -n "$(git status --porcelain)" ]]; then revision="$revision-dirty"; fi
-docker build --platform linux/amd64 -f deploy/Dockerfile \
+docker build --pull --platform linux/amd64 -f deploy/Dockerfile \
     --build-arg "APP_VERSION=$version" --build-arg "VCS_REF=$revision" -t "$image" .
 "$python_bin" deploy/smoke_image.py "$image" ".build/runtime-$version"
 
