@@ -13,7 +13,10 @@ mkdir -p db backups present-live scripts logs
 docker image inspect "honestjung/earththrutime3d:$version" >/dev/null
 
 # Validate the exact immutable image and data pair before touching the running service.
+# Named and labelled like backup.sh's throwaway container, so `docker ps -a` says what it is.
 docker run --rm --read-only --tmpfs /tmp:rw,noexec,nosuid,size=64m \
+    --name "earththrutime3d-verify-$version-$$" \
+    --label earththrutime3d.role=verify \
     --mount "type=bind,src=$PWD/data/$version,dst=/runtime,readonly" \
     --entrypoint python "honestjung/earththrutime3d:$version" /app/deploy/verify_bundle.py
 
