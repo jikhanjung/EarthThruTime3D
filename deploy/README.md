@@ -214,6 +214,12 @@ scripts/present.sh >> logs/present.log 2>&1              # 첫 받기를 손으�
 `earththrutime3d-backup.timer`가 매시간 같은 명령을 돌린다. 배포 직전 스냅샷은 `deploy.sh`가
 직접 실행한다.
 
+일회용 컨테이너에는 이름과 표지가 붙는다: 백업은 `earththrutime3d-backup-<UTC 시각>-<PID>`
+(`earththrutime3d.role=backup`), 배포 전 묶음 검증은 `earththrutime3d-verify-<버전>-<PID>`
+(`earththrutime3d.role=verify`). 1초 안팎 살다 `--rm`으로 지워지는데, 지워지는 순간에는
+`docker ps -a`에 Dead로 보인다. 그 순간에 잡혀도 이상이 아니다
+([jikhanjung 122](../devlog/20261114_jikhanjung_122_throwaway_container_names.md)).
+
 원격지 사본은 개발 호스트 m710q가 매일 04:20에 만든다(`system-operation/m710q/backup-earththrutime.sh`).
 여기 `backups/`의 검증된 최신 스냅샷과 `.env.django`를 당겨 날짜별로 보관하고(로컬 30일·NAS 90일),
 개발 호스트의 `data/sources`와 최신 릴리스 묶음을 NAS에 미러하고, `data/derived`는 일(14일)·주(12주)·월(12개월, 12월분 영구) 스냅샷으로 보관한다. 자료가 DB가

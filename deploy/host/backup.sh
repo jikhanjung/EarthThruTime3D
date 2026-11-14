@@ -19,7 +19,13 @@ tag=${1:-$(grep -oP '(?<=^IMAGE_TAG=).*' .env 2>/dev/null || true)}
 mkdir -p backups
 # -i matters: without an attached stdin the here-document never reaches python, which
 # then exits successfully having done nothing.
+# Named and labelled so that `docker ps -a` says what it is: for a moment during --rm the
+# container shows as Dead, and a monitor that catches it there should not see a random name
+# (2026-11-13, jikhanjung 122). Time and PID keep the name unique when deploy.sh's backup
+# meets the hourly timer.
 docker run --rm -i --read-only --tmpfs /tmp:rw,noexec,nosuid,size=16m \
+    --name "earththrutime3d-backup-$(date -u +%Y%m%dT%H%M%SZ)-$$" \
+    --label earththrutime3d.role=backup \
     --mount "type=bind,src=$PWD/db,dst=/var/lib/earththrutime3d" \
     --mount "type=bind,src=$PWD/backups,dst=/var/lib/earththrutime3d-backups" \
     -e "KEEP=$keep" --entrypoint python "honestjung/earththrutime3d:$tag" - <<'PY'
