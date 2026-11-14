@@ -1,6 +1,6 @@
 # dolfinid 의 "Dead" 무작위 이름 컨테이너 — 매시 백업의 일회용 컨테이너
 
-상태: 2026-11-14 원인 확인, 저장소 스크립트 수정. 서버의 `backup.sh`·`deploy.sh` 는 아직 앞 판이다.
+상태: 2026-11-14 원인 확인, 저장소 스크립트 수정(#123), 같은 날 dolfinid 호스트 스크립트 반영.
 
 ## 관측
 
@@ -35,9 +35,24 @@
   `earththrutime3d.role=verify`.
 - `deploy/README.md` 백업 절에 이름·표지와 Dead 로 잠깐 보이는 까닭을 적었다.
 
+## 서버 반영 (2026-11-14)
+
+사용자 지시(banjang 전달)로 호스트 스크립트만 바꿨다. 이미지 재배포·서비스 재시작은 하지 않았다.
+
+- 반영 전: 서버의 `backup.sh`·`deploy.sh` 해시가 #123 이전 저장소 판과 같음(`1e6d5d61…`, `f65a3ade…`).
+  앞 판을 `backup.sh.20261114-pre123`·`deploy.sh.20261114-pre123` 으로 남겼다(`cp -p`). 2026-10-07 의
+  `backup.sh.prev` 는 건드리지 않았다.
+- main 7e850e0 판을 임시 이름으로 올려 해시(`48242c8b…`, `786633e7…`)와 `bash -n` 을 확인한 뒤 `mv` 로
+  교체, 권한은 앞 판과 같게(755, 775).
+- 01:22 UTC 수동 `bash backup.sh`: rc=0, docker events 에
+  `earththrutime3d-backup-20261114T012205Z-1448737`(role=backup) create→start→die→destroy,
+  `db-20261114T012206Z.sqlite3` 생성, 보관 24개, `INTEGRITY_FAIL` 없음, 남은 컨테이너 없음.
+  운영 컨테이너 healthy, `/healthz` `ok` 0.26.1.
+- 02:02:56 UTC 정시 타이머 실행(systemd 경로): `earththrutime3d-backup.service` 정상 끝,
+  dockerd 에 `earththrutime3d-backup-20261114T020256Z-1485357` 로 연결, `db-20261114T020257Z.sqlite3`
+  생성, 보관 24개, 남은 컨테이너 없음.
+
 ## 남은 일
 
-- 서버 반영: 호스트 스크립트는 저장소에서 따로 복사한다(2026-10-07 `backup.sh` 교체와 같은 방식). 다음
-  배포 때나 따로 지시가 있을 때 바꾼다. 그때까지 서버의 컨테이너는 계속 무작위 이름이다.
 - banjang 쪽: Dead 를 다음 수집에도 남아 있을 때만 알리거나, `earththrutime3d.role` 표지가 있으면 거르는
   것은 banjang 저장소의 일이다(banjang 에 알림).

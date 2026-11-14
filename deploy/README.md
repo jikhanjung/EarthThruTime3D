@@ -12,6 +12,12 @@
 무결성 실패 시 `INTEGRITY_FAIL` 표식). 앞 판은 `/srv/earththrutime3d/backup.sh.prev`. 교체 직후
 수동 실행 rc=0(스냅샷 15개, 표식 없음), `/healthz` `ok`. 보관 개수는 매시간 하나씩 늘어 24개에서 멈춘다.
 
+2026-11-14 호스트 `backup.sh`·`deploy.sh`를 main 7e850e0(#123: 일회용 컨테이너 이름·`earththrutime3d.role` 표지)으로
+교체했다(이미지·자료는 v0.26.1 그대로, 서비스 재시작 없음). 앞 판은 `/srv/earththrutime3d/*.sh.20261114-pre123`.
+교체 직후 수동 실행 rc=0(`earththrutime3d-backup-…` create→destroy, 스냅샷 24개), `/healthz` `ok`,
+다음 정시 타이머 실행(02:02 UTC)도 같은 이름으로 정상
+([jikhanjung 122](../devlog/20261114_jikhanjung_122_throwaway_container_names.md)).
+
 ## 운영 주소
 
 2026-09-12 dolfinid에 배포했다.
